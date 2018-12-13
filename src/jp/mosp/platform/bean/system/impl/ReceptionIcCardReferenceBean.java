@@ -34,7 +34,7 @@ public class ReceptionIcCardReferenceBean extends BaseBean implements ReceptionI
 	/**
 	 * カードID受付DAO。
 	 */
-	private ReceptionIcCardDaoInterface	dao;
+	private ReceptionIcCardDaoInterface dao;
 	
 	
 	/**

@@ -37,7 +37,7 @@ public class EmploymentContractReferenceBean extends PlatformBean implements Emp
 	/**
 	 * 雇用契約マスタDAO。
 	 */
-	protected EmploymentContractDaoInterface	dao;
+	protected EmploymentContractDaoInterface dao;
 	
 	
 	/**
@@ -104,7 +104,8 @@ public class EmploymentContractReferenceBean extends PlatformBean implements Emp
 	}
 	
 	@Override
-	public String[][] getNameSelectArray(Date targetDate, boolean needBlank, String operationType) throws MospException {
+	public String[][] getNameSelectArray(Date targetDate, boolean needBlank, String operationType)
+			throws MospException {
 		// プルダウン用配列取得(名称)
 		return getSelectArray(targetDate, needBlank, operationType, true, false);
 	}
@@ -169,13 +170,15 @@ public class EmploymentContractReferenceBean extends PlatformBean implements Emp
 			// 表示内容設定
 			if (isName && viewCode) {
 				// コード+名称
-				array[idx++][1] = getCodedName(dto.getEmploymentContractCode(), dto.getEmploymentContractName(), length);
+				array[idx++][1] = getCodedName(dto.getEmploymentContractCode(), dto.getEmploymentContractName(),
+						length);
 			} else if (isName) {
 				// 名称
 				array[idx++][1] = dto.getEmploymentContractName();
 			} else if (viewCode) {
 				// コード+略称
-				array[idx++][1] = getCodedName(dto.getEmploymentContractCode(), dto.getEmploymentContractAbbr(), length);
+				array[idx++][1] = getCodedName(dto.getEmploymentContractCode(), dto.getEmploymentContractAbbr(),
+						length);
 			} else {
 				// 略称
 				array[idx++][1] = dto.getEmploymentContractAbbr();

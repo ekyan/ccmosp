@@ -493,6 +493,63 @@ public class PfmPositionDao extends PlatformDao implements PositionDaoInterface 
 	}
 	
 	@Override
+	public String getQueryForPositionGrade(boolean greaterEqual) {
+		boolean hasLowGradeAdvantage = hasLowGradeAdvantage();
+		// SQL作成準備
+		StringBuffer sb = new StringBuffer();
+		sb.append(select());
+		sb.append(COL_POSITION_CODE);
+		sb.append(from(TABLE));
+		// 有効日における最新の情報を抽出する条件SQLを追加
+		sb.append(getQueryForMaxActivateDate(TABLE, COL_POSITION_CODE, COL_ACTIVATE_DATE));
+		sb.append(where());
+		sb.append(deleteFlagOff());
+		// 等級条件SQLを追加
+		sb.append(and());
+		sb.append(COL_POSITION_GRADE);
+		if (greaterEqual) {
+			// 以上
+			if (hasLowGradeAdvantage) {
+				sb.append(lessEqual());
+			} else {
+				sb.append(greaterEqual());
+			}
+		} else {
+			// 以下
+			if (hasLowGradeAdvantage) {
+				sb.append(greaterEqual());
+			} else {
+				sb.append(lessEqual());
+			}
+		}
+		sb.append(leftParenthesis());
+		sb.append(select());
+		sb.append(COL_POSITION_GRADE);
+		sb.append(from(TABLE));
+		// 有効日における最新の情報を抽出する条件SQLを追加
+		sb.append(getQueryForMaxActivateDate(TABLE, COL_POSITION_CODE, COL_ACTIVATE_DATE));
+		sb.append(where());
+		sb.append(deleteFlagOff());
+		// コード条件SQLを追加
+		sb.append(and());
+		sb.append(equal(COL_POSITION_CODE));
+		sb.append(rightParenthesis());
+		return sb.toString();
+	}
+	
+	@Override
+	public int setParamsForPositionGrande(int index, String positionCode, Date targetDate, PreparedStatement ps)
+			throws MospException {
+		// パラメータインデックス準備
+		int idx = index;
+		setParam(idx++, targetDate, false, ps);
+		setParam(idx++, targetDate, false, ps);
+		setParam(idx++, positionCode, ps);
+		// インデックス返却
+		return idx;
+	}
+	
+	@Override
 	public String getQueryForApprover(String targetColumn) {
 		// MosP設定情報から承認者職位等級を取得
 		String grade = mospParams.getApplicationProperty(PlatformConst.APP_APPROVER_POSITION_GRADE);

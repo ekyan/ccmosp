@@ -16,8 +16,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
 /**
  * 画面読込時追加処理
  */
 function onLoadExtra() {
+	
+}
+
+/**
+ * 削除確認メッセージ。<br>
+ */
+function confirmCalc(event) {
+	// 更新系確認メッセージ
+	return confirm(getMessage(MSG_REGIST_CONFIRMATION, trimAll(getInnerHtml(getSrcElement(event)))));
 }

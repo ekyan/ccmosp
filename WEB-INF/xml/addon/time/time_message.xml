@@ -181,7 +181,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		<MessageBody>%1%は社員コード:%2%がまだ入社していません。社員コードまたは付与日を変更してください。</MessageBody>
 	</Message>
 	<Message key="TMW0258">
-		<MessageBody>%1%は社員コード:%2%が入社1年目であるため前年度の有給休暇を付与することはできません。</MessageBody>
+		<MessageBody>%1%は社員コード:%2%が入社1年目又は入社前であるため前年度の有給休暇を付与することはできません。</MessageBody>
 	</Message>
 	<Message key="TMW0259">
 		<MessageBody>%1%は付与されていません。休暇年月日または休暇種別を選択し直してください。</MessageBody>
@@ -198,6 +198,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<Message key="TMW0263">
 		<MessageBody>%1%は既に社員コード：%2%へ有給休暇の手動付与を行っています。付与日または社員コードを変更してください。</MessageBody>
 	</Message>
+	<Message key="TMW0264">
+		<MessageBody>%1%の勤務形態で%2%を設定していないため%3%できません。確認してください。</MessageBody>
+	</Message>
+	
 	<Message key="TMW0265">
 		<MessageBody>%1%で有効な%2%が存在しません。</MessageBody>
 	</Message>
@@ -296,9 +300,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<Message key="TMW0307">
 		<MessageBody>%1%はファイル内で重複しています。</MessageBody>
 	</Message>
-	<Message key="TMW0308">
-		<MessageBody>有効な休暇情報が取得できませんでした。休暇付与設定を確認してください。</MessageBody>
-	</Message>
 	<Message key="TMW0309">
 		<MessageBody>%1%は既に%2%申請が行われています。%2%申請を取り下げてから再度申請してください。</MessageBody>
 	</Message>
@@ -365,6 +366,42 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		<MessageBody>%1%は%2%を計算してから%3%してください。</MessageBody>
 		<ClientAvailable>true</ClientAvailable>
 	</Message>
+	<Message key="TMW0330">
+		<MessageBody>時短時間1(無給)が設定されている場合、勤務前残業自動申請は有効に出来ません。</MessageBody>
+	</Message>
+	<Message key="TMW0331">
+		<MessageBody>付与日：%1%は休暇年月日：%2%に休暇申請を申請しているため削除できません。休暇申請を取下してください。</MessageBody>
+	</Message>
+	<Message key="TMW0332">
+		<MessageBody>付与日：%1%は有効日：%2%に有給休暇手動付与を作成しているため削除できません。</MessageBody>
+	</Message>
+	<Message key="TMW0333">
+		<MessageBody>%1%は%2%が異なるため%3%できません。</MessageBody>
+	</Message>
+	<Message key="TMW0334">
+		<MessageBody>%1%は全日の振替休日ではないため、全日の振替及び休日出勤は出来ません。申請区分または範囲を選択し直してください。</MessageBody>
+	</Message>
+	<Message key="TMW0335">
+		<MessageBody>%1%は勤務形態が異なるため申請できません。勤怠詳細ではなく、勤務形態変更申請より出勤日と振替日の勤務形態を同一にしてください</MessageBody>
+	</Message>
+	<Message key="TMW0336">
+		<MessageBody>%1%を決定してください。</MessageBody>
+	</Message>
+	<Message key="TMW0337">
+		<MessageBody>先に%1%の勤怠を削除してください。</MessageBody>
+	</Message>
+	<Message key="TMW0338">
+		<MessageBody>%1%は申請により休暇となるので%2%の申請及び下書を行うことはできません。</MessageBody>
+	</Message>
+	<Message key="TMW0339">
+		<MessageBody>%1%は既に社員コード：%2%に付与されています。付与日または社員コードを選択し直してください。</MessageBody>
+	</Message>
+	<Message key="TMW0340">
+		<MessageBody>%1%は勤務形態の時間内(%2%:%3%～%4%:%5%)に申請してください。</MessageBody>
+	</Message>
+	<Message key="TMW0341">
+		<MessageBody>終業時刻が翌日の始業時刻を超えています。確認してください。</MessageBody>
+	</Message>
 	
 	<!-- Information -->
 	<Message key="TMI0001">
@@ -376,6 +413,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<Message key="TMI0003">
 		<MessageBody>%1%\n確認して下さい。</MessageBody>
 	</Message>
+	<Message key="TMI0004">
+		<MessageBody>%1%に%2%を%3%しました。</MessageBody>
+	</Message>
+	<Message key="TMI0005">
+		<MessageBody>(下書/申請はまだ完了していません。)</MessageBody>
+	</Message>
+	<Message key="TMI0006">
+		<MessageBody>振替日の勤怠が既に下書されている場合は、削除されます。</MessageBody>
+	</Message>
+	<Message key="TMI0011">
+		<MessageBody>%1%の「%2%」の表示欄に反映される時間です。</MessageBody>
+	</Message>
+	<Message key="TMI0012">
+		<MessageBody>この時間を超えると、%1%の「%2%」に%3%色で時間が表示されます。</MessageBody>
+	</Message>
+	
 	<!-- Question -->
 	<Message key="TMQ3001">
 		<MessageBody>%1%年%2%月の%3%をします。よろしいですか。</MessageBody>

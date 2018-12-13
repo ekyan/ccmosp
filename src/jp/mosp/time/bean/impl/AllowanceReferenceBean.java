@@ -38,7 +38,7 @@ public class AllowanceReferenceBean extends PlatformBean implements AllowanceRef
 	/**
 	 * 勤怠データ手当データマスタDAOクラス。<br>
 	 */
-	AllowanceDaoInterface	dao;
+	AllowanceDaoInterface dao;
 	
 	
 	/**

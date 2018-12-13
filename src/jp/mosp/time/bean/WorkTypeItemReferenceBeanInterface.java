@@ -51,4 +51,33 @@ public interface WorkTypeItemReferenceBeanInterface {
 	 */
 	WorkTypeItemDtoInterface findForKey(String workTypeCode, Date activateDate, String workTypeItemCode)
 			throws MospException;
+	
+	/**
+	 * 勤務時間計算
+	 * @param startWorkTime 始業時間
+	 * @param endWorkTime 終業時間
+	 * @param restTime 休憩時間
+	 * @return	勤務時間
+	 */
+	int getWorkTime(Date startWorkTime, Date endWorkTime, int restTime);
+	
+	/**
+	 * 休憩時間計算(総合)
+	 * @param rest1 休憩1
+	 * @param rest2 休憩2
+	 * @param rest3 休憩3
+	 * @param rest4 休憩4
+	 * @return 休憩時間
+	 */
+	int getRestTime(int rest1, int rest2, int rest3, int rest4);
+	
+	/**
+	 * 差分時間を取得
+	 * @param startTimeHour 開始時間(時)
+	 * @param startTimeMinute 開始時間(分)
+	 * @param endTimeHour 終了時間(時)
+	 * @param endTimeMinute 終了時間(分)
+	 * @return 差分(分単位)
+	 */
+	int getDifferenceTime(String startTimeHour, String startTimeMinute, String endTimeHour, String endTimeMinute);
 }

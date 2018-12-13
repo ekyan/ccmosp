@@ -26,6 +26,7 @@ import = "jp.mosp.framework.constant.MospConst"
 import = "jp.mosp.framework.base.MospParams"
 import = "jp.mosp.framework.utils.HtmlUtility"
 import = "jp.mosp.platform.constant.PlatformConst"
+import = "jp.mosp.platform.utils.PlatformNamingUtility"
 import = "jp.mosp.platform.human.action.BasicNewCardAction"
 import = "jp.mosp.platform.human.vo.BasicNewCardVo"
 import = "jp.mosp.platform.human.action.HumanInfoAction"
@@ -46,9 +47,16 @@ BasicNewCardVo vo = (BasicNewCardVo)params.getVo();
 			<input type="text" class="Number2RequiredTextBox" id="txtActivateDay" name="txtActivateDay" value="<%= HtmlUtility.escapeHTML(vo.getTxtActivateDay()) %>" />&nbsp;<label for="txtActivateDay"><%= params.getName("Day") %></label>
 			<button type="button" class="Name2Button" onclick="submitForm(event, 'tdActivateDate', null, '<%= BasicNewCardAction.CMD_SET_ACTIVATION_DATE %>')"><%= vo.getModeActivateDate().equals(PlatformConst.MODE_ACTIVATE_DATE_FIXED) ? params.getName("Change") : params.getName("Decision") %></button>
 		</td>
-		<td class="TitleTd"><span class="RequiredLabel">*&nbsp;</span><span><label for="txtEmployeeCode"><%= params.getName("Employee") %><%= params.getName("Code") %></label></span></td>
-		<td class="InputTd">
+		<td class="TitleTd"><span class="RequiredLabel">*&nbsp;</span><span><label for="txtEmployeeCode"><%= PlatformNamingUtility.employeeCode(params) %></label></span></td>
+		<td class="InputTd" id="tdEmployeeCode">
 			<input type="text" class="Code10RequiredTextBox" id="txtEmployeeCode" name="txtEmployeeCode" value="<%= HtmlUtility.escapeHTML(vo.getTxtEmployeeCode()) %>" />
+<%
+if (vo.isNeedNumberingButton()) {
+%>
+			<button type="button" class="Name4Button" onclick="submitTransfer(event, 'tdEmployeeCode', null, null, '<%= BasicNewCardAction.CMD_AUTO_NUMBERING %>')"><%= PlatformNamingUtility.autoNumbering(params) %></button>
+<%
+}
+%>
 		</td>
 	</tr>
 	<tr>
@@ -74,7 +82,7 @@ BasicNewCardVo vo = (BasicNewCardVo)params.getVo();
 		</select></td>
 	</tr>
 	<tr>
-		<td class="TitleTd"><span><label for="pltEmploymentName"><%= params.getName("EmploymentContract") %><%= params.getName("Type") %></label></span></td>
+		<td class="TitleTd"><span><label for="pltEmploymentName"><%= params.getName("EmploymentContract") %></label></span></td>
 		<td class="InputTd"><select class="Name15PullDown" id="pltEmploymentName" name="pltEmploymentName">
 			<%= HtmlUtility.getSelectOption(vo.getAryPltEmployment(), vo.getPltEmploymentName()) %>
 		</select></td>
@@ -95,6 +103,11 @@ if (vo.getNeedPost()) {
 		</td>
 		<td class="Blank" colspan="2"></td>
 	</tr>
+<%
+}
+for (String extraJsp : vo.getExtraJspList()) {
+%>
+	<jsp:include page="<%= extraJsp %>" flush="false" />
 <%
 }
 %>

@@ -141,10 +141,7 @@ public class PlatformMessageConst {
 	 * 該当項目が存在しない時のメッセージコード。<br>
 	 */
 	public static final String	MSG_NO_ITEM										= "PFW0201";
-	/**
-	 * 社員の状態確認(否定)時のメッセージコード。<br>
-	 */
-	public static final String	MSG_EMPLOYEE_IS_NOT								= "PFW0203";
+	
 	/**
 	 * 既に登録している情報の二重登録エラーメッセージコード。<br>
 	 */
@@ -173,14 +170,6 @@ public class PlatformMessageConst {
 	 * 有効日以前の情報が存在しない場合の警告メッセージ。<br>
 	 */
 	public static final String	MSG_NO_CODE_BEFORE_DATE							= "PFW0210";
-	/**
-	 * 必須ロールコードを設定してるユーザが存在しなくなる場合の警告メッセージ。<br>
-	 */
-	public static final String	MSG_DISAPPEAR_NEEDED_ROLE						= "PFW0211";
-	/**
-	 * 入社していないためユーザが作成できない場合の警告メッセージ。<br>
-	 */
-	public static final String	MSG_NOT_ENTERED_FOR_ACCOUNT						= "PFW0212";
 	
 	/**
 	 * 対象日時点で無効の場合のマスタ確認エラーメッセージ。<br>
@@ -258,10 +247,7 @@ public class PlatformMessageConst {
 	 * 決定した日付時点で退職日を過ぎている社員の社員はコードが入力されている場合のエラーメッセージ。<br>
 	 */
 	public static final String	MSG_NOT_RETIREMENT_EMPLOYEES					= "PFW0231";
-	/**
-	 * 対象日における履歴情報が存在しない場合のエラーメッセージ。<br>
-	 */
-	public static final String	MSG_HISTORY_NOT_EXIST							= "PFW0232";
+	
 	/**
 	 * 検索条件が指定されていない場合のエラーメッセージ。<br>
 	 */
@@ -275,30 +261,6 @@ public class PlatformMessageConst {
 	 * 認証不正時のメッセージコード。<br>
 	 */
 	public static final String	MSG_AUTH_FAILED									= "PFW9111";
-	/**
-	 * パスワード内容確認時のメッセージコード。<br>
-	 */
-	public static final String	MSG_PASSWORD_CONFIRMATION						= "PFW9112";
-	/**
-	 * パスワード期限チェック時のメッセージコード。<br>
-	 */
-	public static final String	MSG_PASSWORD_LIMIT								= "PFW9113";
-	/**
-	 * 旧パスワード入力エラー時のメッセージコード。<br>
-	 */
-	public static final String	MSG_OLD_PASSWORD								= "PFW9114";
-	/**
-	 * 新しいパスワードとパスワード入力確認が異なる場合のメッセージコード。<br>
-	 */
-	public static final String	MSG_PASSWORD_NOT_CONFIRMED						= "PFW9115";
-	/**
-	 * パスワード文字種の妥当性が確認できなかった場合のメッセージコード。<br>
-	 */
-	public static final String	MSG_CHAR_PASSWORD_ERR							= "PFW9116";
-	/**
-	 * パスワードが初期パスワードと同じであった場合のメッセージコード。<br>
-	 */
-	public static final String	MSG_INIT_PASSWORD_INVALID						= "PFW9117";
 	/**
 	 * 個人基本情報削除時のメッセージコード。<br>
 	 */
@@ -320,6 +282,14 @@ public class PlatformMessageConst {
 	 * インポート時メッセージコード。<br>
 	 */
 	public static final String	MSG_IMPORT_SUCCEED								= "PFI0004";
+	/**
+	 * 処理失敗時メッセージコード。<br>
+	 */
+	public static final String	MSG_PROCESS_FAILED_2							= "PFI0005";
+	/**
+	 * 処理失敗時メッセージコード。<br>
+	 */
+	public static final String	MSG_PROCESS_FAILED_3							= "PFI0006";
 	/**
 	 * データ情報が存在しない際のメッセージコード。<br>
 	 */
@@ -346,6 +316,11 @@ public class PlatformMessageConst {
 	 * 人事汎用情報をインポート際、有効日を対象社員有効日前にした場合のエラーメッセージコード
 	 */
 	public static final String	MSG_HUMAN_GENERAL_IMPORT_BEFORE_ACTIVATE_DATE	= "HG0002";
+	
+	/**
+	 * 人事汎用情報をインポート際、入力値が正しくない場合のエラーメッセージコード
+	 */
+	public static final String	MSG_HUMAN_GENERAL_IMPORT_NOT_INPUT				= "HG0003";
 	
 	/**
 	 * 人事汎用管理：バイナリ情報の画像用拡張子メッセージコード。<br>

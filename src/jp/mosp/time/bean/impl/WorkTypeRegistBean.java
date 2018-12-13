@@ -29,6 +29,7 @@ import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.base.MospParams;
 import jp.mosp.platform.base.PlatformBean;
 import jp.mosp.platform.base.PlatformDtoInterface;
+import jp.mosp.platform.utils.PlatformNamingUtility;
 import jp.mosp.time.bean.WorkTypeRegistBeanInterface;
 import jp.mosp.time.constant.TimeMessageConst;
 import jp.mosp.time.dao.settings.ScheduleDateDaoInterface;
@@ -45,7 +46,22 @@ public class WorkTypeRegistBean extends PlatformBean implements WorkTypeRegistBe
 	/**
 	 * 勤務形態マスタDAOクラス。<br>
 	 */
-	WorkTypeDaoInterface	dao;
+	WorkTypeDaoInterface		dao;
+	
+	/**
+	 * 項目長(勤務形態コード)。<br>
+	 */
+	protected static final int	LEN_WORK_TYPE_CODE	= 10;
+	
+	/**
+	 * 項目長(勤務形態名)。<br>
+	 */
+	protected static final int	LEN_WORK_TYPE_NAME	= 15;
+	
+	/**
+	 * 項目長(勤務形態略称)(バイト数)。<br>
+	 */
+	protected static final int	LEN_WORK_TYPE_ABBR	= 6;
 	
 	
 	/**
@@ -205,6 +221,39 @@ public class WorkTypeRegistBean extends PlatformBean implements WorkTypeRegistBe
 	}
 	
 	/**
+	 * 入力項目の桁数や型を確認する。<br>
+	 * @param dto 勤務形態情報
+	 */
+	public void checkValidate(WorkTypeDtoInterface dto) {
+		// 有効日
+		checkRequired(dto.getActivateDate(), PlatformNamingUtility.activateDate(mospParams), null);
+		// 勤務形態コード
+		String workTypeCode = mospParams.getName("Work", "Form", "Code");
+		checkRequired(dto.getWorkTypeCode(), workTypeCode, null);
+		if (mospParams.hasErrorMessage()) {
+			return;
+		}
+		checkLength(dto.getWorkTypeCode(), LEN_WORK_TYPE_CODE, workTypeCode, null);
+		checkTypeCode(dto.getWorkTypeCode(), workTypeCode, null);
+		// 勤務形態名称 妥当性チェック(桁数)
+		String workTypeName = mospParams.getName("Work", "Form", "Name");
+		checkRequired(dto.getWorkTypeName(), workTypeName, null);
+		if (mospParams.hasErrorMessage()) {
+			return;
+		}
+		checkLength(dto.getWorkTypeName(), LEN_WORK_TYPE_NAME, workTypeName, null);
+		// 勤務形態略称 妥当性チェック(桁数)
+		String workTypeAbbr = mospParams.getName("Work", "Form", "Abbreviation");
+		checkRequired(dto.getWorkTypeAbbr(), workTypeAbbr, null);
+		if (mospParams.hasErrorMessage()) {
+			return;
+		}
+		checkByteLength(dto.getWorkTypeAbbr(), LEN_WORK_TYPE_ABBR, workTypeAbbr, null);
+		// 型確認(有効/無効フラグ)
+		checkInactivateFlag(dto.getInactivateFlag(), null);
+	}
+	
+	/**
 	 * 新規登録時の確認処理を行う。<br>
 	 * @param dto 対象DTO
 	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
@@ -314,7 +363,8 @@ public class WorkTypeRegistBean extends PlatformBean implements WorkTypeRegistBe
 	 * @param dto 対象DTO
 	 */
 	protected void validate(WorkTypeDtoInterface dto) {
-		// TODO 妥当性確認
+		// 妥当性確認
+		checkValidate(dto);
 	}
 	
 	/**

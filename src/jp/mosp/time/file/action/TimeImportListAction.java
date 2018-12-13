@@ -19,21 +19,36 @@ package jp.mosp.time.file.action;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import jp.mosp.framework.base.MospException;
+import jp.mosp.framework.constant.MospConst;
+import jp.mosp.framework.utils.DateUtility;
 import jp.mosp.orangesignal.OrangeSignalUtility;
+import jp.mosp.platform.bean.file.ImportBeanInterface;
+import jp.mosp.platform.bean.workflow.WorkflowIntegrateBeanInterface;
+import jp.mosp.platform.bean.workflow.WorkflowRegistBeanInterface;
+import jp.mosp.platform.constant.PlatformConst;
 import jp.mosp.platform.dto.file.ImportDtoInterface;
+import jp.mosp.platform.dto.workflow.WorkflowDtoInterface;
 import jp.mosp.platform.file.base.ImportListAction;
 import jp.mosp.platform.file.vo.ImportListVo;
 import jp.mosp.time.base.TimeBeanHandlerInterface;
 import jp.mosp.time.base.TimeReferenceBeanHandlerInterface;
 import jp.mosp.time.bean.ApplicationReferenceBeanInterface;
 import jp.mosp.time.bean.AttendanceRegistBeanInterface;
+import jp.mosp.time.bean.AttendanceTransactionRegistBeanInterface;
 import jp.mosp.time.bean.CutoffReferenceBeanInterface;
+import jp.mosp.time.bean.GoOutRegistBeanInterface;
 import jp.mosp.time.bean.HolidayDataRegistBeanInterface;
 import jp.mosp.time.bean.PaidHolidayDataRegistBeanInterface;
+import jp.mosp.time.bean.RestRegistBeanInterface;
 import jp.mosp.time.bean.StockHolidayDataRegistBeanInterface;
 import jp.mosp.time.bean.TimeSettingReferenceBeanInterface;
+import jp.mosp.time.bean.WorkTypeItemRegistBeanInterface;
+import jp.mosp.time.bean.WorkTypeReferenceBeanInterface;
+import jp.mosp.time.bean.WorkTypeRegistBeanInterface;
 import jp.mosp.time.constant.TimeConst;
 import jp.mosp.time.constant.TimeFileConst;
 import jp.mosp.time.dto.settings.ApplicationDtoInterface;
@@ -43,8 +58,9 @@ import jp.mosp.time.dto.settings.HolidayDataDtoInterface;
 import jp.mosp.time.dto.settings.PaidHolidayDataDtoInterface;
 import jp.mosp.time.dto.settings.StockHolidayDataDtoInterface;
 import jp.mosp.time.dto.settings.TimeSettingDtoInterface;
-import jp.mosp.time.dto.settings.TimelyPaidHolidayDtoInterface;
 import jp.mosp.time.dto.settings.TotalTimeDataDtoInterface;
+import jp.mosp.time.dto.settings.WorkTypeDtoInterface;
+import jp.mosp.time.dto.settings.WorkTypeItemDtoInterface;
 
 /**
  * 勤怠情報インポートの実行。インポートマスタの管理を行う。<br>
@@ -122,7 +138,7 @@ public class TimeImportListAction extends ImportListAction {
 	 * ラジオボタンで選択されているインポートマスタの情報を取得し、
 	 * マスタ内の項目を用いて参照ファイルのテンプレートを表計算ファイルで出力する。<br>
 	 */
-	public static final String					CMD_TEMP_OUTPUT	= "TM3186";
+	public static final String					CMD_TEMP_OUTPUT	= "TM3286";
 	
 	/**
 	 * MosP勤怠管理用BeanHandler。
@@ -172,7 +188,9 @@ public class TimeImportListAction extends ImportListAction {
 			prepareVo();
 			page();
 		} else if (mospParams.getCommand().equals(CMD_TEMP_OUTPUT)) {
-			// TODO テンプレート出力
+			// テンプレート出力
+			prepareVo();
+			tempOutput();
 		}
 	}
 	
@@ -192,6 +210,8 @@ public class TimeImportListAction extends ImportListAction {
 		vo.setSortCommand(CMD_SORT);
 		// 実行コマンド設定
 		vo.setExecuteCommand(CMD_EXECUTION);
+		// テンプレート出力コマンド設定
+		vo.setTemplateOutputCommand(CMD_TEMP_OUTPUT);
 		// ページ繰り設定
 		setPageInfo(CMD_PAGE, getListLength());
 	}
@@ -201,9 +221,9 @@ public class TimeImportListAction extends ImportListAction {
 	 * @throws MospException プルダウンの取得に失敗した場合
 	 */
 	protected void show() throws MospException {
-		// エクスポート一覧共通JSP用コマンド及びデータ区分をVOに設定
+		// インポート一覧共通JSP用コマンド及びデータ区分をVOに設定
 		setImportListInfo();
-		// エクスポート一覧共通VO初期値設定
+		// インポート一覧共通VO初期値設定
 		initImportListVoFields();
 	}
 	
@@ -215,8 +235,6 @@ public class TimeImportListAction extends ImportListAction {
 		// 勤怠管理参照用BeanHandler取得(ExportListActionでは扱わないためクラスを指定して取得)
 		time = (TimeBeanHandlerInterface)createHandler(TimeBeanHandlerInterface.class);
 		timeReference = (TimeReferenceBeanHandlerInterface)createHandler(TimeReferenceBeanHandlerInterface.class);
-		// アップロードファイルの取得(アップロードファイルはinputStreamReaderで提供される)
-		List<String[]> csvList = OrangeSignalUtility.parse(mospParams.getRequestFile(PRM_FIL_IMPORT));
 		// VO準備
 		ImportListVo vo = (ImportListVo)mospParams.getVo();
 		// インポートマスタ取得及び確認
@@ -226,26 +244,8 @@ public class TimeImportListAction extends ImportListAction {
 			addInsertFailedMessage();
 			return;
 		}
-		// データ区分確認
-		if (TimeFileConst.CODE_IMPORT_TYPE_TMD_ATTENDANCE.equals(importDto.getImportTable())) {
-			// 勤怠データ
-			importAttendance(importDto, csvList);
-		} else if (TimeFileConst.CODE_IMPORT_TYPE_TMD_TOTAL_TIME.equals(importDto.getImportTable())) {
-			// 勤怠集計データ
-			importTotalTime(importDto, csvList);
-		} else if (TimeFileConst.CODE_IMPORT_TYPE_TMD_PAID_HOLIDAY.equals(importDto.getImportTable())) {
-			// 有給休暇データ
-			importPaidHoliday(importDto, csvList);
-		} else if (TimeFileConst.CODE_IMPORT_TYPE_TMD_STOCK_HOLIDAY.equals(importDto.getImportTable())) {
-			// ストック休暇データ
-			importStockHoliday(importDto, csvList);
-		} else if (TimeFileConst.CODE_IMPORT_TYPE_TIMELY_PAID_HOLIDAY.equals(importDto.getImportTable())) {
-			// 時間単位有給休暇データ
-			importTimelyHoliday(importDto, csvList);
-		} else if (TimeFileConst.CODE_IMPORT_TYPE_TMD_HOLIDAY.equals(importDto.getImportTable())) {
-			// 休暇データ
-			importHoliday(importDto, csvList);
-		}
+		// データ区分ごとにインポート処理実行
+		registImportFile(importDto);
 		// 履歴追加結果確認
 		if (mospParams.hasErrorMessage()) {
 			// 登録失敗メッセージ設定
@@ -256,6 +256,47 @@ public class TimeImportListAction extends ImportListAction {
 		commit();
 		// 履歴追加成功メッセージ設定
 		addInsertMessage();
+	}
+	
+	/**
+	 * インポートファイル登録処理
+	 * @param importDto インポートマスタDTO
+	 * @throws MospException インポートに失敗した場合
+	 */
+	protected void registImportFile(ImportDtoInterface importDto) throws MospException {
+		// データ区分確認
+		if (TimeFileConst.CODE_IMPORT_TYPE_TMD_ATTENDANCE.equals(importDto.getImportTable())) {
+			// 勤怠データ
+			importAttendance(importDto, OrangeSignalUtility.parse(mospParams.getRequestFile(PRM_FIL_IMPORT)));
+		} else if (TimeFileConst.CODE_IMPORT_TYPE_TMD_ATTENDANCE_SELF.equals(importDto.getImportTable())) {
+			// 勤怠データ【自己承認】
+			importAttendanceSelf(importDto, OrangeSignalUtility.parse(mospParams.getRequestFile(PRM_FIL_IMPORT)));
+		} else if (TimeFileConst.CODE_IMPORT_TYPE_TMD_TOTAL_TIME.equals(importDto.getImportTable())) {
+			// 勤怠集計データ
+			importTotalTime(importDto, OrangeSignalUtility.parse(mospParams.getRequestFile(PRM_FIL_IMPORT)));
+		} else if (TimeFileConst.CODE_IMPORT_TYPE_TMD_PAID_HOLIDAY.equals(importDto.getImportTable())) {
+			// 有給休暇データ
+			importPaidHoliday(importDto, OrangeSignalUtility.parse(mospParams.getRequestFile(PRM_FIL_IMPORT)));
+		} else if (TimeFileConst.CODE_IMPORT_TYPE_TMD_STOCK_HOLIDAY.equals(importDto.getImportTable())) {
+			// ストック休暇データ
+			importStockHoliday(importDto, OrangeSignalUtility.parse(mospParams.getRequestFile(PRM_FIL_IMPORT)));
+		} else if (TimeFileConst.CODE_IMPORT_TYPE_TMD_HOLIDAY.equals(importDto.getImportTable())) {
+			// 休暇データ
+			importHoliday(importDto, OrangeSignalUtility.parse(mospParams.getRequestFile(PRM_FIL_IMPORT)));
+		} else if (TimeFileConst.CODE_IMPORT_TYPE_TMD_HOLIDAY_REQUEST.equals(importDto.getImportTable())) {
+			// 休暇申請データ【自己承認】
+			ImportBeanInterface importBean = time.holidayRequestImport();
+			importBean.importFile(importDto, mospParams.getRequestFile(PRM_FIL_IMPORT));
+		} else if (TimeFileConst.CODE_IMPORT_TYPE_TMD_WORK_ON_HOLIDAY_REQUEST.equals(importDto.getImportTable())
+				|| TimeFileConst.CODE_IMPORT_TYPE_TMD_WORK_ON_HOLIDAY_REQUEST_SUBSTITUTE_OFF
+					.equals(importDto.getImportTable())) {
+			// 振替出勤申請データ【自己承認】または休日出勤申請データ【自己承認】
+			ImportBeanInterface importBean = time.workOnHolidayRequestImport();
+			importBean.importFile(importDto, mospParams.getRequestFile(PRM_FIL_IMPORT));
+		} else if (TimeFileConst.CODE_IMPORT_TYPE_TMD_WORK_TYPE.equals(importDto.getImportTable())) {
+			// 勤務形態データ
+			importWorkType(importDto, OrangeSignalUtility.parse(mospParams.getRequestFile(PRM_FIL_IMPORT)));
+		}
 	}
 	
 	/**
@@ -299,6 +340,74 @@ public class TimeImportListAction extends ImportListAction {
 	}
 	
 	/**
+	 * 勤怠データ【自己承認】をインポートする。<br>
+	 * @param dto 対象DTO
+	 * @param csvList インポート対象データリスト
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	protected void importAttendanceSelf(ImportDtoInterface dto, List<String[]> csvList) throws MospException {
+		// Beanを準備
+		WorkflowRegistBeanInterface workflowRegist = platform().workflowRegist();
+		WorkflowIntegrateBeanInterface workflowIntegrate = reference().workflowIntegrate();
+		AttendanceRegistBeanInterface regist = time.attendanceRegist();
+		RestRegistBeanInterface restRegist = time.restRegist();
+		GoOutRegistBeanInterface goOutRegist = time.goOutRegist();
+		AttendanceTransactionRegistBeanInterface transactionRegist = time.attendanceTransactionRegist();
+		// 勤怠データ
+		List<AttendanceDtoInterface> list = timeReference.importTable().getAttendanceList(dto.getImportCode(), csvList);
+		if (mospParams.hasErrorMessage() || list.isEmpty()) {
+			return;
+		}
+		for (AttendanceDtoInterface attendanceDto : list) {
+			// エラー確認
+			if (mospParams.hasErrorMessage()) {
+				continue;
+			}
+			// 休憩削除
+			restRegist.delete(attendanceDto.getPersonalId(), attendanceDto.getWorkDate(), attendanceDto.getTimesWork());
+			// エラー確認
+			if (mospParams.hasErrorMessage()) {
+				continue;
+			}
+			// 外出等削除
+			goOutRegist.delete(attendanceDto.getPersonalId(), attendanceDto.getWorkDate(),
+					attendanceDto.getTimesWork());
+			// エラー確認
+			if (mospParams.hasErrorMessage()) {
+				continue;
+			}
+			// 始業・終業必須チェック
+			regist.checkTimeExist(attendanceDto);
+			// 妥当性チェック
+			regist.checkValidate(attendanceDto);
+			// 申請の相関チェック
+			regist.checkAppli(attendanceDto);
+			// ワークフロー情報取得
+			WorkflowDtoInterface workflowDto = workflowIntegrate.getLatestWorkflowInfo(attendanceDto.getWorkflow());
+			if (workflowDto == null) {
+				workflowDto = workflowRegist.getInitDto();
+			}
+			// 自己承認設定
+			workflowRegist.setSelfApproval(workflowDto);
+			// ワークフロー情報機能コード設定
+			workflowDto.setFunctionCode(TimeConst.CODE_FUNCTION_WORK_MANGE);
+			// ワークフロー申請
+			workflowDto = workflowRegist.appli(workflowDto, attendanceDto.getPersonalId(), attendanceDto.getWorkDate(),
+					PlatformConst.WORKFLOW_TYPE_TIME, null);
+			// エラー確認
+			if (mospParams.hasErrorMessage()) {
+				continue;
+			}
+			// ワークフロー番号設定
+			attendanceDto.setWorkflow(workflowDto.getWorkflow());
+			// 勤怠データ登録
+			regist.regist(attendanceDto);
+			// 勤怠トランザクション登録
+			transactionRegist.regist(attendanceDto);
+		}
+	}
+	
+	/**
 	 * 勤怠集計データをインポートする。<br>
 	 * @param importDto インポート情報
 	 * @param csvList   インポート対象データリスト
@@ -332,8 +441,8 @@ public class TimeImportListAction extends ImportListAction {
 			if (mospParams.hasErrorMessage()) {
 				return;
 			}
-			TimeSettingDtoInterface timeSettingDto = timeSetting.getTimeSettingInfo(
-					applicationDto.getWorkSettingCode(), dto.getCalculationDate());
+			TimeSettingDtoInterface timeSettingDto = timeSetting.getTimeSettingInfo(applicationDto.getWorkSettingCode(),
+					dto.getCalculationDate());
 			timeSetting.chkExistTimeSetting(timeSettingDto, dto.getCalculationDate());
 			if (mospParams.hasErrorMessage()) {
 				return;
@@ -360,14 +469,14 @@ public class TimeImportListAction extends ImportListAction {
 	protected void importPaidHoliday(ImportDtoInterface importDto, List<String[]> csvList) throws MospException {
 		PaidHolidayDataRegistBeanInterface regist = time.paidHolidayDataRegist();
 		// 有給休暇データ登録
-		List<PaidHolidayDataDtoInterface> list = timeReference.importTable().getPaidHolidayList(
-				importDto.getImportCode(), csvList);
+		List<PaidHolidayDataDtoInterface> list = timeReference.importTable()
+			.getPaidHolidayList(importDto.getImportCode(), csvList);
 		if (mospParams.hasErrorMessage() || list.isEmpty()) {
 			return;
 		}
 		for (PaidHolidayDataDtoInterface dto : list) {
-			PaidHolidayDataDtoInterface paidHolidayDataDto = timeReference.paidHolidayData().findForKey(
-					dto.getPersonalId(), dto.getActivateDate(), dto.getAcquisitionDate());
+			PaidHolidayDataDtoInterface paidHolidayDataDto = timeReference.paidHolidayData()
+				.findForKey(dto.getPersonalId(), dto.getActivateDate(), dto.getAcquisitionDate());
 			if (paidHolidayDataDto == null) {
 				// 有給休暇データ登録
 				regist.insert(dto);
@@ -387,14 +496,14 @@ public class TimeImportListAction extends ImportListAction {
 	protected void importStockHoliday(ImportDtoInterface importDto, List<String[]> csvList) throws MospException {
 		StockHolidayDataRegistBeanInterface regist = time.stockHolidayDataRegist();
 		// ストック休暇データ登録
-		List<StockHolidayDataDtoInterface> list = timeReference.importTable().getStockHolidayList(
-				importDto.getImportCode(), csvList);
+		List<StockHolidayDataDtoInterface> list = timeReference.importTable()
+			.getStockHolidayList(importDto.getImportCode(), csvList);
 		if (mospParams.hasErrorMessage() || list.isEmpty()) {
 			return;
 		}
 		for (StockHolidayDataDtoInterface dto : list) {
-			StockHolidayDataDtoInterface stockHolidayDataDto = timeReference.stockHolidayData().findForKey(
-					dto.getPersonalId(), dto.getActivateDate(), dto.getAcquisitionDate());
+			StockHolidayDataDtoInterface stockHolidayDataDto = timeReference.stockHolidayData()
+				.findForKey(dto.getPersonalId(), dto.getActivateDate(), dto.getAcquisitionDate());
 			if (stockHolidayDataDto == null) {
 				// ストック休暇データ登録
 				regist.insert(dto);
@@ -402,25 +511,6 @@ public class TimeImportListAction extends ImportListAction {
 				// ストック休暇データ更新
 				regist.update(dto);
 			}
-		}
-	}
-	
-	/**
-	 * 時間単位有給休暇データをインポートする。<br>
-	 * @param importDto インポート情報
-	 * @param csvList   インポート対象データリスト
-	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
-	 */
-	protected void importTimelyHoliday(ImportDtoInterface importDto, List<String[]> csvList) throws MospException {
-		// 時間単位有給休暇データ登録
-		List<TimelyPaidHolidayDtoInterface> list = timeReference.importTable().getTimelyPaidHolidayList(
-				importDto.getImportCode(), csvList);
-		if (mospParams.hasErrorMessage() || list.isEmpty()) {
-			return;
-		}
-		for (TimelyPaidHolidayDtoInterface dto : list) {
-			// 時間単位有給休暇データ登録
-			time.timelyPaidHolidayRegist().insert(dto);
 		}
 	}
 	
@@ -451,4 +541,106 @@ public class TimeImportListAction extends ImportListAction {
 		}
 	}
 	
+	/**
+	 * 勤務形態データをインポートする。<br>
+	 * 勤務形態項目でインポート対象でないでない項目は空白で登録する。<br>
+	 * @param importDto インポート情報
+	 * @param csvList インポート対象データリスト
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	protected void importWorkType(ImportDtoInterface importDto, List<String[]> csvList) throws MospException {
+		// 登録クラス取得
+		WorkTypeRegistBeanInterface regist = time.workTypeRegist();
+		WorkTypeItemRegistBeanInterface itemRegist = time.workTypeItemRegist();
+		// 勤務形態データ登録
+		Map<WorkTypeDtoInterface, Map<String, WorkTypeItemDtoInterface>> map = timeReference.importTable()
+			.getWorkType(importDto.getImportCode(), csvList);
+		// エラーメッセージがある又はマップがない場合
+		if (mospParams.hasErrorMessage() || map == null) {
+			return;
+		}
+		// 勤務形態 登録・更新
+		for (Entry<WorkTypeDtoInterface, Map<String, WorkTypeItemDtoInterface>> entry : map.entrySet()) {
+			// 勤務形態項目リスト準備
+			List<WorkTypeItemDtoInterface> itemList = new ArrayList<WorkTypeItemDtoInterface>();
+			// 勤務形態情報を取得
+			WorkTypeDtoInterface dto = entry.getKey();
+			// 勤務形態項目リスト取得
+			Map<String, WorkTypeItemDtoInterface> itemMap = entry.getValue();
+			// 勤務形態項目コード毎に処理
+			for (String itemCode : itemRegist.getCodesWorkTypeItem()) {
+				// 勤務形態項目情報取得
+				WorkTypeItemDtoInterface itemDto = itemMap.get(itemCode);
+				if (itemDto == null) {
+					itemDto = itemRegist.getInitDto();
+					itemDto.setActivateDate(dto.getActivateDate());
+					itemDto.setWorkTypeCode(dto.getWorkTypeCode());
+					itemDto.setWorkTypeItemCode(itemCode);
+					itemDto.setWorkTypeItemValue(DateUtility.getDefaultTime());
+					itemDto.setPreliminary("");
+					// 勤務前残業自動申請の場合
+					if (itemCode.equals(TimeConst.CODE_AUTO_BEFORE_OVERWORK)) {
+						// デフォルトを無効に設定
+						itemDto.setPreliminary(String.valueOf(MospConst.INACTIVATE_FLAG_ON));
+					}
+				}
+				// 同じ勤務形態項目データ取得
+				WorkTypeItemDtoInterface oldItemDto = timeReference.workTypeItem().findForKey(dto.getWorkTypeCode(),
+						itemDto.getActivateDate(), itemDto.getWorkTypeItemCode());
+				if (oldItemDto != null) {
+					// レコード識別ID設定
+					itemDto.setTmmWorkTypeItemId(oldItemDto.getTmmWorkTypeItemId());
+				}
+				// リスト追加
+				itemList.add(itemDto);
+			}
+			// クラス取得
+			WorkTypeReferenceBeanInterface workTypeRefer = timeReference.workType();
+			// 同じ勤務形態データ取得
+			WorkTypeDtoInterface workTypeDto = workTypeRefer.findForKey(dto.getWorkTypeCode(), dto.getActivateDate());
+			// 既存の情報が無い場合
+			if (workTypeDto == null) {
+				// 履歴取得
+				List<WorkTypeDtoInterface> list = workTypeRefer.getWorkTypeHistory(dto.getWorkTypeCode());
+				// 履歴が存在する場合
+				if (!list.isEmpty()) {
+					// 勤務形態マスタ 登録
+					regist.add(dto);
+					if (mospParams.hasErrorMessage()) {
+						return;
+					}
+					// 勤務形態項目 登録
+					itemRegist.add(itemList);
+					if (mospParams.hasErrorMessage()) {
+						return;
+					}
+				} else {
+					// 勤務形態マスタ 登録
+					regist.insert(dto);
+					if (mospParams.hasErrorMessage()) {
+						return;
+					}
+					// 勤務形態項目 登録
+					itemRegist.insert(itemList);
+					if (mospParams.hasErrorMessage()) {
+						return;
+					}
+				}
+			} else {
+				// 同じ勤務形態データがない場合
+				// レコード識別ID設定
+				dto.setTmmWorkTypeId(workTypeDto.getTmmWorkTypeId());
+				// 勤務形態マスタ 更新
+				regist.update(dto);
+				if (mospParams.hasErrorMessage()) {
+					return;
+				}
+				// 勤務形態項目 更新
+				itemRegist.update(itemList);
+				if (mospParams.hasErrorMessage()) {
+					return;
+				}
+			}
+		}
+	}
 }

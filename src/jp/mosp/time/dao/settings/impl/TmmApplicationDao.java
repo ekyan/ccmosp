@@ -151,7 +151,7 @@ public class TmmApplicationDao extends PlatformDao implements ApplicationDaoInte
 		dto.setEmploymentContractCode(getString(COL_EMPLOYMENT_CONTRACT_CODE));
 		dto.setSectionCode(getString(COL_SECTION_CODE));
 		dto.setPositionCode(getString(COL_POSITION_CODE));
-		dto.setPersonalId(getString(COL_PERSONAL_IDS));
+		dto.setPersonalIds(getString(COL_PERSONAL_IDS));
 		dto.setInactivateFlag(getInt(COL_INACTIVATE_FLAG));
 		mappingCommonInfo(dto);
 		return dto;
@@ -378,6 +378,7 @@ public class TmmApplicationDao extends PlatformDao implements ApplicationDaoInte
 			sb.append(equal(COL_APPLICATION_CODE));
 			sb.append(and());
 			sb.append(less(COL_ACTIVATE_DATE));
+			sb.append(getOrderByColumnDescLimit1(COL_ACTIVATE_DATE));
 			prepareStatement(sb.toString());
 			setParam(index++, applicationCode);
 			setParam(index++, activateDate);
@@ -492,8 +493,8 @@ public class TmmApplicationDao extends PlatformDao implements ApplicationDaoInte
 	}
 	
 	@Override
-	public ApplicationDtoInterface findForMaster(Date activateDate, String workPlaceCode,
-			String employmentContractCode, String sectionCode, String positionCode) throws MospException {
+	public ApplicationDtoInterface findForMaster(Date activateDate, String workPlaceCode, String employmentContractCode,
+			String sectionCode, String positionCode) throws MospException {
 		try {
 			index = 1;
 			StringBuffer sb = getSelectQuery(getClass());
@@ -667,7 +668,7 @@ public class TmmApplicationDao extends PlatformDao implements ApplicationDaoInte
 		setParam(index++, dto.getEmploymentContractCode());
 		setParam(index++, dto.getSectionCode());
 		setParam(index++, dto.getPositionCode());
-		setParam(index++, dto.getPersonalId());
+		setParam(index++, dto.getPersonalIds());
 		setParam(index++, dto.getInactivateFlag());
 		setCommonParams(baseDto, isInsert);
 	}
@@ -753,7 +754,8 @@ public class TmmApplicationDao extends PlatformDao implements ApplicationDaoInte
 	}
 	
 	@Override
-	public List<ApplicationDtoInterface> findForTerm(Date fromActivateDate, Date toActivateDate) throws MospException {
+	public List<ApplicationDtoInterface> findForCheckTerm(Date fromActivateDate, Date toActivateDate)
+			throws MospException {
 		try {
 			index = 1;
 			// SELECT文追加
@@ -781,6 +783,48 @@ public class TmmApplicationDao extends PlatformDao implements ApplicationDaoInte
 			}
 			if (toActivateDate != null) {
 				setParam(index++, toActivateDate);
+			}
+			// SQL実行
+			executeQuery();
+			// 結果取得
+			return mappingAll();
+		} catch (Throwable e) {
+			throw new MospException(e);
+		} finally {
+			releaseResultSet();
+			releasePreparedStatement();
+		}
+	}
+	
+	@Override
+	public List<ApplicationDtoInterface> findForTerm(Date startDate, Date endDate) throws MospException {
+		try {
+			index = 1;
+			// SELECT文追加
+			StringBuffer sb = getSelectQuery(getClass());
+			// WHERE句追加
+			sb.append(where());
+			// 削除されていない情報を取得
+			sb.append(deleteFlagOff());
+			// 有効日範囲による条件
+			if (startDate != null) {
+				sb.append(and());
+				sb.append(greaterEqual(COL_ACTIVATE_DATE));
+			}
+			if (endDate != null) {
+				sb.append(and());
+				sb.append(lessEqual(COL_ACTIVATE_DATE));
+			}
+			// ソート
+			sb.append(getOrderByColumn(COL_APPLICATION_CODE, COL_ACTIVATE_DATE));
+			// ステートメント準備
+			prepareStatement(sb.toString());
+			// パラメータ設定(有効日範囲による条件)
+			if (startDate != null) {
+				setParam(index++, startDate);
+			}
+			if (endDate != null) {
+				setParam(index++, endDate);
 			}
 			// SQL実行
 			executeQuery();

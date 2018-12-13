@@ -18,6 +18,12 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -->
 <MosP>
+	<MainMenu key="menuTop">
+		<Menu key="Top">
+			<Command>PF0040</Command>
+			<VoClass>jp.mosp.platform.portal.vo.PortalVo</VoClass>
+		</Menu>
+	</MainMenu>
 	<MainMenu key="menuHumanManage">
 		<Menu key="HumanList">
 			<Command>PF1110</Command>
@@ -56,6 +62,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		<Menu key="WorkPlaceMaster">
 			<Command>PF2500</Command>
 			<VoClass>jp.mosp.platform.system.vo.WorkPlaceMasterVo</VoClass>
+		</Menu>
+		<Menu key="SystemManagement">
+			<Command>PFSM2900</Command>
+			<VoClass>jp.mosp.platform.system.vo.SystemManagementVo</VoClass>
 		</Menu>
 	</MainMenu>
 	<MainMenu key="menuWorkflowManage">

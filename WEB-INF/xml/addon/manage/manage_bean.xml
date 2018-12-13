@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE MosP>
+<!--
+MosP - Mind Open Source Project    http://www.mosp.jp/
+Copyright (C) MIND Co., Ltd.       http://www.e-mind.co.jp/
+
+This program is free software: you can redistribute it and/or
+modify it under the terms of the GNU Affero General Public License
+as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<MosP>
+	
+	<!--BeanHandler-->
+	<Model key="MeBeanHandler">
+		jp.mosp.addon.manage.base.MeBeanHandler
+	</Model>
+	
+	<!--Reference-->
+	<Model key="MeMaster">
+		jp.mosp.addon.manage.bean.impl.MeMasterBean
+	</Model>
+	<Model key="MeTotalTypeReference">
+		jp.mosp.addon.manage.bean.impl.MeTotalTypeReferenceBean
+	</Model>
+	<Model key="MeCompanyReference">
+		jp.mosp.addon.manage.bean.impl.MeCompanyReferenceBean
+	</Model>
+	<Model key="MeProposeReference">
+		jp.mosp.addon.manage.bean.impl.MeProposeReferenceBean
+	</Model>
+	<Model key="MeAccountTitleReference">
+		jp.mosp.addon.manage.bean.impl.MeAccountTitleReferenceBean
+	</Model>
+	<Model key="MeSalesBudgetReference">
+		jp.mosp.addon.manage.bean.impl.MeSalesBudgetReferenceBean
+	</Model>
+	<Model key="MeSgaReference">
+		jp.mosp.addon.manage.bean.impl.MeSgaReferenceBean
+	</Model>
+	<Model key="MeAnalyzeEntity">
+		jp.mosp.addon.manage.bean.impl.MeAnalyzeEntityBean
+	</Model>
+	
+	<!-- Regist -->
+	<Model key="MeValidate">
+		jp.mosp.addon.manage.bean.impl.MeValidateBean
+	</Model>
+	<Model key="MeTotalTypeRegist">
+		jp.mosp.addon.manage.bean.impl.MeTotalTypeRegistBean
+	</Model>
+	<Model key="MeCompanyRegist">
+		jp.mosp.addon.manage.bean.impl.MeCompanyRegistBean
+	</Model>
+	<Model key="MeProposeRegist">
+		jp.mosp.addon.manage.bean.impl.MeProposeRegistBean
+	</Model>
+	<Model key="MeOrderRegist">
+		jp.mosp.addon.manage.bean.impl.MeOrderRegistBean
+	</Model>
+	<Model key="MeClaimRegist">
+		jp.mosp.addon.manage.bean.impl.MeClaimRegistBean
+	</Model>
+	<Model key="MeSalesBudgetRegist">
+		jp.mosp.addon.manage.bean.impl.MeSalesBudgetRegistBean
+	</Model>
+	<Model key="MeSgaRegist">
+		jp.mosp.addon.manage.bean.impl.MeSgaRegistBean
+	</Model>
+	
+	<!-- Search -->
+	<Model key="MeTotalTypeSearch">
+		jp.mosp.addon.manage.bean.impl.MeTotalTypeSearchBean
+	</Model>
+	<Model key="MeCompanySearch">
+		jp.mosp.addon.manage.bean.impl.MeCompanySearchBean
+	</Model>
+	<Model key="MeProposeSearch">
+		jp.mosp.addon.manage.bean.impl.MeProposeSearchBean
+	</Model>
+	
+	<!-- Import -->
+	<Model key="MeImportTableReference">
+		jp.mosp.addon.manage.bean.impl.MeImportTableReferenceBean
+	</Model>
+	
+</MosP>

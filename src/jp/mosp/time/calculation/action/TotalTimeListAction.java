@@ -20,25 +20,19 @@ package jp.mosp.time.calculation.action;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
 
 import jp.mosp.framework.base.BaseDtoInterface;
 import jp.mosp.framework.base.BaseVo;
 import jp.mosp.framework.base.MospException;
-import jp.mosp.framework.property.MospProperties;
-import jp.mosp.framework.utils.DateUtility;
-import jp.mosp.platform.bean.human.HumanReferenceBeanInterface;
+import jp.mosp.framework.constant.MospConst;
 import jp.mosp.platform.bean.system.SectionReferenceBeanInterface;
 import jp.mosp.platform.comparator.base.EmployeeCodeComparator;
-import jp.mosp.platform.constant.PlatformMessageConst;
 import jp.mosp.platform.utils.MonthUtility;
 import jp.mosp.time.base.TimeAction;
 import jp.mosp.time.base.TotalTimeBaseAction;
-import jp.mosp.time.bean.CutoffUtilBeanInterface;
 import jp.mosp.time.bean.SubordinateSearchBeanInterface;
 import jp.mosp.time.bean.TotalTimeCalcBeanInterface;
 import jp.mosp.time.bean.TotalTimeSearchBeanInterface;
-import jp.mosp.time.bean.TotalTimeTransactionRegistBeanInterface;
 import jp.mosp.time.calculation.vo.TotalTimeListVo;
 import jp.mosp.time.constant.TimeConst;
 import jp.mosp.time.dto.settings.CutoffErrorListDtoInterface;
@@ -275,6 +269,7 @@ public class TotalTimeListAction extends TotalTimeBaseAction {
 		search.setSectionCode(vo.getPltEditSection());
 		search.setPositionCode(vo.getPltEditPosition());
 		search.setApproval(vo.getPltEditApproval());
+		search.setApprovalBeforeDay(vo.getCkbYesterday());
 		search.setCalc(vo.getPltEditCalc());
 		search.setCutoffCode(vo.getCutoffCode());
 		// 検索条件をもとに検索クラスからマスタリストを取得
@@ -311,14 +306,22 @@ public class TotalTimeListAction extends TotalTimeBaseAction {
 		TotalTimeListVo vo = (TotalTimeListVo)mospParams.getVo();
 		// 譲渡Actionクラス名取得
 		String actionName = getTransferredAction();
+		// MosP処理情報に対象個人IDを設定
+		setTargetPersonalId(getSelectedPersonalId(getTransferredIndex()));
 		// 譲渡Actionクラス名毎に処理
 		if (actionName.equals(AttendanceHistoryAction.class.getName())) {
-			// MosP処理情報に対象個人IDを設定
-			setTargetPersonalId(vo.getAryPersonalId(getTransferredIndex()));
 			// MosP処理情報に対象日を設定(対象年月初日)
 			setTargetDate(MonthUtility.getYearMonthDate(vo.getTargetYear(), vo.getTargetMonth()));
 			// 勤怠集計修正履歴画面へ遷移(連続実行コマンド設定)
 			mospParams.setNextCommand(AttendanceHistoryAction.CMD_SELECT_SHOW_TOTAL);
+		} else if (actionName.equals(TotalTimeCardAction.class.getName())) {
+			// MosP処理情報に締日コードを設定
+			setTargetCutoffCode(vo.getCutoffCode());
+			// MosP処理情報に対象年月を設定
+			setTargetYear(vo.getTargetYear());
+			setTargetMonth(vo.getTargetMonth());
+			// 勤怠集計修正履歴画面へ遷移(連続実行コマンド設定)
+			mospParams.setNextCommand(TotalTimeCardAction.CMD_SELECT_SHOW);
 		}
 	}
 	
@@ -333,98 +336,27 @@ public class TotalTimeListAction extends TotalTimeBaseAction {
 		int targetYear = vo.getTargetYear();
 		int targetMonth = vo.getTargetMonth();
 		// 選択個人ID配列取得
-		String[] aryPersonalId = vo.getCkbSelect();
+		String[] aryPersonalId = getSelectedPersonalIds(vo.getCkbSelect());
 		// 締日コード取得
 		String cutoffCode = vo.getCutoffCode();
-		// 登録クラス取得
-		TotalTimeTransactionRegistBeanInterface regist = time().totalTimeTransactionRegist();
 		// 集計クラス取得
 		TotalTimeCalcBeanInterface calc = time().totalTimeCalc();
-		// 集計クラスに計算情報を設定
-		calc.setCalculationInfo(targetYear, targetMonth, cutoffCode);
-		// 処理結果確認(集計クラス計算情報設定に失敗した場合)
+		// 仮締
+		List<CutoffErrorListDtoInterface> list = calc.tightening(aryPersonalId, targetYear, targetMonth, cutoffCode);
+		// 処理結果確認
 		if (mospParams.hasErrorMessage()) {
 			// 登録失敗メッセージ設定
 			addInsertFailedMessage();
 			return;
 		}
-		// エラーリスト準備
-		List<CutoffErrorListDtoInterface> errorList = new ArrayList<CutoffErrorListDtoInterface>();
-		// 個別仮締対象個人IDリスト準備
-		List<String> registerdPersonalId = new ArrayList<String>();
-		// 選択個人ID毎に処理
-		for (String personalId : aryPersonalId) {
-			// 勤怠集計処理
-			List<CutoffErrorListDtoInterface> list = calc.calc(personalId);
-			// 処理結果確認
-			if (mospParams.hasErrorMessage()) {
-				// 登録失敗メッセージ設定
-				addInsertFailedMessage();
-				return;
-			}
-			if (!list.isEmpty()) {
-				errorList.addAll(list);
-				continue;
-			}
-			registerdPersonalId.add(personalId);
-		}
-		// 締日コードが必要
-		time().totalTimeEmployeeTransactionRegist().draft(registerdPersonalId, targetYear, targetMonth, cutoffCode);
-		// 個別仮締結果確認
-		if (mospParams.hasErrorMessage()) {
-			// 仮締失敗メッセージ設定
-			addUpdateFailedMessage();
-			return;
-		}
-		// エラーリストがあるか取得する
-		if (!errorList.isEmpty()) {
-			// 仮締処理からlistが帰ってきたら集計時エラー内容参照画面へ遷移する
-			mospParams.addGeneralParam(TimeConst.PRM_TOTALTIME_ERROR, errorList);
+		// エラーリストがある場合
+		if (list.isEmpty() == false) {
+			// 仮締処理からlistが帰ってきたら集計時エラー内容参照画面へ遷移
+			mospParams.addGeneralParam(TimeConst.PRM_TOTALTIME_ERROR, list);
 			mospParams.addGeneralParam(TimeConst.PRM_TRANSFERRED_GENERIC_CODE, cutoffCode);
 			mospParams.addGeneralParam(TimeConst.PRM_TRANSFERRED_YEAR, targetYear);
 			mospParams.addGeneralParam(TimeConst.PRM_TRANSFERRED_MONTH, targetMonth);
 			mospParams.setNextCommand(CutoffErrorListAction.CMD_SHOW);
-			return;
-		}
-		// 締日ユーティリティを取得
-		CutoffUtilBeanInterface cutoffUtil = timeReference().cutoffUtil();
-		// 対象年月において対象締日コードが適用されている個人IDのセットを取得
-		Set<String> personalIdSet = cutoffUtil.getCutoffPersonalIdSet(cutoffCode, targetYear, targetMonth);
-		if (personalIdSet.isEmpty()) {
-			// メッセージ設定
-			addInsertFailedMessage();
-			mospParams.addErrorMessage(PlatformMessageConst.MSG_NO_ITEM, mospParams.getName("Employee"));
-			return;
-		}
-		boolean tentativeCutoff = true;
-		// 個人ID毎に処理
-		for (String personalId : personalIdSet) {
-			// 社員勤怠集計管理からレコードを取得
-			Integer state = timeReference().totalTimeEmployeeTransaction().getCutoffState(personalId, targetYear,
-					targetMonth);
-			// 社員勤怠集計管理情報が存在し、未締でない場合
-			if (state != null && state.intValue() != TimeConst.CODE_CUTOFF_STATE_NOT_TIGHT) {
-				continue;
-			}
-			tentativeCutoff = false;
-			break;
-		}
-		if (tentativeCutoff) {
-			// 勤怠集計管理からレコードを取得
-			TotalTimeDtoInterface dto = timeReference().totalTimeTransaction().findForKey(targetYear, targetMonth,
-					cutoffCode);
-			if (dto == null) {
-				dto = regist.getInitDto();
-			}
-			// DTOに値を設定
-			setDtoFields(dto);
-			// 仮締をセット
-			dto.setCutoffState(TimeConst.CODE_CUTOFF_STATE_TEMP_TIGHT);
-			regist.draft(dto);
-		}
-		if (mospParams.hasErrorMessage()) {
-			// 登録失敗メッセージ設定
-			addInsertFailedMessage();
 			return;
 		}
 		// コミット
@@ -433,6 +365,7 @@ public class TotalTimeListAction extends TotalTimeBaseAction {
 		addTighteningMessage();
 		// チェックボックス初期化
 		setCheckOff();
+		// 検索
 		search();
 	}
 	
@@ -443,48 +376,22 @@ public class TotalTimeListAction extends TotalTimeBaseAction {
 	protected void calc() throws MospException {
 		// VO準備
 		TotalTimeListVo vo = (TotalTimeListVo)mospParams.getVo();
-		// 対象年月取得
-		int targetYear = vo.getTargetYear();
-		int targetMonth = vo.getTargetMonth();
-		// 選択個人ID配列取得
-		String[] aryPersonalId = vo.getCkbSelect();
-		// 締日コード取得
-		String cutoffCode = vo.getCutoffCode();
-		// 集計クラス取得
-		TotalTimeCalcBeanInterface calc = time().totalTimeCalc();
-		// 集計クラスに計算情報を設定
-		calc.setCalculationInfo(targetYear, targetMonth, cutoffCode);
-		// 処理結果確認(集計クラス計算情報設定に失敗した場合)
-		if (mospParams.hasErrorMessage()) {
-			// 登録失敗メッセージ設定
-			addInsertFailedMessage();
-			return;
-		}
-		// 検索結果リスト準備
-		List<SubordinateListDtoInterface> list = new ArrayList<SubordinateListDtoInterface>();
-		// 部下一覧検索クラス取得
-		SubordinateSearchBeanInterface subordinateSearch = timeReference().subordinateSearch();
-		// 人事情報参照クラス取得
-		HumanReferenceBeanInterface humanRefer = reference().human();
-		// 選択個人ID毎に処理
-		for (String personalId : aryPersonalId) {
-			// 勤怠集計処理
-			TotalTimeDataDtoInterface dto = calc.getTotaledTimeData(personalId);
-			// 処理結果確認
-			if (mospParams.hasErrorMessage()) {
-				// 計算失敗メッセージ設定
-				addCalculateFailedMessage();
-				return;
-			}
-			// 部下一覧情報を取得しリストに設定
-			list.add(subordinateSearch.getSubordinateListDto(
-					humanRefer.getHumanInfo(personalId, vo.getCutoffTermTargetDate()), targetYear, targetMonth, dto,
-					"", ""));
-		}
-		if (list.isEmpty()) {
-			// 検索結果無しメッセージ設定
-			addNoSearchResultMessage();
-			return;
+		// 検索クラス取得
+		SubordinateSearchBeanInterface search = timeReference().subordinateSearch();
+		// 勤怠集計クラス取得
+		TotalTimeCalcBeanInterface total = time().totalTimeCalc();
+		// 選択された部下一覧情報のリストを取得
+		List<SubordinateListDtoInterface> list = getSelectedListDto();
+		// 選択された部下一覧情報毎に処理
+		for (SubordinateListDtoInterface dto : list) {
+			// 個人ID及び対象年月を取得
+			String personalId = dto.getPersonalId();
+			int targetYear = dto.getTargetYear();
+			int targetMonth = dto.getTargetMonth();
+			// 勤怠集計
+			TotalTimeDataDtoInterface totalTimeDataDto = total.calc(personalId, targetYear, targetMonth, true);
+			// 部下一覧情報に勤怠集計情報を設定
+			search.setTotalTimeData(dto, totalTimeDataDto);
 		}
 		// 検索結果リスト設定
 		vo.setList(list);
@@ -493,6 +400,13 @@ public class TotalTimeListAction extends TotalTimeBaseAction {
 		vo.setAscending(false);
 		// ソート
 		sort();
+		// チェックボックス初期化
+		setCheckOff();
+		// 検索結果確認
+		if (list.isEmpty()) {
+			// 検索結果無しメッセージ設定
+			addNoSearchResultMessage();
+		}
 	}
 	
 	/**
@@ -503,7 +417,7 @@ public class TotalTimeListAction extends TotalTimeBaseAction {
 		// VO準備
 		TotalTimeListVo vo = (TotalTimeListVo)mospParams.getVo();
 		// 選択個人ID配列取得
-		String[] aryPersonalId = vo.getCkbSelect();
+		String[] aryPersonalId = getSelectedPersonalIds(vo.getCkbSelect());
 		// 対象年月取得
 		int targetYear = vo.getTargetYear();
 		int targetMonth = vo.getTargetMonth();
@@ -590,6 +504,7 @@ public class TotalTimeListAction extends TotalTimeBaseAction {
 		vo.setTxtEditToEmployeeCode("");
 		vo.setTxtEditEmployeeName("");
 		vo.setJsCutoffState("");
+		vo.setCkbYesterday(MospConst.CHECKBOX_OFF);
 		vo.setJsSearchConditionRequired(isSearchConditionRequired());
 	}
 	
@@ -600,33 +515,26 @@ public class TotalTimeListAction extends TotalTimeBaseAction {
 	private void setPulldown() throws MospException {
 		// VO準備
 		TotalTimeListVo vo = (TotalTimeListVo)mospParams.getVo();
-		// プルダウン値設定
-		Date date;
-		if (getTransferredYear() == null) {
-			date = DateUtility.getSystemDate();
-		} else {
-			date = DateUtility.getDate(getTransferredYear(), getTransferredMonth(), "1");
-		}
-		String[][] aryWorkPlace = reference().workPlace().getNameSelectArray(date, true, null);
-		String[][] aryEmployment = reference().employmentContract().getNameSelectArray(date, true, null);
-		String[][] arySection = reference().section().getCodedSelectArray(date, true, null);
-		String[][] aryPosition = reference().position().getCodedSelectArray(date, true, null);
-		MospProperties properties = mospParams.getProperties();
-		String[][] aryApproval = properties.getCodeArray(TimeConst.CODE_NOT_APPROVED, true);
-		String[][] aryCalc = properties.getCodeArray(TimeConst.CODE_CUTOFFSTATE, true);
+		// 年月指定時の基準日を取得
+		Date targetDate = MonthUtility.getYearMonthTargetDate(vo.getTargetYear(), vo.getTargetMonth(), mospParams);
+		// プルダウン用配列を取得
+		String[][] aryWorkPlace = reference().workPlace().getNameSelectArray(targetDate, true, null);
+		String[][] aryEmployment = reference().employmentContract().getNameSelectArray(targetDate, true, null);
+		String[][] arySection = reference().section().getCodedSelectArray(targetDate, true, null);
+		String[][] aryPosition = reference().position().getCodedSelectArray(targetDate, true, null);
 		// プルダウンの設定
-		// 編集欄 勤務地
+		// 勤務地
 		vo.setAryPltEditWorkPlace(aryWorkPlace);
-		// 編集欄 雇用契約
+		// 雇用契約
 		vo.setAryPltEditEmployment(aryEmployment);
-		// 編集欄 所属
+		// 所属
 		vo.setAryPltEditSection(arySection);
-		// 編集欄 職位
+		// 職位
 		vo.setAryPltEditPosition(aryPosition);
-		// 検索欄 未承認
-		vo.setAryPltEditApproval(aryApproval);
-		// 検索欄 未集計
-		vo.setAryPltEditCalc(aryCalc);
+		// 未承認
+		vo.setAryPltEditApproval(getCodeArray(TimeConst.CODE_NOT_APPROVED, true));
+		// 未集計
+		vo.setAryPltEditCalc(getCodeArray(TimeConst.CODE_CUTOFFSTATE, true));
 	}
 	
 	/**
@@ -762,7 +670,7 @@ public class TotalTimeListAction extends TotalTimeBaseAction {
 		// VO準備
 		TotalTimeListVo vo = (TotalTimeListVo)mospParams.getVo();
 		// 個人ID配列取得
-		String[] personalIds = vo.getCkbSelect();
+		String[] personalIds = getSelectedPersonalIds(vo.getCkbSelect());
 		// 年月で出勤簿を作成
 		timeReference().attendanceBook().makeAttendanceBooks(personalIds, vo.getTargetYear(), vo.getTargetMonth());
 		// エラー確認
@@ -770,6 +678,25 @@ public class TotalTimeListAction extends TotalTimeBaseAction {
 			// メッセージ設定
 			addNoSearchResultMessage();
 		}
+	}
+	
+	/**
+	 * 選択された部下一覧情報のリストを取得する。<br>
+	 * <br>
+	 * @return 部下一覧情報リスト
+	 */
+	protected List<SubordinateListDtoInterface> getSelectedListDto() {
+		// VO準備
+		TotalTimeListVo vo = (TotalTimeListVo)mospParams.getVo();
+		// 給与計算結果一覧情報リスト準備
+		List<SubordinateListDtoInterface> selectedList = new ArrayList<SubordinateListDtoInterface>();
+		// 選択されたチェックボックス毎に処理
+		for (String idx : vo.getCkbSelect()) {
+			// 選択された給与計算結果一覧情報を追加
+			selectedList.add((SubordinateListDtoInterface)getSelectedListDto(idx));
+		}
+		// 選択された給与計算結果一覧情報のリストを取得
+		return selectedList;
 	}
 	
 }

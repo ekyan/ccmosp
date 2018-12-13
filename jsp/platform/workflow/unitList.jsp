@@ -33,6 +33,7 @@ import = "jp.mosp.platform.comparator.workflow.ApprovalUnitMasterUnitTypeCompara
 import = "jp.mosp.platform.comparator.workflow.ApprovalUnitMasterApproverComparator"
 import = "jp.mosp.platform.constant.PlatformConst"
 import = "jp.mosp.platform.utils.PlatformUtility"
+import = "jp.mosp.platform.utils.PlatformNamingUtility"
 import = "jp.mosp.platform.workflow.action.UnitListAction"
 import = "jp.mosp.platform.workflow.action.UnitCardAction"
 import = "jp.mosp.platform.workflow.vo.UnitListVo"
@@ -70,7 +71,7 @@ UnitListVo vo = (UnitListVo)params.getVo();
 			<td class="InputTd"><input type="text" class="Name15TextBox" id="txtSearchUnitName" name="txtSearchUnitName" value="<%= HtmlUtility.escapeHTML(vo.getTxtSearchUnitName()) %>"/></td>
 		</tr>
 		<tr>
-			<td class="TitleTd"><label for="txtSearchEmployeeCode"><%= params.getName("Approver","Employee","Code") %></label></td>
+			<td class="TitleTd"><label for="txtSearchEmployeeCode"><%= params.getName("Approver") + PlatformNamingUtility.employeeCode(params) %></label></td>
 			<td class="InputTd"><input type="text" class="Code10TextBox" id="txtSearchEmployeeCode" name="txtSearchEmployeeCode" value="<%= HtmlUtility.escapeHTML(vo.getTxtSearchEmployeeCode()) %>"/></td>
 			<td class="TitleTd"><label for="txtSearchApprover"><%= params.getName("Approver","FullName") %></label></td>
 			<td class="InputTd"><input type="text" class="Name10TextBox" id="txtSearchApprover" name="txtSearchApprover" value="<%= HtmlUtility.escapeHTML(vo.getTxtSearchApprover()) %>"/></td>
@@ -145,6 +146,7 @@ for (int i = 0; i < vo.getAryLblActivateDate().length; i++) {
 <%
 if (vo.getAryLblActivateDate().length > 0) {
 %>
+<%= HtmlUtility.getListInfoFlex(params, vo.getList(), vo.getPageCommand(), vo.getDataPerPage(), vo.getSelectIndex()) %>
 <div class="List" id="divUpdate">
 	<table class="InputTable">
 		<tr>
@@ -178,7 +180,6 @@ if (vo.getAryLblActivateDate().length > 0) {
 		</tr>
 	</table>
 </div>
-<%= HtmlUtility.getListInfoFlex(params, vo.getList(), vo.getPageCommand(), vo.getDataPerPage(), vo.getSelectIndex()) %>
 <%
 }
 %>

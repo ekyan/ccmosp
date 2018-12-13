@@ -43,7 +43,7 @@ public class ScheduleTotalReferenceBean extends PlatformBean implements Schedule
 	/**
 	 * 勤務形態項目参照。
 	 */
-	WorkTypeItemReferenceBeanInterface	workTypeItemReference;
+	WorkTypeItemReferenceBeanInterface workTypeItemReference;
 	
 	
 	/**
@@ -64,7 +64,8 @@ public class ScheduleTotalReferenceBean extends PlatformBean implements Schedule
 	
 	@Override
 	public void initBean() throws MospException {
-		workTypeItemReference = (WorkTypeItemReferenceBeanInterface)createBean(WorkTypeItemReferenceBeanInterface.class);
+		workTypeItemReference = (WorkTypeItemReferenceBeanInterface)createBean(
+				WorkTypeItemReferenceBeanInterface.class);
 	}
 	
 	@Override
@@ -92,11 +93,13 @@ public class ScheduleTotalReferenceBean extends PlatformBean implements Schedule
 			} else {
 				// 勤務時間の合計
 				workTimeDate = workTypeItemReference.getWorkTypeItemInfo(list.get(i).getWorkTypeCode(),
-						list.get(i).getScheduleDate(), TimeConst.CODE_WORKTIME).getWorkTypeItemValue();
+						list.get(i).getScheduleDate(), TimeConst.CODE_WORKTIME)
+					.getWorkTypeItemValue();
 				totalWork = totalWork + (DateUtility.getHour(workTimeDate) * 60) + DateUtility.getMinute(workTimeDate);
 				// 休憩時間の合計
 				restTimeDate = workTypeItemReference.getWorkTypeItemInfo(list.get(i).getWorkTypeCode(),
-						list.get(i).getScheduleDate(), TimeConst.CODE_RESTTIME).getWorkTypeItemValue();
+						list.get(i).getScheduleDate(), TimeConst.CODE_RESTTIME)
+					.getWorkTypeItemValue();
 				totalRest = totalRest + (DateUtility.getHour(restTimeDate) * 60) + DateUtility.getMinute(restTimeDate);
 				// 出勤回数のカウント
 				timesWork++;

@@ -41,7 +41,7 @@ public class SubordinateTotalReferenceBean extends PlatformBean implements Subor
 	/**
 	 * 勤怠集計データDAO。
 	 */
-	private TotalTimeDataDaoInterface	totalTimeDataDao;
+	private TotalTimeDataDaoInterface totalTimeDataDao;
 	
 	
 	/**

@@ -38,7 +38,7 @@ public class WorkTypePatternItemRegistBean extends PlatformBean implements WorkT
 	/**
 	 * 勤務形態パターン項目DAOクラス。<br>
 	 */
-	WorkTypePatternItemDaoInterface	dao;
+	WorkTypePatternItemDaoInterface dao;
 	
 	
 	/**
@@ -186,7 +186,7 @@ public class WorkTypePatternItemRegistBean extends PlatformBean implements WorkT
 	 * @param <T> T
 	 * @param array 対象配列
 	 */
-	protected <T>void validate(T[] array) {
+	protected <T> void validate(T[] array) {
 		if (array == null || array.length == 0) {
 			StringBuffer sb = new StringBuffer();
 			sb.append(mospParams.getName("Select"));

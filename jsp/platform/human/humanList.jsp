@@ -37,6 +37,7 @@ import = "jp.mosp.platform.constant.PlatformConst"
 import = "jp.mosp.platform.human.action.HumanListAction"
 import = "jp.mosp.platform.human.vo.HumanListVo"
 import = "jp.mosp.platform.utils.PlatformUtility"
+import = "jp.mosp.platform.utils.PlatformNamingUtility"
 %><%
 MospParams params = (MospParams)request.getAttribute(MospConst.ATT_MOSP_PARAMS);
 HumanListVo vo = (HumanListVo)params.getVo();
@@ -51,7 +52,7 @@ HumanListVo vo = (HumanListVo)params.getVo();
 				<input type="text" class="Number2RequiredTextBox" id="txtActivateDay" name="txtActivateDay" value="<%= HtmlUtility.escapeHTML(vo.getTxtActivateDay()) %>"/>&nbsp;<label for="txtActivateDay"><%= params.getName("Day") %></label>
 				<button type="button" class="Name2Button" onclick="submitForm(event, 'inputActivateDate', null, '<%= HumanListAction.CMD_SET_ACTIVATION_DATE %>')"><%= vo.getModeActivateDate().equals(PlatformConst.MODE_ACTIVATE_DATE_FIXED) ? params.getName("Change") : params.getName("Decision") %></button>
 			</td>
-			<td class="TitleTd"><span><label for="txtEmployeeCode"><%= params.getName("Employee","Code") %></label></span></td>
+			<td class="TitleTd"><span><label for="txtEmployeeCode"><%= PlatformNamingUtility.employeeCode(params) %></label></span></td>
 			<td class="InputTd" id="inputEmployeeCode">
 				<input type="text" class="Code10TextBox" id="txtEmployeeCode" name="txtEmployeeCode" value="<%= HtmlUtility.escapeHTML(vo.getTxtEmployeeCode()) %>" />
 				<select class="Name4PullDown" id="pltEmployeeCode" name="pltEmployeeCode">
@@ -135,7 +136,7 @@ HumanListVo vo = (HumanListVo)params.getVo();
 				<td class="TitleTd"><span><%= params.getName("Information") %></span></td>
 				<td class="InputTd" id="tdInformation" colspan="3">
 					<select class="InfoPullDown" id="pltInfoType" name="pltInfoType">
-						<%= HtmlUtility.getSelectOption(params, PlatformConst.CODE_KEY_FREE_WORD_TYPE, vo.getPltInfoType(), false) %>
+					<%= HtmlUtility.getSelectOption(vo.getAryPltFreeWordTypes(), vo.getPltInfoType()) %>
 					</select>&nbsp;
 					<span><%= params.getName("Search","Word") %></span>&nbsp;
 					<input type="text" class="Name25TextBox" id="txtSearchWord" name="txtSearchWord" value="<%= HtmlUtility.escapeHTML(vo.getTxtSearchWord()) %>" />
@@ -163,7 +164,7 @@ HumanListVo vo = (HumanListVo)params.getVo();
 		<thead>
 			<tr>
 				<th class="ListSelectTh" id="thButton"></th>
-				<th class="ListSortTh" id="thEmployeeCode"   onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= EmployeeCodeComparator.class.getName() %>'), '<%= HumanListAction.CMD_SORT %>')"><%= params.getName("Employee","Code") %><%= PlatformUtility.getSortMark(EmployeeCodeComparator.class.getName(), params) %></th>
+				<th class="ListSortTh" id="thEmployeeCode"   onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= EmployeeCodeComparator.class.getName() %>'), '<%= HumanListAction.CMD_SORT %>')"><%= PlatformNamingUtility.employeeCode(params) %><%= PlatformUtility.getSortMark(EmployeeCodeComparator.class.getName(), params) %></th>
 				<th class="ListSortTh" id="thEmployeeName"   onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= EmployeeNameComparator.class.getName() %>'), '<%= HumanListAction.CMD_SORT %>')"><%= params.getName("FullName") %><%= PlatformUtility.getSortMark(EmployeeNameComparator.class.getName(), params) %></th>
 				<th class="ListSortTh" id="thEmployeeKana"   onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= HumanListEmployeeKanaComparator.class.getName() %>'), '<%= HumanListAction.CMD_SORT %>')"><%= params.getName("FullName","FrontParentheses","Kana","BackParentheses") %><%= PlatformUtility.getSortMark(HumanListEmployeeKanaComparator.class.getName(), params) %></th>
 				<th class="ListSortTh" id="thWorkPlaceAbbr"  onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= WorkPlaceCodeComparator.class.getName() %>'), '<%= HumanListAction.CMD_SORT %>')"><%= params.getName("WorkPlace","Abbreviation") %><%= PlatformUtility.getSortMark(WorkPlaceCodeComparator.class.getName(), params) %></th>

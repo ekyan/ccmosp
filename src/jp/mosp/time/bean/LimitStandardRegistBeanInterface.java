@@ -20,13 +20,14 @@
  */
 package jp.mosp.time.bean;
 
+import java.util.Collection;
 import java.util.Date;
 
 import jp.mosp.framework.base.MospException;
 import jp.mosp.time.dto.settings.LimitStandardDtoInterface;
 
 /**
- * 限度基準登録インターフェース。<br>
+ * 限度基準登録処理インターフェース。<br>
  */
 public interface LimitStandardRegistBeanInterface {
 	
@@ -37,33 +38,23 @@ public interface LimitStandardRegistBeanInterface {
 	LimitStandardDtoInterface getInitDto();
 	
 	/**
-	 * 新規登録を行う。<br>
-	 * @param dto 対象DTO
-	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 * 登録を行う。<br>
+	 * 勤怠設定の登録時にチェックを行うことを想定しており、
+	 * 登録情報にレコード識別IDは付加されていない。<br>
+	 * <br>
+	 * @param dtos 限度基準情報群
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
-	void insert(LimitStandardDtoInterface dto) throws MospException;
+	void regist(Collection<LimitStandardDtoInterface> dtos) throws MospException;
 	
 	/**
-	 * 履歴更新を行う。<br>
-	 * @param dto 対象DTO
-	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 * 論理削除を行う。<br>
+	 * 勤怠設定の削除時にチェックを行うことを想定し、ここでは削除処理のみを行う。<br>
+	 * <br>
+	 * @param workSettingCode 勤怠設定コード
+	 * @param activateDate    有効日
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
-	void update(LimitStandardDtoInterface dto) throws MospException;
-	
-	/**
-	 * 一括更新処理を行う。<br>
-	 * @param idArray 対象レコード識別ID配列
-	 * @param activateDate 有効日
-	 * @param inactivateFlag 無効フラグ
-	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
-	 */
-	void update(long[] idArray, Date activateDate, int inactivateFlag) throws MospException;
-	
-	/**
-	 * 論理削除(履歴)を行う。<br>
-	 * @param dto 対象DTO
-	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
-	 */
-	void delete(LimitStandardDtoInterface dto) throws MospException;
+	void delete(String workSettingCode, Date activateDate) throws MospException;
 	
 }

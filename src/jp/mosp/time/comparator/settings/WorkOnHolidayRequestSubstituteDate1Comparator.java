@@ -31,11 +31,11 @@ public class WorkOnHolidayRequestSubstituteDate1Comparator implements Comparator
 	
 	@Override
 	public int compare(WorkOnHolidayRequestListDtoInterface dto1, WorkOnHolidayRequestListDtoInterface dto2) {
-		if (dto1.getSubstituteDate1() != null && dto2.getSubstituteDate1() != null) {
-			return dto1.getSubstituteDate1().compareTo(dto2.getSubstituteDate1());
-		} else if (dto1.getSubstituteDate1() == null && dto2.getSubstituteDate1() == null) {
+		if (dto1.getSubstituteDate() != null && dto2.getSubstituteDate() != null) {
+			return dto1.getSubstituteDate().compareTo(dto2.getSubstituteDate());
+		} else if (dto1.getSubstituteDate() == null && dto2.getSubstituteDate() == null) {
 			return 0;
-		} else if (dto1.getSubstituteDate1() == null) {
+		} else if (dto1.getSubstituteDate() == null) {
 			return -1;
 		} else {
 			return 1;

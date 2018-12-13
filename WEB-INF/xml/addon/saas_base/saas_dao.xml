@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE MosP>
+<!--
+MosP - Mind Open Source Project    http://www.mosp.jp/
+Copyright (C) MIND Co., Ltd.       http://www.e-mind.co.jp/
+
+This program is free software: you can redistribute it and/or
+modify it under the terms of the GNU Affero General Public License
+as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<MosP>
+	
+	<!-- DAO -->
+	<Model key="SubscribeDao">
+		jp.mosp.addon.saas.base.dao.impl.SstSubscribeDao
+	</Model>
+	<Model key="CustomerDao">
+		jp.mosp.addon.saas.base.dao.impl.SsmCustomerDao
+	</Model>
+	<Model key="CustomerPicDao">
+		jp.mosp.addon.saas.base.dao.impl.SsaCustomerPicDao
+	</Model>
+	<Model key="CustomerPayDao">
+		jp.mosp.addon.saas.base.dao.impl.SsaCustomerPayDao
+	</Model>
+	<Model key="CustomerOptionDao">
+		jp.mosp.addon.saas.base.dao.impl.SsaCustomerOptionDao
+	</Model>
+	<Model key="CustomerActiveDao">
+		jp.mosp.addon.saas.base.dao.impl.SsaCustomerActiveDao
+	</Model>
+	<Model key="CustomerStatusDao">
+		jp.mosp.addon.saas.base.dao.impl.SsaCustomerStatusDao
+	</Model>
+	<Model key="CustomerDbDao">
+		jp.mosp.addon.saas.base.dao.impl.SsaCustomerDbDao
+	</Model>
+	<Model key="CustomerUserDao">
+		jp.mosp.addon.saas.base.dao.impl.SsmCustomerUserDao
+	</Model>
+	<Model key="CustomerUserPasswordDao">
+		jp.mosp.addon.saas.base.dao.impl.SsaCustomerUserPasswordDao
+	</Model>
+	<Model key="CustomerCollectDao">
+		jp.mosp.addon.saas.base.dao.impl.SsdCustomerCollectDao
+	</Model>
+	
+</MosP>

@@ -38,7 +38,7 @@ public class TotalTimeTransactionRegistBean extends PlatformBean implements Tota
 	/**
 	 * 勤怠集計管理トランザクションDAO。
 	 */
-	private TotalTimeDaoInterface	dao;
+	private TotalTimeDaoInterface dao;
 	
 	
 	/**

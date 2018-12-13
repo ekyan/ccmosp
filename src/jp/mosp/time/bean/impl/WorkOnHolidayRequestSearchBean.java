@@ -15,9 +15,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-/**
- * 
- */
 package jp.mosp.time.bean.impl;
 
 import java.sql.Connection;
@@ -116,7 +113,8 @@ public class WorkOnHolidayRequestSearchBean extends PlatformBean implements Work
 		// 休日出勤申請
 		workOnHolidayRequestDao = (WorkOnHolidayRequestDaoInterface)createDao(WorkOnHolidayRequestDaoInterface.class);
 		substituteDao = (SubstituteDaoInterface)createDao(SubstituteDaoInterface.class);
-		approvalInfoReference = (ApprovalInfoReferenceBeanInterface)createBean(ApprovalInfoReferenceBeanInterface.class);
+		approvalInfoReference = (ApprovalInfoReferenceBeanInterface)createBean(
+				ApprovalInfoReferenceBeanInterface.class);
 		workflowReference = (WorkflowReferenceBeanInterface)createBean(WorkflowReferenceBeanInterface.class);
 	}
 	
@@ -158,22 +156,17 @@ public class WorkOnHolidayRequestSearchBean extends PlatformBean implements Work
 			// レコード識別ID
 			dto.setTmdWorkOnHolidayRequestId(requestDto.getTmdWorkOnHolidayRequestId());
 			dto.setRequestDate(requestDto.getRequestDate());
+			dto.setWorkTypeCode(requestDto.getWorkTypeCode());
 			dto.setStartTime(requestDto.getStartTime());
 			dto.setEndTime(requestDto.getEndTime());
 			dto.setRequestReason(requestDto.getRequestReason());
 			dto.setWorkflow(requestDto.getWorkflow());
-			int i = 0;
+			dto.setSubstitute(requestDto.getSubstitute());
 			for (SubstituteDtoInterface substituteDto : substituteList) {
 				Date substituteDate = substituteDto.getSubstituteDate();
 				int substituteRange = substituteDto.getSubstituteRange();
-				if (i == 0) {
-					dto.setSubstituteDate1(substituteDate);
-					dto.setSubstituteRange1(substituteRange);
-				} else if (i == 1) {
-					dto.setSubstituteDate2(substituteDate);
-					dto.setSubstituteRange2(substituteRange);
-				}
-				i++;
+				dto.setSubstituteDate(substituteDate);
+				dto.setSubstituteRange(substituteRange);
 			}
 			// 承認情報
 			approvalInfoReference.setWorkflowInfo(dto, workflowDto);

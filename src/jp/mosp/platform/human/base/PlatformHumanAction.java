@@ -17,14 +17,20 @@
  */
 package jp.mosp.platform.human.base;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
 import jp.mosp.framework.base.MospException;
+import jp.mosp.framework.comparator.IndexComparator;
 import jp.mosp.framework.constant.ExceptionConst;
 import jp.mosp.framework.constant.MospConst;
+import jp.mosp.framework.property.CodeItemProperty;
+import jp.mosp.framework.property.CodeProperty;
 import jp.mosp.framework.utils.DateUtility;
 import jp.mosp.framework.utils.MospUtility;
+import jp.mosp.framework.utils.RoleUtility;
 import jp.mosp.platform.base.PlatformAction;
 import jp.mosp.platform.bean.human.HumanSearchBeanInterface;
 import jp.mosp.platform.constant.PlatformConst;
@@ -79,12 +85,18 @@ public abstract class PlatformHumanAction extends PlatformAction {
 	 * @throws MospException 社員存在確認に失敗した場合
 	 */
 	protected void setTargetHumanCommonInfo() throws MospException {
+		// VO取得
+		PlatformHumanVo vo = (PlatformHumanVo)mospParams.getVo();
+		
 		// 個人ID取得
 		String personalId = getTargetPersonalId();
 		// 対象日取得
 		Date targetDate = getTargetDate();
 		// 人事管理共通情報設定
 		setHumanCommonInfo(personalId, targetDate);
+		// 人事汎用管理区分参照権限設定
+		vo.setJsIsReferenceDivision(RoleUtility.getReferenceDivisionsList(mospParams).contains(getTransferredType()));
+		
 	}
 	
 	/**
@@ -293,6 +305,57 @@ public abstract class PlatformHumanAction extends PlatformAction {
 	protected void addDeleteHistoryMessage(String count) {
 		String[] aryMeassage = { count };
 		mospParams.addMessage(PlatformMessageConst.MSG_DELETE_HISTORY, aryMeassage);
+	}
+	
+	/**
+	 * コード配列を取得する。（人事汎用機能のフリーワード検索用コード配列取得）
+	 * @param codeKey   コードキー
+	 * @param needBlank 空白行要否(true：空白行要、false：空白行不要)
+	 * @return コード配列
+	 */
+	protected String[][] getCodeArrayForHumanGeneral(String codeKey, boolean needBlank) {
+		// コード設定情報取得
+		CodeProperty codeProperty = mospParams.getCodeProperty().get(codeKey);
+		// コード設定情報確認
+		if (codeProperty == null) {
+			// コード設定情報無し
+			return new String[0][0];
+		}
+		// コード項目リスト取得
+		List<CodeItemProperty> list = new ArrayList<CodeItemProperty>(codeProperty.getCodeItemMap().values());
+		// コード項目リストソート
+		Collections.sort(list, new IndexComparator());
+		// 非表示項目除去
+		for (int i = list.size() - 1; i >= 0; i--) {
+			CodeItemProperty codeItemProperty = list.get(i);
+			if (codeItemProperty.getViewFlag() == MospConst.VIEW_OFF) {
+				list.remove(i);
+			}
+			// ロールで非表示設定された人事汎用管理区分が存在した場合は表示対象としない
+			if (RoleUtility.getHiddenDivisionsList(mospParams).contains(codeItemProperty.getKey())) {
+				list.remove(i);
+			}
+			
+		}
+		// 配列及びインデックス宣言
+		String[][] array;
+		int idx = 0;
+		// 空白行設定
+		if (needBlank) {
+			array = new String[list.size() + 1][2];
+			array[0][0] = "";
+			array[0][1] = "";
+			idx++;
+		} else {
+			array = new String[list.size()][2];
+		}
+		// 配列作成
+		for (CodeItemProperty codeItemProperty : list) {
+			array[idx][0] = codeItemProperty.getKey();
+			array[idx][1] = codeItemProperty.getItemName();
+			idx++;
+		}
+		return array;
 	}
 	
 }

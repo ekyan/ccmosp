@@ -17,16 +17,6 @@
  */
 
 /**
- * 休暇区分(欠勤)。<br>
- */
-var HOLIDAY_TYPE_ABSENCE = "4";
-
-/**
- * 給与区分(無給)。<br>
- */
-var SALARY_PAY_TYPE_NONE = "1";
-
-/**
  * 付与日数値チェックエラーメッセージ。
  */
 var MSG_GIVINGDAY_VALUE_CHECK = "TMW0219";
@@ -40,6 +30,7 @@ var MSG_GIVINGDAY_VALUE_CHECK = "TMW0219";
 function onLoadExtra() {
 	// イベントハンドラ設定
 	setOnChangeHandler("pltEditHolidayType", checkHolidayType);
+	setOnChangeHandler("pltEditHourlyHoliday", changeHourlyHoliday);
 	setOnClickHandler("ckbNoLimit", checkNoLimit);
 	// 休暇区分確認
 	checkHolidayType();
@@ -81,11 +72,11 @@ function checkHolidayType(event) {
 		onChangeFields(event);
 	}
 	// 休暇区分確認
-	if (getFormValue("pltEditHolidayType") == HOLIDAY_TYPE_ABSENCE) {
+	if (getFormValue("pltEditHolidayType") == TYPE_HOLIDAY_ABSENCE) {
 		// 欠勤の場合
 		checkableCheck("ckbNoLimit", true);
 		setReadOnly("ckbNoLimit", true);
-		setFormValue("pltEditSalary", SALARY_PAY_TYPE_NONE);
+		setFormValue("pltEditSalary", TYPE_SALARY_PAY_NONE);
 		setReadOnly("pltEditSalary", true);
 	} else {
 		// 欠勤以外の場合
@@ -107,8 +98,6 @@ function checkNoLimit(event) {
 		// チェックされている場合
 		setReadOnly("txtEditHolidayGiving", true);
 		setFormValue("txtEditHolidayGiving", "0.0");
-		setReadOnly("pltEditContinue", true);
-		setFormValue("pltEditContinue", "2");
 		setReadOnly("txtEditHolidayLimitMonth", true);
 		setFormValue("txtEditHolidayLimitMonth", "0");
 		setReadOnly("txtEditHolidayLimitDay", true);
@@ -116,10 +105,11 @@ function checkNoLimit(event) {
 	} else {
 		// チェックされていない場合
 		setReadOnly("txtEditHolidayGiving", false);
-		setReadOnly("pltEditContinue", false);
 		setReadOnly("txtEditHolidayLimitMonth", false);
 		setReadOnly("txtEditHolidayLimitDay", false);
 	}
+	// 連続取得の値及び読取専用を設定
+	setHourlyHoliday();
 }
 
 /**
@@ -142,3 +132,33 @@ function checkHolidayGiving(aryMessage, event) {
 	}
 }
 
+/**
+ * 時間単位取得変更時の処理を行う。
+ * @param event イベントオブジェクト
+ */
+function changeHourlyHoliday(event) {
+	// イベントオブジェクトが存在する場合
+	if (event != null) {
+		// フィールド変更時の処理を実施
+		onChangeFields(event);
+	}
+	// 連続取得の値及び読取専用を設定
+	setHourlyHoliday();
+}
+
+/**
+ * 連続取得の値及び読取専用を設定する。
+ */
+function setHourlyHoliday() {
+	// 連続取得の読取専用を解除
+	setReadOnly("pltEditContinue", false);
+	// 時間単位取得の値を取得
+	var hourlyHoliday = getFormValue("pltEditHourlyHoliday");
+	// 時間単位取得が有効であるか無制限がチェックされている場合
+	if (hourlyHoliday == FLAG_HOURLY_VALID || isCheckableChecked("ckbNoLimit")) {
+		// 連続取得を不要に設定
+		setFormValue("pltEditContinue", TYPE_CONTINUOUS_UNNECESSARY);
+		// 連続取得を読取専用に設定
+		setReadOnly("pltEditContinue", true);
+	}
+}

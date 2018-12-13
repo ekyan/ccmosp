@@ -31,6 +31,7 @@ import = "jp.mosp.platform.human.constant.PlatformHumanConst"
 import = "jp.mosp.setup.vo.FirstUserVo"
 import = "jp.mosp.setup.action.FirstUserAction"
 import = "jp.mosp.setup.action.SetupFinishAction"
+import = "jp.mosp.platform.utils.PlatformNamingUtility"
 
 %><%
 MospParams params = (MospParams)request.getAttribute(MospConst.ATT_MOSP_PARAMS);
@@ -47,7 +48,7 @@ FirstUserVo vo = (FirstUserVo)params.getVo();
 <table class="SetupTable">
 	<tr>
 		<td class="SetupTitleTd">
-			<font class="ServerFont"><label for="txtEmployeeCode"><%= params.getName("Employee") + params.getName("Code") %></label></font>
+			<font class="ServerFont"><label for="txtEmployeeCode"><%= PlatformNamingUtility.employeeCode(params) %></label></font>
 		</td>
 		<td class="SetupInputTd">
 			<input type="text" class="Code10RequiredTextBox" id="txtEmployeeCode" name="txtEmployeeCode" value="<%= HtmlUtility.escapeHTML(vo.getTxtEmployeeCode()) %>" />

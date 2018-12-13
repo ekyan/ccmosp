@@ -39,7 +39,7 @@ import = "jp.mosp.platform.human.vo.HumanInfoVo"
 MospParams params = (MospParams)request.getAttribute(MospConst.ATT_MOSP_PARAMS);
 HumanInfoVo vo = (HumanInfoVo)params.getVo();
 %>
-<jsp:include page="<%= PlatformHumanConst.PATH_HUMAN_COMMON_INFO_JSP %>" flush="false" />
+<jsp:include page="<%= params.getApplicationProperty(PlatformHumanConst.APP_HUMAN_COMMON_INFO_JSP) %>" flush="false" />
 <div class="List">
 	<table class="OverTable" id="tblBasicInfomation">
 		<tr>
@@ -52,6 +52,7 @@ HumanInfoVo vo = (HumanInfoVo)params.getVo();
 					<button type="button" class="Name4Button" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_ACTION %>','<%= BasicListAction.class.getName() %>'), '<%= HumanInfoAction.CMD_TRANSFER %>');">
 						<%= params.getName("History","List") %>
 					</button>
+
 				</span>
 			</th>
 		</tr>
@@ -79,7 +80,7 @@ HumanInfoVo vo = (HumanInfoVo)params.getVo();
 		</tr>
 <%
 if (vo.getNeedPost()) {
-%>			
+%>
 		<tr>
 			<td class="TitleTd" id="titlePostName"><%= params.getName("Post") %></td>
 			<td class="InputTd" id="lblPostName"><%= HtmlUtility.escapeHTML(vo.getLblPost()) %></td>
@@ -87,7 +88,7 @@ if (vo.getNeedPost()) {
 		</tr>
 <%
 }
-%>	
+%>
 	</table>
 </div>
 <div class="List">
@@ -118,6 +119,14 @@ if (vo.getLblEntranceDate().isEmpty() == false) {
 %>
 	</table>
 </div>
+<%
+// 人事情報一覧画面追加情報
+for (String extraView : vo.getExtraViewList()) {
+%>
+<jsp:include page="<%= extraView %>" flush="false" />
+<%
+}
+%>
 <div class="List">
 	<table class="OverTable">
 		<tr>

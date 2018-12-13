@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE MosP>
+<!--
+MosP - Mind Open Source Project    http://www.mosp.jp/
+Copyright (C) MIND Co., Ltd.       http://www.e-mind.co.jp/
+
+This program is free software: you can redistribute it and/or
+modify it under the terms of the GNU Affero General Public License
+as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<MosP>
+	
+	<!-- BeanHandler -->
+	<Model key="SaasBeanHandler">
+		jp.mosp.addon.saas.base.handler.impl.SaasBeanHandler
+	</Model>
+	<Model key="SaasCustomerDbBeanHandler">
+		jp.mosp.addon.saas.base.handler.impl.SaasCustomerDbBeanHandler
+	</Model>
+	
+	<!-- Bean -->
+	<Model key="Subscribe">
+		jp.mosp.addon.saas.base.bean.impl.SubscribeBean
+	</Model>
+	<Model key="Customer">
+		jp.mosp.addon.saas.base.bean.impl.CustomerBean
+	</Model>
+	<Model key="CustomerDb">
+		jp.mosp.addon.saas.base.bean.impl.CustomerDbBean
+	</Model>
+	<Model key="CustomerStatus">
+		jp.mosp.addon.saas.base.bean.impl.CustomerStatusBean
+	</Model>
+	<Model key="CustomerPic">
+		jp.mosp.addon.saas.base.bean.impl.CustomerPicBean
+	</Model>
+	<Model key="CustomerPay">
+		jp.mosp.addon.saas.base.bean.impl.CustomerPayBean
+	</Model>
+	<Model key="CustomerOption">
+		jp.mosp.addon.saas.base.bean.impl.CustomerOptionBean
+	</Model>
+	<Model key="CustomerActive">
+		jp.mosp.addon.saas.base.bean.impl.CustomerActiveBean
+	</Model>
+	<Model key="CustomerUser">
+		jp.mosp.addon.saas.base.bean.impl.CustomerUserBean
+	</Model>
+	<Model key="CustomerUserPassword">
+		jp.mosp.addon.saas.base.bean.impl.CustomerUserPasswordBean
+	</Model>
+	<Model key="CustomerCollect">
+		jp.mosp.addon.saas.base.bean.impl.CustomerCollectBean
+	</Model>
+	<Model key="CustomerMaster">
+		jp.mosp.addon.saas.base.bean.impl.CustomerMasterBean
+	</Model>
+	<Model key="CustomerSearch">
+		jp.mosp.addon.saas.base.bean.impl.CustomerSearchBean
+	</Model>
+	<Model key="CustomerCollectSearch">
+		jp.mosp.addon.saas.base.bean.impl.CustomerCollectSearchBean
+	</Model>
+	<Model key="SaasValidate">
+		jp.mosp.addon.saas.base.bean.impl.SaasValidateBean
+	</Model>
+	<Model key="SaasEncrypt">
+		jp.mosp.addon.saas.base.bean.impl.SaasEncryptBean
+	</Model>
+	<Model key="SaasMail">
+		jp.mosp.addon.saas.base.bean.impl.SaasMailBean
+	</Model>
+	<Model key="SaasMaster">
+		jp.mosp.addon.saas.base.bean.impl.SaasMasterBean
+	</Model>
+	<Model key="SaasReceive">
+		jp.mosp.addon.saas.base.bean.impl.SaasReceiveBean
+	</Model>
+	<Model key="SaasActivate">
+		jp.mosp.addon.saas.base.bean.impl.SaasActivateBean
+	</Model>
+	<Model key="SaasDrop">
+		jp.mosp.addon.saas.base.bean.impl.SaasDropBean
+	</Model>
+	<Model key="SaasSubscribe">
+		jp.mosp.addon.saas.base.bean.impl.SaasSubscribeBean
+	</Model>
+	<Model key="SaasCreateMospUser">
+		jp.mosp.addon.saas.base.bean.impl.SaasCreateMospUserBean
+	</Model>
+	<Model key="SaasClientAuth">
+		jp.mosp.addon.saas.base.bean.impl.SaasClientAuthBean
+	</Model>
+	<Model key="SaasCustomerUserAuth">
+		jp.mosp.addon.saas.base.bean.impl.SaasCustomerUserAuthBean
+	</Model>
+	<Model key="SaasWithdraw">
+		jp.mosp.addon.saas.base.bean.impl.SaasWithdrawBean
+	</Model>
+	<Model key="SaasCollect">
+		jp.mosp.addon.saas.base.bean.impl.SaasCollectBean
+	</Model>
+	<Model key="SaasCheckActiveUser">
+		jp.mosp.addon.saas.base.bean.impl.SaasCheckActiveUserBean
+	</Model>
+	
+</MosP>

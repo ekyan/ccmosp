@@ -18,30 +18,24 @@
 package jp.mosp.platform.bean.system.impl;
 
 import java.sql.Connection;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
-import java.util.Map.Entry;
 
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.base.MospParams;
-import jp.mosp.framework.property.RoleProperty;
 import jp.mosp.platform.base.PlatformBean;
-import jp.mosp.platform.bean.file.PlatformFileBean;
 import jp.mosp.platform.bean.portal.UserCheckBeanInterface;
 import jp.mosp.platform.bean.system.RoleReferenceBeanInterface;
 import jp.mosp.platform.bean.system.UserMasterRegistBeanInterface;
-import jp.mosp.platform.constant.PlatformMessageConst;
 import jp.mosp.platform.dao.system.UserMasterDaoInterface;
-import jp.mosp.platform.dao.system.UserPasswordDaoInterface;
 import jp.mosp.platform.dto.system.UserMasterDtoInterface;
-import jp.mosp.platform.dto.system.UserPasswordDtoInterface;
 import jp.mosp.platform.dto.system.impl.PfmUserDto;
+import jp.mosp.platform.utils.PlatformMessageUtility;
+import jp.mosp.platform.utils.PlatformNamingUtility;
 
 /**
  * ユーザマスタ登録クラス。
  */
-public class UserMasterRegistBean extends PlatformFileBean implements UserMasterRegistBeanInterface {
+public class UserMasterRegistBean extends PlatformBean implements UserMasterRegistBeanInterface {
 	
 	/**
 	 * ユーザID項目長。<br>
@@ -52,11 +46,6 @@ public class UserMasterRegistBean extends PlatformFileBean implements UserMaster
 	 * ユーザマスタDAOクラス。<br>
 	 */
 	protected UserMasterDaoInterface		dao;
-	
-	/**
-	 * ユーザパスワード情報DAO。<br>
-	 */
-	protected UserPasswordDaoInterface		userPasswordDao;
 	
 	/**
 	 * ロール参照クラス。<br>
@@ -84,9 +73,9 @@ public class UserMasterRegistBean extends PlatformFileBean implements UserMaster
 	public void initBean() throws MospException {
 		// DAO準備
 		dao = (UserMasterDaoInterface)createDao(UserMasterDaoInterface.class);
-		userPasswordDao = (UserPasswordDaoInterface)createDao(UserPasswordDaoInterface.class);
 		// Bean準備
 		roleRefer = (RoleReferenceBeanInterface)createBean(RoleReferenceBeanInterface.class);
+		
 	}
 	
 	@Override
@@ -128,8 +117,6 @@ public class UserMasterRegistBean extends PlatformFileBean implements UserMaster
 		dto.setPfmUserId(dao.nextRecordId());
 		// 登録処理
 		dao.insert(dto);
-		// 有効ユーザ存在確認
-		checkUserExist();
 	}
 	
 	@Override
@@ -150,177 +137,19 @@ public class UserMasterRegistBean extends PlatformFileBean implements UserMaster
 		dto.setPfmUserId(dao.nextRecordId());
 		// 登録処理
 		dao.insert(dto);
-		// 有効ユーザ存在確認
-		checkUserExist();
 	}
 	
 	@Override
-	public void update(long[] idArray, Date activateDate, int inactivateFlag) throws MospException {
-		// レコード識別ID配列の妥当性確認
-		validateAryId(idArray);
+	public void delete(UserMasterDtoInterface dto) throws MospException {
+		// 削除情報の検証
+		checkDelete(dto);
+		// 削除できない場合
 		if (mospParams.hasErrorMessage()) {
+			// 処理終了
 			return;
 		}
-		// 更新処理
-		for (String code : getUserIdList(idArray)) {
-			// 対象ユーザにおける有効日の情報を取得
-			UserMasterDtoInterface dto = dao.findForKey(code, activateDate);
-			// 存在確認(存在しなければ履歴追加、存在すれば履歴更新)
-			if (dto == null) {
-				// 対象ユーザにおける有効日以前で最新の情報を取得
-				dto = dao.findForInfo(code, activateDate);
-				// 対象ユーザ情報確認
-				if (dto == null) {
-					// 有効日以前に情報が存在しない場合
-					addNoCodeBeforeActivateDateMessage(code);
-					continue;
-				}
-				// DTOに有効日、無効フラグを設定
-				dto.setActivateDate(activateDate);
-				dto.setInactivateFlag(inactivateFlag);
-				// DTOの妥当性確認
-				validate(dto, null);
-				// 履歴追加情報の検証
-				checkAdd(dto);
-				if (mospParams.hasErrorMessage()) {
-					// エラーが存在したら履歴追加処理をしない
-					continue;
-				}
-				// レコード識別ID最大値をインクリメントしてDTOに設定
-				dto.setPfmUserId(dao.nextRecordId());
-				// 登録処理
-				dao.insert(dto);
-			} else {
-				// DTOに無効フラグを設定
-				dto.setInactivateFlag(inactivateFlag);
-				// DTOの妥当性確認
-				validate(dto, null);
-				// 履歴更新情報の検証
-				checkUpdate(dto);
-				if (mospParams.hasErrorMessage()) {
-					// エラーが存在したら履歴更新処理をしない
-					continue;
-				}
-				// 論理削除
-				logicalDelete(dao, dto.getPfmUserId());
-				// レコード識別ID最大値をインクリメントしてDTOに設定
-				dto.setPfmUserId(dao.nextRecordId());
-				// 登録処理
-				dao.insert(dto);
-			}
-		}
-		// 有効ユーザ存在確認
-		checkUserExist();
-	}
-	
-	@Override
-	public void update(long[] idArray, Date activateDate, String roleCode) throws MospException {
-		// レコード識別ID配列の妥当性確認
-		validateAryId(idArray);
-		if (mospParams.hasErrorMessage()) {
-			return;
-		}
-		// 更新処理
-		for (String code : getUserIdList(idArray)) {
-			// 対象ユーザにおける有効日の情報を取得
-			UserMasterDtoInterface dto = dao.findForKey(code, activateDate);
-			// 存在確認(存在しなければ履歴追加、存在すれば履歴更新)
-			if (dto == null) {
-				// 対象ユーザにおける有効日以前で最新の情報を取得
-				dto = dao.findForInfo(code, activateDate);
-				// 有効日以前で最新の情報がない場合
-				if (dto == null) {
-					// エラーメッセージ追加
-					addNoCodeBeforeActivateDateMessage(code);
-					continue;
-				}
-				// DTOに有効日、ロールコードを設定
-				dto.setActivateDate(activateDate);
-				dto.setRoleCode(roleCode);
-				// DTOの妥当性確認
-				validate(dto, null);
-				// 履歴追加情報の検証
-				checkAdd(dto);
-				if (mospParams.hasErrorMessage()) {
-					// エラーが存在したら履歴追加処理をしない
-					continue;
-				}
-				// レコード識別ID最大値をインクリメントしてDTOに設定
-				dto.setPfmUserId(dao.nextRecordId());
-				// 登録処理
-				dao.insert(dto);
-			} else {
-				// DTOに有効日、ロールコードを設定
-				dto.setRoleCode(roleCode);
-				// DTOの妥当性確認
-				validate(dto, null);
-				// 履歴更新情報の検証
-				checkUpdate(dto);
-				if (mospParams.hasErrorMessage()) {
-					// エラーが存在したら履歴更新処理をしない
-					continue;
-				}
-				// 論理削除
-				logicalDelete(dao, dto.getPfmUserId());
-				// レコード識別ID最大値をインクリメントしてDTOに設定
-				dto.setPfmUserId(dao.nextRecordId());
-				// 登録処理
-				dao.insert(dto);
-			}
-		}
-		// 有効ユーザ存在確認
-		checkUserExist();
-	}
-	
-	@Override
-	public void delete(long[] idArray) throws MospException {
-		// レコード識別ID配列の妥当性確認
-		validateAryId(idArray);
-		if (mospParams.hasErrorMessage()) {
-			return;
-		}
-		// レコード識別ID毎に削除
-		for (long id : idArray) {
-			// 削除対象DTO取得
-			UserMasterDtoInterface dto = (UserMasterDtoInterface)dao.findForKey(id, true);
-			// 削除情報の検証
-			checkDelete(dto);
-			if (mospParams.hasErrorMessage()) {
-				// エラーが存在したら履歴削除処理をしない
-				continue;
-			}
-			// 論理削除
-			logicalDelete(dao, id);
-			// ユーザIDでユーザパスワード情報を取得
-			UserPasswordDtoInterface userPasswordDto = userPasswordDao.findForInfo(dto.getUserId());
-			if (userPasswordDto != null) {
-				// ユーザマスタ履歴一覧を取得
-				List<UserMasterDtoInterface> list = dao.findForHistory(dto.getUserId());
-				// 履歴がない場合ユーザパスワード削除
-				if (list.isEmpty()) {
-					// 論理削除
-					logicalDelete(userPasswordDao, userPasswordDto.getPfaUserPasswordId());
-				}
-			}
-		}
-		// 有効ユーザ存在確認
-		checkUserExist();
-	}
-	
-	@Override
-	public List<String> getUserIdList(long[] recordIdArray) throws MospException {
-		// リスト準備
-		List<String> list = new ArrayList<String>();
-		// レコード識別IDからDTOを取得し、コードをリストへ追加
-		for (long recordId : recordIdArray) {
-			// レコード識別IDから対象DTOを取得
-			UserMasterDtoInterface dto = (UserMasterDtoInterface)dao.findForKey(recordId, false);
-			// 排他確認
-			checkExclusive(dto);
-			// 対象コードをリストへ追加
-			list.add(dto.getUserId());
-		}
-		return list;
+		// 論理削除
+		logicalDelete(dao, dto.getPfmUserId());
 	}
 	
 	/**
@@ -329,8 +158,13 @@ public class UserMasterRegistBean extends PlatformFileBean implements UserMaster
 	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
 	 */
 	protected void checkInsert(UserMasterDtoInterface dto) throws MospException {
-		// 対象レコードが重複していないかを確認
-		checkDuplicateInsert(dao.findForHistory(dto.getUserId()));
+		// ユーザIDを取得
+		String userId = dto.getUserId();
+		// ユーザIDでユーザ情報を取得できる場合
+		if (dao.findForHistory(dto.getUserId()).isEmpty() == false) {
+			// エラーメッセージを設定
+			PlatformMessageUtility.addErrorUserIdExist(mospParams, userId, null);
+		}
 	}
 	
 	/**
@@ -378,61 +212,23 @@ public class UserMasterRegistBean extends PlatformFileBean implements UserMaster
 		userCheck.checkUserEmployee(dto.getPersonalId(), dto.getActivateDate());
 	}
 	
-	/**
-	 * 有効ユーザ存在確認を行う。<br>
-	 * システム日付で確認し、ユーザが存在せず
-	 * ログインできない状態にならないかを確認する。<br>
-	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
-	 */
-	protected void checkUserExist() throws MospException {
-		// システム日付で必須ロールコードを有する有効なユーザを取得
-		List<UserMasterDtoInterface> list = dao.findForRole(getNeededRole(), getSystemDate());
-		// 結果確認
-		if (list.isEmpty()) {
-			// 必須ロールコードを設定してるユーザが存在しなくなる場合のメッセージを設定
-			addDisappearNeededRoleMessage();
-		}
-	}
-	
-	/**
-	 * 必須ロールコードを取得する。<br>
-	 * @return 必須ロールコード
-	 */
-	protected String getNeededRole() {
-		// ロール情報取得
-		for (Entry<String, RoleProperty> entry : mospParams.getProperties().getRoleProperties().entrySet()) {
-			// ロール情報取得
-			RoleProperty roleProperty = entry.getValue();
-			// 必須ロール設定確認
-			if (roleProperty.isNeeded()) {
-				return roleProperty.getKey();
-			}
-		}
-		return "";
-	}
-	
-	/**
-	 * 必須ロールコードを設定してるユーザが存在しなくなる場合のメッセージを設定する。<br>
-	 */
-	protected void addDisappearNeededRoleMessage() {
-		mospParams.addErrorMessage(PlatformMessageConst.MSG_DISAPPEAR_NEEDED_ROLE, getNeededRole());
-	}
-	
 	@Override
 	public void validate(UserMasterDtoInterface dto, Integer row) throws MospException {
+		// エラーメッセージ用の名称を取得
+		String nameUserId = PlatformNamingUtility.userId(mospParams);
 		// 無効フラグ確認
 		if (isDtoActivate(dto)) {
 			// ユーザ妥当性確認
 			checkUser(dto);
 		}
 		// 必須確認(ユーザID)
-		checkRequired(dto.getUserId(), getNameUserId(), row);
+		checkRequired(dto.getUserId(), nameUserId, row);
 		// コード + 記号確認
-		checkUserId(dto.getUserId(), getNameUserId(), row);
+		checkUserId(dto.getUserId(), nameUserId, row);
 		// 必須確認(有効日)
 		checkRequired(dto.getActivateDate(), getNameActivateDate(), row);
 		// 桁数確認(ユーザID)
-		checkLength(dto.getUserId(), LEN_USER_ID, getNameUserId(), row);
+		checkLength(dto.getUserId(), LEN_USER_ID, nameUserId, row);
 		// ロール存在確認
 		checkRole(dto.getRoleCode(), dto.getActivateDate(), row);
 	}
@@ -454,33 +250,7 @@ public class UserMasterRegistBean extends PlatformFileBean implements UserMaster
 			}
 		}
 		// ロールが存在しない場合のメッセージを追加
-		addRoleNotExistMessage(roleCode, row);
-	}
-	
-	/**
-	 * ロールが存在しない場合のメッセージを設定する。<br>
-	 * @param roleCode ロール
-	 * @param row      行インデックス
-	 */
-	protected void addRoleNotExistMessage(String roleCode, Integer row) {
-		String[] rep = { getRowedFieldName(getNameRole(), row), roleCode };
-		mospParams.addErrorMessage(PlatformMessageConst.MSG_SELECTED_CODE_NOT_EXIST, rep);
-	}
-	
-	/**
-	 * ユーザID名称を取得する。<br>
-	 * @return ユーザID名称
-	 */
-	protected String getNameUserId() {
-		return mospParams.getName("User") + mospParams.getName("Id");
-	}
-	
-	/**
-	 * ロール名称を取得する。<br>
-	 * @return ロール名称
-	 */
-	protected String getNameRole() {
-		return mospParams.getName("Role");
+		PlatformMessageUtility.addErrorRoleCodeNotExist(mospParams, roleCode, row);
 	}
 	
 }

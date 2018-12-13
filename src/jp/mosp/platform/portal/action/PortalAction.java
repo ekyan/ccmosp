@@ -106,6 +106,16 @@ public class PortalAction extends PlatformAction {
 		return portalVo;
 	}
 	
+	/**
+	 * ポータルではメニューキーはnullとする。<br>
+	 * メニュー選択時にエラー等でポータル画面に帰ってくる場合に
+	 * パンくずや範囲設定が不正に設定されることを防ぐ。<br>
+	 */
+	@Override
+	protected String getTransferredMenuKey() {
+		return null;
+	}
+	
 	@Override
 	public void action() throws MospException {
 		if (mospParams.getCommand().equals(CMD_AFTER_AUTH)) {
@@ -143,10 +153,15 @@ public class PortalAction extends PlatformAction {
 	 * @throws MospException MosP例外が発生した場合
 	 */
 	protected void afterAuthShow() throws MospException {
-		// 表示処理
-		show();
 		// ログイン後ポータルBeanクラス群(クラス名)に対して、クラス毎に処理
 		showPortalBeans(getAfterAuthPortalBeansClassNames());
+		// 処理結果確認
+		if (mospParams.hasErrorMessage() == false) {
+			// コミット
+			commit();
+		}
+		// 表示処理
+		show();
 	}
 	
 	/**
@@ -205,6 +220,8 @@ public class PortalAction extends PlatformAction {
 			// コミット
 			commit();
 		}
+		// ロールバック
+		rollback();
 		// 表示処理
 		show();
 	}

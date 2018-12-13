@@ -82,7 +82,7 @@ public interface AttendanceRegistBeanInterface {
 	/**
 	 * 下書時の確認処理を行う。<br>
 	 * @param dto 対象DTO
-	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合 
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
 	void checkDraft(AttendanceDtoInterface dto) throws MospException;
 	
@@ -138,18 +138,13 @@ public interface AttendanceRegistBeanInterface {
 	void checkPeriod(AttendanceDtoInterface dto);
 	
 	/**
-	 * 遅刻時間が取得可能な範囲のチェックを行う。<br>
+	 * 遅刻早退時間が取得可能な範囲のチェックを行う。<br>
+	 * 遅刻の場合、休暇又は代休の午前休を取得しているか確認する。<br>
+	 * 早退の場合、休暇又は代休の午後休を取得しているか確認する。<br>
 	 * @param dto 対象DTO
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
-	void checkLateTime(AttendanceDtoInterface dto) throws MospException;
-	
-	/**
-	 * 早退時間が取得可能な範囲のチェックを行う。<br>
-	 * @param dto 対象DTO
-	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
-	 */
-	void checkLeaveEarlyTime(AttendanceDtoInterface dto) throws MospException;
+	void checkLateEarlyTime(AttendanceDtoInterface dto) throws MospException;
 	
 	/**
 	 * 始業・終業必須確認。
@@ -247,4 +242,19 @@ public interface AttendanceRegistBeanInterface {
 			List<GoOutDtoInterface> goOutPublicList, List<GoOutDtoInterface> goOutPrivateList,
 			List<GoOutDtoInterface> goOutMinutely1HolidayList, List<GoOutDtoInterface> goOutMinutely2HolidayList)
 			throws MospException;
+	
+	/**
+	 * 勤怠詳細画面下書チェック。<br>
+	 * @param dto 対象DTO
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 */
+	void checkAttendanceCardDraft(AttendanceDtoInterface dto) throws MospException;
+	
+	/**
+	 * 勤怠詳細画面申請チェック。<br>
+	 * @param dto 対象DTO
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 */
+	void checkAttendanceCardAppli(AttendanceDtoInterface dto) throws MospException;
+	
 }

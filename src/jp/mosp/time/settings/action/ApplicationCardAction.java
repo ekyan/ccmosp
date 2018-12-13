@@ -308,6 +308,7 @@ public class ApplicationCardAction extends TimeSettingAction {
 	protected void setActivationDate() throws MospException {
 		// VO取得
 		ApplicationCardVo vo = (ApplicationCardVo)mospParams.getVo();
+		ApplicationReferenceBeanInterface application = timeReference().application();
 		// 現在の有効日モードを確認
 		if (vo.getModeActivateDate().equals(PlatformConst.MODE_ACTIVATE_DATE_FIXED)) {
 			// 有効日モード設定(変更)
@@ -347,7 +348,16 @@ public class ApplicationCardAction extends TimeSettingAction {
 			vo.setModeActivateDate(PlatformConst.MODE_ACTIVATE_DATE_CHANGING);
 			// プルダウン再取得
 			setPulldown();
+			return;
 		}
+		ApplicationDtoInterface applicationDto = application.findFormerInfo(vo.getTxtEditApplicationCode(),
+				getEditActivateDate());
+		if (applicationDto == null) {
+			return;
+		}
+		vo.setPltEditWorkSetting(applicationDto.getWorkSettingCode());
+		vo.setPltEditSchedule(applicationDto.getScheduleCode());
+		vo.setPltEditPaidHoliday(applicationDto.getPaidHolidayCode());
 	}
 	
 	/**
@@ -489,7 +499,7 @@ public class ApplicationCardAction extends TimeSettingAction {
 			dto.setSectionCode(vo.getPltEditSectionMaster());
 			dto.setPositionCode(vo.getPltEditPositionMaster());
 			// 個人ID設定
-			dto.setPersonalId("");
+			dto.setPersonalIds("");
 		} else {
 			// マスタ組合設定
 			dto.setWorkPlaceCode("");
@@ -526,7 +536,7 @@ public class ApplicationCardAction extends TimeSettingAction {
 				}
 			}
 			// 個人ID設定
-			dto.setPersonalId(sb.toString());
+			dto.setPersonalIds(sb.toString());
 		}
 	}
 	
@@ -556,9 +566,9 @@ public class ApplicationCardAction extends TimeSettingAction {
 		vo.setPltEditSchedule(dto.getScheduleCode());
 		vo.setPltEditPaidHoliday(dto.getPaidHolidayCode());
 		// 社員コード
-		vo.setTxtEditEmployeeCode(reference().human().getEmployeeCodes(dto.getPersonalId(), dto.getActivateDate()));
+		vo.setTxtEditEmployeeCode(reference().human().getEmployeeCodes(dto.getPersonalIds(), dto.getActivateDate()));
 		// 適用対象者氏名
-		vo.setLblEmployeeName(reference().human().getHumanNames(dto.getPersonalId(), dto.getActivateDate()));
+		vo.setLblEmployeeName(reference().human().getHumanNames(dto.getPersonalIds(), dto.getActivateDate()));
 	}
 	
 }

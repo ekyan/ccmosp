@@ -21,13 +21,19 @@ import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.base.MospParams;
+import jp.mosp.framework.constant.MospConst;
 import jp.mosp.framework.utils.DateUtility;
+import jp.mosp.framework.utils.MospUtility;
 import jp.mosp.platform.base.PlatformBean;
+import jp.mosp.platform.bean.workflow.WorkflowIntegrateBeanInterface;
 import jp.mosp.platform.constant.PlatformConst;
+import jp.mosp.platform.constant.PlatformMessageConst;
 import jp.mosp.platform.dao.file.ImportDaoInterface;
 import jp.mosp.platform.dao.file.ImportFieldDaoInterface;
 import jp.mosp.platform.dao.human.HumanDaoInterface;
@@ -37,10 +43,16 @@ import jp.mosp.platform.dto.file.ImportDtoInterface;
 import jp.mosp.platform.dto.file.ImportFieldDtoInterface;
 import jp.mosp.platform.dto.human.HumanDtoInterface;
 import jp.mosp.platform.dto.workflow.WorkflowDtoInterface;
+import jp.mosp.platform.utils.InputCheckUtility;
+import jp.mosp.platform.utils.MonthUtility;
 import jp.mosp.time.bean.ApplicationReferenceBeanInterface;
 import jp.mosp.time.bean.ImportTableReferenceBeanInterface;
+import jp.mosp.time.bean.PaidHolidayReferenceBeanInterface;
 import jp.mosp.time.bean.TotalTimeTransactionReferenceBeanInterface;
+import jp.mosp.time.bean.WorkTypeItemReferenceBeanInterface;
+import jp.mosp.time.bean.WorkTypeItemRegistBeanInterface;
 import jp.mosp.time.constant.TimeConst;
+import jp.mosp.time.constant.TimeFileConst;
 import jp.mosp.time.constant.TimeMessageConst;
 import jp.mosp.time.dao.settings.AttendanceDaoInterface;
 import jp.mosp.time.dao.settings.CutoffDaoInterface;
@@ -49,33 +61,34 @@ import jp.mosp.time.dao.settings.HolidayDataDaoInterface;
 import jp.mosp.time.dao.settings.PaidHolidayDataDaoInterface;
 import jp.mosp.time.dao.settings.StockHolidayDataDaoInterface;
 import jp.mosp.time.dao.settings.TimeSettingDaoInterface;
-import jp.mosp.time.dao.settings.TimelyPaidHolidayDaoInterface;
 import jp.mosp.time.dao.settings.TotalTimeDataDaoInterface;
 import jp.mosp.time.dao.settings.WorkTypeDaoInterface;
 import jp.mosp.time.dao.settings.impl.TmdAttendanceDao;
 import jp.mosp.time.dao.settings.impl.TmdHolidayDataDao;
 import jp.mosp.time.dao.settings.impl.TmdPaidHolidayDao;
 import jp.mosp.time.dao.settings.impl.TmdStockHolidayDao;
-import jp.mosp.time.dao.settings.impl.TmdTimelyPaidHolidayDao;
 import jp.mosp.time.dao.settings.impl.TmdTotalTimeDao;
+import jp.mosp.time.dao.settings.impl.TmmWorkTypeDao;
 import jp.mosp.time.dto.settings.ApplicationDtoInterface;
 import jp.mosp.time.dto.settings.AttendanceDtoInterface;
 import jp.mosp.time.dto.settings.CutoffDtoInterface;
 import jp.mosp.time.dto.settings.HolidayDataDtoInterface;
 import jp.mosp.time.dto.settings.HolidayDtoInterface;
 import jp.mosp.time.dto.settings.PaidHolidayDataDtoInterface;
+import jp.mosp.time.dto.settings.PaidHolidayDtoInterface;
 import jp.mosp.time.dto.settings.StockHolidayDataDtoInterface;
 import jp.mosp.time.dto.settings.TimeSettingDtoInterface;
-import jp.mosp.time.dto.settings.TimelyPaidHolidayDtoInterface;
 import jp.mosp.time.dto.settings.TotalTimeDataDtoInterface;
 import jp.mosp.time.dto.settings.TotalTimeDtoInterface;
 import jp.mosp.time.dto.settings.WorkTypeDtoInterface;
+import jp.mosp.time.dto.settings.WorkTypeItemDtoInterface;
 import jp.mosp.time.dto.settings.impl.TmdAttendanceDto;
 import jp.mosp.time.dto.settings.impl.TmdHolidayDataDto;
 import jp.mosp.time.dto.settings.impl.TmdPaidHolidayDataDto;
 import jp.mosp.time.dto.settings.impl.TmdStockHolidayDto;
-import jp.mosp.time.dto.settings.impl.TmdTimelyPaidHolidayDto;
 import jp.mosp.time.dto.settings.impl.TmdTotalTimeDataDto;
+import jp.mosp.time.dto.settings.impl.TmmWorkTypeDto;
+import jp.mosp.time.entity.WorkTypeEntity;
 import jp.mosp.time.utils.TimeUtility;
 
 /**
@@ -91,17 +104,17 @@ public class ImportTableReferenceBean extends PlatformBean implements ImportTabl
 	/**
 	 * エクスポートマスタDAO。
 	 */
-	private ImportDaoInterface							importDao;
+	protected ImportDaoInterface						importDao;
 	
 	/**
 	 * エクスポートフィールドマスタDAO。
 	 */
-	private ImportFieldDaoInterface						importFieldDao;
+	protected ImportFieldDaoInterface					importFieldDao;
 	
 	/**
 	 * 人事マスタDAO。
 	 */
-	private HumanDaoInterface							humanDao;
+	protected HumanDaoInterface							humanDao;
 	
 	/**
 	 * 勤怠データDAO。
@@ -134,39 +147,54 @@ public class ImportTableReferenceBean extends PlatformBean implements ImportTabl
 	private StockHolidayDataDaoInterface				stockHolidayDataDao;
 	
 	/**
-	 * 時間単位有給休暇データDAO。
+	 * 勤務形態マスタDAO。<br>
 	 */
-	private TimelyPaidHolidayDaoInterface				timelyPaidHolidayDao;
+	protected WorkTypeDaoInterface						workTypeDao;
 	
 	/**
-	 * 勤務形態マスタDAO。
-	 */
-	private WorkTypeDaoInterface						workTypeDao;
-	
-	/**
-	 * 勤怠設定管理DAO。
+	 * 勤怠設定管理DAO。<br>
 	 */
 	private TimeSettingDaoInterface						timeSettingDao;
 	
 	/**
-	 * 締日管理DAO。
+	 * 締日管理DAOクラス。<br>
 	 */
 	private CutoffDaoInterface							cutoffDao;
 	
 	/**
-	 * ワークフローDAO。
+	 * ワークフローDAO。<br>
 	 */
 	private WorkflowDaoInterface						workflowDao;
 	
 	/**
-	 * 設定適用参照。
+	 * 設定適用参照クラス。<br>
 	 */
 	private ApplicationReferenceBeanInterface			application;
 	
 	/**
-	 * 勤怠集計管理参照。
+	 * 有給休暇設定参照クラス。<br>
+	 */
+	protected PaidHolidayReferenceBeanInterface			paidHolidayReference;
+	
+	/**
+	 * 勤怠集計管理参照クラス。<br>
 	 */
 	private TotalTimeTransactionReferenceBeanInterface	totalTimeTransaction;
+	
+	/**
+	 * ワークフロー統括クラス。<br>
+	 */
+	protected WorkflowIntegrateBeanInterface			workflowIntegrate;
+	
+	/**
+	 * 勤務形態項目登録クラス。<br>
+	 */
+	protected WorkTypeItemRegistBeanInterface			workTypeItemRegist;
+	
+	/**
+	 * 勤務形態項目参照クラス。<br>
+	 */
+	protected WorkTypeItemReferenceBeanInterface		workTypeItemRefer;
 	
 	
 	/**
@@ -196,36 +224,17 @@ public class ImportTableReferenceBean extends PlatformBean implements ImportTabl
 		holidayDataDao = (HolidayDataDaoInterface)createDao(HolidayDataDaoInterface.class);
 		paidHolidayDataDao = (PaidHolidayDataDaoInterface)createDao(PaidHolidayDataDaoInterface.class);
 		stockHolidayDataDao = (StockHolidayDataDaoInterface)createDao(StockHolidayDataDaoInterface.class);
-		timelyPaidHolidayDao = (TimelyPaidHolidayDaoInterface)createDao(TimelyPaidHolidayDaoInterface.class);
 		workTypeDao = (WorkTypeDaoInterface)createDao(WorkTypeDaoInterface.class);
 		timeSettingDao = (TimeSettingDaoInterface)createDao(TimeSettingDaoInterface.class);
 		cutoffDao = (CutoffDaoInterface)createDao(CutoffDaoInterface.class);
 		workflowDao = (WorkflowDaoInterface)createDao(WorkflowDaoInterface.class);
 		application = (ApplicationReferenceBeanInterface)createBean(ApplicationReferenceBeanInterface.class);
-		totalTimeTransaction = (TotalTimeTransactionReferenceBeanInterface)createBean(TotalTimeTransactionReferenceBeanInterface.class);
-	}
-	
-	@Override
-	public List<String[]> getTemplate(String importCode) throws MospException {
-		ImportDtoInterface importDto = importDao.findForKey(importCode);
-		if (importDto == null) {
-			return null;
-		}
-		List<ImportFieldDtoInterface> importFieldDtoList = importFieldDao.findForList(importCode);
-		if (importFieldDtoList == null || importFieldDtoList.isEmpty()) {
-			return null;
-		}
-		List<String[]> list = new ArrayList<String[]>();
-		if (importDto.getHeader() == 1) {
-			// ヘッダが有りの場合
-			List<String> headerList = new ArrayList<String>();
-			for (ImportFieldDtoInterface importFieldDto : importFieldDtoList) {
-				headerList.add(mospParams.getProperties().getCodeItemName(importDto.getImportTable(),
-						importFieldDto.getFieldName()));
-			}
-			list.add(headerList.toArray(new String[0]));
-		}
-		return list;
+		paidHolidayReference = (PaidHolidayReferenceBeanInterface)createBean(PaidHolidayReferenceBeanInterface.class);
+		totalTimeTransaction = (TotalTimeTransactionReferenceBeanInterface)createBean(
+				TotalTimeTransactionReferenceBeanInterface.class);
+		workflowIntegrate = (WorkflowIntegrateBeanInterface)createBean(WorkflowIntegrateBeanInterface.class);
+		workTypeItemRegist = (WorkTypeItemRegistBeanInterface)createBean(WorkTypeItemRegistBeanInterface.class);
+		workTypeItemRefer = (WorkTypeItemReferenceBeanInterface)createBean(WorkTypeItemReferenceBeanInterface.class);
 	}
 	
 	@Override
@@ -261,6 +270,7 @@ public class ImportTableReferenceBean extends PlatformBean implements ImportTabl
 				dto.setLeaveEarlyCertificate("");
 				dto.setLeaveEarlyComment("");
 				dto.setTimeComment("");
+				dto.setRemarks("");
 				for (ImportFieldDtoInterface importFieldDto : importFieldDtoList) {
 					int fieldOrder = importFieldDto.getFieldOrder();
 					if (csvArray.length > fieldOrder - 1) {
@@ -446,7 +456,8 @@ public class ImportTableReferenceBean extends PlatformBean implements ImportTabl
 							}
 						} else if (fieldName.equals(TmdAttendanceDao.COL_LATE_COMMENT)) {
 							// 遅刻コメント
-							if (!checkMaxLength(value, MAX_LENGTH_TIME_COMMENT)) {
+							checkLength(value, MAX_LENGTH_TIME_COMMENT, "遅刻コメント", fieldOrder);
+							if (mospParams.hasErrorMessage()) {
 								hasError = true;
 								break;
 							}
@@ -561,7 +572,8 @@ public class ImportTableReferenceBean extends PlatformBean implements ImportTabl
 							}
 						} else if (fieldName.equals(TmdAttendanceDao.COL_LEAVE_EARLY_COMMENT)) {
 							// 早退コメント
-							if (!checkMaxLength(value, MAX_LENGTH_TIME_COMMENT)) {
+							checkLength(value, MAX_LENGTH_TIME_COMMENT, "早退コメント", fieldOrder);
+							if (mospParams.hasErrorMessage()) {
 								hasError = true;
 								break;
 							}
@@ -888,6 +900,48 @@ public class ImportTableReferenceBean extends PlatformBean implements ImportTabl
 								break;
 							}
 							dto.setLateNightTime(lateNightTime);
+						} else if (fieldName.equals(TmdAttendanceDao.COL_NIGHT_WORK_WITHIN_PRESCRIBED_WORK)) {
+							// 深夜所定労働時間内時間
+							int nightWorkWithinPrescribedWork = 0;
+							try {
+								nightWorkWithinPrescribedWork = Integer.parseInt(value);
+							} catch (NumberFormatException e) {
+								hasError = true;
+								break;
+							}
+							if (nightWorkWithinPrescribedWork < 0) {
+								hasError = true;
+								break;
+							}
+							dto.setNightWorkWithinPrescribedWork(nightWorkWithinPrescribedWork);
+						} else if (fieldName.equals(TmdAttendanceDao.COL_NIGHT_OVERTIME_WORK)) {
+							// 深夜時間外時間
+							int nightOvertimeWork = 0;
+							try {
+								nightOvertimeWork = Integer.parseInt(value);
+							} catch (NumberFormatException e) {
+								hasError = true;
+								break;
+							}
+							if (nightOvertimeWork < 0) {
+								hasError = true;
+								break;
+							}
+							dto.setNightOvertimeWork(nightOvertimeWork);
+						} else if (fieldName.equals(TmdAttendanceDao.COL_NIGHT_WORK_ON_HOLIDAY)) {
+							// 深夜休日労働時間
+							int nightWorkOnHoliday = 0;
+							try {
+								nightWorkOnHoliday = Integer.parseInt(value);
+							} catch (NumberFormatException e) {
+								hasError = true;
+								break;
+							}
+							if (nightWorkOnHoliday < 0) {
+								hasError = true;
+								break;
+							}
+							dto.setNightWorkOnHoliday(nightWorkOnHoliday);
 						} else if (fieldName.equals(TmdAttendanceDao.COL_SPECIFIC_WORK_TIME)) {
 							// 所定休日勤務時間
 							int specificWorkTime = 0;
@@ -1129,6 +1183,20 @@ public class ImportTableReferenceBean extends PlatformBean implements ImportTabl
 								break;
 							}
 							dto.setSpecialLeaveDays(specialLeaveDays);
+						} else if (fieldName.equals(TmdAttendanceDao.COL_SPECIAL_LEAVE_HOURS)) {
+							// 特別休暇時間数
+							int specialLeaveHours = 0;
+							try {
+								specialLeaveHours = Integer.parseInt(value);
+							} catch (NumberFormatException e) {
+								hasError = true;
+								break;
+							}
+							if (specialLeaveHours < 0) {
+								hasError = true;
+								break;
+							}
+							dto.setSpecialLeaveHours(specialLeaveHours);
 						} else if (fieldName.equals(TmdAttendanceDao.COL_OTHER_LEAVE_DAYS)) {
 							// その他休暇日数
 							double otherLeaveDays = 0;
@@ -1143,6 +1211,20 @@ public class ImportTableReferenceBean extends PlatformBean implements ImportTabl
 								break;
 							}
 							dto.setOtherLeaveDays(otherLeaveDays);
+						} else if (fieldName.equals(TmdAttendanceDao.COL_OTHER_LEAVE_HOURS)) {
+							// その他休暇時間数
+							int otherLeaveHours = 0;
+							try {
+								otherLeaveHours = Integer.parseInt(value);
+							} catch (NumberFormatException e) {
+								hasError = true;
+								break;
+							}
+							if (otherLeaveHours < 0) {
+								hasError = true;
+								break;
+							}
+							dto.setOtherLeaveHours(otherLeaveHours);
 						} else if (fieldName.equals(TmdAttendanceDao.COL_ABSENCE_DAYS)) {
 							// 欠勤日数
 							double absenceDays = 0;
@@ -1157,6 +1239,20 @@ public class ImportTableReferenceBean extends PlatformBean implements ImportTabl
 								break;
 							}
 							dto.setAbsenceDays(absenceDays);
+						} else if (fieldName.equals(TmdAttendanceDao.COL_ABSENCE_HOURS)) {
+							// 欠勤時間数
+							int absenceHours = 0;
+							try {
+								absenceHours = Integer.parseInt(value);
+							} catch (NumberFormatException e) {
+								hasError = true;
+								break;
+							}
+							if (absenceHours < 0) {
+								hasError = true;
+								break;
+							}
+							dto.setAbsenceHours(absenceHours);
 						} else if (fieldName.equals(TmdAttendanceDao.COL_GRANTED_LEGAL_COMPENSATION_DAYS)) {
 							// 法定代休発生日数
 							double grantedLegalCompensationDays = 0;
@@ -1199,7 +1295,8 @@ public class ImportTableReferenceBean extends PlatformBean implements ImportTabl
 								break;
 							}
 							dto.setGrantedNightCompensationDays(grantedNightCompensationDays);
-						} else if (fieldName.equals(TmdAttendanceDao.COL_LEGAL_HOLIDAY_WORK_TIME_WITH_COMPENSATION_DAY)) {
+						} else if (fieldName
+							.equals(TmdAttendanceDao.COL_LEGAL_HOLIDAY_WORK_TIME_WITH_COMPENSATION_DAY)) {
 							// 法定休出時間(代休あり)
 							int legalHolidayWorkTimeWithCompensationDay = 0;
 							try {
@@ -1227,7 +1324,8 @@ public class ImportTableReferenceBean extends PlatformBean implements ImportTabl
 								hasError = true;
 								break;
 							}
-							dto.setLegalHolidayWorkTimeWithoutCompensationDay(legalHolidayWorkTimeWithoutCompensationDay);
+							dto.setLegalHolidayWorkTimeWithoutCompensationDay(
+									legalHolidayWorkTimeWithoutCompensationDay);
 						} else if (fieldName
 							.equals(TmdAttendanceDao.COL_PRESCRIBED_HOLIDAY_WORK_TIME_WITH_COMPENSATION_DAY)) {
 							// 所定休出時間(代休あり)
@@ -1242,7 +1340,8 @@ public class ImportTableReferenceBean extends PlatformBean implements ImportTabl
 								hasError = true;
 								break;
 							}
-							dto.setPrescribedHolidayWorkTimeWithCompensationDay(prescribedHolidayWorkTimeWithCompensationDay);
+							dto.setPrescribedHolidayWorkTimeWithCompensationDay(
+									prescribedHolidayWorkTimeWithCompensationDay);
 						} else if (fieldName
 							.equals(TmdAttendanceDao.COL_PRESCRIBED_HOLIDAY_WORK_TIME_WITHOUT_COMPENSATION_DAY)) {
 							// 所定休出時間(代休なし)
@@ -1257,7 +1356,8 @@ public class ImportTableReferenceBean extends PlatformBean implements ImportTabl
 								hasError = true;
 								break;
 							}
-							dto.setPrescribedHolidayWorkTimeWithoutCompensationDay(prescribedHolidayWorkTimeWithoutCompensationDay);
+							dto.setPrescribedHolidayWorkTimeWithoutCompensationDay(
+									prescribedHolidayWorkTimeWithoutCompensationDay);
 						} else if (fieldName.equals(TmdAttendanceDao.COL_OVERTIME_IN_WITH_COMPENSATION_DAY)) {
 							// 法定労働時間内残業時間(代休あり)
 							int overtimeInWithCompensationDay = 0;
@@ -1427,8 +1527,9 @@ public class ImportTableReferenceBean extends PlatformBean implements ImportTabl
 									|| PlatformConst.CODE_STATUS_APPROVED.equals(workflowDto.getWorkflowStatus())
 									|| PlatformConst.CODE_STATUS_REVERT.equals(workflowDto.getWorkflowStatus())
 									|| PlatformConst.CODE_STATUS_CANCEL.equals(workflowDto.getWorkflowStatus())
-									|| PlatformConst.CODE_STATUS_COMPLETE.equals(workflowDto.getWorkflowStatus())) {
-								// 未承認・承認・差戻・承認解除・承認済の場合
+									|| PlatformConst.CODE_STATUS_COMPLETE.equals(workflowDto.getWorkflowStatus())
+									|| workflowIntegrate.isCancelApprovable(workflowDto)) {
+								// 未承認・承認・差戻・承認解除・承認済・解除申請の場合
 								addAlreadyRegisteredDataErrorMessage(i);
 								hasError = true;
 								break;
@@ -1480,32 +1581,20 @@ public class ImportTableReferenceBean extends PlatformBean implements ImportTabl
 							employeeCode = value;
 						} else if (fieldName.equals(TmdTotalTimeDao.COL_CALCULATION_YEAR)) {
 							// 年
-							int calculationYear = 1;
-							try {
-								calculationYear = Integer.parseInt(value);
-							} catch (NumberFormatException e) {
+							InputCheckUtility.checkYear(mospParams, value, fieldName);
+							if (mospParams.hasErrorMessage()) {
 								hasError = true;
 								break;
 							}
-							if (calculationYear < 1) {
-								hasError = true;
-								break;
-							}
-							dto.setCalculationYear(calculationYear);
+							dto.setCalculationYear(getInteger(value));
 						} else if (fieldName.equals(TmdTotalTimeDao.COL_CALCULATION_MONTH)) {
 							// 月
-							int calculationMonth = 1;
-							try {
-								calculationMonth = Integer.parseInt(value);
-							} catch (NumberFormatException e) {
+							InputCheckUtility.checkMonth(mospParams, value, fieldName);
+							if (mospParams.hasErrorMessage()) {
 								hasError = true;
 								break;
 							}
-							if (calculationMonth < 1 || calculationMonth > 12) {
-								hasError = true;
-								break;
-							}
-							dto.setCalculationMonth(calculationMonth);
+							dto.setCalculationMonth(getInteger(value));
 						} else if (fieldName.equals(TmdTotalTimeDao.COL_CALCULATION_DATE)) {
 							// 集計日
 							Date calculationDate = getDate(value);
@@ -1808,6 +1897,48 @@ public class ImportTableReferenceBean extends PlatformBean implements ImportTabl
 								break;
 							}
 							dto.setLateNight(lateNight);
+						} else if (fieldName.equals(TmdTotalTimeDao.COL_NIGHT_WORK_WITHIN_PRESCRIBED_WORK)) {
+							// 深夜所定労働時間内時間
+							int nightWorkWithinPrescribedWork = 0;
+							try {
+								nightWorkWithinPrescribedWork = Integer.parseInt(value);
+							} catch (NumberFormatException e) {
+								hasError = true;
+								break;
+							}
+							if (nightWorkWithinPrescribedWork < 0) {
+								hasError = true;
+								break;
+							}
+							dto.setNightWorkWithinPrescribedWork(nightWorkWithinPrescribedWork);
+						} else if (fieldName.equals(TmdTotalTimeDao.COL_NIGHT_OVERTIME_WORK)) {
+							// 深夜時間外時間
+							int nightOvertimeWork = 0;
+							try {
+								nightOvertimeWork = Integer.parseInt(value);
+							} catch (NumberFormatException e) {
+								hasError = true;
+								break;
+							}
+							if (nightOvertimeWork < 0) {
+								hasError = true;
+								break;
+							}
+							dto.setNightOvertimeWork(nightOvertimeWork);
+						} else if (fieldName.equals(TmdTotalTimeDao.COL_NIGHT_WORK_ON_HOLIDAY)) {
+							// 深夜休日労働時間
+							int nightWorkOnHoliday = 0;
+							try {
+								nightWorkOnHoliday = Integer.parseInt(value);
+							} catch (NumberFormatException e) {
+								hasError = true;
+								break;
+							}
+							if (nightWorkOnHoliday < 0) {
+								hasError = true;
+								break;
+							}
+							dto.setNightWorkOnHoliday(nightWorkOnHoliday);
 						} else if (fieldName.equals(TmdTotalTimeDao.COL_WORK_ON_SPECIFIC_HOLIDAY)) {
 							// 所定休出時間
 							int workOnSpecificHoliday = 0;
@@ -2157,6 +2288,7 @@ public class ImportTableReferenceBean extends PlatformBean implements ImportTabl
 								hasError = true;
 								break;
 							}
+							dto.setPaidHolidayHour(paidHolidayHour);
 						} else if (fieldName.equals(TmdTotalTimeDao.COL_TIMES_STOCK_HOLIDAY)) {
 							// ストック休暇日数
 							double timesStockHoliday = 0;
@@ -2283,6 +2415,20 @@ public class ImportTableReferenceBean extends PlatformBean implements ImportTabl
 								break;
 							}
 							dto.setTotalSpecialHoliday(totalSpecialHoliday);
+						} else if (fieldName.equals(TmdTotalTimeDao.COL_SPECIAL_HOLIDAY_HOUR)) {
+							// 特別休暇時間
+							int specialHolidayHour = 0;
+							try {
+								specialHolidayHour = Integer.parseInt(value);
+							} catch (NumberFormatException e) {
+								hasError = true;
+								break;
+							}
+							if (specialHolidayHour < 0) {
+								hasError = true;
+								break;
+							}
+							dto.setSpecialHolidayHour(specialHolidayHour);
 						} else if (fieldName.equals(TmdTotalTimeDao.COL_TOTAL_OTHER_HOLIDAY)) {
 							// その他休暇合計日数
 							double totalOtherHoliday = 0;
@@ -2297,6 +2443,20 @@ public class ImportTableReferenceBean extends PlatformBean implements ImportTabl
 								break;
 							}
 							dto.setTotalOtherHoliday(totalOtherHoliday);
+						} else if (fieldName.equals(TmdTotalTimeDao.COL_OTHER_HOLIDAY_HOUR)) {
+							// その他休暇時間
+							int otherHolidayHour = 0;
+							try {
+								otherHolidayHour = Integer.parseInt(value);
+							} catch (NumberFormatException e) {
+								hasError = true;
+								break;
+							}
+							if (otherHolidayHour < 0) {
+								hasError = true;
+								break;
+							}
+							dto.setOtherHolidayHour(otherHolidayHour);
 						} else if (fieldName.equals(TmdTotalTimeDao.COL_TOTAL_ABSENCE)) {
 							// 欠勤合計日数
 							int totalAbsence = 0;
@@ -2311,6 +2471,20 @@ public class ImportTableReferenceBean extends PlatformBean implements ImportTabl
 								break;
 							}
 							dto.setTotalAbsence(totalAbsence);
+						} else if (fieldName.equals(TmdTotalTimeDao.COL_ABSENCE_HOUR)) {
+							// 欠勤時間
+							int absenceHolidayHour = 0;
+							try {
+								absenceHolidayHour = Integer.parseInt(value);
+							} catch (NumberFormatException e) {
+								hasError = true;
+								break;
+							}
+							if (absenceHolidayHour < 0) {
+								hasError = true;
+								break;
+							}
+							dto.setAbsenceHour(absenceHolidayHour);
 						} else if (fieldName.equals(TmdTotalTimeDao.COL_TOTAL_ALLOWANCE)) {
 							// 手当合計
 							int totalAllowance = 0;
@@ -2608,8 +2782,8 @@ public class ImportTableReferenceBean extends PlatformBean implements ImportTabl
 					if (applicationDto == null) {
 						hasError = true;
 					} else {
-						TimeSettingDtoInterface timeSettingDto = timeSettingDao.findForInfo(
-								applicationDto.getWorkSettingCode(), dto.getCalculationDate());
+						TimeSettingDtoInterface timeSettingDto = timeSettingDao
+							.findForInfo(applicationDto.getWorkSettingCode(), dto.getCalculationDate());
 						if (timeSettingDto == null) {
 							hasError = true;
 						} else {
@@ -2685,6 +2859,7 @@ public class ImportTableReferenceBean extends PlatformBean implements ImportTabl
 	@Override
 	public List<PaidHolidayDataDtoInterface> getPaidHolidayList(String importCode, List<String[]> list)
 			throws MospException {
+		Date systemDate = getSystemDate();
 		ImportDtoInterface importDto = importDao.findForKey(importCode);
 		if (importDto == null) {
 			return null;
@@ -2869,6 +3044,22 @@ public class ImportTableReferenceBean extends PlatformBean implements ImportTabl
 						dto.setPersonalId(humanDto.getPersonalId());
 					}
 				}
+				if (!hasError) {
+					// システム日付で取得する
+					ApplicationDtoInterface applicationDto = application.findForPerson(dto.getPersonalId(), systemDate);
+					if (applicationDto != null) {
+						// システム日付で取得する
+						PaidHolidayDtoInterface paidHolidayDto = paidHolidayReference
+							.getPaidHolidayInfo(applicationDto.getPaidHolidayCode(), systemDate);
+						if (paidHolidayDto != null) {
+							dto.setDenominatorDayHour(paidHolidayDto.getTimeAcquisitionLimitTimes());
+						}
+					}
+				}
+				// 必須項目が未設定
+				if (dto.getAcquisitionDate() == null || dto.getLimitDate() == null) {
+					hasError = true;
+				}
 				if (hasError) {
 					addInvalidDataErrorMessage(i);
 				} else {
@@ -3030,6 +3221,11 @@ public class ImportTableReferenceBean extends PlatformBean implements ImportTabl
 						dto.setPersonalId(humanDto.getPersonalId());
 					}
 				}
+				//
+				if (dto.getAcquisitionDate() == null || dto.getLimitDate() == null) {
+					hasError = true;
+				}
+				
 				if (hasError) {
 					addInvalidDataErrorMessage(i);
 				} else {
@@ -3045,8 +3241,8 @@ public class ImportTableReferenceBean extends PlatformBean implements ImportTabl
 					}
 				}
 				if (!hasError) {
-					StockHolidayDataDtoInterface stockHolidayDataDto = stockHolidayDataDao.findForKey(
-							dto.getPersonalId(), dto.getActivateDate(), dto.getAcquisitionDate());
+					StockHolidayDataDtoInterface stockHolidayDataDto = stockHolidayDataDao
+						.findForKey(dto.getPersonalId(), dto.getActivateDate(), dto.getAcquisitionDate());
 					if (stockHolidayDataDto != null) {
 						dto.setTmdStockHolidayId(stockHolidayDataDto.getTmdStockHolidayId());
 					}
@@ -3058,158 +3254,6 @@ public class ImportTableReferenceBean extends PlatformBean implements ImportTabl
 			i++;
 		}
 		return stockHolidayDataList;
-	}
-	
-	@Override
-	public List<TimelyPaidHolidayDtoInterface> getTimelyPaidHolidayList(String importCode, List<String[]> list)
-			throws MospException {
-		ImportDtoInterface importDto = importDao.findForKey(importCode);
-		if (importDto == null) {
-			return null;
-		}
-		List<ImportFieldDtoInterface> importFieldDtoList = importFieldDao.findForList(importCode);
-		if (importFieldDtoList == null || importFieldDtoList.isEmpty()) {
-			return null;
-		}
-		List<TimelyPaidHolidayDtoInterface> timelyPaidHolidayList = new ArrayList<TimelyPaidHolidayDtoInterface>();
-		int i = 0;
-		for (String[] csvArray : list) {
-			if (importDto.getHeader() == 1 && i == 0) {
-				// ヘッダが有り場合
-				if (!checkHeader(importDto, importFieldDtoList, csvArray)) {
-					// ヘッダの形式が不正の場合
-					addInvalidHeaderErrorMessage();
-					return null;
-				}
-			} else {
-				boolean hasError = false;
-				String employeeCode = "";
-				TimelyPaidHolidayDtoInterface dto = new TmdTimelyPaidHolidayDto();
-				for (ImportFieldDtoInterface importFieldDto : importFieldDtoList) {
-					int fieldOrder = importFieldDto.getFieldOrder();
-					if (csvArray.length > fieldOrder - 1) {
-						String value = csvArray[fieldOrder - 1];
-						String fieldName = importFieldDto.getFieldName();
-						if (fieldName.equals(PfmHumanDao.COL_EMPLOYEE_CODE)) {
-							// 社員コード
-							employeeCode = value;
-						} else if (fieldName.equals(TmdTimelyPaidHolidayDao.COL_ACTIVATE_DATE)) {
-							// 有効日
-							Date activateDate = getDate(value);
-							if (activateDate == null) {
-								hasError = true;
-								break;
-							}
-							dto.setActivateDate(activateDate);
-						} else if (fieldName.equals(TmdTimelyPaidHolidayDao.COL_ACQUISITION_DATE)) {
-							// 取得日
-							Date acquisitionDate = getDate(value);
-							if (acquisitionDate == null) {
-								hasError = true;
-								break;
-							}
-							dto.setAcquisitionDate(acquisitionDate);
-						} else if (fieldName.equals(TmdTimelyPaidHolidayDao.COL_POSSIBLE_HOUR)) {
-							// 利用可能時間数
-							int possibleHour = 0;
-							try {
-								possibleHour = Integer.parseInt(value);
-							} catch (NumberFormatException e) {
-								hasError = true;
-								break;
-							}
-							if (possibleHour < 0) {
-								hasError = true;
-								break;
-							}
-							dto.setPossibleHour(possibleHour);
-						} else if (fieldName.equals(TmdTimelyPaidHolidayDao.COL_GIVING_HOUR)) {
-							// 付与時間数
-							int givingHour = 0;
-							try {
-								givingHour = Integer.parseInt(value);
-							} catch (NumberFormatException e) {
-								hasError = true;
-								break;
-							}
-							if (givingHour < 0) {
-								hasError = true;
-								break;
-							}
-							dto.setGivingHour(givingHour);
-						} else if (fieldName.equals(TmdTimelyPaidHolidayDao.COL_CANCEL_HOUR)) {
-							// 廃棄時間数
-							int cancelHour = 0;
-							try {
-								cancelHour = Integer.parseInt(value);
-							} catch (NumberFormatException e) {
-								hasError = true;
-								break;
-							}
-							if (cancelHour < 0) {
-								hasError = true;
-								break;
-							}
-							dto.setCancelHour(cancelHour);
-						} else if (fieldName.equals(TmdTimelyPaidHolidayDao.COL_USE_HOUR)) {
-							// 使用時間数
-							int useHour = 0;
-							try {
-								useHour = Integer.parseInt(value);
-							} catch (NumberFormatException e) {
-								hasError = true;
-								break;
-							}
-							if (useHour < 0) {
-								hasError = true;
-								break;
-							}
-							dto.setUseHour(useHour);
-						}
-					}
-				}
-				if (!hasError && employeeCode.isEmpty()) {
-					hasError = true;
-				}
-				if (!hasError && dto.getActivateDate() == null) {
-					hasError = true;
-				}
-				if (!hasError) {
-					HumanDtoInterface humanDto = humanDao.findForEmployeeCode(employeeCode, dto.getActivateDate());
-					if (humanDto == null || humanDto.getPersonalId() == null || humanDto.getPersonalId().isEmpty()) {
-						hasError = true;
-					} else {
-						// 個人ID
-						dto.setPersonalId(humanDto.getPersonalId());
-					}
-				}
-				if (hasError) {
-					addInvalidDataErrorMessage(i);
-				} else {
-					if (timelyPaidHolidayDao.findForKey(dto.getPersonalId(), dto.getActivateDate(),
-							dto.getAcquisitionDate()) == null) {
-						// ファイル内重複チェック
-						for (TimelyPaidHolidayDtoInterface timelyPaidHolidayDataDto : timelyPaidHolidayList) {
-							if (timelyPaidHolidayDataDto.getPersonalId().equals(dto.getPersonalId())
-									&& timelyPaidHolidayDataDto.getActivateDate().equals(dto.getActivateDate())
-									&& timelyPaidHolidayDataDto.getAcquisitionDate().equals(dto.getAcquisitionDate())) {
-								addDuplicateDataErrorMessage(i);
-								hasError = true;
-								break;
-							}
-						}
-					} else {
-						addAlreadyRegisteredDataErrorMessage(i);
-						hasError = true;
-					}
-				}
-				if (!hasError) {
-					timelyPaidHolidayList.add(dto);
-				}
-			}
-			i++;
-		}
-		return timelyPaidHolidayList;
 	}
 	
 	@Override
@@ -3284,6 +3328,20 @@ public class ImportTableReferenceBean extends PlatformBean implements ImportTabl
 								break;
 							}
 							dto.setGivingDay(givingDay);
+						} else if (TmdHolidayDataDao.COL_GIVING_HOUR.equals(fieldName)) {
+							// 付与時間
+							int givingHour = 0;
+							try {
+								givingHour = Integer.parseInt(value);
+							} catch (NumberFormatException e) {
+								hasError = true;
+								break;
+							}
+							if (givingHour < 0) {
+								hasError = true;
+								break;
+							}
+							dto.setGivingHour(givingHour);
 						} else if (TmdHolidayDataDao.COL_CANCEL_DAY.equals(fieldName)) {
 							// 廃棄日数
 							double cancelDay = 0;
@@ -3298,6 +3356,20 @@ public class ImportTableReferenceBean extends PlatformBean implements ImportTabl
 								break;
 							}
 							dto.setCancelDay(cancelDay);
+						} else if (TmdHolidayDataDao.COL_CANCEL_HOUR.equals(fieldName)) {
+							// 廃棄時間
+							int cancelHour = 0;
+							try {
+								cancelHour = Integer.parseInt(value);
+							} catch (NumberFormatException e) {
+								hasError = true;
+								break;
+							}
+							if (cancelHour < 0) {
+								hasError = true;
+								break;
+							}
+							dto.setCancelHour(cancelHour);
 						} else if (TmdHolidayDataDao.COL_HOLIDAY_LIMIT_DATE.equals(fieldName)) {
 							// 取得期限
 							Date holidayLimitDate = getDate(value);
@@ -3404,6 +3476,595 @@ public class ImportTableReferenceBean extends PlatformBean implements ImportTabl
 		return holidayDataList;
 	}
 	
+	@Override
+	public Map<WorkTypeDtoInterface, Map<String, WorkTypeItemDtoInterface>> getWorkType(String importCode,
+			List<String[]> list) throws MospException {
+		// 勤務形態 基本情報
+		// インポート情報取得
+		ImportDtoInterface importDto = importDao.findForKey(importCode);
+		if (importDto == null) {
+			// インポート情報がnullの場合
+			return null;
+		}
+		// インポートフィールド情報取得
+		List<ImportFieldDtoInterface> importFieldDtoList = importFieldDao.findForList(importCode);
+		if (importFieldDtoList == null || importFieldDtoList.isEmpty()) {
+			// インポートフィールド情報がnull又は、空白の場合
+			return null;
+		}
+		// マップ準備
+		Map<WorkTypeDtoInterface, Map<String, WorkTypeItemDtoInterface>> targetMap = new HashMap<WorkTypeDtoInterface, Map<String, WorkTypeItemDtoInterface>>();
+		// ヘッダが有りの場合、一回だけ処理するため
+		int i = 0;
+		// インポート情報設定
+		for (String[] csvArray : list) {
+			if (importDto.getHeader() == 1 && i == 0) {
+				// ヘッダが有り場合かつ、iが0の場合
+				if (!checkHeader(importDto, importFieldDtoList, csvArray)) {
+					// ヘッダの形式が不正の場合
+					addInvalidHeaderErrorMessage();
+					return null;
+				}
+			} else {
+				// インポート項目
+				WorkTypeDtoInterface dto = new TmmWorkTypeDto();
+				// 勤務形態コードリスト
+				List<String> workTypeCodeList = new ArrayList<String>();
+				// 勤務形態項目マップ準備
+				Map<String, WorkTypeItemDtoInterface> itemMap = new HashMap<String, WorkTypeItemDtoInterface>();
+				// 年月準備
+				String year = "";
+				String month = "";
+				boolean isActivateDate = false;
+				// 初期化 無効フラグ
+				dto.setInactivateFlag(0);
+				// インポートフィールド情報設定
+				for (ImportFieldDtoInterface importFieldDto : importFieldDtoList) {
+					// インポートフィールド情報の順序
+					int fieldOrder = importFieldDto.getFieldOrder();
+					if (csvArray.length > fieldOrder - 1) {
+						// インポートフィールド数が順序数より大きい場合
+						// インポートフィールドの値を設定
+						String value = csvArray[fieldOrder - 1];
+						// インポートフィールドのコードキー設定
+						String fieldName = importFieldDto.getFieldName();
+						// 勤務形態情報でない場合
+						if (!isWorkTypeInfo(fieldName)) {
+							continue;
+						}
+						// 有効日(必須項目)
+						if (fieldName.equals(TimeFileConst.ACTIVATE_DATE_YEAR)) {
+							// 有効日(年)
+							year = value;
+						} else if (fieldName.equals(TimeFileConst.ACTIVATE_DATE_MONTH)) {
+							// 有効日(月)
+							month = value;
+						}
+						if (!isActivateDate && !year.isEmpty() && !month.isEmpty()) {
+							// 有効日設定
+							String[] rep = { "有効日(年)", "有効日(月)", "" };
+							InputCheckUtility.checkDateGeneral(mospParams, year, month, "1", rep);
+							if (mospParams.hasErrorMessage()) {
+								return null;
+							}
+							Date activateDate = MonthUtility.getYearMonthDate(Integer.parseInt(year),
+									Integer.parseInt(month));
+							dto.setActivateDate(activateDate);
+							isActivateDate = true;
+							continue;
+						}
+						// 勤務形態情報設定
+						setWorkTypeDto(dto, fieldName, value);
+					}
+				}
+				// 同じ勤務形態コードの勤務形態情報がある場合
+				if (workTypeCodeList.contains(dto.getWorkTypeCode())) {
+					// エラー処理
+					addDuplicateDataErrorMessage(i);
+					return null;
+				} else {
+					// 勤務形態コード追加
+					workTypeCodeList.add(dto.getWorkTypeCode());
+				}
+				if (mospParams.hasErrorMessage()) {
+					return null;
+				}
+				// インポートフィールド情報設定
+				for (ImportFieldDtoInterface importFieldDto : importFieldDtoList) {
+					// インポートフィールド情報の順序
+					int fieldOrder = importFieldDto.getFieldOrder();
+					if (csvArray.length > fieldOrder - 1) {
+						// インポートフィールド数が順序数より大きい場合インポートフィールドの値を設定
+						String value = csvArray[fieldOrder - 1];
+						// インポートフィールドのコードキー設定
+						String fieldName = importFieldDto.getFieldName();
+						// 勤務形態項目情報でない場合
+						if (!isWorkTypeItemInfo(fieldName)) {
+							continue;
+						}
+						// 勤務形態項目データ取得
+						WorkTypeItemDtoInterface itemDto = setWorktypeItemDto(fieldName, fieldOrder, value, dto, i);
+						// 項目が不正な値の場合
+						if (itemDto == null) {
+							return null;
+						}
+						// 時短時間(開始時間)項目がある場合
+						if (isWorkTypeItemShort(itemDto)) {
+							// 時短項目(開始時間)データを取得する
+							itemDto = setWorkTypeItemShort(fieldName, value, itemMap, itemDto);
+						}
+						// 勤務形態コード
+						itemMap.put(itemDto.getWorkTypeItemCode(), itemDto);
+					}
+				}
+				// 休憩時間取得
+				itemMap.put(TimeConst.CODE_RESTTIME, getWoryTypeRestTimedto(dto, itemMap));
+				// 勤務時間取得
+				itemMap.put(TimeConst.CODE_WORKTIME, getWoryTypeWorkTimedto(dto, itemMap));
+				// マップ追加
+				targetMap.put(dto, itemMap);
+			}
+			
+			i++;
+		}
+		
+		return targetMap;
+	}
+	
+	/**
+	 * 勤務形態データ休憩時間を取得する。<br>
+	 * @param workTypeDto 勤務形態項目データ
+	 * @param itemMap 項目マップ
+	 * @return 休憩時間勤務形態データ
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 */
+	protected WorkTypeItemDtoInterface getWoryTypeRestTimedto(WorkTypeDtoInterface workTypeDto,
+			Map<String, WorkTypeItemDtoInterface> itemMap) throws MospException {
+		// 始業・終業取得
+		WorkTypeItemDtoInterface rest1StartDto = itemMap.get(TimeConst.CODE_RESTSTART1);
+		WorkTypeItemDtoInterface rest1EndDto = itemMap.get(TimeConst.CODE_RESTEND1);
+		WorkTypeItemDtoInterface rest2StartDto = itemMap.get(TimeConst.CODE_RESTSTART2);
+		WorkTypeItemDtoInterface rest2EndDto = itemMap.get(TimeConst.CODE_RESTEND2);
+		WorkTypeItemDtoInterface rest3StartDto = itemMap.get(TimeConst.CODE_RESTSTART3);
+		WorkTypeItemDtoInterface rest3EndDto = itemMap.get(TimeConst.CODE_RESTEND3);
+		WorkTypeItemDtoInterface rest4StartDto = itemMap.get(TimeConst.CODE_RESTSTART4);
+		WorkTypeItemDtoInterface rest4EndDto = itemMap.get(TimeConst.CODE_RESTEND4);
+		// 差を取得する。
+		int rest1 = 0;
+		if (rest1StartDto != null && rest1EndDto != null) {
+			rest1 = TimeUtility.getDifferenceMinutes(rest1StartDto.getWorkTypeItemValue(),
+					rest1EndDto.getWorkTypeItemValue());
+		}
+		int rest2 = 0;
+		if (rest2StartDto != null && rest2EndDto != null) {
+			rest2 = TimeUtility.getDifferenceMinutes(rest2StartDto.getWorkTypeItemValue(),
+					rest2EndDto.getWorkTypeItemValue());
+		}
+		int rest3 = 0;
+		if (rest3StartDto != null && rest3EndDto != null) {
+			rest3 = TimeUtility.getDifferenceMinutes(rest3StartDto.getWorkTypeItemValue(),
+					rest3EndDto.getWorkTypeItemValue());
+		}
+		int rest4 = 0;
+		if (rest4StartDto != null && rest4EndDto != null) {
+			rest4 = TimeUtility.getDifferenceMinutes(rest4StartDto.getWorkTypeItemValue(),
+					rest4EndDto.getWorkTypeItemValue());
+		}
+		// 休憩時間取得
+		int rest = workTypeItemRefer.getRestTime(rest1, rest2, rest3, rest4);
+		// DTO設定
+		WorkTypeItemDtoInterface itemDto = workTypeItemRegist.getInitDto();
+		// コード・有効日設定
+		itemDto.setWorkTypeCode(workTypeDto.getWorkTypeCode());
+		itemDto.setActivateDate(workTypeDto.getActivateDate());
+		itemDto.setInactivateFlag(workTypeDto.getInactivateFlag());
+		itemDto.setWorkTypeItemCode(TimeConst.CODE_RESTTIME);
+		itemDto.setWorkTypeItemValue(DateUtility.addMinute(DateUtility.getDefaultTime(), rest));
+		itemDto.setPreliminary("");
+		
+		return itemDto;
+	}
+	
+	/**
+	 * 勤務形態データ勤務時間を取得する。<br>
+	 * @param workTypeDto 勤務形態データ
+	 * @param itemMap 項目マップ
+	 * @return 勤務時間勤務形態データ
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 */
+	protected WorkTypeItemDtoInterface getWoryTypeWorkTimedto(WorkTypeDtoInterface workTypeDto,
+			Map<String, WorkTypeItemDtoInterface> itemMap) throws MospException {
+		WorkTypeItemDtoInterface startDto = itemMap.get(TimeConst.CODE_WORKSTART);
+		WorkTypeItemDtoInterface endDto = itemMap.get(TimeConst.CODE_WORKEND);
+		WorkTypeItemDtoInterface restDto = itemMap.get(TimeConst.CODE_RESTTIME);
+		// 始業時刻を取得する
+		Date startTime = startDto != null ? startDto.getWorkTypeItemValue() : null;
+		// 終業時刻を取得する
+		Date endTime = endDto != null ? endDto.getWorkTypeItemValue() : null;
+		// 休憩時間を取得する
+		int restTime = 0;
+		if (restDto != null) {
+			restTime = TimeUtility.getDifferenceMinutes(DateUtility.getDefaultTime(), restDto.getWorkTypeItemValue());
+		}
+		// 勤務形態項目情報準備
+		WorkTypeItemDtoInterface itemDto = workTypeItemRegist.getInitDto();
+		// コード・有効日設定
+		itemDto.setWorkTypeCode(workTypeDto.getWorkTypeCode());
+		itemDto.setActivateDate(workTypeDto.getActivateDate());
+		itemDto.setInactivateFlag(workTypeDto.getInactivateFlag());
+		itemDto.setWorkTypeItemCode(TimeConst.CODE_WORKTIME);
+		itemDto.setWorkTypeItemValue(DateUtility.addMinute(DateUtility.getDefaultTime(),
+				workTypeItemRefer.getWorkTime(startTime, endTime, restTime)));
+		itemDto.setPreliminary("");
+		return itemDto;
+	}
+	
+	/**
+	 * 勤務形態情報を取得する。<br>
+	 * @param dto 勤務形態情報
+	 * @param fieldName 項目名
+	 * @param value 項目値
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 */
+	protected void setWorkTypeDto(WorkTypeDtoInterface dto, String fieldName, String value) throws MospException {
+		// 勤務形態データ
+		if (fieldName.equals(TmmWorkTypeDao.COL_WORK_TYPE_CODE)) {
+			// 勤務形態コード
+			dto.setWorkTypeCode(value);
+		} else if (fieldName.equals(TmmWorkTypeDao.COL_WORK_TYPE_NAME)) {
+			// 勤務形態名称(必須項目)
+			dto.setWorkTypeName(value);
+		} else if (fieldName.equals(TmmWorkTypeDao.COL_WORK_TYPE_ABBR)) {
+			// 勤務形態略称(必須項目)
+			dto.setWorkTypeAbbr(value);
+		} else if (fieldName.equals(TmmWorkTypeDao.COL_INACTIVATE_FLAG)) {
+			// 有効/無効設定
+			checkRequired(value, getCodeName(fieldName, TimeFileConst.CODE_IMPORT_TYPE_TMD_WORK_TYPE), null);
+			if (mospParams.hasErrorMessage()) {
+				return;
+			}
+			checkTypeNumber(value, getCodeName(fieldName, TimeFileConst.CODE_IMPORT_TYPE_TMD_WORK_TYPE), null);
+			if (mospParams.hasErrorMessage()) {
+				return;
+			}
+			checkFlag(getInteger(value), getCodeName(fieldName, TimeFileConst.CODE_IMPORT_TYPE_TMD_WORK_TYPE), null);
+			if (mospParams.hasErrorMessage()) {
+				return;
+			}
+			dto.setInactivateFlag(MospUtility.getInt(value));
+		}
+	}
+	
+	/**
+	 * 勤務形態項目コードリストを取得する。<br>
+	 * @param fieldName 項目名
+	 * @param i インデックス
+	 * @param value 項目値
+	 * @param worktypeDto 勤務形態情報
+	 * @param index 対象行数
+	 * @return 勤務形態項目情報
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 */
+	protected WorkTypeItemDtoInterface setWorktypeItemDto(String fieldName, Integer i, String value,
+			WorkTypeDtoInterface worktypeDto, int index) throws MospException {
+		// 勤務形態項目情報準備
+		WorkTypeItemDtoInterface dto = workTypeItemRegist.getInitDto();
+		// コード・有効日設定
+		dto.setActivateDate(worktypeDto.getActivateDate());
+		dto.setWorkTypeCode(worktypeDto.getWorkTypeCode());
+		dto.setWorkTypeItemValue(DateUtility.getDefaultTime());
+		dto.setPreliminary("");
+		dto.setInactivateFlag(worktypeDto.getInactivateFlag());
+		if (fieldName.equals(TimeFileConst.WORK_START_TIME)) {
+			// 始業時刻設定
+			dto.setWorkTypeItemCode(TimeConst.CODE_WORKSTART);
+			dto.setWorkTypeItemValue(getDefaltTimestamp(value, fieldName));
+			return dto;
+		} else if (fieldName.equals(TimeFileConst.WORK_END_TIME)) {
+			// 終業時刻設定
+			dto.setWorkTypeItemCode(TimeConst.CODE_WORKEND);
+			dto.setWorkTypeItemValue(getDefaltTimestamp(value, fieldName));
+			return dto;
+		} else if (fieldName.equals(TimeFileConst.REST1_START_TIME)) {
+			// 休憩1(開始時間)
+			dto.setWorkTypeItemCode(TimeConst.CODE_RESTSTART1);
+			dto.setWorkTypeItemValue(getDefaltTimestamp(value, fieldName));
+			return dto;
+		} else if (fieldName.equals(TimeFileConst.REST1_END_TIME)) {
+			// 休憩1(終了時間)
+			dto.setWorkTypeItemCode(TimeConst.CODE_RESTEND1);
+			dto.setWorkTypeItemValue(getDefaltTimestamp(value, fieldName));
+			return dto;
+		} else if (fieldName.equals(TimeFileConst.REST2_START_TIME)) {
+			// 休憩2(開始時間)
+			dto.setWorkTypeItemCode(TimeConst.CODE_RESTSTART2);
+			dto.setWorkTypeItemValue(getDefaltTimestamp(value, fieldName));
+			return dto;
+		} else if (fieldName.equals(TimeFileConst.REST2_END_TIME)) {
+			// 休憩2(終了時間)
+			dto.setWorkTypeItemCode(TimeConst.CODE_RESTEND2);
+			dto.setWorkTypeItemValue(getDefaltTimestamp(value, fieldName));
+			return dto;
+		} else if (fieldName.equals(TimeFileConst.REST3_START_TIME)) {
+			// 休憩3(開始時間)
+			dto.setWorkTypeItemCode(TimeConst.CODE_RESTSTART3);
+			dto.setWorkTypeItemValue(getDefaltTimestamp(value, fieldName));
+			return dto;
+		} else if (fieldName.equals(TimeFileConst.REST3_END_TIME)) {
+			// 休憩3(終了時間)
+			dto.setWorkTypeItemCode(TimeConst.CODE_RESTEND3);
+			dto.setWorkTypeItemValue(getDefaltTimestamp(value, fieldName));
+			return dto;
+		} else if (fieldName.equals(TimeFileConst.REST4_START_TIME)) {
+			// 休憩4(開始時間)
+			dto.setWorkTypeItemCode(TimeConst.CODE_RESTSTART4);
+			dto.setWorkTypeItemValue(getDefaltTimestamp(value, fieldName));
+			return dto;
+		} else if (fieldName.equals(TimeFileConst.REST4_END_TIME)) {
+			// 休憩4(終了時間)
+			dto.setWorkTypeItemCode(TimeConst.CODE_RESTEND4);
+			dto.setWorkTypeItemValue(getDefaltTimestamp(value, fieldName));
+			return dto;
+		} else if (fieldName.equals(TimeFileConst.FRONT_START_TIME)) {
+			// 午前休(開始時間)(必須項目)
+			dto.setWorkTypeItemCode(TimeConst.CODE_FRONTSTART);
+			dto.setWorkTypeItemValue(getDefaltTimestamp(value, fieldName));
+			return dto;
+		} else if (fieldName.equals(TimeFileConst.FRONT_END_TIME)) {
+			// 午前休(終了時間)(必須項目)
+			dto.setWorkTypeItemCode(TimeConst.CODE_FRONTEND);
+			dto.setWorkTypeItemValue(getDefaltTimestamp(value, fieldName));
+			return dto;
+		} else if (fieldName.equals(TimeFileConst.BACK_START_TIME)) {
+			// 午後休(開始時間)(必須項目)
+			dto.setWorkTypeItemCode(TimeConst.CODE_BACKSTART);
+			dto.setWorkTypeItemValue(getDefaltTimestamp(value, fieldName));
+			return dto;
+		} else if (fieldName.equals(TimeFileConst.BACK_END_TIME)) {
+			// 午後休(終了時間)(必須項目)
+			dto.setWorkTypeItemCode(TimeConst.CODE_BACKEND);
+			dto.setWorkTypeItemValue(getDefaltTimestamp(value, fieldName));
+			return dto;
+		} else if (fieldName.equals(TimeFileConst.OVER_PER)) {
+			// 残業休憩時間[毎](必須項目)
+			dto.setWorkTypeItemCode(TimeConst.CODE_OVERPER);
+			dto.setWorkTypeItemValue(getDefaltTimestamp(value, fieldName));
+			return dto;
+		} else if (fieldName.equals(TimeFileConst.OVER_REST)) {
+			// 残業休憩時間(必須項目)
+			dto.setWorkTypeItemCode(TimeConst.CODE_OVERREST);
+			dto.setWorkTypeItemValue(getDefaltTimestamp(value, fieldName));
+			return dto;
+		} else if (fieldName.equals(TimeFileConst.OVER_BEFORE)) {
+			// 残前休憩(時間)(必須項目)
+			dto.setWorkTypeItemCode(TimeConst.CODE_OVERBEFORE);
+			dto.setWorkTypeItemValue(getDefaltTimestamp(value, fieldName));
+			return dto;
+		} else if (fieldName.equals(TimeFileConst.BEFORE_OVERTIME)) {
+			// 勤務前残業実績登録設定
+			if (value == null || value.isEmpty()) {
+				// 初期値に無効フラグ設定
+				value = String.valueOf(MospConst.INACTIVATE_FLAG_ON);
+			}
+			checkRequired(value, getCodeName(fieldName, TimeFileConst.CODE_IMPORT_TYPE_TMD_WORK_TYPE), index);
+			if (mospParams.hasErrorMessage()) {
+				return null;
+			}
+			checkTypeNumber(value, getCodeName(fieldName, TimeFileConst.CODE_IMPORT_TYPE_TMD_WORK_TYPE), index);
+			if (mospParams.hasErrorMessage()) {
+				return null;
+			}
+			checkFlag(getInteger(value), getCodeName(fieldName, TimeFileConst.CODE_IMPORT_TYPE_TMD_WORK_TYPE), index);
+			if (mospParams.hasErrorMessage()) {
+				return null;
+			}
+			dto.setWorkTypeItemCode(TimeConst.CODE_AUTO_BEFORE_OVERWORK);
+			dto.setPreliminary(value);
+			return dto;
+		} else if (fieldName.equals(TimeFileConst.HALF_REST_WORK_TIME)) {
+			// 半休取得休憩(午前休取得日の勤務時間)
+			dto.setWorkTypeItemCode(TimeConst.CODE_HALFREST);
+			dto.setWorkTypeItemValue(getDefaltTimestamp(value, fieldName));
+			return dto;
+		} else if (fieldName.equals(TimeFileConst.HALF_REST_START_TIME)) {
+			// 半休取得休憩(休憩開始時間)
+			dto.setWorkTypeItemCode(TimeConst.CODE_HALFRESTSTART);
+			dto.setWorkTypeItemValue(getDefaltTimestamp(value, fieldName));
+			return dto;
+		} else if (fieldName.equals(TimeFileConst.HALF_REST_END_TIME)) {
+			// 半休取得休憩(休憩終了時間)
+			dto.setWorkTypeItemCode(TimeConst.CODE_HALFRESTEND);
+			dto.setWorkTypeItemValue(getDefaltTimestamp(value, fieldName));
+			return dto;
+		} else if (fieldName.equals(TimeFileConst.DIRECT_START)) {
+			// 直行
+			if (value == null || value.isEmpty()) {
+				// 未入力時、初期値にチェックボックス値(OFF)設定
+				value = String.valueOf(MospConst.CHECKBOX_OFF);
+			}
+			checkTypeNumber(value, getCodeName(fieldName, TimeFileConst.CODE_IMPORT_TYPE_TMD_WORK_TYPE), index);
+			if (mospParams.hasErrorMessage()) {
+				return null;
+			}
+			checkFlag(getInteger(value), getCodeName(fieldName, TimeFileConst.CODE_IMPORT_TYPE_TMD_WORK_TYPE), index);
+			if (mospParams.hasErrorMessage()) {
+				return null;
+			}
+			dto.setWorkTypeItemCode(TimeConst.CODE_WORK_TYPE_ITEM_DIRECT_START);
+			dto.setPreliminary(value);
+			return dto;
+		} else if (fieldName.equals(TimeFileConst.DIRECT_END)) {
+			// 直帰
+			checkTypeNumber(value, getCodeName(fieldName, TimeFileConst.CODE_IMPORT_TYPE_TMD_WORK_TYPE), index);
+			if (mospParams.hasErrorMessage()) {
+				return null;
+			}
+			if (value == null || value.isEmpty()) {
+				// 未入力時、初期値にチェックボックス値(OFF)設定
+				value = String.valueOf(MospConst.CHECKBOX_OFF);
+			}
+			checkFlag(getInteger(value), getCodeName(fieldName, TimeFileConst.CODE_IMPORT_TYPE_TMD_WORK_TYPE), index);
+			if (mospParams.hasErrorMessage()) {
+				return null;
+			}
+			dto.setWorkTypeItemCode(TimeConst.CODE_WORK_TYPE_ITEM_DIRECT_END);
+			dto.setPreliminary(value);
+			return dto;
+		} else if (fieldName.equals(TimeFileConst.EXCLUDE_NIGHT_REST)) {
+			// 割増休憩除外
+			if (value == null || value.isEmpty()) {
+				// 未入力時、無効フラグ設定
+				value = String.valueOf(MospConst.INACTIVATE_FLAG_ON);
+			}
+			checkTypeNumber(value, getCodeName(fieldName, TimeFileConst.CODE_IMPORT_TYPE_TMD_WORK_TYPE), index);
+			if (mospParams.hasErrorMessage()) {
+				return null;
+			}
+			checkFlag(getInteger(value), getCodeName(fieldName, TimeFileConst.CODE_IMPORT_TYPE_TMD_WORK_TYPE), index);
+			if (mospParams.hasErrorMessage()) {
+				return null;
+			}
+			dto.setWorkTypeItemCode(TimeConst.CODE_WORK_TYPE_ITEM_EXCLUDE_NIGHT_REST);
+			dto.setPreliminary(value);
+			return dto;
+		} else if (fieldName.equals(TimeFileConst.SHORT1_START)) {
+			// 時短時間1(開始時間)
+			dto.setWorkTypeItemCode(TimeConst.CODE_WORK_TYPE_ITEM_SHORT1_START);
+			dto.setWorkTypeItemValue(getDefaltTimestamp(value, fieldName));
+			return dto;
+		} else if (fieldName.equals(TimeFileConst.SHORT1_END)) {
+			// 時短時間1(終了時間)
+			dto.setWorkTypeItemCode(TimeConst.CODE_WORK_TYPE_ITEM_SHORT1_END);
+			dto.setWorkTypeItemValue(getDefaltTimestamp(value, fieldName));
+			return dto;
+		} else if (fieldName.equals(TimeFileConst.SHORT1_TYPE)) {
+			// 時短時間1(区分)
+			if (value == null || value.isEmpty()) {
+				// 未入力時、給与区分(有給)を設定
+				value = WorkTypeEntity.CODE_PAY_TYPE_PAY;
+			}
+			checkTypeNumber(value, getCodeName(fieldName, TimeFileConst.CODE_IMPORT_TYPE_TMD_WORK_TYPE), index);
+			if (mospParams.hasErrorMessage()) {
+				return null;
+			}
+			checkFlag(getInteger(value), getCodeName(fieldName, TimeFileConst.CODE_IMPORT_TYPE_TMD_WORK_TYPE), index);
+			if (mospParams.hasErrorMessage()) {
+				return null;
+			}
+			dto.setWorkTypeItemCode(TimeConst.CODE_WORK_TYPE_ITEM_SHORT1_START);
+			dto.setPreliminary(value);
+			return dto;
+		} else if (fieldName.equals(TimeFileConst.SHORT2_START)) {
+			// 時短時間2(開始時間)
+			dto.setWorkTypeItemCode(TimeConst.CODE_WORK_TYPE_ITEM_SHORT2_START);
+			dto.setWorkTypeItemValue(getDefaltTimestamp(value, fieldName));
+			return dto;
+		} else if (fieldName.equals(TimeFileConst.SHORT2_END)) {
+			// 時短時間2(終了時間)
+			dto.setWorkTypeItemCode(TimeConst.CODE_WORK_TYPE_ITEM_SHORT2_END);
+			dto.setWorkTypeItemValue(getDefaltTimestamp(value, fieldName));
+			return dto;
+		} else if (fieldName.equals(TimeFileConst.SHORT2_TYPE)) {
+			// 時短時間2(区分)
+			if (value == null || value.isEmpty()) {
+				// 未入力時、給与区分(有給)を設定
+				value = WorkTypeEntity.CODE_PAY_TYPE_PAY;
+			}
+			checkTypeNumber(value, getCodeName(fieldName, TimeFileConst.CODE_IMPORT_TYPE_TMD_WORK_TYPE), index);
+			if (mospParams.hasErrorMessage()) {
+				return null;
+			}
+			checkFlag(getInteger(value), getCodeName(fieldName, TimeFileConst.CODE_IMPORT_TYPE_TMD_WORK_TYPE), index);
+			if (mospParams.hasErrorMessage()) {
+				return null;
+			}
+			dto.setWorkTypeItemCode(TimeConst.CODE_WORK_TYPE_ITEM_SHORT2_START);
+			dto.setPreliminary(value);
+			return dto;
+		}
+		return null;
+	}
+	
+	/**
+	 * 時短時間(開始時刻)を設定する。<BR>
+	 * @param itemMap 勤務形態項目管理
+	 * @param dto 勤務形態項目
+	 * @param fieldName 項目名
+	 * @param value 項目値
+	 * @return 勤務形態項目管理
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 */
+	protected WorkTypeItemDtoInterface setWorkTypeItemShort(String fieldName, String value,
+			Map<String, WorkTypeItemDtoInterface> itemMap, WorkTypeItemDtoInterface dto) throws MospException {
+		// 勤務形態項目管理に勤務形態項目コードが存在しない場合
+		if (itemMap.get(dto.getWorkTypeItemCode()) == null) {
+			// 引数の勤務形態項目を返却する
+			return dto;
+		}
+		// 勤務形態項目管理に勤務形態項目を設定する
+		dto = itemMap.get(dto.getWorkTypeItemCode());
+		// 時短時間(開始時間)の場合
+		if (fieldName.equals(TimeFileConst.SHORT1_START) || fieldName.equals(TimeFileConst.SHORT2_START)) {
+			// 項目値を設定
+			dto.setWorkTypeItemValue(getDefaltTimestamp(value, fieldName));
+		}
+		// 時短時間(区分)の場合
+		if (fieldName.equals(TimeFileConst.SHORT1_TYPE) || fieldName.equals(TimeFileConst.SHORT2_TYPE)) {
+			// 項目値(予備)を設定
+			dto.setPreliminary(value);
+		}
+		// 勤務形態項目コードから取得した勤務形態項目を返却する
+		return dto;
+	}
+	
+	/**
+	 * 時短項目か確認する。<br>
+	 * @param dto 勤務形態項目管理
+	 * @return 確認結果（true：合致、false：合致しない）
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 */
+	protected boolean isWorkTypeItemShort(WorkTypeItemDtoInterface dto) throws MospException {
+		if (dto.getWorkTypeItemCode().equals(TimeConst.CODE_WORK_TYPE_ITEM_SHORT1_START)
+				|| dto.getWorkTypeItemCode().equals(TimeConst.CODE_WORK_TYPE_ITEM_SHORT2_START)) {
+			// 時短時間項目あり
+			return true;
+		}
+		return false;
+	}
+	
+	/**
+	 * 勤務形態情報項目か確認する。<br>
+	 * @param fieldName 項目名
+	 * @return 確認結果（true：合致、false：合致しない）
+	 */
+	protected boolean isWorkTypeInfo(String fieldName) {
+		String[] item = { TimeFileConst.ACTIVATE_DATE_YEAR, TimeFileConst.ACTIVATE_DATE_MONTH,
+			TmmWorkTypeDao.COL_WORK_TYPE_CODE, TmmWorkTypeDao.COL_WORK_TYPE_NAME, TmmWorkTypeDao.COL_WORK_TYPE_ABBR,
+			TmmWorkTypeDao.COL_INACTIVATE_FLAG };
+		List<String> list = Arrays.asList(item);
+		return list.contains(fieldName);
+	}
+	
+	/**
+	 * 勤務形態項目情報か確認する。<br>
+	 * @param fieldName 項目名
+	 * @return 確認結果（true：合致、false：合致しない）
+	 */
+	protected boolean isWorkTypeItemInfo(String fieldName) {
+		String[] item = { TimeFileConst.WORK_START_TIME, TimeFileConst.WORK_END_TIME, TimeFileConst.REST1_START_TIME,
+			TimeFileConst.REST1_END_TIME, TimeFileConst.REST2_START_TIME, TimeFileConst.REST2_END_TIME,
+			TimeFileConst.REST3_START_TIME, TimeFileConst.REST3_END_TIME, TimeFileConst.REST4_START_TIME,
+			TimeFileConst.REST4_END_TIME, TimeFileConst.FRONT_START_TIME, TimeFileConst.FRONT_END_TIME,
+			TimeFileConst.BACK_START_TIME, TimeFileConst.BACK_END_TIME, TimeFileConst.OVER_PER, TimeFileConst.OVER_REST,
+			TimeFileConst.OVER_BEFORE, TimeFileConst.BEFORE_OVERTIME, TimeFileConst.HALF_REST_WORK_TIME,
+			TimeFileConst.HALF_REST_START_TIME, TimeFileConst.HALF_REST_END_TIME, TimeFileConst.DIRECT_START,
+			TimeFileConst.DIRECT_END, TimeFileConst.EXCLUDE_NIGHT_REST, TimeFileConst.SHORT1_START,
+			TimeFileConst.SHORT1_TYPE, TimeFileConst.SHORT1_END, TimeFileConst.SHORT2_START, TimeFileConst.SHORT2_TYPE,
+			TimeFileConst.SHORT2_END };
+		List<String> list = Arrays.asList(item);
+		return list.contains(fieldName);
+	}
+	
 	/**
 	 * ヘッダチェック。
 	 * @param importDto インポートDTO
@@ -3411,7 +4072,7 @@ public class ImportTableReferenceBean extends PlatformBean implements ImportTabl
 	 * @param array ヘッダ配列
 	 * @return true：ヘッダ正常、false：ヘッダ異常
 	 */
-	private boolean checkHeader(ImportDtoInterface importDto, List<ImportFieldDtoInterface> list, String[] array) {
+	protected boolean checkHeader(ImportDtoInterface importDto, List<ImportFieldDtoInterface> list, String[] array) {
 		if (importDto == null) {
 			return false;
 		}
@@ -3425,7 +4086,12 @@ public class ImportTableReferenceBean extends PlatformBean implements ImportTabl
 					importFieldDto.getFieldName());
 			i++;
 		}
-		return Arrays.equals(headerArray, array);
+		if (Arrays.equals(headerArray, array)) {
+			return true;
+		} else {
+			addHeaderErrorMessage(headerArray, array);
+			return false;
+		}
 	}
 	
 	/**
@@ -3433,7 +4099,7 @@ public class ImportTableReferenceBean extends PlatformBean implements ImportTabl
 	 * @param date 入力された日付
 	 * @return データ型日付
 	 */
-	private Date getDate(String date) {
+	protected Date getDate(String date) {
 		if (date.indexOf("/") == -1) {
 			return DateUtility.getDate(date, "yyyyMMdd");
 		}
@@ -3445,7 +4111,7 @@ public class ImportTableReferenceBean extends PlatformBean implements ImportTabl
 	 * @param timestamp 入力された打刻日付
 	 * @return データ型日付
 	 */
-	private Date getTimestamp(String timestamp) {
+	protected Date getTimestamp(String timestamp) {
 		if (timestamp.indexOf("/") == -1) {
 			return DateUtility.getDate(timestamp, "yyyyMMdd H:m");
 		}
@@ -3453,32 +4119,254 @@ public class ImportTableReferenceBean extends PlatformBean implements ImportTabl
 	}
 	
 	/**
-	 * 最大長チェック。
-	 * @param target 対象文字列
-	 * @param maxLength 最大長
-	 * @return true：最大長の範囲内の場合、false：最大長を超える場合
+	 * デフォルト日付と入力された時刻を取得する。
+	 * 入力された打刻日付のスラッシュの有無に限らずDateに変換する。
+	 * @param timestamp 入力された時刻（HH:MM）
+	 * @param fieldName 項目名
+	 * @return データ型日付
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
-	private boolean checkMaxLength(String target, int maxLength) {
-		return target.length() <= maxLength;
+	protected Date getDefaltTimestamp(String timestamp, String fieldName) throws MospException {
+		if (timestamp.isEmpty()) {
+			timestamp = "0:0";
+		}
+		// エラーメッセージ
+		String[] rep = { getCodeName(fieldName, TimeFileConst.CODE_IMPORT_TYPE_TMD_WORK_TYPE), "HH:MM" };
+		String[] target = MospUtility.split(timestamp, ":");
+		if (target.length != 2) {
+			mospParams.addErrorMessage(PlatformMessageConst.MSG_INPUT_DATE, rep);
+			return null;
+		}
+		try {
+			Integer.parseInt(target[0]);
+			Integer.parseInt(target[1]);
+		} catch (NumberFormatException e) {
+			// int型にキャストできなかった場合
+			mospParams.addErrorMessage(PlatformMessageConst.MSG_INPUT_DATE, rep);
+			return null;
+		}
+		if (Integer.parseInt(target[0]) > 47) {
+			mospParams.addErrorMessage("PFW0129", getCodeName(fieldName, TimeFileConst.CODE_IMPORT_TYPE_TMD_WORK_TYPE),
+					"47");
+			return null;
+		}
+		if (Integer.parseInt(target[1]) > 59) {
+			mospParams.addErrorMessage("PFW0129", getCodeName(fieldName, TimeFileConst.CODE_IMPORT_TYPE_TMD_WORK_TYPE),
+					"59");
+			return null;
+		}
+		return workTypeItemRegist.getDefaultTime(target[0], target[1]);
 	}
 	
-	private void addInvalidHeaderErrorMessage() {
+	/**
+	 * 入力された時刻をDateに変換する。<br>
+	 * @param time 入力された時刻
+	 * @return データ型日付、形式不正の場合、null
+	 * @throws MospException 例外時
+	 */
+	protected Date checkTime(String time) throws MospException {
+		if (time.isEmpty()) {
+			// 空白の場合
+			// 日付(デフォルト)設定
+			return DateUtility.getDefaultTime();
+		}
+		if (time.indexOf(":") != -1) {
+			// :が入力されていた場合
+			String[] times = time.split(":", 0);
+			try {
+				Integer.parseInt(times[0]);
+				Integer.parseInt(times[1]);
+			} catch (NumberFormatException e) {
+				// int型にキャストできなかった場合
+				return null;
+			}
+			// 日付設定
+			return DateUtility.getTime(times[0], times[1]);
+		}
+		// 形式不正の場合
+		return null;
+	}
+	
+	/**
+	 * 入力された必須時刻をDateに変換する。<br>
+	 * @param time 入力された時刻
+	 * @param name 項目名
+	 * @return データ型日付、空白・形式不正の場合、null
+	 * @throws MospException 例外時
+	 */
+	protected Date checkRequiredTime(String time, String name) throws MospException {
+		if (time.indexOf(":") != -1) {
+			// :が入力されていた場合
+			String[] times = time.split(":", 0);
+			try {
+				Integer.parseInt(times[0]);
+				Integer.parseInt(times[1]);
+			} catch (NumberFormatException e) {
+				// int型にキャストできなかった場合
+				// エラーメッセージ追加
+				addIntCastErrorMessage(name);
+				return null;
+			}
+			// 日付設定
+			return DateUtility.getTime(times[0], times[1]);
+		}
+		// 形式不正の場合
+		// エラーメッセージ追加
+		addInjusticeDataErrorMessage(name);
+		return null;
+	}
+	
+	/**
+	 * int型のキャストチェック。<br>
+	 * @param value 入力された値
+	 * @param name 項目名
+	 * @param flag true:エラーメッセージあり、false:エラーメッセージなし
+	 * @return キャストした値 キャストに失敗した場合、-1
+	 */
+	protected int checkIntCast(String value, String name, boolean flag) {
+		int num = 0;
+		if (value.isEmpty()) {
+			return -2;
+		}
+		try {
+			num = Integer.parseInt(value);
+		} catch (NumberFormatException e) {
+			// int型にキャストできなかった場合
+			if (flag) {
+				// エラーメッセージ追加
+				addIntCastErrorMessage(name);
+			}
+			return -1;
+		}
+		
+		return num;
+	}
+	
+	/**
+	 * ヘッダー情報不正エラーメッセージ追加
+	 */
+	protected void addInvalidHeaderErrorMessage() {
 		mospParams.addErrorMessage(TimeMessageConst.MSG_FORM_INJUSTICE, mospParams.getName("Header"));
 	}
 	
-	private void addInvalidDataErrorMessage(int i) {
+	/**
+	 * ヘッダー情報不正エラーメッセージ追加(詳細)。<br>
+	 * @param header1 ヘッダ配列
+	 * @param header2 インポート配列
+	 * エラーメッセージ:ヘッダの[]を正しく入力してください。
+	 */
+	protected void addHeaderErrorMessage(String[] header1, String[] header2) {
+		if (header1.length != header2.length) {
+			return;
+		}
+		for (int i = 0; i < header2.length; i++) {
+			if (!header2[i].equals(header1[i])) {
+				String rep = mospParams.getName("Header") + "の" + header1[i];
+				addNotInputErrorMessage(rep);
+				break;
+			}
+		}
+	}
+	
+	/**
+	 * データ形式不正エラーメッセージ追加
+	 * @param i 行インデックス
+	 */
+	protected void addInvalidDataErrorMessage(int i) {
 		String rep = ++i + mospParams.getName("TheLine", "Of", "Data");
 		mospParams.addErrorMessage(TimeMessageConst.MSG_FORM_INJUSTICE, rep);
 	}
 	
-	private void addDuplicateDataErrorMessage(int i) {
+	/**
+	 * 重複エラーメッセージ追加
+	 * @param i 行インデックス
+	 */
+	protected void addDuplicateDataErrorMessage(int i) {
 		String rep = ++i + mospParams.getName("TheLine", "Of", "Data");
 		mospParams.addErrorMessage(TimeMessageConst.MSG_FILE_REPETITION, rep);
 	}
 	
-	private void addAlreadyRegisteredDataErrorMessage(int i) {
+	/**
+	 * 登録済みエラーメッセージ追加
+	 * @param i 行インデックス
+	 */
+	protected void addAlreadyRegisteredDataErrorMessage(int i) {
 		String rep = ++i + mospParams.getName("TheLine", "Of", "Data");
 		mospParams.addErrorMessage(TimeMessageConst.MSG_ALREADY_EXIST, rep);
 	}
 	
+	/**
+	 * データ形式不正エラーメッセージ追加(詳細)。<br>
+	 * @param name 項目名
+	 * エラーメッセージ:[項目名]には正しい形式の値を入力してください。
+	 */
+	protected void addInjusticeDataErrorMessage(String name) {
+		mospParams.addErrorMessage(PlatformMessageConst.MSG_INPUT_FORM_AMP, name);
+	}
+	
+	/**
+	 * int型キャストエラーメッセージ追加。<br>
+	 * @param name 項目名
+	 * エラーメッセージ:[項目名]には数字を入力してください。
+	 */
+	protected void addIntCastErrorMessage(String name) {
+		mospParams.addErrorMessage(PlatformMessageConst.MSG_NUMBER_CHECK_AMP, name);
+	}
+	
+	/**
+	 * 日付(年)1000年未満エラーメッセージ追加。<br>
+	 * エラーメッセージ:年は1000以上を入力してください。
+	 */
+	protected void addYearErrorMessage() {
+		String rep = mospParams.getName("No1", "No0", "No0", "No0");
+		mospParams.addErrorMessage(PlatformMessageConst.MSG_YEAR_CHECK, rep);
+	}
+	
+	/**
+	 * 日付(月)1～12月以外エラーメッセージ追加。<br>
+	 * エラーメッセージ:月は1--12を入力してください。
+	 */
+	protected void addMonthErrorMessage() {
+		mospParams.addErrorMessage(PlatformMessageConst.MSG_MONTH_CHECK);
+	}
+	
+	/**
+	 * 時刻比較エラーメッセージ追加。<br>
+	 * @param name1 項目名A
+	 * @param name2 項目名B
+	 * エラーメッセージ:[項目名A]は[項目名B]より後となるようにしてください。
+	 */
+	protected void addTimeComparisonErrorMessage(String name1, String name2) {
+		mospParams.addErrorMessage(PlatformMessageConst.MSG_INVALID_ORDER, name1, name2);
+	}
+	
+	/**
+	 * 勤務外エラーメッセージ追加。<br>
+	 * @param name 項目名
+	 * エラーメッセージ:勤務時間外に[項目名]が設定されています。[項目名]は勤務時間内に含めて設定してください。
+	 */
+	protected void addTimeOutErrorMessage(String name) {
+		mospParams.addErrorMessage(TimeMessageConst.MSG_WORK_TIME_OUT_CHECK, name);
+	}
+	
+	/**
+	 * 不一致でないエラーメッセージ追加。<br>
+	 * @param name1 項目名A
+	 * @param name2 項目名B
+	 * エラーメッセージ:[項目名A]には[項目名B]と同一の時刻を入力してください。
+	 */
+	protected void addDiscordanceErrorMessage(String name1, String name2) {
+		String rep1 = name1;
+		String rep2 = name2 + "と同一の" + mospParams.getName("Moment");
+		mospParams.addErrorMessage(PlatformMessageConst.MSG_CHR_TYPE, rep1, rep2);
+	}
+	
+	/**
+	 * 必須項目が未入力エラーメッセージ追加。<br>
+	 * @param name 項目名
+	 * エラーメッセージ:[項目名]を正しく入力してください。
+	 */
+	protected void addNotInputErrorMessage(String name) {
+		mospParams.addErrorMessage(PlatformMessageConst.MSG_REQUIRED, name);
+	}
 }

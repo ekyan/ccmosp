@@ -99,4 +99,17 @@ public interface NamingReferenceBeanInterface {
 	 */
 	String[][] getCodedSelectArray(String namingType, Date targetDate, boolean needBlank) throws MospException;
 	
+	/**
+	 * プルダウン用配列を取得する。<br>
+	 * 対象年月日からプルダウン用配列を取得する。<br>
+	 * 表示内容は、名称区分名称。<br>
+	 * <br>
+	 * @param namingType 名称区分
+	 * @param targetDate 対象年月日
+	 * @param needBlank  空白行要否(true：空白行要、false：空白行不要)
+	 * @return プルダウン用配列
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	String[][] getSelectArray(String namingType, Date targetDate, boolean needBlank) throws MospException;
+	
 }

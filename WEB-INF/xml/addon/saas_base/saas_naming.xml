@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE MosP>
+<!--
+MosP - Mind Open Source Project    http://www.mosp.jp/
+Copyright (C) MIND Co., Ltd.       http://www.e-mind.co.jp/
+
+This program is free software: you can redistribute it and/or
+modify it under the terms of the GNU Affero General Public License
+as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<MosP>
+	
+	<!-- 名称(環境に応じて設定) -->
+	<Naming key="SaasProviderName">
+		株式会社マインド
+	</Naming>
+	<Naming key="SaasServiceName">
+		Mi'Scoope
+	</Naming>
+	<Naming key="SaasUserPolicy">
+		MosP利用規約
+	</Naming>
+	<Naming key="SaasAgreement">
+		に同意します。
+	</Naming>
+	
+	<!-- 名称 -->
+	<Naming key="menuCustomerManage">
+		顧客管理
+	</Naming>
+	<Naming key="jp.mosp.addon.saas.manager.vo.SaasCustomerListVo">
+		顧客一覧
+	</Naming>
+	<Naming key="jp.mosp.addon.saas.manager.vo.SaasCustomerCardVo">
+		顧客詳細
+	</Naming>
+	<Naming key="jp.mosp.addon.saas.manager.vo.SaasDbUpdateVo">
+		DB更新
+	</Naming>
+	<Naming key="jp.mosp.addon.saas.manager.vo.SaasCollectListVo">
+		収集情報一覧
+	</Naming>
+	<Naming key="jp.mosp.addon.saas.console.vo.SaasCreateMospUserVo">
+		MosP管理者ID登録
+	</Naming>
+	<Naming key="jp.mosp.addon.saas.console.vo.SaasCustomerEditVo">
+		企業情報変更
+	</Naming>
+	<Naming key="jp.mosp.addon.saas.console.vo.SaasCustomerPicEditVo">
+		担当者情報変更
+	</Naming>
+	<Naming key="jp.mosp.addon.saas.console.vo.SaasCustomerPayEditVo">
+		請求方法変更
+	</Naming>
+	<Naming key="jp.mosp.addon.saas.console.vo.SaasCustomerOptionEditVo">
+		オプション変更
+	</Naming>
+	<Naming key="jp.mosp.addon.saas.console.vo.SaasWithdrawVo">
+		退会
+	</Naming>
+	<Naming key="SaasSubscribeReceive">
+		申込受付
+	</Naming>
+	<Naming key="SaasResumeService">
+		サービス再開
+	</Naming>
+	<Naming key="SaasSuspendService">
+		サービス停止
+	</Naming>
+	<Naming key="SaasRemandWithdraw">
+		退会差戻
+	</Naming>
+	<Naming key="SaasDropDatabase">
+		DB削除
+	</Naming>
+	<Naming key="SaasSubscribe">
+		申込
+	</Naming>
+	<Naming key="SaasCustomer">
+		顧客
+	</Naming>
+	<Naming key="SaasCustomerStatus">
+		ステータス
+	</Naming>
+	<Naming key="SaasStatusTime">
+		ステータス登録日時
+	</Naming>
+	<Naming key="SaasPic">
+		担当者
+	</Naming>
+	<Naming key="SaasOption">
+		オプション
+	</Naming>
+	<Naming key="SaasAvailableUsers">
+		ユーザID数
+	</Naming>
+	<Naming key="SaasMonthlyPrice">
+		月額(税別)円
+	</Naming>
+	<Naming key="SaasDataBase">
+		DB
+	</Naming>
+	<Naming key="SaasServer">
+		サーバ
+	</Naming>
+	<Naming key="SaasPort">
+		ポート
+	</Naming>
+	<Naming key="SaasCompany">
+		企業
+	</Naming>
+	<Naming key="SaasHomepage">
+		ホームページ
+	</Naming>
+	<Naming key="SaasIndustry">
+		職種
+	</Naming>
+	<Naming key="SaasWithdraw">
+		退会
+	</Naming>
+	<Naming key="SaasPayMethod">
+		請求方法
+	</Naming>
+	<Naming key="SaasBeforeWithdraw">
+		退会及び削除以外
+	</Naming>
+	<Naming key="SaasCollectTime">
+		収集日時
+	</Naming>
+	<Naming key="SaasCollectType">
+		収集区分
+	</Naming>
+	<Naming key="SaasCollectValue">
+		収集値
+	</Naming>
+	<Naming key="SaasBack">
+		戻る
+	</Naming>
+	<Naming key="SaasApplicationUrl">
+		アプリケーションURL
+	</Naming>
+	<Naming key="SaasAppClient">
+		クライアントアプリケーション
+	</Naming>
+	<Naming key="SaasAppClientAbbr">
+		APP
+	</Naming>
+	
+</MosP>

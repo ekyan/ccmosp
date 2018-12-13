@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		<ActionClass>jp.mosp.platform.portal.action.IndexAction</ActionClass>
 		<NeedSession>unnecessary</NeedSession>
 	</Controller>
-	<Controller key="PF0020">
+	<Controller key="PF002*">
 		<ActionClass>jp.mosp.platform.portal.action.AuthAction</ActionClass>
 		<NeedSession>unnecessary</NeedSession>
 		<NeedProcSeq>zeroAcceptable</NeedProcSeq>
@@ -70,6 +70,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	</Controller>
 	<Controller key="PF131*">
 		<ActionClass>jp.mosp.platform.file.action.HumanImportListAction</ActionClass>
+	</Controller>
+	<Controller key="PF1386">
+		<ActionClass>jp.mosp.platform.file.action.HumanImportListAction</ActionClass>
+		<NeedProcSeq>unnecessary</NeedProcSeq>
 	</Controller>
 	<Controller key="PF132*">
 		<ActionClass>jp.mosp.platform.file.action.ImportCardAction</ActionClass>
@@ -166,6 +170,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<Controller key="PF263*">
 		<ActionClass>jp.mosp.platform.system.action.NamingMasterAction</ActionClass>
 	</Controller>
+	<Controller key="PFSM290*">
+		<ActionClass>jp.mosp.platform.system.action.SystemManagementAction</ActionClass>
+	</Controller>
 	
 	<Controller key="PF311*">
 		<ActionClass>jp.mosp.platform.workflow.action.UnitListAction</ActionClass>
@@ -229,6 +236,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	</Controller>
 	<Controller key="PF9110">
 		<ActionClass>jp.mosp.platform.portal.action.PasswordChangeAction</ActionClass>
+		<NeedProcSeq>unnecessary</NeedProcSeq>
+	</Controller>
+	<Controller key="PF9120">
+		<ActionClass>jp.mosp.platform.file.action.FileExportAction</ActionClass>
 		<NeedProcSeq>unnecessary</NeedProcSeq>
 	</Controller>
 </MosP>

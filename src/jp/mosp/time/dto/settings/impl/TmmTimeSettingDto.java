@@ -104,7 +104,7 @@ public class TmmTimeSettingDto extends BaseDto implements TimeSettingDtoInterfac
 	/**
 	 * 日勤務時間丸め単位。
 	 */
-	private int					roundDailyTimeWorkUint;
+	private int					roundDailyTimeWork;
 	/**
 	 * 日勤務時間丸め。
 	 */
@@ -391,6 +391,12 @@ public class TmmTimeSettingDto extends BaseDto implements TimeSettingDtoInterfac
 	 * 法定休日割増率。
 	 */
 	private int					legalHoliday;
+	
+	/**
+	 * 見込月
+	 */
+	private String				prospectsMonths;
+	
 	/**
 	 * 無効フラグ。
 	 */
@@ -530,8 +536,8 @@ public class TmmTimeSettingDto extends BaseDto implements TimeSettingDtoInterfac
 	}
 	
 	@Override
-	public int getRoundDailyWorkUnit() {
-		return roundDailyTimeWorkUint;
+	public int getRoundDailyTimeWork() {
+		return roundDailyTimeWork;
 	}
 	
 	@Override
@@ -790,7 +796,7 @@ public class TmmTimeSettingDto extends BaseDto implements TimeSettingDtoInterfac
 	
 	@Override
 	public void setRoundDailyTimeWork(int roundDailyTimeWork) {
-		roundDailyTimeWorkUint = roundDailyTimeWork;
+		this.roundDailyTimeWork = roundDailyTimeWork;
 	}
 	
 	@Override
@@ -922,6 +928,16 @@ public class TmmTimeSettingDto extends BaseDto implements TimeSettingDtoInterfac
 	@Override
 	public Date getActivateDate() {
 		return getDateClone(activateDate);
+	}
+	
+	@Override
+	public String getProspectsMonths() {
+		return prospectsMonths;
+	}
+	
+	@Override
+	public void setProspectsMonths(String prospectsMonths) {
+		this.prospectsMonths = prospectsMonths;
 	}
 	
 	@Override

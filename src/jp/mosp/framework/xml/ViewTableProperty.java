@@ -67,13 +67,14 @@ public class ViewTableProperty implements BaseProperty {
 	 * @param dateName 有効日名称
 	 * @param tableItemList 人事汎用管理表示テーブル(VIEW_TABLE)情報リスト
 	 */
-	public ViewTableProperty(String key, String type, int pair, String dateName, List<TableItemProperty> tableItemList) {
+	public ViewTableProperty(String key, String type, int pair, String dateName,
+			List<TableItemProperty> tableItemList) {
 		this.key = key;
 		this.type = type;
 		this.pair = pair;
 		this.dateName = dateName;
-		this.tableItemList = tableItemList == null ? new ArrayList<TableItemProperty>() : Collections
-			.unmodifiableList(tableItemList);
+		this.tableItemList = tableItemList == null ? new ArrayList<TableItemProperty>()
+				: Collections.unmodifiableList(tableItemList);
 	}
 	
 	@Override

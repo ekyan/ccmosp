@@ -112,7 +112,8 @@ public class HolidayRequestSearchBean extends PlatformBean implements HolidayReq
 	public void initBean() throws MospException {
 		// 休暇申請マスタDAO取得
 		holidayRequestDao = (HolidayRequestDaoInterface)createDao(HolidayRequestDaoInterface.class);
-		approvalInfoReference = (ApprovalInfoReferenceBeanInterface)createBean(ApprovalInfoReferenceBeanInterface.class);
+		approvalInfoReference = (ApprovalInfoReferenceBeanInterface)createBean(
+				ApprovalInfoReferenceBeanInterface.class);
 	}
 	
 	@Override

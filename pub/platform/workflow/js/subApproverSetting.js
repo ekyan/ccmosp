@@ -33,7 +33,7 @@ function onLoadExtra() {
 		// フロー区分編集不可
 		setDisabled("pltEditWorkflowType", true);
 		// 有効日編集不可
-		setDisabled("btnEditActivateDate", true);
+		setReadOnly("btnEditActivateDate", true);
 	}
 	// 有効日決定状態
 	if (modeActivateDate == MODE_ACTIVATE_DATE_FIXED) {
@@ -45,13 +45,13 @@ function onLoadExtra() {
 	// 有効日変更状態
 	if (modeActivateDate == MODE_ACTIVATE_DATE_CHANGING) {
 		// 登録ボタン利用不可
-		setDisabled("btnRegist", true);
+		setReadOnly("btnRegist", true);
 		// 社員検索ボタン利用不可
-		setDisabled("btnEmployeeSearch", true);
+		setReadOnly("btnEmployeeSearch", true);
 	}
 	// 代理人確認
 	if (getFormValue("pltEditEmployeeName") == "") {
 		// 登録ボタン利用不可
-		setDisabled("btnRegist", true);
+		setReadOnly("btnRegist", true);
 	}
 }

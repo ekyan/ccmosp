@@ -41,7 +41,7 @@ function onLoadExtra() {
 		// コード編集不可
 		setReadOnly("txtEditUserId", true);
 		// 社員コード編集不可
-		setDisabled("btnEditEmployeeCode", true);
+		setReadOnly("btnEditEmployeeCode", true);
 	}
 	// 社員選択モード確認
 	if (modeEditEmployee == MODE_ACTIVATE_DATE_FIXED) {
@@ -55,7 +55,7 @@ function onLoadExtra() {
 	// 登録ボタン利用確認
 	if (modeEditEmployee != MODE_ACTIVATE_DATE_FIXED) {
 		// 登録ボタン利用不可(社員変更状態の場合)
-		setDisabled("btnRegist", true);
+		setReadOnly("btnRegist", true);
 	}
 	// 一括更新領域存在確認
 	if (getObject("divUpdate") == null) {

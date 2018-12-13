@@ -144,11 +144,10 @@ public interface HumanHistoryReferenceBeanInterface {
 	 * @param viewKey 人事汎用管理表示区分
 	 * @param personalId 個人ID
 	 * @param targetDate 対象日
-	 * @return 有効日人事汎用履歴情報マップ
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
-	LinkedHashMap<String, Map<String, String>> getActiveDateHistoryMapInfo(String division, String viewKey,
-			String personalId, Date targetDate) throws MospException;
+	void getActiveDateHistoryMapInfo(String division, String viewKey, String personalId, Date targetDate)
+			throws MospException;
 	
 	/**
 	 * 対象項目キーからの値を設定された表示形式で取得する。
@@ -162,8 +161,8 @@ public interface HumanHistoryReferenceBeanInterface {
 	 * @return 表示形式値
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
-	String getHistoryItemValue(String division, String viewKey, String personalId, Date targetDate,
-			String tableItemKey, boolean isPulldownName) throws MospException;
+	String getHistoryItemValue(String division, String viewKey, String personalId, Date targetDate, String tableItemKey,
+			boolean isPulldownName) throws MospException;
 	
 	/**
 	 * 降順で有効日の配列を取得する。<br>
@@ -183,5 +182,46 @@ public interface HumanHistoryReferenceBeanInterface {
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
 	Map<String, String[][]> getInputActiveDateGeneralPulldown(String division, String viewKey) throws MospException;
+	
+	/**
+	 * 人事汎用履歴情報をマップで取得する。<br>
+	 * 個人IDと人事項目区分が合致する情報のうち、有効日が対象日以前で最新の情報を取得する。<br>
+	 * プルダウンの値をコードで取得する。<br>
+	 * 人事履歴追加の際、前情報の表示に利用する。<br>
+	 * @param division 人事汎用管理区分
+	 * @param viewKey 人事汎用管理表示区分
+	 * @param personalId 個人ID
+	 * @param activeDate 有効日
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	void getHistoryRecordMapInfo(String division, String viewKey, String personalId, Date activeDate)
+			throws MospException;
+	
+	/**
+	 * レコード識別IDマップ取得
+	 * @return レコード識別IDマップ（K:項目ID,V:レコード識別ID）
+	 */
+	LinkedHashMap<String, Long> getRecordsMap();
+	
+	/**
+	 * 人事汎用履歴情報マップ取得
+	 * @return 人事履歴情報マップ（K:有効日,V:項目ID,項目値）
+	 */
+	LinkedHashMap<String, Map<String, String>> getHistoryHumanInfoMap();
+	
+	/**
+	 * 人事汎用履歴レコード識別IDマップ取得<br>
+	 * 履歴一覧にて使用
+	 * @return レコード識別IDマップ（K:有効日,V:項目ID,レコード識別ID）
+	 */
+	LinkedHashMap<String, LinkedHashMap<String, Long>> getHistoryReferenceInfoMap();
+	
+	/**
+	 * 人事汎用履歴情報を画面表示用に再加工
+	 * @param division 人事汎用管理区分
+	 * @param viewKey 人事汎用管理表示区分
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	void getHistoryListData(String division, String viewKey) throws MospException;
 	
 }

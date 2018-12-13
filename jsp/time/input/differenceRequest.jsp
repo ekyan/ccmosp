@@ -25,6 +25,7 @@ errorPage    = "/jsp/common/error.jsp"
 import = "jp.mosp.framework.base.MospParams"
 import = "jp.mosp.framework.constant.MospConst"
 import = "jp.mosp.framework.utils.HtmlUtility"
+import = "jp.mosp.framework.utils.CalendarHtmlUtility"
 import = "jp.mosp.platform.constant.PlatformConst"
 import = "jp.mosp.platform.utils.PlatformUtility"
 import = "jp.mosp.time.comparator.settings.DifferenceRequestApproverNameComparator"
@@ -37,6 +38,8 @@ import = "jp.mosp.time.input.vo.DifferenceRequestVo"
 %><%
 MospParams params = (MospParams)request.getAttribute(MospConst.ATT_MOSP_PARAMS);
 DifferenceRequestVo vo = (DifferenceRequestVo)params.getVo();
+boolean isChanging = vo.isModeActivateDateFixed() == false;
+boolean isSearchChanging = PlatformUtility.isActivateDateChanging(vo.getJsSearchActivateDateMode());
 %>
 <div class="ListHeader">
 	<table class="EmployeeLabelTable">
@@ -55,6 +58,7 @@ DifferenceRequestVo vo = (DifferenceRequestVo)params.getVo();
 		<tr>
 			<td class="TitleTd"><%= params.getName("TimeDifference") %><%= params.getName("GoingWork") %><%= params.getName("Day") %></td>
 			<td class="InputTd" id="tdWorkDate">
+				<%= CalendarHtmlUtility.getCalendarDiv(CalendarHtmlUtility.TYPE_DAY, "pltEditRequest", "", "", false, false, isChanging) %>
 				<select class="Number4PullDown" id="pltEditRequestYear" name="pltEditRequestYear">
 					<%= HtmlUtility.getSelectOption(vo.getAryPltEditRequestYear(), vo.getPltEditRequestYear()) %>
 				</select>
@@ -80,6 +84,7 @@ DifferenceRequestVo vo = (DifferenceRequestVo)params.getVo();
 		<tr>
 			<td class="TitleTd"><%= params.getName("Period") %><%= params.getName("End") %><%= params.getName("Day") %></td>
 			<td class="InputTd" id="tdEndDate">
+				<%= CalendarHtmlUtility.getCalendarDiv(CalendarHtmlUtility.TYPE_DAY, "pltEditEnd", "", "", false, false, true) %>
 				<select class="Number4PullDown" id="pltEditEndYear" name="pltEditEndYear">
 					<%= HtmlUtility.getSelectOption(vo.getAryPltEditEndYear(), vo.getPltEditEndYear()) %>
 				</select>
@@ -115,7 +120,14 @@ DifferenceRequestVo vo = (DifferenceRequestVo)params.getVo();
 		</tr>
 	</table>
 	<jsp:include page="<%= TimeConst.PATH_TIME_APPLY_BUTTON_JSP %>" flush="false" />
+<%
+// 承認個人ID利用
+if(!params.isTargetApprovalUnit()){
+%>
 	<jsp:include page="<%= TimeConst.PATH_TIME_APPROVER_PULLDOWN_JSP %>" flush="false" />
+<%
+}
+%>
 </div>
 <div class="List">
 	<table class="InputTable SearchInputTable">
@@ -142,6 +154,7 @@ DifferenceRequestVo vo = (DifferenceRequestVo)params.getVo();
 			</td>
 			<td class="TitleTd"><%= params.getName("Display") %><%= params.getName("Period") %></td>
 			<td class="InputTd">
+				<%= CalendarHtmlUtility.getCalendarDiv(CalendarHtmlUtility.TYPE_MONTH, "pltSearchRequest", "", "", false, false, isSearchChanging) %>
 				<select class="Number4PullDown" id="pltSearchRequestYear" name="pltSearchRequestYear">
 					<%= HtmlUtility.getSelectOption(vo.getAryPltSearchRequestYear(), vo.getPltSearchRequestYear()) %>
 				</select>

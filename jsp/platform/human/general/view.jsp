@@ -26,6 +26,7 @@ errorPage = "/jsp/common/error.jsp"
 import = "jp.mosp.framework.base.MospParams"
 import = "jp.mosp.framework.constant.MospConst"
 import = "jp.mosp.framework.utils.HtmlUtility"
+import = "jp.mosp.framework.utils.RoleUtility"
 import = "jp.mosp.platform.constant.PlatformConst"
 import = "jp.mosp.platform.human.base.PlatformHumanVo"
 import = "jp.mosp.platform.human.constant.PlatformHumanConst"
@@ -53,6 +54,8 @@ if(division == null){
 	// 表示なし
 	return;
 }
+// 人事汎用管理区分参照権限
+boolean isReferenceDivision = RoleUtility.getReferenceDivisionsList(params).contains(division);
 // 人事汎用管理区分設定取得
 ViewConfigProperty viewConfig = params.getProperties().getViewConfigProperties().get(division);
 String divisionType = viewConfig.getType();
@@ -81,7 +84,8 @@ for(int i=0; i<viewTableKeys.length; i++){
 					<span class="TableButtonSpan">
 						<button type="button" class="Name2Button"
 							onclick="submitTransfer(event, null, null, new Array('<%=PlatformConst.PRM_TRANSFERRED_TYPE%>','<%= division %>','<%=PlatformConst.PRM_TRANSFERRED_ACTION%>', '<%=HumanNormalCardAction.class.getName()%>'), '<%=HumanInfoAction.CMD_TRANSFER%>');">
-							<%=params.getName("Edit")%>
+							<% // 更新権限がある場合%>
+							<%= isReferenceDivision ? params.getName("Reference") : params.getName("Edit")%>
 						</button>
 					</span>
 				</th>
@@ -107,7 +111,8 @@ for(int i=0; i<viewTableKeys.length; i++){
 						<span class="TableButtonSpan">
 							<button type="button" class="Name2Button"
 								onclick="submitTransfer(event, null, null, new Array('<%=PlatformConst.PRM_TRANSFERRED_TYPE %>','<%= division %>','<%=PlatformConst.PRM_TRANSFERRED_ACTION%>', '<%=HumanBinaryNormalCardAction.class.getName()%>'), '<%=HumanInfoAction.CMD_TRANSFER%>');">
-								<%=params.getName("Edit")%>
+								<% // 更新権限がある場合%>
+								<%= isReferenceDivision ? params.getName("Reference") : params.getName("Edit")%>
 							</button>
 						</span>
 					</th>
@@ -155,9 +160,12 @@ for(int i=0; i<viewTableKeys.length; i++){
 			<tr>
 				<th colspan="3" class="ListTableTh" id="thDivision"><span class="TitleTh"><%= params.getName(viewTitles[i]) %></span>
 					<span class="TableButtonSpan">
-						<button type="button" class="Name4Button" onclick="submitTransfer(event, null, null, new Array('<%=PlatformConst.PRM_TRANSFERRED_TYPE%>','<%= division %>','<%=PlatformConst.PRM_TRANSFERRED_ACTION%>', '<%=HumanHistoryCardAction.class.getName()%>'), '<%= HumanInfoAction.CMD_TRANSFER %>');">
-							<%= params.getName("History","Add") %>
-						</button>
+						<% // 更新権限がある場合%>
+						<% if (!isReferenceDivision) { %>
+							<button type="button" class="Name4Button" onclick="submitTransfer(event, null, null, new Array('<%=PlatformConst.PRM_TRANSFERRED_TYPE%>','<%= division %>','<%=PlatformConst.PRM_TRANSFERRED_ACTION%>', '<%=HumanHistoryCardAction.class.getName()%>'), '<%= HumanInfoAction.CMD_TRANSFER %>');">
+								<%= params.getName("History","Add")%>
+							</button>
+						<% } %>
 						<%
 						// 登録済みの場合だけ一覧ボタンを表示する。
 						if(vo.getHistoryMapInfo(division).isEmpty() ==false){
@@ -190,9 +198,12 @@ for(int i=0; i<viewTableKeys.length; i++){
 			<tr>
 				<th colspan="3" class="ListTableTh" id="thDivision"><span class="TitleTh"><%= params.getName(viewTitles[i]) %></span>
 					<span class="TableButtonSpan">
+						<% // 更新権限がある場合%>
+						<% if (!isReferenceDivision) { %>
 						<button type="button" class="Name4Button" onclick="submitTransfer(event, null, null, new Array('<%=PlatformConst.PRM_TRANSFERRED_TYPE%>','<%= division %>','<%=PlatformConst.PRM_TRANSFERRED_ACTION%>', '<%=HumanBinaryHistoryCardAction.class.getName()%>'), '<%= HumanInfoAction.CMD_TRANSFER %>');">
-							<%= params.getName("History","Add") %>
+							<%= params.getName("History","Add")%>
 						</button>
+						<% } %>
 						<%
 						// 登録済みの場合だけ一覧ボタンを表示する。
 						if(activeDate[0]!=null){
@@ -252,10 +263,13 @@ for(int i=0; i<viewTableKeys.length; i++){
 			<tr>
 				<th colspan="3" class="ListTableTh" id="thDivision"><span class="TitleTh"><%= params.getName(viewTitles[i]) %></span>
 			  		<span class="TableButtonSpan">
-			     	    <button type="button" class="Name2Button"
-							onclick="submitTransfer(event, null, null, new Array('<%=PlatformConst.PRM_TRANSFERRED_TYPE%>','<%= division %>','<%= PlatformConst.PRM_TRANSFERRED_ACTION %>', '<%= HumanArrayCardAction.class.getName() %>'), '<%= HumanInfoAction.CMD_TRANSFER %>');">
-							<%= params.getName("Add") %>
-						</button>
+						<% // 更新権限がある場合%>
+						<% if (!isReferenceDivision) { %>
+				     	    <button type="button" class="Name2Button"
+								onclick="submitTransfer(event, null, null, new Array('<%=PlatformConst.PRM_TRANSFERRED_TYPE%>','<%= division %>','<%= PlatformConst.PRM_TRANSFERRED_ACTION %>', '<%= HumanArrayCardAction.class.getName() %>'), '<%= HumanInfoAction.CMD_TRANSFER %>');">
+								<%= params.getName("Add") %>
+							</button>
+						<% } %>
 					</span>
 				</th>
 			</tr>
@@ -283,10 +297,13 @@ for(int i=0; i<viewTableKeys.length; i++){
 			<tr>
 				<th colspan="3" class="ListTableTh" id="thDivision"><span class="TitleTh"><%= params.getName(viewTitles[i]) %></span>
 			  		<span class="TableButtonSpan">
-			     	    <button type="button" class="Name2Button" id="btnBinaryFileOutput"
-							onclick="submitTransfer(event, null, null, new Array('<%=PlatformConst.PRM_TRANSFERRED_TYPE%>','<%= division %>','<%= PlatformConst.PRM_TRANSFERRED_ACTION %>', '<%= HumanBinaryArrayCardAction.class.getName() %>'), '<%= HumanInfoAction.CMD_TRANSFER %>');">
-							<%= params.getName("Add") %>
-						</button>
+						<% // 更新権限がある場合%>
+						<% if (!isReferenceDivision) { %>
+				     	    <button type="button" class="Name2Button" id="btnBinaryFileOutput"
+								onclick="submitTransfer(event, null, null, new Array('<%=PlatformConst.PRM_TRANSFERRED_TYPE%>','<%= division %>','<%= PlatformConst.PRM_TRANSFERRED_ACTION %>', '<%= HumanBinaryArrayCardAction.class.getName() %>'), '<%= HumanInfoAction.CMD_TRANSFER %>');">
+								<%= params.getName("Add") %>
+							</button>
+						<% } %>
 					</span>
 				</th>
 			</tr>
@@ -394,9 +411,13 @@ for(int i=0; i<viewTableKeys.length; i++){
 				<span class="TitleTh"><%= HtmlUtility.escapeHTML(activeDate) %><%= params.getName("Wave") %></span>
 					<span class="TableButtonSpan">
 					<button type="button" id="btnHumenInfo" class="Name4Button" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_ACTIVATE_DATE %>',  '<%= activeDate %>','<%= PlatformConst.PRM_TRANSFERRED_TYPE %>',  '<%= division %>','<%= PlatformConst.PRM_TRANSFERRED_ACTION %>',  '<%= HumanHistoryCardAction.CMD_EDIT_SELECT %>'), '<%= HumanHistoryListAction.CMD_TRANSFER %>');">
-					<%= params.getName("History","Edit") %>
+					<% // 更新権限がある場合%>
+					<%= isReferenceDivision ? params.getName("History","Reference") : params.getName("History","Edit")%>
 					</button>&nbsp;
-					<button type="button" id="btnHumenInfo" name="btnDelete" class="Name4Button" onclick="submitTransfer(event,null,checkExtra,new Array('<%= PlatformConst.PRM_TRANSFERRED_ACTIVATE_DATE %>', '<%= activeDate %>','<%= PlatformConst.PRM_TRANSFERRED_TYPE %>','<%= division %>'),'<%= HumanHistoryListAction.CMD_DELETE %>');"><%= params.getName("History","Delete") %></button>
+					<% // 更新権限がある場合%>
+					<% if (!isReferenceDivision) { %>
+						<button type="button" id="btnHumenInfo" name="btnDelete" class="Name4Button" onclick="submitTransfer(event,null,checkExtra,new Array('<%= PlatformConst.PRM_TRANSFERRED_ACTIVATE_DATE %>', '<%= activeDate %>','<%= PlatformConst.PRM_TRANSFERRED_TYPE %>','<%= division %>'),'<%= HumanHistoryListAction.CMD_DELETE %>');"><%= params.getName("History","Delete") %></button>
+					<% } %>
 					</span>
 				</th>
 			</tr>

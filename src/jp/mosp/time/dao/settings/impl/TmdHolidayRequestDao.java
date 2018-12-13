@@ -218,6 +218,58 @@ public class TmdHolidayRequestDao extends PlatformDao implements HolidayRequestD
 	}
 	
 	@Override
+	public List<HolidayRequestDtoInterface> findForApprovedList(String personalId, Date acquisitionDate,
+			int holidayType1, String holidayType2, Date requestStartDate, Date requestEndDate) throws MospException {
+		try {
+			index = 1;
+			StringBuffer sb = getSelectQuery(getClass());
+			sb.append(where());
+			sb.append(deleteFlagOff());
+			sb.append(and());
+			sb.append(equal(COL_PERSONAL_ID));
+			sb.append(and());
+			sb.append(equal(COL_HOLIDAY_ACQUISITION_DATE));
+			sb.append(and());
+			sb.append(equal(COL_HOLIDAY_TYPE1));
+			sb.append(and());
+			sb.append(equal(COL_HOLIDAY_TYPE2));
+			sb.append(and());
+			sb.append(lessEqual(COL_REQUEST_START_DATE));
+			sb.append(and());
+			sb.append(greaterEqual(COL_REQUEST_END_DATE));
+			sb.append(and());
+			sb.append(COL_WORKFLOW);
+			sb.append(in());
+			sb.append(leftParenthesis());
+			sb.append(select());
+			sb.append(PftWorkflowDao.COL_WORKFLOW);
+			sb.append(from(PftWorkflowDao.TABLE));
+			sb.append(where());
+			sb.append(deleteFlagOff());
+			sb.append(and());
+			sb.append(PftWorkflowDao.COL_WORKFLOW_STATUS);
+			sb.append(" = '");
+			sb.append(PlatformConst.CODE_STATUS_COMPLETE);
+			sb.append("'");
+			sb.append(rightParenthesis());
+			prepareStatement(sb.toString());
+			setParam(index++, personalId);
+			setParam(index++, acquisitionDate);
+			setParam(index++, holidayType1);
+			setParam(index++, holidayType2);
+			setParam(index++, requestEndDate);
+			setParam(index++, requestStartDate);
+			executeQuery();
+			return mappingAll();
+		} catch (Throwable e) {
+			throw new MospException(e);
+		} finally {
+			releaseResultSet();
+			releasePreparedStatement();
+		}
+	}
+	
+	@Override
 	public List<HolidayRequestDtoInterface> findForRequestList(String personalId, Date acquisitionDate,
 			int holidayType1, String holidayType2, Date requestDate) throws MospException {
 		try {
@@ -306,7 +358,8 @@ public class TmdHolidayRequestDao extends PlatformDao implements HolidayRequestD
 			sb.append(leftParenthesis());
 			sb.append(workflowDao.getSubQueryForNotEqualDraft());
 			sb.append(rightParenthesis());
-			sb.append(getOrderByColumns(COL_REQUEST_START_DATE, COL_REQUEST_END_DATE, COL_START_TIME, COL_HOLIDAY_RANGE));
+			sb.append(
+					getOrderByColumns(COL_REQUEST_START_DATE, COL_REQUEST_END_DATE, COL_START_TIME, COL_HOLIDAY_RANGE));
 			prepareStatement(sb.toString());
 			setParam(index++, personalId);
 			setParam(index++, acquisitionDate);
@@ -476,6 +529,28 @@ public class TmdHolidayRequestDao extends PlatformDao implements HolidayRequestD
 			setParam(index++, personalId);
 			setParam(index++, requestDate);
 			setParam(index++, requestDate);
+			executeQuery();
+			return mappingAll();
+		} catch (Throwable e) {
+			throw new MospException(e);
+		} finally {
+			releaseResultSet();
+			releasePreparedStatement();
+		}
+	}
+	
+	@Override
+	public List<HolidayRequestDtoInterface> findForList(String personalId) throws MospException {
+		try {
+			index = 1;
+			StringBuffer sb = getSelectQuery(getClass());
+			sb.append(where());
+			sb.append(deleteFlagOff());
+			sb.append(and());
+			sb.append(equal(COL_PERSONAL_ID));
+			sb.append(getOrderByColumns(COL_REQUEST_START_DATE, COL_REQUEST_END_DATE, COL_START_TIME));
+			prepareStatement(sb.toString());
+			setParam(index++, personalId);
 			executeQuery();
 			return mappingAll();
 		} catch (Throwable e) {
@@ -882,6 +957,32 @@ public class TmdHolidayRequestDao extends PlatformDao implements HolidayRequestD
 			setParam(index++, personalId);
 			setParam(index++, lastDate, false);
 			setParam(index++, firstDate, false);
+			executeQuery();
+			return mappingAll();
+		} catch (Throwable e) {
+			throw new MospException(e);
+		} finally {
+			releaseResultSet();
+			releasePreparedStatement();
+		}
+	}
+	
+	@Override
+	public List<HolidayRequestDtoInterface> findForAcquisitionList(String personalId, Date acquisitionDate)
+			throws MospException {
+		try {
+			index = 1;
+			StringBuffer sb = getSelectQuery(getClass());
+			sb.append(where());
+			sb.append(deleteFlagOff());
+			sb.append(and());
+			sb.append(equal(COL_PERSONAL_ID));
+			sb.append(and());
+			sb.append(equal(COL_HOLIDAY_ACQUISITION_DATE));
+			sb.append(getOrderByColumn(COL_REQUEST_START_DATE, COL_REQUEST_END_DATE));
+			prepareStatement(sb.toString());
+			setParam(index++, personalId);
+			setParam(index++, acquisitionDate);
 			executeQuery();
 			return mappingAll();
 		} catch (Throwable e) {

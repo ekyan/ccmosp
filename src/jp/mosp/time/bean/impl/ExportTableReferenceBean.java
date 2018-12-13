@@ -31,7 +31,9 @@ import jp.mosp.framework.utils.DateUtility;
 import jp.mosp.framework.utils.MospUtility;
 import jp.mosp.platform.base.PlatformBean;
 import jp.mosp.platform.bean.human.HumanSearchBeanInterface;
+import jp.mosp.platform.bean.human.RetirementReferenceBeanInterface;
 import jp.mosp.platform.bean.system.SectionReferenceBeanInterface;
+import jp.mosp.platform.bean.workflow.WorkflowReferenceBeanInterface;
 import jp.mosp.platform.constant.PlatformConst;
 import jp.mosp.platform.constant.PlatformFileConst;
 import jp.mosp.platform.dao.file.ExportDaoInterface;
@@ -40,15 +42,16 @@ import jp.mosp.platform.dao.human.impl.PfmHumanDao;
 import jp.mosp.platform.dto.file.ExportDtoInterface;
 import jp.mosp.platform.dto.file.ExportFieldDtoInterface;
 import jp.mosp.platform.dto.human.HumanDtoInterface;
+import jp.mosp.platform.dto.workflow.WorkflowDtoInterface;
 import jp.mosp.platform.utils.MonthUtility;
+import jp.mosp.platform.utils.WorkflowUtility;
 import jp.mosp.time.base.TimeBean;
-import jp.mosp.time.bean.ApplicationReferenceBeanInterface;
 import jp.mosp.time.bean.AttendanceListReferenceBeanInterface;
 import jp.mosp.time.bean.CutoffUtilBeanInterface;
 import jp.mosp.time.bean.ExportTableReferenceBeanInterface;
+import jp.mosp.time.bean.PaidHolidayDataReferenceBeanInterface;
+import jp.mosp.time.bean.PaidHolidayTransactionReferenceBeanInterface;
 import jp.mosp.time.bean.TimeRecordReferenceBeanInterface;
-import jp.mosp.time.bean.TimeSettingReferenceBeanInterface;
-import jp.mosp.time.bean.WorkTypeReferenceBeanInterface;
 import jp.mosp.time.constant.TimeConst;
 import jp.mosp.time.constant.TimeFileConst;
 import jp.mosp.time.dao.settings.ExportDataDaoInterface;
@@ -57,12 +60,15 @@ import jp.mosp.time.dao.settings.impl.TmdHolidayDataDao;
 import jp.mosp.time.dao.settings.impl.TmdPaidHolidayDao;
 import jp.mosp.time.dao.settings.impl.TmdStockHolidayDao;
 import jp.mosp.time.dao.settings.impl.TmdTotalTimeDao;
-import jp.mosp.time.dto.settings.ApplicationDtoInterface;
 import jp.mosp.time.dto.settings.CutoffDtoInterface;
+import jp.mosp.time.dto.settings.HolidayRequestDtoInterface;
+import jp.mosp.time.dto.settings.PaidHolidayDataDtoInterface;
+import jp.mosp.time.dto.settings.PaidHolidayTransactionDtoInterface;
 import jp.mosp.time.dto.settings.TimeRecordDtoInterface;
 import jp.mosp.time.dto.settings.TimeSettingDtoInterface;
 import jp.mosp.time.dto.settings.impl.AttendanceListDto;
 import jp.mosp.time.portal.bean.impl.PortalTimeCardBean;
+import jp.mosp.time.utils.TimeUtility;
 
 /**
  * エクスポートテーブル参照クラス。
@@ -72,112 +78,132 @@ public class ExportTableReferenceBean extends PlatformBean implements ExportTabl
 	/**
 	 * エクスポートコード。
 	 */
-	protected String								exportCode;
+	protected String										exportCode;
 	
 	/**
 	 * 開始年。
 	 */
-	protected int									startYear;
+	protected int											startYear;
 	
 	/**
 	 * 開始月。
 	 */
-	protected int									startMonth;
+	protected int											startMonth;
 	
 	/**
 	 * 終了年。
 	 */
-	protected int									endYear;
+	protected int											endYear;
 	
 	/**
 	 * 終了月。
 	 */
-	protected int									endMonth;
+	protected int											endMonth;
 	
 	/**
 	 * 締日コード。
 	 */
-	protected String								cutoffCode;
+	protected String										cutoffCode;
 	
 	/**
 	 * 勤務地コード。
 	 */
-	protected String								workPlaceCode;
+	protected String										workPlaceCode;
 	
 	/**
 	 * 雇用契約コード。
 	 */
-	protected String								employmentCode;
+	protected String										employmentCode;
 	
 	/**
 	 * 所属コード。
 	 */
-	protected String								sectionCode;
+	protected String										sectionCode;
 	
 	/**
 	 * 職位コード。
 	 */
-	protected String								positionCode;
+	protected String										positionCode;
+	
+	/**
+	 * 下位所属含むチェックボックス。
+	 */
+	protected int											ckbNeedLowerSection;
 	
 	/**
 	 * エクスポートマスタDAO。
 	 */
-	private ExportDaoInterface						exportDao;
+	private ExportDaoInterface								exportDao;
 	
 	/**
 	 * エクスポートフィールドマスタDAO。
 	 */
-	private ExportFieldDaoInterface					exportFieldDao;
+	private ExportFieldDaoInterface							exportFieldDao;
 	
 	/**
 	 * エクスポートデータDAO。
 	 */
-	private ExportDataDaoInterface					exportDataDao;
-	
-	/**
-	 * 設定適用管理参照。
-	 */
-	private ApplicationReferenceBeanInterface		application;
-	
-	/**
-	 * 勤怠設定参照。
-	 */
-	private TimeSettingReferenceBeanInterface		timeSetting;
+	private ExportDataDaoInterface							exportDataDao;
 	
 	/**
 	 * 締日ユーティリティクラス。
 	 */
-	private CutoffUtilBeanInterface					cutoffUtil;
+	private CutoffUtilBeanInterface							cutoffUtil;
 	
 	/**
 	 * 勤怠一覧参照クラス。
 	 */
-	private AttendanceListReferenceBeanInterface	attendanceList;
+	private AttendanceListReferenceBeanInterface			attendanceList;
 	
 	/**
 	 * 打刻データ参照クラス。
 	 */
-	private TimeRecordReferenceBeanInterface		timeRecord;
+	private TimeRecordReferenceBeanInterface				timeRecord;
 	
 	/**
 	 * 人事マスタ検索クラス。<br>
 	 */
-	protected HumanSearchBeanInterface				humanSearch;
+	protected HumanSearchBeanInterface						humanSearch;
 	
 	/**
 	 * 所属マスタ参照クラス。<br>
 	 */
-	protected SectionReferenceBeanInterface			section;
+	protected SectionReferenceBeanInterface					section;
 	
 	/**
-	 * 勤務形態参照クラス。<br>
+	 * 休暇申請情報参照クラス。<br>
 	 */
-	protected WorkTypeReferenceBeanInterface		workType;
+	protected HolidayRequestReferenceBean					holidayRequestReference;
+	
+	/**
+	 * 有給休暇付与情報参照クラス。<br>
+	 */
+	protected PaidHolidayDataReferenceBeanInterface			paidHolidayDataReference;
+	
+	/**
+	 * ワークフロー情報参照クラス。<br>
+	 */
+	protected WorkflowReferenceBeanInterface				workflowReference;
+	
+	/**
+	 * 有給休暇手動付与参照クラス。<br>
+	 */
+	protected PaidHolidayTransactionReferenceBeanInterface	paidHolidayTransactionReference;
+	
+	/**
+	 * 人事退社情報参照クラス。
+	 */
+	RetirementReferenceBeanInterface						retirementReference;
 	
 	/**
 	 * MosPアプリケーション設定キー(エクスポート時間フォーマット)。
 	 */
-	protected static final String					APP_EXPORT_TIME_FORMAT	= "ExportTimeFormat";
+	protected static final String							APP_EXPORT_TIME_FORMAT	= "ExportTimeFormat";
+	
+	/**
+	 * 操作時間数(-1年)
+	 */
+	protected static final int								addPrevious				= -1;
 	
 	
 	/**
@@ -201,14 +227,18 @@ public class ExportTableReferenceBean extends PlatformBean implements ExportTabl
 		exportDao = (ExportDaoInterface)createDao(ExportDaoInterface.class);
 		exportFieldDao = (ExportFieldDaoInterface)createDao(ExportFieldDaoInterface.class);
 		exportDataDao = (ExportDataDaoInterface)createDao(ExportDataDaoInterface.class);
-		application = (ApplicationReferenceBeanInterface)createBean(ApplicationReferenceBeanInterface.class);
-		timeSetting = (TimeSettingReferenceBeanInterface)createBean(TimeSettingReferenceBeanInterface.class);
 		cutoffUtil = (CutoffUtilBeanInterface)createBean(CutoffUtilBeanInterface.class);
 		attendanceList = (AttendanceListReferenceBeanInterface)createBean(AttendanceListReferenceBeanInterface.class);
 		timeRecord = (TimeRecordReferenceBeanInterface)createBean(TimeRecordReferenceBeanInterface.class);
 		humanSearch = (HumanSearchBeanInterface)createBean(HumanSearchBeanInterface.class);
 		section = (SectionReferenceBeanInterface)createBean(SectionReferenceBeanInterface.class);
-		workType = (WorkTypeReferenceBeanInterface)createBean(WorkTypeReferenceBeanInterface.class);
+		holidayRequestReference = (HolidayRequestReferenceBean)createBean(HolidayRequestReferenceBean.class);
+		paidHolidayDataReference = (PaidHolidayDataReferenceBeanInterface)createBean(
+				PaidHolidayDataReferenceBeanInterface.class);
+		workflowReference = (WorkflowReferenceBeanInterface)createBean(WorkflowReferenceBeanInterface.class);
+		paidHolidayTransactionReference = (PaidHolidayTransactionReferenceBeanInterface)createBean(
+				PaidHolidayTransactionReferenceBeanInterface.class);
+		retirementReference = (RetirementReferenceBeanInterface)createBean(RetirementReferenceBeanInterface.class);
 	}
 	
 	@Override
@@ -254,44 +284,36 @@ public class ExportTableReferenceBean extends PlatformBean implements ExportTabl
 		boolean isTotalTime = TimeFileConst.CODE_EXPORT_TYPE_TMD_TOTAL_TIME.equals(exportDto.getExportTable());
 		boolean isPaidHoliday = TimeFileConst.CODE_EXPORT_TYPE_TMD_PAID_HOLIDAY.equals(exportDto.getExportTable());
 		boolean isStockHoliday = TimeFileConst.CODE_EXPORT_TYPE_TMD_STOCK_HOLIDAY.equals(exportDto.getExportTable());
-		//boolean isTimelyPaidHoliday = TmdTimelyPaidHolidayDao.TABLE.equals(exportDto.getExportTable());
 		boolean isHolidayData = TimeFileConst.CODE_EXPORT_TYPE_TMD_HOLIDAY.equals(exportDto.getExportTable());
 		boolean isAttendanceBook = TimeFileConst.CODE_EXPORT_TYPE_ATTENDANCE_BOOK.equals(exportDto.getExportTable());
 		if (isAttendance) {
 			// 勤怠データ
 			rs = exportDataDao.findForAttendance(startDate, endDate, cutoffCode, workPlaceCode, employmentCode,
-					sectionCode, positionCode);
+					sectionCode, ckbNeedLowerSection, positionCode);
 		}
 		if (isTotalTime) {
 			// 勤怠集計データ
 			rs = exportDataDao.findForTotalTime(startDate, endDate, cutoffCode, workPlaceCode, employmentCode,
-					sectionCode, positionCode);
+					sectionCode, ckbNeedLowerSection, positionCode);
 		}
 		if (isPaidHoliday) {
 			// 有給休暇データ
 			rs = exportDataDao.findForPaidHoliday(startDate, endDate, cutoffCode, workPlaceCode, employmentCode,
-					sectionCode, positionCode);
+					sectionCode, ckbNeedLowerSection, positionCode);
 		}
 		if (isStockHoliday) {
 			// ストック休暇データ
 			rs = exportDataDao.findForStockHoliday(startDate, endDate, cutoffCode, workPlaceCode, employmentCode,
-					sectionCode, positionCode);
+					sectionCode, ckbNeedLowerSection, positionCode);
 		}
-		/*
-		if (isTimelyPaidHoliday) {
-			// 時間単位有給休暇データ
-			rs = exportDataDao.findForTimelyPaidHoliday(startDate, endDate, cutoffCode, workPlaceCode, employmentCode,
-					sectionCode, positionCode);
-		}
-		*/
 		if (isHolidayData) {
 			// 休暇データ
 			rs = exportDataDao.findForHolidayData(startDate, endDate, cutoffCode, workPlaceCode, employmentCode,
-					sectionCode, positionCode);
+					sectionCode, ckbNeedLowerSection, positionCode);
 		}
 		// 出勤簿データ
 		if (isAttendanceBook) {
-			// 人事情報検索条件設定
+			// 人事情報検索条件設定(在職)
 			humanSearch.setStartDate(startDate);
 			humanSearch.setEndDate(endDate);
 			humanSearch.setTargetDate(endDate);
@@ -301,14 +323,30 @@ public class ExportTableReferenceBean extends PlatformBean implements ExportTabl
 			humanSearch.setPositionCode(positionCode);
 			// 検索条件設定(状態)
 			humanSearch.setStateType(PlatformConst.EMPLOYEE_STATE_PRESENCE);
-			// 検索条件設定(下位所属要否)
-			humanSearch.setNeedLowerSection(false);
+			// 検索条件設定(下位所属要否) 下位所属含むチェックボックスで判定
+			if (ckbNeedLowerSection == 1) {
+				humanSearch.setNeedLowerSection(true);
+			} else {
+				humanSearch.setNeedLowerSection(false);
+			}
 			// 検索条件設定(兼務要否)
 			humanSearch.setNeedConcurrent(false);
 			// 検索条件設定(操作区分)
 			humanSearch.setOperationType(MospConst.OPERATION_TYPE_REFER);
-			// 人事情報検索
-			List<HumanDtoInterface> humanList = humanSearch.search();
+			// 人事情報検索(在職)
+			List<HumanDtoInterface> presenceHumanList = humanSearch.search();
+			
+			// 人事情報検索条件設定(休職)
+			// 検索条件設定(状態)
+			humanSearch.setStateType(PlatformConst.EMPLOYEE_STATE_SUSPEND);
+			// 人事情報検索(休職)
+			List<HumanDtoInterface> suspendHumanList = humanSearch.search();
+			
+			// 人事情報検索(在職+休職)
+			List<HumanDtoInterface> humanList = new ArrayList<HumanDtoInterface>();
+			humanList.addAll(presenceHumanList);
+			humanList.addAll(suspendHumanList);
+			
 			// 人事情報確認
 			if (humanList.isEmpty()) {
 				return list;
@@ -326,19 +364,32 @@ public class ExportTableReferenceBean extends PlatformBean implements ExportTabl
 						continue;
 					}
 				}
-				// 実績一覧を取得
-				List<AttendanceListDto> actualList = attendanceList.getActualList(humanDto.getPersonalId(),
-						firstTargetDate);
-				// 実績一覧確認
-				if (actualList == null || actualList.isEmpty()) {
-					// エラーメッセージ削除
-					mospParams.getErrorMessageList().clear();
-					continue;
+				// 対象日の設定
+				Date targetDate = startDate;
+				int idx = 0;
+				// 締期間毎に処理
+				while (endDate.after(targetDate)) {
+					// 対象月に対する月操作
+					targetDate = DateUtility.addMonth(startDate, idx);
+					idx++;
+					// 対象日が最終日を超えていた場合
+					if (endDate.compareTo(targetDate) < 0) {
+						break;
+					}
+					// 実績一覧を取得
+					List<AttendanceListDto> actualList = attendanceList.getActualList(humanDto.getPersonalId(),
+							targetDate);
+					// 実績一覧確認
+					if (actualList == null || actualList.isEmpty()) {
+						// エラーメッセージ削除
+						mospParams.getErrorMessageList().clear();
+						continue;
+					}
+					// 対象社員出力リスト取得
+					List<String[]> AttandanceBookList = getFieldValue(humanDto, exportFieldDtoList, actualList);
+					// CSVデータをCSVデータリストに追加
+					list.addAll(AttandanceBookList);
 				}
-				// 対象社員出力リスト取得
-				List<String[]> AttandanceBookList = getFieldValue(humanDto, exportFieldDtoList, actualList);
-				// CSVデータをCSVデータリストに追加
-				list.addAll(AttandanceBookList);
 			}
 			exportDataDao.closers();
 			return list;
@@ -362,34 +413,27 @@ public class ExportTableReferenceBean extends PlatformBean implements ExportTabl
 						// 有給休暇データ
 						personalId = rs.getString(TmdPaidHolidayDao.COL_PERSONAL_ID);
 						firstTargetDate = rs.getDate(TmdPaidHolidayDao.COL_ACTIVATE_DATE);
+						// 退職日取得
+						Date retirementDate = retirementReference.getRetireDate(personalId);
+						if (retirementDate != null
+								&& DateUtility.isTermContain(firstTargetDate, retirementDate, null)) {
+							// 退職日が存在し、有効日が退職日より後の場合
+							continue;
+						}
 					}
 					if (isStockHoliday) {
 						// ストック休暇データ
 						personalId = rs.getString(TmdStockHolidayDao.COL_PERSONAL_ID);
 						firstTargetDate = rs.getDate(TmdStockHolidayDao.COL_ACTIVATE_DATE);
 					}
-					/*
-					if (isTimelyPaidHoliday) {
-						// 時間単位有給休暇データ
-						personalId = rs.getString(TmdTimelyPaidHolidayDao.COL_PERSONAL_ID);
-						firstTargetDate = rs.getDate(TmdTimelyPaidHolidayDao.COL_ACTIVATE_DATE);
-					}
-					*/
 					if (isHolidayData) {
 						// 休暇データ
 						personalId = rs.getString(TmdHolidayDataDao.COL_PERSONAL_ID);
 						firstTargetDate = rs.getDate(TmdHolidayDataDao.COL_ACTIVATE_DATE);
 					}
-					
-					// TODO ここの処理は変えられる。cutoffUtilがいいか
-					// 設定適用情報取得
-					ApplicationDtoInterface applicationDto = application.findForPerson(personalId, firstTargetDate);
-					if (applicationDto == null) {
-						continue;
-					}
-					// 勤怠設定情報取得
-					TimeSettingDtoInterface timeSettingDto = timeSetting.getTimeSettingInfo(
-							applicationDto.getWorkSettingCode(), firstTargetDate);
+					// 勤怠設定情報を取得
+					TimeSettingDtoInterface timeSettingDto = cutoffUtil.getTimeSettingNoMessage(personalId,
+							firstTargetDate);
 					if (timeSettingDto == null) {
 						continue;
 					}
@@ -424,13 +468,6 @@ public class ExportTableReferenceBean extends PlatformBean implements ExportTabl
 						personalId = rs.getString(TmdStockHolidayDao.COL_PERSONAL_ID);
 						targetDate = rs.getDate(TmdStockHolidayDao.COL_ACTIVATE_DATE);
 					}
-					/*
-					if (isTimelyPaidHoliday) {
-						// 時間単位有給休暇データ
-						personalId = rs.getString(TmdTimelyPaidHolidayDao.COL_PERSONAL_ID);
-						targetDate = rs.getDate(TmdTimelyPaidHolidayDao.COL_ACTIVATE_DATE);
-					}
-					*/
 					if (isHolidayData) {
 						// 休暇データ
 						personalId = rs.getString(TmdHolidayDataDao.COL_PERSONAL_ID);
@@ -446,15 +483,15 @@ public class ExportTableReferenceBean extends PlatformBean implements ExportTabl
 						// 始業時刻（丸め打刻）
 						if (TmdAttendanceDao.COL_START_TIME.equals(fieldName)) {
 							// 丸め時刻追加
-							dataList.add(DateUtility.getStringDateAndTime(rs
-								.getTimestamp(TmdAttendanceDao.COL_START_TIME)));
+							dataList.add(
+									DateUtility.getStringDateAndTime(rs.getTimestamp(TmdAttendanceDao.COL_START_TIME)));
 							continue;
 						}
 						// 始業時刻(実打刻)
 						if (TmdAttendanceDao.COL_ACTUAL_START_TIME.equals(fieldName)) {
 							// 実打刻追加
-							dataList.add(DateUtility.getStringDateAndTime(rs
-								.getTimestamp(TmdAttendanceDao.COL_ACTUAL_START_TIME)));
+							dataList.add(DateUtility
+								.getStringDateAndTime(rs.getTimestamp(TmdAttendanceDao.COL_ACTUAL_START_TIME)));
 							continue;
 						}
 						// 始業時刻(ポータル打刻)
@@ -474,15 +511,15 @@ public class ExportTableReferenceBean extends PlatformBean implements ExportTabl
 						}
 						// 終業時刻（丸め打刻）
 						if (TmdAttendanceDao.COL_END_TIME.equals(fieldName)) {
-							dataList.add(DateUtility.getStringDateAndTime(rs
-								.getTimestamp(TmdAttendanceDao.COL_END_TIME)));
+							dataList
+								.add(DateUtility.getStringDateAndTime(rs.getTimestamp(TmdAttendanceDao.COL_END_TIME)));
 							continue;
 						}
 						// 終業時刻(実打刻)
 						if (TmdAttendanceDao.COL_ACTUAL_END_TIME.equals(fieldName)) {
 							// 実打刻追加
-							dataList.add(DateUtility.getStringDateAndTime(rs
-								.getTimestamp(TmdAttendanceDao.COL_ACTUAL_END_TIME)));
+							dataList.add(DateUtility
+								.getStringDateAndTime(rs.getTimestamp(TmdAttendanceDao.COL_ACTUAL_END_TIME)));
 							continue;
 						}
 						// 終業時刻(ポータル打刻)
@@ -502,7 +539,7 @@ public class ExportTableReferenceBean extends PlatformBean implements ExportTabl
 						if (
 						// 遅刻時間
 						TmdAttendanceDao.COL_LATE_TIME.equals(fieldName)
-						// 実遅刻時間
+								// 実遅刻時間
 								|| TmdAttendanceDao.COL_ACTUAL_LATE_TIME.equals(fieldName)
 								// 遅刻30分以上時間
 								|| TmdAttendanceDao.COL_LATE_THIRTY_MINUTES_OR_MORE_TIME.equals(fieldName)
@@ -564,6 +601,12 @@ public class ExportTableReferenceBean extends PlatformBean implements ExportTabl
 								|| TmdAttendanceDao.COL_PRESCRIBED_HOLIDAY_OVERTIME_OUT.equals(fieldName)
 								// 深夜勤務時間
 								|| TmdAttendanceDao.COL_LATE_NIGHT_TIME.equals(fieldName)
+								// 深夜所定労働時間内時間
+								|| TmdAttendanceDao.COL_NIGHT_WORK_WITHIN_PRESCRIBED_WORK.equals(fieldName)
+								// 深夜時間外時間
+								|| TmdAttendanceDao.COL_NIGHT_OVERTIME_WORK.equals(fieldName)
+								// 深夜休日労働時間
+								|| TmdAttendanceDao.COL_NIGHT_WORK_ON_HOLIDAY.equals(fieldName)
 								// 所定休日勤務時間
 								|| TmdAttendanceDao.COL_SPECIFIC_WORK_TIME.equals(fieldName)
 								// 法定休日勤務時間
@@ -613,7 +656,7 @@ public class ExportTableReferenceBean extends PlatformBean implements ExportTabl
 						if (
 						// 勤務時間
 						TmdTotalTimeDao.COL_WORK_TIME.equals(fieldName)
-						// 所定勤務時間
+								// 所定勤務時間
 								|| TmdTotalTimeDao.COL_SPECIFIC_WORK_TIME.equals(fieldName)
 								// 契約勤務時間
 								|| TmdTotalTimeDao.COL_CONTRACT_WORK_TIME.equals(fieldName)
@@ -643,6 +686,12 @@ public class ExportTableReferenceBean extends PlatformBean implements ExportTabl
 								|| TmdTotalTimeDao.COL_OVERTIME_OUT.equals(fieldName)
 								// 深夜時間
 								|| TmdTotalTimeDao.COL_LATE_NIGHT.equals(fieldName)
+								// 深夜所定労働時間内時間
+								|| TmdTotalTimeDao.COL_NIGHT_WORK_WITHIN_PRESCRIBED_WORK.equals(fieldName)
+								// 深夜時間外時間
+								|| TmdTotalTimeDao.COL_NIGHT_OVERTIME_WORK.equals(fieldName)
+								// 深夜休日労働時間
+								|| TmdTotalTimeDao.COL_NIGHT_WORK_ON_HOLIDAY.equals(fieldName)
 								// 所定休出時間
 								|| TmdTotalTimeDao.COL_WORK_ON_SPECIFIC_HOLIDAY.equals(fieldName)
 								// 法定休出時間
@@ -690,45 +739,44 @@ public class ExportTableReferenceBean extends PlatformBean implements ExportTabl
 								// 平日時間外時間(週40時間超除く)
 								|| TmdTotalTimeDao.COL_WEEK_DAY_OVERTIME_OUT_NO_WEEKLY_FORTY.equals(fieldName)
 								// 平日時間内時間
-								|| TmdTotalTimeDao.COL_WEEK_DAY_OVERTIME_IN.equals(fieldName)) {
+								|| TmdTotalTimeDao.COL_WEEK_DAY_OVERTIME_IN.equals(fieldName)
+								// 汎用項目1(数値)
+								|| TmdTotalTimeDao.COL_GENERAL_INT_ITEM1.equals(fieldName)) {
 							// 項目追加
 							dataList.add(getExportTime(rs.getInt(fieldName), format));
 							continue;
 						}
 						// TODO 計算するものは、ここに処理を加えるのか
-						
 					}
-					if (isPaidHoliday
-							&& (TmdPaidHolidayDao.COL_ACTIVATE_DATE.equals(fieldName)
-									|| TmdPaidHolidayDao.COL_ACQUISITION_DATE.equals(fieldName) || TmdPaidHolidayDao.COL_LIMIT_DATE
-								.equals(fieldName))) {
+					if (isPaidHoliday && (TmdPaidHolidayDao.COL_ACTIVATE_DATE.equals(fieldName)
+							|| TmdPaidHolidayDao.COL_ACQUISITION_DATE.equals(fieldName)
+							|| TmdPaidHolidayDao.COL_LIMIT_DATE.equals(fieldName))) {
 						// 有給休暇データ
 						// 有効日・取得日・期限日
 						dataList.add(DateUtility.getStringDate(rs.getDate(fieldName)));
 						continue;
 					}
-					if (isStockHoliday
-							&& (TmdStockHolidayDao.COL_ACTIVATE_DATE.equals(fieldName)
-									|| TmdStockHolidayDao.COL_ACQUISITION_DATE.equals(fieldName) || TmdStockHolidayDao.COL_LIMIT_DATE
-								.equals(fieldName))) {
+					if (isPaidHoliday && (TimeFileConst.FIELD_CARYYOVER_DAY.equals(fieldName)
+							|| TimeFileConst.FIELD_CARYYOVER_HOUR.equals(fieldName))) {
+						// 有給休暇データ
+						// 前年度繰越日数・前年度繰越時間数
+						// 昨年度の有給休暇付与日設定
+						Date acquisitionDate = rs.getDate(TmdPaidHolidayDao.COL_ACQUISITION_DATE);
+						String carryoverTime = getCarryoverTime(personalId, acquisitionDate, fieldName, true);
+						
+						dataList.add(carryoverTime);
+						continue;
+					}
+					if (isStockHoliday && (TmdStockHolidayDao.COL_ACTIVATE_DATE.equals(fieldName)
+							|| TmdStockHolidayDao.COL_ACQUISITION_DATE.equals(fieldName)
+							|| TmdStockHolidayDao.COL_LIMIT_DATE.equals(fieldName))) {
 						// ストック休暇データ
 						// 有効日・取得日・期限日
 						dataList.add(DateUtility.getStringDate(rs.getDate(fieldName)));
 						continue;
 					}
-					/*
-					if (isTimelyPaidHoliday
-							&& (TmdTimelyPaidHolidayDao.COL_ACTIVATE_DATE.equals(fieldName) || TmdTimelyPaidHolidayDao.COL_ACQUISITION_DATE
-								.equals(fieldName))) {
-						// 時間単位有給休暇データ
-						// 有効日・取得日
-						dataList.add(DateUtility.getStringDate(rs.getDate(fieldName)));
-						continue;
-					}
-					*/
-					if (isHolidayData
-							&& (TmdHolidayDataDao.COL_ACTIVATE_DATE.equals(fieldName) || TmdHolidayDataDao.COL_HOLIDAY_LIMIT_DATE
-								.equals(fieldName))) {
+					if (isHolidayData && (TmdHolidayDataDao.COL_ACTIVATE_DATE.equals(fieldName)
+							|| TmdHolidayDataDao.COL_HOLIDAY_LIMIT_DATE.equals(fieldName))) {
 						// 休暇データ
 						// 有効日・取得期限
 						dataList.add(DateUtility.getStringDate(rs.getDate(fieldName)));
@@ -929,7 +977,7 @@ public class ExportTableReferenceBean extends PlatformBean implements ExportTabl
 	 * @return 時間(コロン区切)
 	 */
 	protected String getExportTimeColonSeparated(int minute) {
-		return getExportTimeDelimiterSeparated(minute, mospParams.getName("HalfColon"));
+		return TimeUtility.getTimeDelimiterSeparated(minute, mospParams.getName("HalfColon"));
 	}
 	
 	/**
@@ -938,28 +986,7 @@ public class ExportTableReferenceBean extends PlatformBean implements ExportTabl
 	 * @return 時間(ドット区切)
 	 */
 	protected String getExportTimeDotSeparated(int minute) {
-		return getExportTimeDelimiterSeparated(minute, mospParams.getName("HalfPeriod"));
-	}
-	
-	/**
-	 * 時間をデリミタ区切で取得する。
-	 * @param minute 分
-	 * @param delimiter デリミタ
-	 * @return 時間(デリミタ区切)
-	 */
-	protected String getExportTimeDelimiterSeparated(int minute, String delimiter) {
-		// 時間
-		int h = minute / TimeConst.CODE_DEFINITION_HOUR;
-		// 分
-		int m = minute % TimeConst.CODE_DEFINITION_HOUR;
-		StringBuffer sb = new StringBuffer();
-		sb.append(h);
-		sb.append(delimiter);
-		if (m < 10) {
-			sb.append(0);
-		}
-		sb.append(m);
-		return sb.toString();
+		return TimeUtility.getTimeDelimiterSeparated(minute, mospParams.getName("HalfPeriod"));
 	}
 	
 	@Override
@@ -1012,6 +1039,11 @@ public class ExportTableReferenceBean extends PlatformBean implements ExportTabl
 		this.positionCode = positionCode;
 	}
 	
+	@Override
+	public void setCkbNeedLowerSection(int ckbNeedLowerSection) {
+		this.ckbNeedLowerSection = ckbNeedLowerSection;
+	}
+	
 	/**
 	 * 追加フィールドを設定する。
 	 * @param personalId 個人ID
@@ -1027,4 +1059,135 @@ public class ExportTableReferenceBean extends PlatformBean implements ExportTabl
 		return false;
 	}
 	
+	/**
+	 * 前年度繰越休暇日数、前年度繰越休暇時間数を取得する。
+	 * @param personalId 個人ID
+	 * @param acquisitionDate 今年度付与日
+	 * @param fieldName エクスポート項目名
+	 * @return 前年度繰越休暇日数または前年度繰越休暇時間数
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	@Override
+	public String getCarryoverTime(String personalId, Date acquisitionDate, String fieldName, boolean status)
+			throws MospException {
+		String carryoverTime = "";
+		// 繰越日数初期値設定
+		double carryoverDay = 0;
+		// 付与時間数初期値
+		int grantHour = 0;
+		// 1年前の日付(期間開始日)取得
+		Date startDay = DateUtility.addYear(acquisitionDate, addPrevious);
+		// 今年度付与日1日前(期間終了日)取得
+		Date endDay = DateUtility.addDay(acquisitionDate, addPrevious);
+		// 付与日以前の有給休暇付与情報リスト取得
+		List<PaidHolidayDataDtoInterface> paidHolidayDataList = paidHolidayDataReference
+			.findForAcquisitionList(personalId, startDay, endDay);
+		// 付与情報毎に処理
+		for (PaidHolidayDataDtoInterface paidHolidayDataDto : paidHolidayDataList) {
+			// 繰越日数・時間に付与日を加算
+			carryoverDay += paidHolidayDataDto.getHoldDay();
+			grantHour += paidHolidayDataDto.getHoldHour();
+		}
+		// 前年度の有給休暇手動付与情報取得
+		List<PaidHolidayTransactionDtoInterface> transactionList = paidHolidayTransactionReference
+			.findForHistoryList(personalId);
+		// 前年度手動付与フラグ準備
+		boolean isBefore = false;
+		// 手動付与情報毎に処理
+		for (PaidHolidayTransactionDtoInterface transactionDto : transactionList) {
+			// 有給取得日確認
+			if (!DateUtility.isTermContain(transactionDto.getAcquisitionDate(), startDay, endDay)) {
+				// 昨年度付与基準日≦有給休暇付与日＜今年度付与基準日でないなら
+				continue;
+			}
+			// 前年度手動付与フラグ設定
+			isBefore = true;
+			// 繰越日数に付与日を加算
+			carryoverDay += (transactionDto.getGivingDay() - transactionDto.getCancelDay());
+			grantHour += (transactionDto.getGivingHour() - transactionDto.getCancelHour());
+		}
+		// 前年度自動付与情報が存在しなく、前年度手動付与がされていない場合
+		if (paidHolidayDataList.isEmpty() && !isBefore) {
+			return carryoverTime;
+		}
+		// 昨年度の休暇申請リスト取得
+		List<HolidayRequestDtoInterface> holidayRequestList = holidayRequestReference
+			.getHolidayRequestListOnWorkflow(personalId, startDay, endDay);
+		// 休暇申請情報毎に処理
+		double requestDate = 0;
+		int requestHour = 0;
+		for (HolidayRequestDtoInterface holidayRequestDto : holidayRequestList) {
+			// 有給取得日確認
+			if (!DateUtility.isTermContain(holidayRequestDto.getHolidayAcquisitionDate(), startDay, endDay)) {
+				// 昨年度付与基準日≦有給休暇取得日＜今年度付与基準日でないなら
+				continue;
+			}
+			// 休暇種別確認
+			if (holidayRequestDto.getHolidayType1() != TimeConst.CODE_HOLIDAYTYPE_HOLIDAY) {
+				// 休暇種別が有給休暇以外なら
+				continue;
+			}
+			// ワークフロー情報取得
+			WorkflowDtoInterface workflowDto = workflowReference.getLatestWorkflowInfo(holidayRequestDto.getWorkflow());
+			if (status) {
+				// 参照ステータスがtrueの場合
+				if (!WorkflowUtility.isCompleted(workflowDto)) {
+					// 承認済でない場合
+					continue;
+				}
+			} else {
+				// 参照ステータスがfalseの場合
+				if (WorkflowUtility.isDraft(workflowDto) || WorkflowUtility.isWithDrawn(workflowDto)) {
+					// 下書・取下の場合
+					continue;
+				}
+			}
+			if (holidayRequestDto.getHolidayRange() == TimeConst.CODE_HOLIDAY_RANGE_ALL) {
+				// 全休なら休暇日数+1
+				requestDate += 1;
+			} else if (holidayRequestDto.getHolidayRange() == TimeConst.CODE_HOLIDAY_RANGE_TIME) {
+				// 時間休なら休暇時間+1
+				requestHour += 1;
+			} else {
+				// 午前休・午後休なら休暇日数+0.5
+				requestDate += 0.5;
+			}
+		}
+		// 休暇時間8時間ごとに休暇日数1日とする。
+		int requestHourDay = 0;
+		if (requestHour != 0 && grantHour < requestHour) {
+			requestHourDay = requestHour / 8;
+			// 休暇時間から休暇日数1日となった日数分の時間休8時間をマイナスする。
+			requestHour = requestHour - requestHourDay * 8;
+			// 時間休の残数が1～7時間なら計算用休暇日数に1日加算
+			if (requestHour != 0) {
+				requestHourDay += 1;
+			}
+		}
+		// 昨年度付与日数から休暇日数をマイナスする。
+		if (carryoverDay != 0 && requestHourDay != 0) {
+			requestDate += requestHourDay;
+		}
+		carryoverDay = carryoverDay - requestDate;
+		// エクスポート項目ごとに処理
+		if (TimeFileConst.FIELD_CARYYOVER_DAY.equals(fieldName)) {
+			// 繰越日数の場合
+			carryoverTime = String.valueOf(carryoverDay);
+		} else {
+			// 繰越時間数の場合
+			int caryyoverHour = grantHour;
+			if (requestHour != 0) {
+				if (grantHour > requestHour) {
+					// 時間休付与時間が時間休申請時間より多い場合
+					caryyoverHour = grantHour - requestHour;
+				} else if (requestHour <= 8) {
+					// 時間休申請時間が時間休付与時間より短く、8時間以下の場合
+					caryyoverHour = 8 - requestHour;
+				}
+			}
+			// 繰越時間数設定
+			carryoverTime = String.valueOf(caryyoverHour);
+		}
+		return carryoverTime;
+	}
 }

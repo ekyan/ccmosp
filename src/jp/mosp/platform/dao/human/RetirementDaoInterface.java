@@ -18,6 +18,8 @@
 package jp.mosp.platform.dao.human;
 
 import java.util.Date;
+import java.util.Map;
+import java.util.Set;
 
 import jp.mosp.framework.base.BaseDaoInterface;
 import jp.mosp.framework.base.MospException;
@@ -49,9 +51,38 @@ public interface RetirementDaoInterface extends BaseDaoInterface {
 	RetirementDtoInterface findForInfo(String personalId) throws MospException;
 	
 	/**
-	 * 対象日における退職者の個人IDを抽出するSQLを取得する。<br>
-	 * @return 退職者の個人IDを抽出するSQL
+	 * 対象期間終了日における退職者の個人IDセットを取得する。<br>
+	 * 期間の定めがある場合は
+	 * 退職日が期間開始日より前に設定されている個人IDを取得する。<br>
+	 * 期間の定めがない場合は
+	 * 退職日が対象日より前に設定されている個人IDを取得する。<br>
+	 * @param targetDate 対象日
+	 * @param startDate 対象期間開始日
+	 * @param endDate 対象期間終了日
+	 * @return 退職者の個人IDセット
+	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
 	 */
-	String getQueryForRetiredPerson();
+	Set<String> findForRetiredPersonalIdSet(Date targetDate, Date startDate, Date endDate) throws MospException;
+	
+	/**
+	 * パーソナルID配列に該当する退職情報マップを作成する
+	 * @param personalIds パーソナルID配列
+	 * @return パーソナルID配列に該当する退職情報マップ
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 */
+	public Map<String, RetirementDtoInterface> findForPersonalIds(String[] personalIds) throws MospException;
+	
+	/**
+	 * ユーザマスタ(pfa_user)に人事退職情報を付加するSQLを取得する。<br>
+	 * @param personalIdColumn 個人ID列名
+	 * @return ユーザマスタ(pfa_user)に追加ロールコードを付加するSQL
+	 */
+	String getQueryForJoinUser(String personalIdColumn);
+	
+	/**
+	 * ユーザマスタ(pfa_user)に人事退職情報を付加するSQLの列名(retirement_date)を取得する。<br>
+	 * @return SQLの条件文用列名
+	 */
+	String getRetirementDateColumnForJoinUser();
 	
 }

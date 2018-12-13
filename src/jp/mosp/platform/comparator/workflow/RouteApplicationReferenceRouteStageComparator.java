@@ -24,7 +24,8 @@ import jp.mosp.platform.dto.workflow.RouteApplicationReferenceDtoInterface;
 /**
  * ルート適用参照クラスを承認階層で比較するクラス。
  */
-public class RouteApplicationReferenceRouteStageComparator implements Comparator<RouteApplicationReferenceDtoInterface> {
+public class RouteApplicationReferenceRouteStageComparator
+		implements Comparator<RouteApplicationReferenceDtoInterface> {
 	
 	@Override
 	public int compare(RouteApplicationReferenceDtoInterface dto1, RouteApplicationReferenceDtoInterface dto2) {

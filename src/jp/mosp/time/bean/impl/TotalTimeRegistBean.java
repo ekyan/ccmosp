@@ -39,7 +39,7 @@ public class TotalTimeRegistBean extends PlatformBean implements TotalTimeRegist
 	/**
 	 * 勤怠集計データDAOクラス。<br>
 	 */
-	TotalTimeDataDaoInterface	dao;
+	TotalTimeDataDaoInterface dao;
 	
 	
 	/**

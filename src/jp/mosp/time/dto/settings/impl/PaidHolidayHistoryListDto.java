@@ -85,12 +85,12 @@ public class PaidHolidayHistoryListDto extends BaseDto implements PaidHolidayHis
 	
 	@Override
 	public Date getActivateDate() {
-		return activateDate;
+		return getDateClone(activateDate);
 	}
 	
 	@Override
 	public void setActivateDate(Date activateDate) {
-		this.activateDate = activateDate;
+		this.activateDate = getDateClone(activateDate);
 	}
 	
 	@Override

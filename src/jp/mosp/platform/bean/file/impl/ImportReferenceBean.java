@@ -34,7 +34,7 @@ public class ImportReferenceBean extends PlatformBean implements ImportReference
 	/**
 	 * インポートマスタDAO。
 	 */
-	protected ImportDaoInterface	dao;
+	protected ImportDaoInterface dao;
 	
 	
 	/**

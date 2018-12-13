@@ -39,12 +39,12 @@ public abstract class BaseDto implements BaseDtoInterface {
 	
 	@Override
 	public Date getInsertDate() {
-		return (Date)insertDate.clone();
+		return getDateClone(insertDate);
 	}
 	
 	@Override
 	public void setInsertDate(Date insertDate) {
-		this.insertDate = (Date)insertDate.clone();
+		this.insertDate = getDateClone(insertDate);
 	}
 	
 	@Override
@@ -59,12 +59,12 @@ public abstract class BaseDto implements BaseDtoInterface {
 	
 	@Override
 	public Date getUpdateDate() {
-		return (Date)updateDate.clone();
+		return getDateClone(updateDate);
 	}
 	
 	@Override
 	public void setUpdateDate(Date updateDate) {
-		this.updateDate = (Date)updateDate.clone();
+		this.updateDate = getDateClone(updateDate);
 	}
 	
 	@Override

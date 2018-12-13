@@ -501,14 +501,14 @@ public class ScheduleCardVo extends TimeSettingVo {
 	 * @return aryPltPattern
 	 */
 	public String[][] getAryPltPattern() {
-		return aryPltPattern;
+		return getStringArrayClone(aryPltPattern);
 	}
 	
 	/**
 	 * @param aryPltPattern セットする aryPltPattern
 	 */
 	public void setAryPltPattern(String[][] aryPltPattern) {
-		this.aryPltPattern = aryPltPattern;
+		this.aryPltPattern = getStringArrayClone(aryPltPattern);
 	}
 	
 	/**

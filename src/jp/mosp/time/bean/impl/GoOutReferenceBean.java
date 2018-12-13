@@ -38,7 +38,7 @@ public class GoOutReferenceBean extends TimeBean implements GoOutReferenceBeanIn
 	/**
 	 *  勤怠データ外出情報マスタDAOクラス。<br>
 	 */
-	GoOutDaoInterface	dao;
+	GoOutDaoInterface dao;
 	
 	
 	/**

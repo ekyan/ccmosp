@@ -219,6 +219,35 @@ public class TmdWorkTypeChangeRequestDao extends BaseDao implements WorkTypeChan
 	}
 	
 	@Override
+	public List<WorkTypeChangeRequestDtoInterface> findForTerm(String personalId, Date firstDate, Date lastDate)
+			throws MospException {
+		try {
+			index = 1;
+			StringBuffer sb = getSelectQuery(getClass());
+			sb.append(where());
+			sb.append(deleteFlagOff());
+			sb.append(and());
+			sb.append(equal(COL_PERSONAL_ID));
+			sb.append(and());
+			sb.append(lessEqual(COL_REQUEST_DATE));
+			sb.append(and());
+			sb.append(greaterEqual(COL_REQUEST_DATE));
+			sb.append(getOrderByColumn(COL_REQUEST_DATE));
+			prepareStatement(sb.toString());
+			setParam(index++, personalId);
+			setParam(index++, lastDate, false);
+			setParam(index++, firstDate, false);
+			executeQuery();
+			return mappingAll();
+		} catch (Throwable e) {
+			throw new MospException(e);
+		} finally {
+			releaseResultSet();
+			releasePreparedStatement();
+		}
+	}
+	
+	@Override
 	public List<WorkTypeChangeRequestDtoInterface> findForTermOnWorkflow(String personalId, Date firstDate,
 			Date lastDate) throws MospException {
 		try {

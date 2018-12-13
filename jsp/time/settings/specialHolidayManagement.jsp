@@ -37,6 +37,7 @@ import = "jp.mosp.time.constant.TimeConst"
 import = "jp.mosp.time.settings.action.SpecialHolidayHistoryAction"
 import = "jp.mosp.time.settings.action.SpecialHolidayManagementAction"
 import = "jp.mosp.time.settings.vo.SpecialHolidayManagementVo"
+import = "jp.mosp.platform.utils.PlatformNamingUtility"
 %><%
 MospParams params = (MospParams)request.getAttribute(MospConst.ATT_MOSP_PARAMS);
 SpecialHolidayManagementVo vo = (SpecialHolidayManagementVo)params.getVo();
@@ -59,7 +60,7 @@ SpecialHolidayManagementVo vo = (SpecialHolidayManagementVo)params.getVo();
 				<label for="txtSearchActivateDay"><%= params.getName("Day") %></label>&nbsp;
 				<button type="button" class="Name2Button" id="btnActivateDate" onclick="submitForm(event, 'tdSpecialSearchHolidayDate', null, '<%= SpecialHolidayManagementAction.CMD_SET_ACTIVATION_DATE %>');"><%= vo.getModeActivateDate().equals(PlatformConst.MODE_ACTIVATE_DATE_FIXED) ? params.getName("Change") : params.getName("Decision") %></button>
 			</td>
-			<td class="TitleTd"><%= params.getName("Employee","Code") %></td>
+			<td class="TitleTd"><%= PlatformNamingUtility.employeeCode(params) %></td>
 			<td class="InputTd">
 				<input type="text" class="Code10TextBox" id="txtSearchEmployeeCode" name="txtSearchEmployeeCode" value="<%= HtmlUtility.escapeHTML(vo.getTxtSearchEmployeeCode()) %>"/>
 			</td>

@@ -79,6 +79,11 @@ public interface HumanSearchDaoInterface {
 	String	SEARCH_POSITION_CODE				= "positionCode";
 	
 	/**
+	 * 検索条件(職位等級範囲)。
+	 */
+	String	SEARCH_POSITION_GRADE_RANGE			= "positionGradeRange";
+	
+	/**
 	 * 検索条件(兼務要否)。
 	 */
 	String	SEARCH_NEED_CONCURRENT				= "needConcurrent";

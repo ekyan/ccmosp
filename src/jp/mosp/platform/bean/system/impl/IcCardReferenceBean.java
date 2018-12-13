@@ -36,7 +36,7 @@ public class IcCardReferenceBean extends PlatformBean implements IcCardReference
 	/**
 	 * ICカードマスタDAO。
 	 */
-	protected IcCardDaoInterface	dao;
+	protected IcCardDaoInterface dao;
 	
 	
 	/**

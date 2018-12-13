@@ -210,9 +210,7 @@ public class TmdStockHolidayDao extends PlatformDao implements StockHolidayDataD
 			sb.append(where());
 			sb.append(deleteFlagOff());
 			sb.append(and());
-			sb.append(COL_INACTIVATE_FLAG);
-			sb.append(" = ");
-			sb.append(MospConst.DELETE_FLAG_OFF);
+			sb.append(inactivateFlagOff());
 			sb.append(and());
 			sb.append(equal(COL_PERSONAL_ID));
 			sb.append(and());
@@ -246,9 +244,7 @@ public class TmdStockHolidayDao extends PlatformDao implements StockHolidayDataD
 			sb.append(where());
 			sb.append(deleteFlagOff());
 			sb.append(and());
-			sb.append(COL_INACTIVATE_FLAG);
-			sb.append(" = ");
-			sb.append(MospConst.DELETE_FLAG_OFF);
+			sb.append(inactivateFlagOff());
 			sb.append(and());
 			sb.append(equal(COL_PERSONAL_ID));
 			sb.append(and());
@@ -340,6 +336,34 @@ public class TmdStockHolidayDao extends PlatformDao implements StockHolidayDataD
 		setParam(index++, dto.getUseDay());
 		setParam(index++, dto.getInactivateFlag());
 		setCommonParams(baseDto, isInsert);
+	}
+	
+	@Override
+	public List<StockHolidayDataDtoInterface> findForInfoAllList(String personalId, Date targetDate)
+			throws MospException {
+		try {
+			index = 1;
+			StringBuffer sb = getSelectQuery(getClass());
+			sb.append(where());
+			sb.append(deleteFlagOff());
+			sb.append(and());
+			sb.append(inactivateFlagOff());
+			sb.append(and());
+			sb.append(equal(COL_PERSONAL_ID));
+			sb.append(and());
+			sb.append(greater(COL_LIMIT_DATE));
+			sb.append(getOrderByColumn(COL_ACQUISITION_DATE, COL_ACTIVATE_DATE));
+			prepareStatement(sb.toString());
+			setParam(index++, personalId);
+			setParam(index++, targetDate);
+			executeQuery();
+			return mappingAll();
+		} catch (Throwable e) {
+			throw new MospException(e);
+		} finally {
+			releaseResultSet();
+			releasePreparedStatement();
+		}
 	}
 	
 }

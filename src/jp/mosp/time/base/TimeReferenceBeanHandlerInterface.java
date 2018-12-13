@@ -21,13 +21,16 @@ import java.util.Date;
 
 import jp.mosp.framework.base.MospException;
 import jp.mosp.time.bean.AllowanceReferenceBeanInterface;
+import jp.mosp.time.bean.AppliReasonDataExportBeanInterface;
 import jp.mosp.time.bean.ApplicationReferenceBeanInterface;
 import jp.mosp.time.bean.ApplicationReferenceSearchBeanInterface;
 import jp.mosp.time.bean.ApplicationSearchBeanInterface;
 import jp.mosp.time.bean.ApprovalInfoReferenceBeanInterface;
 import jp.mosp.time.bean.AttendanceCorrectionReferenceBeanInterface;
 import jp.mosp.time.bean.AttendanceListReferenceBeanInterface;
+import jp.mosp.time.bean.AttendanceReapplicationExportBeanInterface;
 import jp.mosp.time.bean.AttendanceReferenceBeanInterface;
+import jp.mosp.time.bean.AttendanceTotalInfoBeanInterface;
 import jp.mosp.time.bean.AttendanceTotalReferenceBeanInterface;
 import jp.mosp.time.bean.CutoffReferenceBeanInterface;
 import jp.mosp.time.bean.CutoffSearchBeanInterface;
@@ -54,10 +57,12 @@ import jp.mosp.time.bean.PaidHolidayDataReferenceBeanInterface;
 import jp.mosp.time.bean.PaidHolidayDataSearchBeanInterface;
 import jp.mosp.time.bean.PaidHolidayEntranceDateReferenceBeanInterface;
 import jp.mosp.time.bean.PaidHolidayFirstYearReferenceBeanInterface;
+import jp.mosp.time.bean.PaidHolidayGrantReferenceBeanInterface;
 import jp.mosp.time.bean.PaidHolidayHistorySearchBeanInterface;
 import jp.mosp.time.bean.PaidHolidayInfoReferenceBeanInterface;
 import jp.mosp.time.bean.PaidHolidayManagementSearchBeanInterface;
 import jp.mosp.time.bean.PaidHolidayPointDateReferenceBeanInterface;
+import jp.mosp.time.bean.PaidHolidayProportionallyReferenceBeanInterface;
 import jp.mosp.time.bean.PaidHolidayReferenceBeanInterface;
 import jp.mosp.time.bean.PaidHolidaySearchBeanInterface;
 import jp.mosp.time.bean.PaidHolidayTransactionReferenceBeanInterface;
@@ -76,9 +81,11 @@ import jp.mosp.time.bean.SubHolidayExportBeanInterface;
 import jp.mosp.time.bean.SubHolidayReferenceBeanInterface;
 import jp.mosp.time.bean.SubHolidayRequestReferenceBeanInterface;
 import jp.mosp.time.bean.SubHolidayRequestSearchBeanInterface;
+import jp.mosp.time.bean.SubordinateFiscalSearchBeanInterface;
 import jp.mosp.time.bean.SubordinateSearchBeanInterface;
 import jp.mosp.time.bean.SubordinateTotalReferenceBeanInterface;
 import jp.mosp.time.bean.SubstituteReferenceBeanInterface;
+import jp.mosp.time.bean.TimeMasterBeanInterface;
 import jp.mosp.time.bean.TimeRecordReferenceBeanInterface;
 import jp.mosp.time.bean.TimeSettingReferenceBeanInterface;
 import jp.mosp.time.bean.TimeSettingSearchBeanInterface;
@@ -92,7 +99,6 @@ import jp.mosp.time.bean.TotalTimeReferenceBeanInterface;
 import jp.mosp.time.bean.TotalTimeSearchBeanInterface;
 import jp.mosp.time.bean.TotalTimeTransactionReferenceBeanInterface;
 import jp.mosp.time.bean.TotalTimeTransactionSearchBeanInterface;
-import jp.mosp.time.bean.WorkOnHolidayInfoReferenceBeanInterface;
 import jp.mosp.time.bean.WorkOnHolidayRequestReferenceBeanInterface;
 import jp.mosp.time.bean.WorkOnHolidayRequestSearchBeanInterface;
 import jp.mosp.time.bean.WorkTypeChangeRequestReferenceBeanInterface;
@@ -249,6 +255,12 @@ public interface TimeReferenceBeanHandlerInterface {
 	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
 	 */
 	SubordinateSearchBeanInterface subordinateSearch() throws MospException;
+	
+	/**
+	 * @return 統計情報一覧検索
+	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
+	 */
+	SubordinateFiscalSearchBeanInterface subordinateFiscalSearch() throws MospException;
 	
 	/**
 	 * @return 部下データ合計参照
@@ -462,6 +474,12 @@ public interface TimeReferenceBeanHandlerInterface {
 	PaidHolidayReferenceBeanInterface paidHoliday() throws MospException;
 	
 	/**
+	 * @return 有給休暇比例付与参照
+	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
+	 */
+	PaidHolidayProportionallyReferenceBeanInterface paidHolidayProportionally() throws MospException;
+	
+	/**
 	 * @return 有給休暇初年度付与参照
 	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
 	 */
@@ -570,16 +588,16 @@ public interface TimeReferenceBeanHandlerInterface {
 	ApprovalInfoReferenceBeanInterface approvalInfo() throws MospException;
 	
 	/**
+	 * @return 有給休暇付与参照
+	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
+	 */
+	PaidHolidayGrantReferenceBeanInterface paidHolidayGrant() throws MospException;
+	
+	/**
 	 * @return 振替休日データ参照インスタンス
 	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
 	 */
 	SubstituteReferenceBeanInterface substitute() throws MospException;
-	
-	/**
-	 * @return 休日出勤情報参照インスタンス
-	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
-	 */
-	WorkOnHolidayInfoReferenceBeanInterface workOnHolidayInfo() throws MospException;
 	
 	/**
 	 * @return 勤怠一覧情報参照インスタンス
@@ -598,6 +616,18 @@ public interface TimeReferenceBeanHandlerInterface {
 	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
 	 */
 	HolidayExportBeanInterface holidayRequestDataExport() throws MospException;
+	
+	/**
+	 * @return 勤怠再申請対象者エクスポート
+	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合ｓ
+	 */
+	AttendanceReapplicationExportBeanInterface attendanceReapplicationExport() throws MospException;
+	
+	/**
+	 * @return 各種申請理由データエクスポート
+	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合ｓ
+	 */
+	AppliReasonDataExportBeanInterface appliResonDataExport() throws MospException;
 	
 	/**
 	 * @return 予定簿作成インスタンス
@@ -628,5 +658,18 @@ public interface TimeReferenceBeanHandlerInterface {
 	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
 	 */
 	ScheduleUtilBeanInterface scheduleUtil() throws MospException;
+	
+	/**
+	 * @return 日々勤怠の集計クラス
+	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
+	 */
+	AttendanceTotalInfoBeanInterface attendanceTotalInfo() throws MospException;
+	
+	/**
+	 * 勤怠管理マスタ参照処理を取得する。<br>
+	 * @return 勤怠管理マスタ参照処理
+	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
+	 */
+	TimeMasterBeanInterface master() throws MospException;
 	
 }

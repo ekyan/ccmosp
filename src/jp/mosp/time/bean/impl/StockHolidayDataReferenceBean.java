@@ -36,7 +36,7 @@ public class StockHolidayDataReferenceBean extends PlatformBean implements Stock
 	/**
 	 * ストック休暇データDAO。
 	 */
-	protected StockHolidayDataDaoInterface	dao;
+	protected StockHolidayDataDaoInterface dao;
 	
 	
 	/**
@@ -61,8 +61,8 @@ public class StockHolidayDataReferenceBean extends PlatformBean implements Stock
 	}
 	
 	@Override
-	public StockHolidayDataDtoInterface getStockHolidayDataInfo(String personalId, Date targetDate, Date acquisitionDate)
-			throws MospException {
+	public StockHolidayDataDtoInterface getStockHolidayDataInfo(String personalId, Date targetDate,
+			Date acquisitionDate) throws MospException {
 		return dao.findForInfo(personalId, targetDate, acquisitionDate);
 	}
 	

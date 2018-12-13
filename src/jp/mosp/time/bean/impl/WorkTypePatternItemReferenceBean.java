@@ -37,22 +37,23 @@ import jp.mosp.time.dto.settings.WorkTypePatternItemDtoInterface;
 /**
  * 勤務形態パターン項目情報参照クラス。
  */
-public class WorkTypePatternItemReferenceBean extends PlatformBean implements WorkTypePatternItemReferenceBeanInterface {
+public class WorkTypePatternItemReferenceBean extends PlatformBean
+		implements WorkTypePatternItemReferenceBeanInterface {
 	
 	/**
 	 * 勤務形態パターン項目情報DAO。
 	 */
-	private WorkTypePatternItemDaoInterface	dao;
+	protected WorkTypePatternItemDaoInterface	dao;
 	
 	/**
 	 * 勤務形態パターンマスタDAO。
 	 */
-	private WorkTypePatternDaoInterface		workTypePatternDao;
+	protected WorkTypePatternDaoInterface		workTypePatternDao;
 	
 	/**
 	 * 勤務形態マスタ参照クラス。
 	 */
-	private WorkTypeReferenceBeanInterface	workTypeReference;
+	protected WorkTypeReferenceBeanInterface	workTypeReference;
 	
 	
 	/**

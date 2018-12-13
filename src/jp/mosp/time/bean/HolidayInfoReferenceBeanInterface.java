@@ -17,14 +17,17 @@
  */
 package jp.mosp.time.bean;
 
+import java.util.AbstractMap.SimpleEntry;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import jp.mosp.framework.base.MospException;
+import jp.mosp.platform.dto.human.HumanDtoInterface;
 import jp.mosp.time.dto.settings.HolidayDataDtoInterface;
 
 /**
- * 休暇データ参照インターフェース。
+ * 休暇数参照処理インターフェース。<br>
  */
 public interface HolidayInfoReferenceBeanInterface {
 	
@@ -77,22 +80,6 @@ public interface HolidayInfoReferenceBeanInterface {
 			int holidayType) throws MospException;
 	
 	/**
-	 * 休暇データ取得。
-	 * <p>
-	 * 個人IDと対象年月日と休暇コードと休暇区分から休暇データを取得。
-	 * 休暇申請の承認状況が未承認・承認・差戻・承認解除・承認済は廃棄日数に加算する。
-	 * </p>
-	 * @param personalId 個人ID
-	 * @param targetDate 対象年月日
-	 * @param holidayCode 休暇コード
-	 * @param holidayType 休暇区分
-	 * @return 休暇データDTO
-	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
-	 */
-	HolidayDataDtoInterface getHolidayPossibleRequest(String personalId, Date targetDate, String holidayCode,
-			int holidayType) throws MospException;
-	
-	/**
 	 * 期間内に適用されている設定が存在するか確認する。<br>
 	 * @param startDate 期間開始日
 	 * @param endDate 期間終了日
@@ -103,4 +90,21 @@ public interface HolidayInfoReferenceBeanInterface {
 	 */
 	boolean hasPersonalApplication(String personalId, Date startDate, Date endDate, int holidayType)
 			throws MospException;
+	
+	/**
+	 * 休暇の残日数及び残時間数群を取得する。<br>
+	 * <br>
+	 * 対象日時点で有効な休暇付与情報リストを取得し、
+	 * それぞれの休暇付与情報に対する休暇申請情報と合わせて、
+	 * 残日数及び残時間数を計算する。<br>
+	 * <br>
+	 * @param humanDto    人事情報
+	 * @param targetDate  対象日
+	 * @param holidayType 休暇区分(休暇種別1：特別休暇orその他休暇)
+	 * @return 休暇の残日数(キー)及び残時間数(値)群(キー：休暇付与情報)
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	Map<HolidayDataDtoInterface, SimpleEntry<Double, Integer>> getHolidayRemains(HumanDtoInterface humanDto,
+			Date targetDate, int holidayType) throws MospException;
+	
 }

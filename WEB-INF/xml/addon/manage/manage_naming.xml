@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE MosP>
+<!--
+MosP - Mind Open Source Project    http://www.mosp.jp/
+Copyright (C) MIND Co., Ltd.       http://www.e-mind.co.jp/
+
+This program is free software: you can redistribute it and/or
+modify it under the terms of the GNU Affero General Public License
+as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<MosP>
+	
+	<!-- メニュー名(メインメニュー) -->
+	<Naming key="menuMePropose">
+		案件管理
+	</Naming>
+	<Naming key="menuMeManage">
+		経営管理
+	</Naming>
+	
+	<!-- メニュー名 -->
+	<Naming key="jp.mosp.addon.manage.vo.MeProposeListVo">
+		案件一覧
+	</Naming>
+	<Naming key="jp.mosp.addon.manage.vo.MeProposeCardVo">
+		案件登録
+	</Naming>
+	<Naming key="jp.mosp.addon.manage.vo.MeCompanyMasterVo">
+		企業マスタ
+	</Naming>
+	<Naming key="jp.mosp.addon.manage.vo.MeAnalysisSalesListVo">
+		売上分析
+	</Naming>
+	<Naming key="MeSgaResult">
+		販管費実績
+	</Naming>
+	<Naming key="MeSalesBudget">
+		売上予算
+	</Naming>
+	<Naming key="MeSgaBudget">
+		販管費予算
+	</Naming>
+	<Naming key="jp.mosp.addon.manage.vo.MeConfigVo">
+		経営設定
+	</Naming>
+	<Naming key="jp.mosp.addon.manage.vo.MeTotalTypeMasterVo">
+		集計区分マスタ
+	</Naming>
+	
+	<!-- 項目名 -->
+	<Naming key="MeCompany">
+		企業
+	</Naming>
+	<Naming key="MeCompanyType">
+		顧客仕入区分
+	</Naming>
+	<Naming key="MePaymentType">
+		支払条件
+	</Naming>
+	<Naming key="MeThisMonthTighten">
+		当月締め
+	</Naming>
+	<Naming key="MePropose">
+		案件
+	</Naming>
+	<Naming key="MeCustomer">
+		顧客
+	</Naming>
+	<Naming key="MeOurCompany">
+		自社
+	</Naming>
+	<Naming key="MePic">
+		担当者
+	</Naming>
+	<Naming key="MeAccuracy">
+		確度
+	</Naming>
+	<Naming key="MeSum">
+		合計
+	</Naming>
+	<Naming key="MeTotal">
+		集計
+	</Naming>
+	<Naming key="MeCurrencyUnit">
+		円
+	</Naming>
+	<Naming key="MeOrder">
+		仕入
+	</Naming>
+	<Naming key="MeTotalType">
+		集計区分
+	</Naming>
+	<Naming key="MeSales">
+		売上
+	</Naming>
+	<Naming key="MeClaimMonth">
+		売上年月
+	</Naming>
+	<Naming key="MeClaimAmount">
+		売上額
+	</Naming>
+	<Naming key="MeOrderMonth">
+		仕入年月
+	</Naming>
+	<Naming key="MeOrderAmount">
+		仕入額
+	</Naming>
+	<Naming key="MeSupplier">
+		仕入先
+	</Naming>
+	<Naming key="MeOrderUse">
+		用途
+	</Naming>
+	<Naming key="MeAmountUnit">
+		金額単位
+	</Naming>
+	<Naming key="MeAccountStartMonth">
+		会計開始月
+	</Naming>
+	<Naming key="MeCurrentYear">
+		現在年度
+	</Naming>
+	<Naming key="MeAccountYear">
+		会計年度
+	</Naming>
+	<Naming key="MeFirstHalf">
+		上期
+	</Naming>
+	<Naming key="MeSecondHalf">
+		下期
+	</Naming>
+	<Naming key="MeFirstQuarter">
+		第1四半期
+	</Naming>
+	<Naming key="MeSecondQuarter">
+		第2四半期
+	</Naming>
+	<Naming key="MeThirdQuarter">
+		第3四半期
+	</Naming>
+	<Naming key="MeFourthQuarter">
+		第4四半期
+	</Naming>
+	<Naming key="MeCopy">
+		コピー
+	</Naming>
+	<Naming key="MeAccountCode">
+		勘定科目コード
+	</Naming>
+	<Naming key="MeBudgetMonth">
+		予算年月
+	</Naming>
+	<Naming key="MeSgaType">
+		予実区分
+	</Naming>
+	<Naming key="MeSgaMonth">
+		販管費年月
+	</Naming>
+	<Naming key="MeAnalyzeType">
+		表示内容
+	</Naming>
+	<Naming key="MeAnalyzeAccuracy">
+		確度を含む
+	</Naming>
+	<Naming key="MeAmount">
+		金額
+	</Naming>
+	<Naming key="MeUnset">
+		未設定
+	</Naming>
+	<Naming key="MeManageConfig">
+		経営設定
+	</Naming>
+	<Naming key="MeManageAnalysis">
+		経営分析
+	</Naming>
+
+</MosP>

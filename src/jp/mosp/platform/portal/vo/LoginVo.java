@@ -36,6 +36,26 @@ public class LoginVo extends PlatformVo {
 	 */
 	private String				txtPassWord;
 	
+	/**
+	 * パスワード変更用ユーザID。
+	 */
+	private String				txtPassChangeUserId;
+	
+	/**
+	 * メールアドレス。<br>
+	 */
+	private String				txtMailAddress;
+	
+	/**
+	 * 追加ログインボタンパス。<br>
+	 */
+	private String				loginExtraButtoun;
+	
+	/**
+	 * パスワード初期化。
+	 */
+	private boolean				useInitializePassword;
+	
 	
 	/**
 	 * @param txtPassWord セットする txtPassWord
@@ -52,6 +72,13 @@ public class LoginVo extends PlatformVo {
 	}
 	
 	/**
+	 * @return loginExtraButtoun
+	 */
+	public String getLoginExtraButtoun() {
+		return loginExtraButtoun;
+	}
+	
+	/**
 	 * @param txtUserId セットする txtUserId
 	 */
 	public void setTxtUserId(String txtUserId) {
@@ -63,6 +90,55 @@ public class LoginVo extends PlatformVo {
 	 */
 	public String getTxtUserId() {
 		return txtUserId;
+	}
+	
+	/**
+	 * @return txtPassChangeUserId
+	 */
+	public String getTxtPassChangeUserId() {
+		return txtPassChangeUserId;
+	}
+	
+	/**
+	 * @param txtPassChangeUserId セットする txtPassChangeUserId
+	 */
+	public void setTxtPassChangeUserId(String txtPassChangeUserId) {
+		this.txtPassChangeUserId = txtPassChangeUserId;
+	}
+	
+	/**
+	 * @return txtMailAddress
+	 */
+	public String getTxtMailAddress() {
+		return txtMailAddress;
+	}
+	
+	/**
+	 * @param txtMailAddress セットする txtMailAddress
+	 */
+	public void setTxtMailAddress(String txtMailAddress) {
+		this.txtMailAddress = txtMailAddress;
+	}
+	
+	/**
+	 * @param loginExtraButtoun セットする loginExtraButtoun
+	 */
+	public void setLoginExtraButtoun(String loginExtraButtoun) {
+		this.loginExtraButtoun = loginExtraButtoun;
+	}
+	
+	/**
+	 * @return useInitializePassword
+	 */
+	public boolean isUseInitializePassword() {
+		return useInitializePassword;
+	}
+	
+	/**
+	 * @param useInitializePassword セットする useInitializePassword
+	 */
+	public void setUseInitializePassword(boolean useInitializePassword) {
+		this.useInitializePassword = useInitializePassword;
 	}
 	
 }

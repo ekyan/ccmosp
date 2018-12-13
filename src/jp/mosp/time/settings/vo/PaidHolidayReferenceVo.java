@@ -311,154 +311,154 @@ public class PaidHolidayReferenceVo extends TimeVo {
 	 * @return aryLblViewYearMonth
 	 */
 	public String[] getAryLblViewYearMonth() {
-		return aryLblViewYearMonth;
+		return getStringArrayClone(aryLblViewYearMonth);
 	}
 	
 	/**
 	 * @return aryLblFormerDate
 	 */
 	public String[] getAryLblFormerDate() {
-		return aryLblFormerDate;
+		return getStringArrayClone(aryLblFormerDate);
 	}
 	
 	/**
 	 * @return aryLblFormerTime
 	 */
 	public String[] getAryLblFormerTime() {
-		return aryLblFormerTime;
+		return getStringArrayClone(aryLblFormerTime);
 	}
 	
 	/**
 	 * @return aryLblDate
 	 */
 	public String[] getAryLblDate() {
-		return aryLblDate;
+		return getStringArrayClone(aryLblDate);
 	}
 	
 	/**
 	 * @return aryLblTime
 	 */
 	public String[] getAryLblTime() {
-		return aryLblTime;
+		return getStringArrayClone(aryLblTime);
 	}
 	
 	/**
 	 * @return aryLblGivingDate
 	 */
 	public String[] getAryLblGivingDate() {
-		return aryLblGivingDate;
+		return getStringArrayClone(aryLblGivingDate);
 	}
 	
 	/**
 	 * @return aryLblGivingTime
 	 */
 	public String[] getAryLblGivingTime() {
-		return aryLblGivingTime;
+		return getStringArrayClone(aryLblGivingTime);
 	}
 	
 	/**
 	 * @return aryLblCancelDate
 	 */
 	public String[] getAryLblCancelDate() {
-		return aryLblCancelDate;
+		return getStringArrayClone(aryLblCancelDate);
 	}
 	
 	/**
 	 * @return aryLblCancelTime
 	 */
 	public String[] getAryLblCancelTime() {
-		return aryLblCancelTime;
+		return getStringArrayClone(aryLblCancelTime);
 	}
 	
 	/**
 	 * @return aryLblUseDate
 	 */
 	public String[] getAryLblUseDate() {
-		return aryLblUseDate;
+		return getStringArrayClone(aryLblUseDate);
 	}
 	
 	/**
 	 * @return aryLblUseTime
 	 */
 	public String[] getAryLblUseTime() {
-		return aryLblUseTime;
+		return getStringArrayClone(aryLblUseTime);
 	}
 	
 	/**
 	 * @param aryLblViewYearMonth セットする aryLblViewYearMonth
 	 */
 	public void setAryLblViewYearMonth(String[] aryLblViewYearMonth) {
-		this.aryLblViewYearMonth = aryLblViewYearMonth;
+		this.aryLblViewYearMonth = getStringArrayClone(aryLblViewYearMonth);
 	}
 	
 	/**
 	 * @param aryLblFormerDate セットする aryLblFormerDate
 	 */
 	public void setAryLblFormerDate(String[] aryLblFormerDate) {
-		this.aryLblFormerDate = aryLblFormerDate;
+		this.aryLblFormerDate = getStringArrayClone(aryLblFormerDate);
 	}
 	
 	/**
 	 * @param aryLblFormerTime セットする aryLblFormerTime
 	 */
 	public void setAryLblFormerTime(String[] aryLblFormerTime) {
-		this.aryLblFormerTime = aryLblFormerTime;
+		this.aryLblFormerTime = getStringArrayClone(aryLblFormerTime);
 	}
 	
 	/**
 	 * @param aryLblDate セットする aryLblDate
 	 */
 	public void setAryLblDate(String[] aryLblDate) {
-		this.aryLblDate = aryLblDate;
+		this.aryLblDate = getStringArrayClone(aryLblDate);
 	}
 	
 	/**
 	 * @param aryLblTime セットする aryLblTime
 	 */
 	public void setAryLblTime(String[] aryLblTime) {
-		this.aryLblTime = aryLblTime;
+		this.aryLblTime = getStringArrayClone(aryLblTime);
 	}
 	
 	/**
 	 * @param aryLblGivingDate セットする aryLblGivingDate
 	 */
 	public void setAryLblGivingDate(String[] aryLblGivingDate) {
-		this.aryLblGivingDate = aryLblGivingDate;
+		this.aryLblGivingDate = getStringArrayClone(aryLblGivingDate);
 	}
 	
 	/**
 	 * @param aryLblGivingTime セットする aryLblGivingTime
 	 */
 	public void setAryLblGivingTime(String[] aryLblGivingTime) {
-		this.aryLblGivingTime = aryLblGivingTime;
+		this.aryLblGivingTime = getStringArrayClone(aryLblGivingTime);
 	}
 	
 	/**
 	 * @param aryLblCancelDate セットする aryLblCancelDate
 	 */
 	public void setAryLblCancelDate(String[] aryLblCancelDate) {
-		this.aryLblCancelDate = aryLblCancelDate;
+		this.aryLblCancelDate = getStringArrayClone(aryLblCancelDate);
 	}
 	
 	/**
 	 * @param aryLblCancelTime セットする aryLblCancelTime
 	 */
 	public void setAryLblCancelTime(String[] aryLblCancelTime) {
-		this.aryLblCancelTime = aryLblCancelTime;
+		this.aryLblCancelTime = getStringArrayClone(aryLblCancelTime);
 	}
 	
 	/**
 	 * @param aryLblUseDate セットする aryLblUseDate
 	 */
 	public void setAryLblUseDate(String[] aryLblUseDate) {
-		this.aryLblUseDate = aryLblUseDate;
+		this.aryLblUseDate = getStringArrayClone(aryLblUseDate);
 	}
 	
 	/**
 	 * @param aryLblUseTime セットする aryLblUseTime
 	 */
 	public void setAryLblUseTime(String[] aryLblUseTime) {
-		this.aryLblUseTime = aryLblUseTime;
+		this.aryLblUseTime = getStringArrayClone(aryLblUseTime);
 	}
 	
 	/**
@@ -486,7 +486,7 @@ public class PaidHolidayReferenceVo extends TimeVo {
 	 * @param aryPltSelectYear セットする aryPltSelectYear
 	 */
 	public void setAryPltSelectYear(String[][] aryPltSelectYear) {
-		this.aryPltSelectYear = aryPltSelectYear;
+		this.aryPltSelectYear = getStringArrayClone(aryPltSelectYear);
 	}
 	
 	/**

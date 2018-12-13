@@ -18,6 +18,7 @@
 package jp.mosp.time.bean;
 
 import java.util.Date;
+import java.util.Map;
 
 import jp.mosp.framework.base.MospException;
 import jp.mosp.time.dto.settings.AttendanceDtoInterface;
@@ -75,5 +76,17 @@ public interface AttendanceTransactionRegistBeanInterface {
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
 	void regist(String personalId, Date firstDate, Date lastDate, boolean isUpdate) throws MospException;
+	
+	/**
+	 * 勤怠トランザクションの登録を行う。<br>
+	 * <br>
+	 * 勤怠集計によって作成された勤怠トランザクション登録判定情報群を基に、
+	 * 休職と法定休日と所定休日の日につき、勤怠トランザクションの登録を行う。<br>
+	 * <br>
+	 * @param personalId    個人ID
+	 * @param attendanceMap 勤怠トランザクション登録判定情報群
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	void regist(String personalId, Map<Date, String> attendanceMap) throws MospException;
 	
 }

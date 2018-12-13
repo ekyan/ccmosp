@@ -75,4 +75,32 @@ public interface PaidHolidayDataGrantBeanInterface {
 	 */
 	Date getGrantDate(String personalId, Date targetDate, int grantTimes, Date entranceDate) throws MospException;
 	
+	/**
+	 * 有給休暇期限日を取得する。
+	 * @param personalId 個人ID
+	 * @param grantDate 有給休暇付与日
+	 * @param grantTimes 有給休暇付与回数
+	 * @return 有給休暇期限日
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	Date getExpirationDate(String personalId, Date grantDate, int grantTimes) throws MospException;
+	
+	/**
+	 * 有給休暇付与日を取得する。
+	 * @param personalId 個人ID
+	 * @param grantTimes 有給休暇付与回数
+	 * @return 有給休暇付与日
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	Date getGrantDate(String personalId, int grantTimes) throws MospException;
+	
+	/**
+	 * 有給休暇付与日数を取得する。
+	 * @param personalId 個人ID
+	 * @param grantDate 有給休暇付与日
+	 * @param grantTimes 付与回数
+	 * @return 有給休暇付与日数
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	int getGrantDaysForProportionally(String personalId, Date grantDate, int grantTimes) throws MospException;
 }

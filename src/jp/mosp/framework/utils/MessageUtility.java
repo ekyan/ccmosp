@@ -17,10 +17,9 @@
  */
 package jp.mosp.framework.utils;
 
-import java.util.Date;
+import java.util.List;
 
 import jp.mosp.framework.base.MospParams;
-import jp.mosp.platform.constant.PlatformMessageConst;
 
 /**
  * メッセージに関するユーティリティクラス。<br>
@@ -106,34 +105,18 @@ public class MessageUtility {
 	 * @param row        対象行インデックス
 	 */
 	public static void addErrorMessageOverLimit(MospParams mospParams, String fieldName, int limit, Integer row) {
-		mospParams
-			.addErrorMessage(MSG_OVER_LIMIT, getRowedFieldName(mospParams, fieldName, row), String.valueOf(limit));
+		addErrorMessageOverLimit(mospParams, fieldName, String.valueOf(limit), row);
 	}
 	
 	/**
-	 * %1%：%2%は%3%時点で無効となります。(PFW0213)<br>
+	 * %1%には、%2%以下を入力してください。(PFW0129)
 	 * @param mospParams MosP処理情報
 	 * @param fieldName  対象フィールド名
-	 * @param targetCode 対象コード
-	 * @param targetDate 対象日
-	 * @param row        行インデックス
+	 * @param limit      対象限界値
+	 * @param row        対象行インデックス
 	 */
-	public static void addErrorMessageInactive(MospParams mospParams, String fieldName, String targetCode,
-			Date targetDate, Integer row) {
-		mospParams.addErrorMessage(PlatformMessageConst.MSG_INACTIVE_DAY_CHECK,
-				getRowedFieldName(mospParams, fieldName, row), targetCode, DateUtility.getStringDate(targetDate));
-	}
-	
-	/**
-	 * %1%：%2%は存在しないため、登録できません。(PFW0214)<br>
-	 * @param mospParams MosP処理情報
-	 * @param fieldName  対象フィールド名
-	 * @param targetCode 対象コード
-	 * @param row        行インデックス
-	 */
-	public static void addErrorMessageNotExist(MospParams mospParams, String fieldName, String targetCode, Integer row) {
-		mospParams.addErrorMessage(PlatformMessageConst.MSG_SELECTED_CODE_NOT_EXIST,
-				getRowedFieldName(mospParams, fieldName, row), targetCode);
+	public static void addErrorMessageOverLimit(MospParams mospParams, String fieldName, String limit, Integer row) {
+		mospParams.addErrorMessage(MSG_OVER_LIMIT, getRowedFieldName(mospParams, fieldName, row), limit);
 	}
 	
 	/**
@@ -154,13 +137,53 @@ public class MessageUtility {
 	}
 	
 	/**
+	 * MosP処理情報にエラーメッセージを追加する。<br>
+	 * @param mospParams   MosP処理情報
+	 * @param key          メッセージ設定キー
+	 * @param row          行番号
+	 * @param replacements 置換文字列
+	 */
+	public static void addErrorMessage(MospParams mospParams, String key, Integer row, String... replacements) {
+		// 行番号(nullの場合は空白)を取得
+		StringBuilder sb = new StringBuilder(getRowedFieldName(mospParams, "", row));
+		// MosP処理情報からエラーメッセージを取得し作成
+		sb.append(mospParams.getCodedMessage(key, replacements));
+		// エラーメッセージを取得
+		String message = sb.toString();
+		// MosP処理情報からエラーメッセージリストを取得
+		List<String> errorMessageList = mospParams.getErrorMessageList();
+		// エラーメッセージリストに含まれていない場合
+		if (errorMessageList.contains(message) == false) {
+			// エラーメッセージリストに追加
+			errorMessageList.add(message);
+		}
+	}
+	
+	/**
+	 * MosP処理情報にエラーメッセージを追加する。<br>
+	 * @param mospParams   MosP処理情報
+	 * @param key          メッセージ設定キー
+	 * @param replacements 置換文字列
+	 */
+	public static void addErrorMessage(MospParams mospParams, String key, String... replacements) {
+		// MosP処理情報にエラーメッセージを追加
+		addErrorMessage(mospParams, key, null, replacements);
+	}
+	
+	/**
 	 * 名称(行row+1：)を取得する。<br>
 	 * @param mospParams MosP処理情報
 	 * @param row 対象行インデックス
 	 * @return 名称(行row+1：)
 	 */
 	protected static String getRowColonName(MospParams mospParams, int row) {
-		return mospParams.getName("Row") + String.valueOf(row + 1) + mospParams.getName("Colon");
+		// 名称(行row+1：)を作成
+		StringBuilder sb = new StringBuilder();
+		sb.append(getNameRow(mospParams));
+		sb.append(row + 1);
+		sb.append(getNameColon(mospParams));
+		// 名称(行row+1：)を取得
+		return sb.toString();
 	}
 	
 	/**

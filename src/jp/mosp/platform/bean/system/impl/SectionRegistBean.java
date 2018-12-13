@@ -28,9 +28,11 @@ import jp.mosp.framework.utils.DateUtility;
 import jp.mosp.platform.base.PlatformBean;
 import jp.mosp.platform.base.PlatformDtoInterface;
 import jp.mosp.platform.bean.file.PlatformFileBean;
+import jp.mosp.platform.bean.human.RetirementReferenceBeanInterface;
 import jp.mosp.platform.bean.system.SectionRegistBeanInterface;
 import jp.mosp.platform.constant.PlatformMessageConst;
 import jp.mosp.platform.dao.system.SectionDaoInterface;
+import jp.mosp.platform.dto.human.ConcurrentDtoInterface;
 import jp.mosp.platform.dto.human.HumanDtoInterface;
 import jp.mosp.platform.dto.system.SectionDtoInterface;
 import jp.mosp.platform.dto.system.impl.PfmSectionDto;
@@ -331,8 +333,12 @@ public class SectionRegistBean extends PlatformFileBean implements SectionRegist
 		}
 		// 確認するべき人事マスタリストを取得
 		List<HumanDtoInterface> humanList = getHumanListForCheck(dto, list);
-		// コード使用確認
-		checkCodeIsUsed(dto.getSectionCode(), humanList);
+		// 確認するべき兼務情報を取得
+		List<ConcurrentDtoInterface> concurrentList = getConcurrentListForCheck(dto, list);
+		// コード使用確認(人事マスタリスト)
+		checkCodeIsUsed(dto, humanList);
+		// コード使用確認(兼務情報)
+		checkConcurrentCodeIsUsed(dto.getSectionCode(), concurrentList);
 	}
 	
 	/**
@@ -356,8 +362,12 @@ public class SectionRegistBean extends PlatformFileBean implements SectionRegist
 		List<SectionDtoInterface> list = dao.findForHistory(dto.getSectionCode());
 		// 確認するべき人事マスタリストを取得
 		List<HumanDtoInterface> humanList = getHumanListForCheck(dto, list);
-		// コード使用確認
-		checkCodeIsUsed(dto.getSectionCode(), humanList);
+		// 確認するべき兼務情報を取得
+		List<ConcurrentDtoInterface> concurrentList = getConcurrentListForCheck(dto, list);
+		// コード使用確認(人事マスタリスト)
+		checkCodeIsUsed(dto, humanList);
+		// コード使用確認(兼務情報)
+		checkConcurrentCodeIsUsed(dto.getSectionCode(), concurrentList);
 	}
 	
 	/**
@@ -383,8 +393,12 @@ public class SectionRegistBean extends PlatformFileBean implements SectionRegist
 		}
 		// 確認するべき人事マスタリストを取得
 		List<HumanDtoInterface> humanList = getHumanListForCheck(dto, list);
-		// コード使用確認
-		checkCodeIsUsed(dto.getSectionCode(), humanList);
+		// 確認するべき兼務情報を取得
+		List<ConcurrentDtoInterface> concurrentList = getConcurrentListForCheck(dto, list);
+		// コード使用確認(人事マスタリスト)
+		checkCodeIsUsed(dto, humanList);
+		// コード使用確認(兼務情報)
+		checkConcurrentCodeIsUsed(dto.getSectionCode(), concurrentList);
 	}
 	
 	/**
@@ -514,16 +528,40 @@ public class SectionRegistBean extends PlatformFileBean implements SectionRegist
 	
 	/**
 	 * 人事マスタリスト内に所属コードが使用されている情報がないかの確認をする。<br>
+	 * @param sectionDto  所属情報
+	 * @param list 人事情報リスト
+	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
+	 * 
+	 */
+	protected void checkCodeIsUsed(SectionDtoInterface sectionDto, List<HumanDtoInterface> list) throws MospException {
+		// 人事・退職情報参照クラスを取得
+		RetirementReferenceBeanInterface refer = (RetirementReferenceBeanInterface)createBean(
+				RetirementReferenceBeanInterface.class);
+		// 人事マスタリストの中身を確認
+		for (HumanDtoInterface humanDto : list) {
+			// 所属コード確認
+			if (humanDto.getSectionCode().equals(sectionDto.getSectionCode())
+					&& refer.isRetired(humanDto.getPersonalId(), sectionDto.getActivateDate()) == false) {
+				// メッセージ設定
+				addCodeIsUsedMessage(sectionDto.getSectionCode(), humanDto);
+			}
+		}
+	}
+	
+	/**
+	 * 兼務情報内に所属コードが使用されている情報がないかの確認をする。<br>
 	 * @param code 所属コード
 	 * @param list 人事マスタリスト
+	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
 	 */
-	protected void checkCodeIsUsed(String code, List<HumanDtoInterface> list) {
-		// 人事マスタリストの中身を確認
-		for (HumanDtoInterface dto : list) {
+	protected void checkConcurrentCodeIsUsed(String code, List<ConcurrentDtoInterface> list) throws MospException {
+		// 兼務情報を確認
+		for (ConcurrentDtoInterface ConcurrentDto : list) {
 			// 所属コード確認
-			if (code.equals(dto.getSectionCode())) {
+			if (code.equals(ConcurrentDto.getSectionCode())) {
+				HumanDtoInterface HumanDto = getHumanInfo(ConcurrentDto.getPersonalId(), ConcurrentDto.getStartDate());
 				// メッセージ設定
-				addCodeIsUsedMessage(code, dto);
+				addCodeIsUsedMessage(code, HumanDto);
 			}
 		}
 	}
@@ -628,5 +666,4 @@ public class SectionRegistBean extends PlatformFileBean implements SectionRegist
 	protected String getNameSectionDisplay() {
 		return mospParams.getName("Section") + mospParams.getName("Display") + mospParams.getName("Name");
 	}
-	
 }

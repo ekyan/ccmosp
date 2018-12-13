@@ -34,13 +34,13 @@ import jp.mosp.time.dto.settings.PaidHolidayTransactionDtoInterface;
 /**
  * 有給休暇トランザクション参照クラス。
  */
-public class PaidHolidayTransactionReferenceBean extends PlatformBean implements
-		PaidHolidayTransactionReferenceBeanInterface {
+public class PaidHolidayTransactionReferenceBean extends PlatformBean
+		implements PaidHolidayTransactionReferenceBeanInterface {
 	
 	/**
 	 * 有給休暇トランザクションDAO。
 	 */
-	private PaidHolidayTransactionDaoInterface	dao;
+	private PaidHolidayTransactionDaoInterface dao;
 	
 	
 	/**
@@ -77,15 +77,8 @@ public class PaidHolidayTransactionReferenceBean extends PlatformBean implements
 	}
 	
 	@Override
-	@Deprecated
-	public List<PaidHolidayTransactionDtoInterface> findForList(String personalId, Date firstDate, Date lastDate)
-			throws MospException {
-		return dao.findForList(personalId, firstDate, lastDate);
-	}
-	
-	@Override
-	public List<PaidHolidayTransactionDtoInterface> findForList(String personalId, Date acquisitionDate,
-			Date startDate, Date endDate) throws MospException {
+	public List<PaidHolidayTransactionDtoInterface> findForList(String personalId, Date acquisitionDate, Date startDate,
+			Date endDate) throws MospException {
 		return dao.findForList(personalId, acquisitionDate, startDate, endDate);
 	}
 	
@@ -104,6 +97,12 @@ public class PaidHolidayTransactionReferenceBean extends PlatformBean implements
 	@Override
 	public List<PaidHolidayTransactionDtoInterface> findForHistoryList(String personalId) throws MospException {
 		return dao.findForHistoryList(personalId);
+	}
+	
+	@Override
+	public List<PaidHolidayTransactionDtoInterface> findForAcquisitionList(String personalId, Date acquisitionDate)
+			throws MospException {
+		return dao.findForAcquisitionList(personalId, acquisitionDate);
 	}
 	
 }

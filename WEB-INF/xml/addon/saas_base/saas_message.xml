@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE MosP>
+<!--
+MosP - Mind Open Source Project    http://www.mosp.jp/
+Copyright (C) MIND Co., Ltd.       http://www.e-mind.co.jp/
+
+This program is free software: you can redistribute it and/or
+modify it under the terms of the GNU Affero General Public License
+as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<MosP>
+	
+	<!-- メッセージ -->
+	<Message key="ADSSO1001">
+		<MessageBody>jdbc:postgresql://%1%:%2%/%3%</MessageBody>
+	</Message>
+	<Message key="ADSSI1001">
+		<MessageBody>恐れ入りますが、再度申込をお願いいたします。</MessageBody>
+	</Message>
+	<Message key="ADSSI1002">
+		<MessageBody>退会しました。ご利用ありがとうございました。</MessageBody>
+	</Message>
+	<Message key="ADSSI1003">
+		<MessageBody>メールを送信しました。&#x0A;手順に従って本登録を行ってください。&#x0A;&#x0A;入力したアドレス宛にメールが届かない場合は、アドレスをご確認の上、再度申込をお試しください。</MessageBody>
+	</Message>
+	<Message key="ADSSI1004">
+		<MessageBody>本登録が完了しました。本登録完了メールが届きます。&#x0A;メールに記載されているURLより、企業ページに進んで下さい。</MessageBody>
+	</Message>
+	<Message key="ADSSQ1001">
+		<MessageBody>今回のプラン変更を行なった場合、全てのログインユーザの%1%機能に関するロール情報は削除されます。よろしいですか。</MessageBody>
+		<ClientAvailable>true</ClientAvailable>
+	</Message>
+	<Message key="ADSSW1001">
+		<MessageBody>申込有効期限を超えているか申込内容に問題がありました。</MessageBody>
+	</Message>
+	<Message key="ADSSW1002">
+		<MessageBody>退会するとMosPを利用できなくなります。</MessageBody>
+	</Message>
+	<Message key="ADSSW1003">
+		<MessageBody>既に退会しているため、この処理は行えません。</MessageBody>
+	</Message>
+	<Message key="ADSSW1004">
+		<MessageBody>注意：DBを削除すると、元に戻せなくなります。</MessageBody>
+	</Message>
+	<Message key="ADSSW1005">
+		<MessageBody>注意：ボタンを押すと、全対象顧客DBに対して%1%を実行します。</MessageBody>
+	</Message>
+	<Message key="ADSSW1006">
+		<MessageBody>セッションの接続が切れました。&#x0A;画面を閉じてください。</MessageBody>
+	</Message>
+	<Message key="ADSSW1007">
+		<MessageBody>%1%へのアクセスに失敗しました。&#x0A;URLを確認してください。</MessageBody>
+	</Message>
+	<Message key="ADSSW1008">
+		<MessageBody>現在、%1%のご利用ができません。</MessageBody>
+	</Message>
+	<Message key="ADSSW1009">
+		<MessageBody>その%1%はご利用になれません。異なる%1%を入力してください。</MessageBody>
+	</Message>
+	<Message key="ADSSW1010">
+		<MessageBody>%1%に同意していません。</MessageBody>
+		<ClientAvailable>true</ClientAvailable>
+	</Message>
+	<Message key="ADSSW1011">
+		<MessageBody>%1%の発行に失敗しました。恐れ入りますが、再度処理をしてください。</MessageBody>
+	</Message>
+	<Message key="ADSSW1012">
+		<MessageBody>当メニューはご利用になれません。</MessageBody>
+	</Message>
+	<Message key="ADSSE1001">
+		<MessageBody>顧客ID：%1%の顧客DB連携に失敗しました。</MessageBody>
+	</Message>
+	
+	<!-- メッセージ(メール関連) -->
+	<Message key="ADSSM1001">
+		<MessageBody>本登録のご案内（%1%）</MessageBody>
+	</Message>
+	<Message key="ADSSM1002">
+		<MessageBody>登録完了のお知らせ（%1%）</MessageBody>
+	</Message>
+	<Message key="ADSSM2001">
+		<MessageBody>
+※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※
+このメッセージは、%1%にお申し込みいただいたメールアドレスに
+お送りしています。
+このメールにお心当りのない場合は、誠に恐れ入りますが
+%2%（%3%）へご連絡いただきますよう
+お願い申し上げます。
+※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※
+		</MessageBody>
+	</Message>
+	<Message key="ADSSM2002">
+		<MessageBody>
+―――――――――――――――――――――――――――――――――――
+%1%
+―――――――――――――――――――――――――――――――――――
+		</MessageBody>
+	</Message>
+	
+	<!-- メッセージ(ログ関連) -->
+	<Message key="ADSSL1001">
+		<MessageBody>顧客ID(%1%)のDB更新処理を開始します。</MessageBody>
+	</Message>
+	<Message key="ADSSL1002">
+		<MessageBody>顧客ID(%1%)のDBに対して%2%を実行します。</MessageBody>
+	</Message>
+	
+</MosP>

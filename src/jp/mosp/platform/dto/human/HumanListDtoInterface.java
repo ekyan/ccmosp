@@ -21,6 +21,7 @@ import jp.mosp.framework.base.BaseDtoInterface;
 import jp.mosp.platform.dto.base.EmployeeCodeDtoInterface;
 import jp.mosp.platform.dto.base.EmployeeNameDtoInterface;
 import jp.mosp.platform.dto.base.EmploymentContractCodeDtoInterface;
+import jp.mosp.platform.dto.base.PersonalIdDtoInterface;
 import jp.mosp.platform.dto.base.PositionCodeDtoInterface;
 import jp.mosp.platform.dto.base.SectionCodeDtoInterface;
 import jp.mosp.platform.dto.base.WorkPlaceCodeDtoInterface;
@@ -28,19 +29,14 @@ import jp.mosp.platform.dto.base.WorkPlaceCodeDtoInterface;
 /**
  * 社員一覧DTOのインターフェース。<br>
  */
-public interface HumanListDtoInterface extends BaseDtoInterface, EmploymentContractCodeDtoInterface,
-		WorkPlaceCodeDtoInterface, PositionCodeDtoInterface, SectionCodeDtoInterface, EmployeeCodeDtoInterface,
-		EmployeeNameDtoInterface {
+public interface HumanListDtoInterface
+		extends BaseDtoInterface, PersonalIdDtoInterface, EmploymentContractCodeDtoInterface, WorkPlaceCodeDtoInterface,
+		PositionCodeDtoInterface, SectionCodeDtoInterface, EmployeeCodeDtoInterface, EmployeeNameDtoInterface {
 	
 	/**
 	 * @return レコード識別ID。
 	 */
 	String getPfmHumanId();
-	
-	/**
-	 * @return 個人ID。
-	 */
-	String getPersonalId();
 	
 	/**
 	 * @return カナ姓。
@@ -81,11 +77,6 @@ public interface HumanListDtoInterface extends BaseDtoInterface, EmploymentContr
 	 * @param pfmHumanId セットする レコード識別ID。
 	 */
 	void setPfmHumanId(String pfmHumanId);
-	
-	/**
-	 * @param personalId セットする 個人ID。
-	 */
-	void setPersonalId(String personalId);
 	
 	/**
 	 * @param lastKana セットする カナ姓。

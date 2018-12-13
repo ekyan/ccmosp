@@ -211,4 +211,15 @@ public interface WorkTypeReferenceBeanInterface {
 	 */
 	WorkTypeEntity getWorkTypeEntity(String workTypeCode, Date targetDate) throws MospException;
 	
+	/**
+	 * 勤務形態エンティティ履歴を取得する。<br>
+	 * <br>
+	 * 履歴は、有効日昇順に並んでいる。<br>
+	 * <br>
+	 * @param workTypeCode 勤務形態コード
+	 * @return 勤務形態エンティティ履歴
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	List<WorkTypeEntity> getWorkTypeEntityHistory(String workTypeCode) throws MospException;
+	
 }

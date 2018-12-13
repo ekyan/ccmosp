@@ -32,7 +32,7 @@ public class LogoutAction extends PlatformAction {
 	 * ログイン中に保持すべき情報を破棄し、ログアウトを行う。<br>
 	 * コマンド実行後、ログイン画面へ遷移する。<br>
 	 */
-	public static final String	CMD_LOGOUT	= "PF0030";
+	public static final String CMD_LOGOUT = "PF0030";
 	
 	
 	/**

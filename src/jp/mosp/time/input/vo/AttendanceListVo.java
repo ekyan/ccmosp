@@ -32,6 +32,16 @@ public class AttendanceListVo extends AttendanceListBaseVo {
 	private String[]			aryDate;
 	
 	/**
+	 * 始業打刻時間。
+	 */
+	private String[]			aryLblStartRecordTime;
+	
+	/**
+	 * 終業打刻時間
+	 */
+	private String[]			aryLblEndRecordTime;
+	
+	/**
 	 * 私用外出時間。
 	 */
 	private String[]			aryLblPrivateTime;
@@ -75,6 +85,16 @@ public class AttendanceListVo extends AttendanceListBaseVo {
 	 * 深夜時間。
 	 */
 	private String[]			aryLblLateNight;
+	
+	/**
+	 * 無休時短時間。
+	 */
+	private String[]			aryLblShortUnpaid;
+	
+	/**
+	 * カット([外出]+[遅早]+[無給時短時間])
+	 */
+	private String[]			aryLblCat;
 	
 	/**
 	 * 状態。
@@ -202,6 +222,11 @@ public class AttendanceListVo extends AttendanceListBaseVo {
 	private String				lblTimesBirthMidnightSubHolidayday;
 	
 	/**
+	 * 合計休暇日数(所定休日+法定休日)
+	 */
+	private String				lblTimesHoliday;
+	
+	/**
 	 * 合計有休日数。
 	 */
 	private String				lblTimesPaidHoliday;
@@ -235,6 +260,11 @@ public class AttendanceListVo extends AttendanceListBaseVo {
 	 * 合計欠勤日数。
 	 */
 	private String				lblTimesAbsence;
+	
+	/**
+	 * 合計無休時短時間。
+	 */
+	private String				lblShortUnpaidTotal;
 	
 	/**
 	 * 合計分単位休暇A時間。
@@ -271,6 +301,27 @@ public class AttendanceListVo extends AttendanceListBaseVo {
 	 */
 	private boolean				isLblTimesMinutelyHolidayB;
 	
+	/**
+	 * 始業打刻時間表示要否。
+	 */
+	private boolean				isLblStartRecordTime;
+	
+	/**
+	 * 終業打刻時間表示要否。
+	 */
+	private boolean				isLblEndRecordTime;
+	
+	/**
+	 * カット([外出]+[遅早]+[無給時短時間])表示要否。
+	 */
+	private boolean				isLblTimesCat;
+	
+	/**
+	 * 追加フィールド。<br>
+	 * アドオン機能で利用する。<br>
+	 */
+	private String				lblExtraFiled;
+	
 	
 	/**
 	 * @return txtStartTime
@@ -284,6 +335,36 @@ public class AttendanceListVo extends AttendanceListBaseVo {
 	 */
 	public void setTxtStartTime(String[] txtStartTime) {
 		this.txtStartTime = getStringArrayClone(txtStartTime);
+	}
+	
+	/**
+	 * @param idx インデックス
+	 * @return aryLblStartRecordTime
+	 */
+	public String getAryLblStartRecordTime(int idx) {
+		return aryLblStartRecordTime[idx];
+	}
+	
+	/**
+	 * @param aryLblStartRecordTime セットする aryLblStartRecordTime
+	 */
+	public void setAryLblStartRecordTime(String[] aryLblStartRecordTime) {
+		this.aryLblStartRecordTime = getStringArrayClone(aryLblStartRecordTime);
+	}
+	
+	/**
+	 * @param idx インデックス
+	 * @return aryLblStartRecordTime
+	 */
+	public String getAryLblEndRecordTime(int idx) {
+		return aryLblEndRecordTime[idx];
+	}
+	
+	/**
+	 * @param aryLblEndRecordTime セットする aryLblStartRecordTime
+	 */
+	public void setAryLblEndRecordTime(String[] aryLblEndRecordTime) {
+		this.aryLblEndRecordTime = getStringArrayClone(aryLblEndRecordTime);
 	}
 	
 	/**
@@ -444,6 +525,37 @@ public class AttendanceListVo extends AttendanceListBaseVo {
 	}
 	
 	/**
+	 * 
+	 * @param idx インデックス 
+	 * @return aryLblShortUnpaid。
+	 */
+	public String getAryLblShortUnpaid(int idx) {
+		return aryLblShortUnpaid[idx];
+	}
+	
+	/**
+	 * @param aryLblShortUnpaid セットする aryLblShortUnpaid。
+	 */
+	public void setAryLblShortUnpaid(String[] aryLblShortUnpaid) {
+		this.aryLblShortUnpaid = getStringArrayClone(aryLblShortUnpaid);
+	}
+	
+	/**
+	 * @param idx インデックス
+	 * @return aryLblCat
+	 */
+	public String getAryLblCat(int idx) {
+		return aryLblCat[idx];
+	}
+	
+	/**
+	 * @param aryLblCat セットする aryLblCat
+	 */
+	public void setAryLblCat(String[] aryLblCat) {
+		this.aryLblCat = getStringArrayClone(aryLblCat);
+	}
+	
+	/**
 	 * @param aryLblState セットする aryLblState
 	 */
 	public void setAryLblState(String[] aryLblState) {
@@ -477,7 +589,7 @@ public class AttendanceListVo extends AttendanceListBaseVo {
 	 * @param aryLinkState セットする aryLinkState
 	 */
 	public void setAryLinkState(boolean[] aryLinkState) {
-		this.aryLinkState = aryLinkState;
+		this.aryLinkState = getBooleanArrayClone(aryLinkState);
 	}
 	
 	/**
@@ -767,6 +879,22 @@ public class AttendanceListVo extends AttendanceListBaseVo {
 	}
 	
 	/**
+	 * @return lblTimesHoliday
+	 */
+	@Override
+	public String getLblTimesHoliday() {
+		return lblTimesHoliday;
+	}
+	
+	/**
+	 * @param lblTimesHoliday セットする lblTimesHoliday
+	 */
+	@Override
+	public void setLblTimesHoliday(String lblTimesHoliday) {
+		this.lblTimesHoliday = lblTimesHoliday;
+	}
+	
+	/**
 	 * @return lblTimesPaidHoliday
 	 */
 	public String getLblTimesPaidHoliday() {
@@ -834,6 +962,20 @@ public class AttendanceListVo extends AttendanceListBaseVo {
 	 */
 	public void setLblTimesAbsence(String lblTimesAbsence) {
 		this.lblTimesAbsence = lblTimesAbsence;
+	}
+	
+	/**
+	 * @return lblShortUnpaidTotal
+	 */
+	public String getLblShortUnpaidTotal() {
+		return lblShortUnpaidTotal;
+	}
+	
+	/**
+	 * @param lblShortUnpaidTotal セットする lblShortUnpaidTotal
+	 */
+	public void setLblShortUnpaidTotal(String lblShortUnpaidTotal) {
+		this.lblShortUnpaidTotal = lblShortUnpaidTotal;
 	}
 	
 	/**
@@ -940,7 +1082,7 @@ public class AttendanceListVo extends AttendanceListBaseVo {
 	 * @param aryCheckState セットする aryCheckState
 	 */
 	public void setAryCheckState(boolean[] aryCheckState) {
-		this.aryCheckState = aryCheckState;
+		this.aryCheckState = getBooleanArrayClone(aryCheckState);
 	}
 	
 	/**
@@ -983,6 +1125,62 @@ public class AttendanceListVo extends AttendanceListBaseVo {
 	 */
 	public void setLblTimesMinutelyHolidayB(boolean isLblTimesMinutelyHolidayB) {
 		this.isLblTimesMinutelyHolidayB = isLblTimesMinutelyHolidayB;
+	}
+	
+	/**
+	 * @return isLblStartRecordTime
+	 */
+	public boolean isLblStartRecordTime() {
+		return isLblStartRecordTime;
+	}
+	
+	/**
+	 * @param isLblStartRecordTime セットする isLblStartRecordTime
+	 */
+	public void setLblStartRecordTime(boolean isLblStartRecordTime) {
+		this.isLblStartRecordTime = isLblStartRecordTime;
+	}
+	
+	/**
+	 * @return isLblEndRecordTime
+	 */
+	public boolean isLblEndRecordTime() {
+		return isLblEndRecordTime;
+	}
+	
+	/**
+	 * @param isLblEndRecordTime セットする isLblEndRecordTime
+	 */
+	public void setLblEndRecordTime(boolean isLblEndRecordTime) {
+		this.isLblEndRecordTime = isLblEndRecordTime;
+	}
+	
+	/**
+	 * @return isLblTimesCat
+	 */
+	public boolean isLblTimesCat() {
+		return isLblTimesCat;
+	}
+	
+	/**
+	 * @param isLblTimesCat セットする isLblTimesCat
+	 */
+	public void setLblTimesCat(boolean isLblTimesCat) {
+		this.isLblTimesCat = isLblTimesCat;
+	}
+	
+	/**
+	 * @return lblExtraFiled
+	 */
+	public String getLblExtraFiled() {
+		return lblExtraFiled;
+	}
+	
+	/**
+	 * @param lblExtraFiled セットする lblExtraFiled
+	 */
+	public void setLblExtraFiled(String lblExtraFiled) {
+		this.lblExtraFiled = lblExtraFiled;
 	}
 	
 }

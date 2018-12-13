@@ -18,22 +18,23 @@
 package jp.mosp.framework.xml;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import jp.mosp.framework.property.BaseProperty;
+import jp.mosp.framework.property.CheckConfigProperty;
 import jp.mosp.framework.property.ViewConfigProperty;
 
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
- * @author yoshida
- *
+ * 人事汎用管理表示区分設定情報を作成する。<br>
  */
 public class ViewConfigTagConverter implements TagConverterInterface {
 	
-	String	path;
+	String path;
 	
 	
 	@Override
@@ -73,6 +74,9 @@ public class ViewConfigTagConverter implements TagConverterInterface {
 					break;
 				case TABLE:
 					element = toViewTable(item);
+					break;
+				case CHECK_CONFIG:
+					element = toCheckConfig(item, key);
 					break;
 				default:
 					break;
@@ -223,6 +227,54 @@ public class ViewConfigTagConverter implements TagConverterInterface {
 		return tableItem;
 	}
 	
+	CheckConfigProperty toCheckConfig(Node item, String divisionKey) {
+		
+		// TableItemの項目リストを取得
+		List<LinkedHashMap<String, String>> itemCheckList = new ArrayList<LinkedHashMap<String, String>>();
+		
+		List<String> extraBeanlist = new ArrayList<String>();
+		
+		NodeList list = TagUtility.getElements("./CheckItem", item);
+		
+		NodeList extraList = TagUtility.getElements("./ExtraCheck", item);
+		
+		int itemIndex = 0;
+		int length = list.getLength();
+		while (itemIndex < length) {
+			LinkedHashMap<String, String> itemMap = new LinkedHashMap<String, String>();
+			
+			// ノード取得
+			Node checkItem = list.item(itemIndex);
+			
+			// パラメータ用文字列取得
+			String key = TagUtility.getKey(checkItem);
+			String param = TagUtility.trimText(checkItem);
+			
+			// Mapに設定
+			itemMap.put(key, param);
+			// チェックリストに値を設定
+			itemCheckList.add(itemMap);
+			
+			itemIndex++;
+		}
+		itemIndex = 0;
+		length = extraList.getLength();
+		
+		// 拡張クラスの取得
+		while (itemIndex < length) {
+			// ノード取得
+			Node extraCheck = extraList.item(itemIndex);
+			
+			String key = TagUtility.getKey(extraCheck);
+			if (!key.isEmpty()) {
+				extraBeanlist.add(key);
+			}
+			itemIndex++;
+		}
+		
+		return new CheckConfigProperty(divisionKey, itemCheckList, extraBeanlist);
+	}
+	
 	
 	enum ViewConfig {
 		
@@ -239,6 +291,13 @@ public class ViewConfigTagConverter implements TagConverterInterface {
 			@Override
 			public String getName() {
 				return "ViewTable";
+			}
+		},
+		CHECK_CONFIG {
+			
+			@Override
+			public String getName() {
+				return "CheckConfig";
 			}
 		},
 		

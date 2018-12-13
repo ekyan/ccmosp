@@ -18,30 +18,15 @@
 package jp.mosp.time.bean;
 
 import java.util.Date;
+import java.util.List;
 
 import jp.mosp.framework.base.MospException;
-import jp.mosp.time.constant.TimeConst;
 import jp.mosp.time.dto.settings.WorkTypeItemDtoInterface;
 
 /**
  * 勤務形態項目登録インターフェース
  */
 public interface WorkTypeItemRegistBeanInterface {
-	
-	/**
-	 * 勤務形態項目配列。<br>
-	 */
-	public static final String[]	CODES_WORK_TYPE_ITEM	= { TimeConst.CODE_WORKSTART, TimeConst.CODE_WORKEND,
-		TimeConst.CODE_WORKTIME, TimeConst.CODE_RESTTIME, TimeConst.CODE_RESTSTART1, TimeConst.CODE_RESTEND1,
-		TimeConst.CODE_RESTSTART2, TimeConst.CODE_RESTEND2, TimeConst.CODE_RESTSTART3, TimeConst.CODE_RESTEND3,
-		TimeConst.CODE_RESTSTART4, TimeConst.CODE_RESTEND4, TimeConst.CODE_FRONTSTART, TimeConst.CODE_FRONTEND,
-		TimeConst.CODE_BACKSTART, TimeConst.CODE_BACKEND, TimeConst.CODE_OVERBEFORE, TimeConst.CODE_OVERPER,
-		TimeConst.CODE_OVERREST, TimeConst.CODE_HALFREST, TimeConst.CODE_HALFRESTSTART, TimeConst.CODE_HALFRESTEND,
-		TimeConst.CODE_WORK_TYPE_ITEM_DIRECT_START, TimeConst.CODE_WORK_TYPE_ITEM_DIRECT_END,
-		TimeConst.CODE_WORK_TYPE_ITEM_EXCLUDE_NIGHT_REST, TimeConst.CODE_WORK_TYPE_ITEM_SHORT1_START,
-		TimeConst.CODE_WORK_TYPE_ITEM_SHORT1_END, TimeConst.CODE_WORK_TYPE_ITEM_SHORT2_START,
-		TimeConst.CODE_WORK_TYPE_ITEM_SHORT2_END			};
-	
 	
 	/**
 	 * 登録用DTOを取得する。<br>
@@ -51,24 +36,24 @@ public interface WorkTypeItemRegistBeanInterface {
 	
 	/**
 	 * 新規登録を行う。<br>
-	 * @param dto 対象DTO
+	 * @param dtoList 対象DTOリスト
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
-	void insert(WorkTypeItemDtoInterface dto) throws MospException;
+	void insert(List<WorkTypeItemDtoInterface> dtoList) throws MospException;
 	
 	/**
 	 * 履歴更新を行う。<br>
-	 * @param dto 対象DTO
+	 * @param dtoList 対象DTOリスト
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
-	void add(WorkTypeItemDtoInterface dto) throws MospException;
+	void add(List<WorkTypeItemDtoInterface> dtoList) throws MospException;
 	
 	/**
 	 * 履歴更新を行う。<br>
-	 * @param dto 対象DTO
+	 * @param dtoList 対象DTOリスト
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
-	void update(WorkTypeItemDtoInterface dto) throws MospException;
+	void update(List<WorkTypeItemDtoInterface> dtoList) throws MospException;
 	
 	/**
 	 * 一括更新処理を行う。<br>
@@ -86,5 +71,21 @@ public interface WorkTypeItemRegistBeanInterface {
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
 	void delete(String workTypeCode, Date activateDate) throws MospException;
+	
+	/**
+	 * 勤務形態項目配列を取得する。
+	 * @return 勤務形態項目配列
+	 */
+	String[] getCodesWorkTypeItem();
+	
+	/**
+	 * デフォルト時刻を基準に指定した時間、分を取得する。<br>
+	 * 24時を超えた場合、日付を繰り上げる。<br>
+	 * @param hour 時間
+	 * @param minute 分
+	 * @return フォーマットされた時間
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	Date getDefaultTime(String hour, String minute) throws MospException;
 	
 }

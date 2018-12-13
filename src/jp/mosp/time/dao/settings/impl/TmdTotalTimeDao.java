@@ -18,7 +18,9 @@
 package jp.mosp.time.dao.settings.impl;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import jp.mosp.framework.base.BaseDto;
 import jp.mosp.framework.base.BaseDtoInterface;
@@ -182,6 +184,21 @@ public class TmdTotalTimeDao extends PlatformDao implements TotalTimeDataDaoInte
 	 * 深夜時間。
 	 */
 	public static final String	COL_LATE_NIGHT									= "late_night";
+	
+	/**
+	 * 深夜所定労働時間内時間。
+	 */
+	public static final String	COL_NIGHT_WORK_WITHIN_PRESCRIBED_WORK			= "night_work_within_prescribed_work";
+	
+	/**
+	 * 深夜時間外時間。
+	 */
+	public static final String	COL_NIGHT_OVERTIME_WORK							= "night_overtime_work";
+	
+	/**
+	 * 深夜休日労働時間。
+	 */
+	public static final String	COL_NIGHT_WORK_ON_HOLIDAY						= "night_work_on_holiday";
 	
 	/**
 	 * 所定休出時間。
@@ -354,14 +371,29 @@ public class TmdTotalTimeDao extends PlatformDao implements TotalTimeDataDaoInte
 	public static final String	COL_TOTAL_SPECIAL_HOLIDAY						= "total_special_holiday";
 	
 	/**
+	 * 特別休暇合計時間数。
+	 */
+	public static final String	COL_SPECIAL_HOLIDAY_HOUR							= "special_holiday_hour";
+	
+	/**
 	 * その他休暇合計日数。
 	 */
 	public static final String	COL_TOTAL_OTHER_HOLIDAY							= "total_other_holiday";
 	
 	/**
+	 * その他休暇合計時間数。
+	 */
+	public static final String	COL_OTHER_HOLIDAY_HOUR							= "other_holiday_hour";
+	
+	/**
 	 * 欠勤合計日数。
 	 */
 	public static final String	COL_TOTAL_ABSENCE								= "total_absence";
+	
+	/**
+	 * 欠勤合計時間数。
+	 */
+	public static final String	COL_ABSENCE_HOUR								= "absence_hour";
 	
 	/**
 	 * 手当合計。
@@ -472,6 +504,46 @@ public class TmdTotalTimeDao extends PlatformDao implements TotalTimeDataDaoInte
 	 * 平日時間内時間。
 	 */
 	public static final String	COL_WEEK_DAY_OVERTIME_IN						= "week_day_overtime_in";
+	/**
+	 * 汎用項目1(数値)
+	 */
+	public static final String	COL_GENERAL_INT_ITEM1							= "general_int_item1";
+	/**
+	 * 汎用項目2(数値)
+	 */
+	public static final String	COL_GENERAL_INT_ITEM2							= "general_int_item2";
+	/**
+	 * 汎用項目3(数値)
+	 */
+	public static final String	COL_GENERAL_INT_ITEM3							= "general_int_item3";
+	/**
+	 * 汎用項目4(数値)
+	 */
+	public static final String	COL_GENERAL_INT_ITEM4							= "general_int_item4";
+	/**
+	 * 汎用項目5(数値)
+	 */
+	public static final String	COL_GENERAL_INT_ITEM5							= "general_int_item5";
+	/**
+	 * 汎用項目1(浮動小数点数)
+	 */
+	public static final String	COL_GENERAL_DOUBLE_ITEM1						= "general_double_item1";
+	/**
+	 * 汎用項目2(浮動小数点数)
+	 */
+	public static final String	COL_GENERAL_DOUBLE_ITEM2						= "general_double_item2";
+	/**
+	 * 汎用項目3(浮動小数点数)
+	 */
+	public static final String	COL_GENERAL_DOUBLE_ITEM3						= "general_double_item3";
+	/**
+	 * 汎用項目4(浮動小数点数)
+	 */
+	public static final String	COL_GENERAL_DOUBLE_ITEM4						= "general_double_item4";
+	/**
+	 * 汎用項目5(浮動小数点数)
+	 */
+	public static final String	COL_GENERAL_DOUBLE_ITEM5						= "general_double_item5";
 	
 	/**
 	 * キー。
@@ -523,6 +595,9 @@ public class TmdTotalTimeDao extends PlatformDao implements TotalTimeDataDaoInte
 		dto.setOvertimeIn(getInt(COL_OVERTIME_IN));
 		dto.setOvertimeOut(getInt(COL_OVERTIME_OUT));
 		dto.setLateNight(getInt(COL_LATE_NIGHT));
+		dto.setNightWorkWithinPrescribedWork(getInt(COL_NIGHT_WORK_WITHIN_PRESCRIBED_WORK));
+		dto.setNightOvertimeWork(getInt(COL_NIGHT_OVERTIME_WORK));
+		dto.setNightWorkOnHoliday(getInt(COL_NIGHT_WORK_ON_HOLIDAY));
 		dto.setWorkOnSpecificHoliday(getInt(COL_WORK_ON_SPECIFIC_HOLIDAY));
 		dto.setWorkOnHoliday(getInt(COL_WORK_ON_HOLIDAY));
 		dto.setDecreaseTime(getInt(COL_DECREASE_TIME));
@@ -557,8 +632,11 @@ public class TmdTotalTimeDao extends PlatformDao implements TotalTimeDataDaoInte
 		dto.setTimesLegalHolidaySubstitute(getDouble(COL_TIMES_LEGAL_HOLIDAY_SUBSTITUTE));
 		dto.setTimesSpecificHolidaySubstitute(getDouble(COL_TIMES_SPECIFIC_HOLIDAY_SUBSTITUTE));
 		dto.setTotalSpecialHoliday(getDouble(COL_TOTAL_SPECIAL_HOLIDAY));
+		dto.setSpecialHolidayHour(getInt(COL_SPECIAL_HOLIDAY_HOUR));
 		dto.setTotalOtherHoliday(getDouble(COL_TOTAL_OTHER_HOLIDAY));
+		dto.setOtherHolidayHour(getInt(COL_OTHER_HOLIDAY_HOUR));
 		dto.setTotalAbsence(getDouble(COL_TOTAL_ABSENCE));
+		dto.setAbsenceHour(getInt(COL_ABSENCE_HOUR));
 		dto.setTotalAllowance(getInt(COL_TOTAL_ALLOWANCE));
 		dto.setSixtyHourOvertime(getInt(COL_SIXTY_HOUR_OVERTIME));
 		dto.setWeekDayOvertime(getInt(COL_WEEK_DAY_OVERTIME));
@@ -581,6 +659,16 @@ public class TmdTotalTimeDao extends PlatformDao implements TotalTimeDataDaoInte
 		dto.setWeekDayOvertimeInNoWeeklyForty(getInt(COL_WEEK_DAY_OVERTIME_IN_NO_WEEKLY_FORTY));
 		dto.setWeekDayOvertimeOutNoWeeklyForty(getInt(COL_WEEK_DAY_OVERTIME_OUT_NO_WEEKLY_FORTY));
 		dto.setWeekDayOvertimeIn(getInt(COL_WEEK_DAY_OVERTIME_IN));
+		dto.setGeneralIntItem1(getInt(COL_GENERAL_INT_ITEM1));
+		dto.setGeneralIntItem2(getInt(COL_GENERAL_INT_ITEM2));
+		dto.setGeneralIntItem3(getInt(COL_GENERAL_INT_ITEM3));
+		dto.setGeneralIntItem4(getInt(COL_GENERAL_INT_ITEM4));
+		dto.setGeneralIntItem5(getInt(COL_GENERAL_INT_ITEM5));
+		dto.setGeneralDoubleItem1(getInt(COL_GENERAL_DOUBLE_ITEM1));
+		dto.setGeneralDoubleItem2(getInt(COL_GENERAL_DOUBLE_ITEM2));
+		dto.setGeneralDoubleItem3(getInt(COL_GENERAL_DOUBLE_ITEM3));
+		dto.setGeneralDoubleItem4(getInt(COL_GENERAL_DOUBLE_ITEM4));
+		dto.setGeneralDoubleItem5(getInt(COL_GENERAL_DOUBLE_ITEM5));
 		mappingCommonInfo(dto);
 		return dto;
 	}
@@ -695,6 +783,9 @@ public class TmdTotalTimeDao extends PlatformDao implements TotalTimeDataDaoInte
 		setParam(index++, dto.getOvertimeIn());
 		setParam(index++, dto.getOvertimeOut());
 		setParam(index++, dto.getLateNight());
+		setParam(index++, dto.getNightWorkWithinPrescribedWork());
+		setParam(index++, dto.getNightOvertimeWork());
+		setParam(index++, dto.getNightWorkOnHoliday());
 		setParam(index++, dto.getWorkOnSpecificHoliday());
 		setParam(index++, dto.getWorkOnHoliday());
 		setParam(index++, dto.getDecreaseTime());
@@ -729,8 +820,11 @@ public class TmdTotalTimeDao extends PlatformDao implements TotalTimeDataDaoInte
 		setParam(index++, dto.getTimesLegalHolidaySubstitute());
 		setParam(index++, dto.getTimesSpecificHolidaySubstitute());
 		setParam(index++, dto.getTotalSpecialHoliday());
+		setParam(index++, dto.getSpecialHolidayHour());
 		setParam(index++, dto.getTotalOtherHoliday());
+		setParam(index++, dto.getOtherHolidayHour());
 		setParam(index++, dto.getTotalAbsence());
+		setParam(index++, dto.getAbsenceHour());
 		setParam(index++, dto.getTotalAllowance());
 		setParam(index++, dto.getSixtyHourOvertime());
 		setParam(index++, dto.getWeekDayOvertime());
@@ -753,6 +847,16 @@ public class TmdTotalTimeDao extends PlatformDao implements TotalTimeDataDaoInte
 		setParam(index++, dto.getWeekDayOvertimeInNoWeeklyForty());
 		setParam(index++, dto.getWeekDayOvertimeOutNoWeeklyForty());
 		setParam(index++, dto.getWeekDayOvertimeIn());
+		setParam(index++, dto.getGeneralIntItem1());
+		setParam(index++, dto.getGeneralIntItem2());
+		setParam(index++, dto.getGeneralIntItem3());
+		setParam(index++, dto.getGeneralIntItem4());
+		setParam(index++, dto.getGeneralIntItem5());
+		setParam(index++, dto.getGeneralDoubleItem1());
+		setParam(index++, dto.getGeneralDoubleItem2());
+		setParam(index++, dto.getGeneralDoubleItem3());
+		setParam(index++, dto.getGeneralDoubleItem4());
+		setParam(index++, dto.getGeneralDoubleItem5());
 		setCommonParams(baseDto, isInsert);
 	}
 	
@@ -799,4 +903,86 @@ public class TmdTotalTimeDao extends PlatformDao implements TotalTimeDataDaoInte
 		}
 	}
 	
+	@Override
+	public Map<Integer, TotalTimeDataDtoInterface> findFiscalMap(String personalId, int startYear, int startMonth,
+			int endYear, int endMonth) throws MospException {
+		try {
+			index = 1;
+			StringBuffer sb = getSelectQuery(getClass());
+			sb.append(where());
+			sb.append(deleteFlagOff());
+			sb.append(and());
+			sb.append(equal(COL_PERSONAL_ID));
+			sb.append(and());
+			sb.append(leftParenthesis());
+			sb.append(leftParenthesis());
+			sb.append(equal(COL_CALCULATION_YEAR));
+			sb.append(and());
+			sb.append(greaterEqual(COL_CALCULATION_MONTH));
+			sb.append(rightParenthesis());
+			sb.append(or());
+			sb.append(equal(COL_CALCULATION_YEAR));
+			sb.append(and());
+			sb.append(lessEqual(COL_CALCULATION_MONTH));
+			sb.append(rightParenthesis());
+			prepareStatement(sb.toString());
+			setParam(index++, personalId);
+			setParam(index++, startYear);
+			setParam(index++, startMonth);
+			setParam(index++, endYear);
+			setParam(index++, endMonth);
+			executeQuery();
+			return mappingAllMap();
+		} catch (Throwable e) {
+			throw new MospException(e);
+		} finally {
+			releaseResultSet();
+			releasePreparedStatement();
+		}
+	}
+	
+	@Override
+	public int getMinYear() throws MospException {
+		try {
+			// SQLを作成
+			StringBuilder sb = new StringBuilder(select());
+			sb.append(min(COL_CALCULATION_YEAR));
+			sb.append(from(TABLE));
+			sb.append(where());
+			sb.append(deleteFlagOff());
+			prepareStatement(sb.toString());
+			// SQLを実行
+			executeQuery();
+			// 結果を取得
+			next();
+			return rs.getInt(1);
+		} catch (Throwable e) {
+			throw new MospException(e);
+		} finally {
+			releaseResultSet();
+			releasePreparedStatement();
+		}
+	}
+	
+	/**
+	 * ResultSetの内容を、年間勤怠集計情報群(キー：集計月)として取得する。<br>
+	 * @return 年間勤怠集計情報群
+	 * @throws MospException SQL例外が発生した場合
+	 */
+	protected Map<Integer, TotalTimeDataDtoInterface> mappingAllMap() throws MospException {
+		Map<Integer, TotalTimeDataDtoInterface> all = new HashMap<Integer, TotalTimeDataDtoInterface>();
+		while (next()) {
+			all.put(getInt(COL_CALCULATION_MONTH), castDto(mapping()));
+		}
+		return all;
+	}
+	
+	/**
+	 * DTOインスタンスのキャストを行う。<br>
+	 * @param baseDto 対象DTO
+	 * @return キャストされたDTO
+	 */
+	protected TotalTimeDataDtoInterface castDto(BaseDtoInterface baseDto) {
+		return (TotalTimeDataDtoInterface)baseDto;
+	}
 }

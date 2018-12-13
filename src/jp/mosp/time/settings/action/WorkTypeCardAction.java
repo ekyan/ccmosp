@@ -17,29 +17,27 @@
  */
 package jp.mosp.time.settings.action;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import jp.mosp.framework.base.BaseVo;
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.constant.MospConst;
 import jp.mosp.framework.utils.DateUtility;
 import jp.mosp.platform.constant.PlatformConst;
-import jp.mosp.platform.constant.PlatformMessageConst;
 import jp.mosp.platform.utils.MonthUtility;
 import jp.mosp.time.base.TimeAction;
-import jp.mosp.time.bean.AttendanceCalcBeanInterface;
+import jp.mosp.time.bean.WorkTypeItemReferenceBeanInterface;
 import jp.mosp.time.bean.WorkTypeItemRegistBeanInterface;
 import jp.mosp.time.bean.WorkTypeReferenceBeanInterface;
 import jp.mosp.time.bean.WorkTypeRegistBeanInterface;
+import jp.mosp.time.bean.impl.WorkTypeItemReferenceBean;
 import jp.mosp.time.constant.TimeConst;
-import jp.mosp.time.constant.TimeMessageConst;
 import jp.mosp.time.dto.settings.WorkTypeDtoInterface;
 import jp.mosp.time.dto.settings.WorkTypeItemDtoInterface;
-import jp.mosp.time.entity.WorkTypeEntity;
 import jp.mosp.time.settings.base.TimeSettingAction;
 import jp.mosp.time.settings.vo.WorkTypeCardVo;
-import jp.mosp.time.utils.TimeMessageUtility;
-import jp.mosp.time.utils.TimeUtility;
 
 /**
  * 勤務形態情報の個別詳細情報の確認、編集を行う。<br>
@@ -152,8 +150,9 @@ public class WorkTypeCardAction extends TimeSettingAction {
 	
 	/**
 	 * 初期表示処理を行う。<br>
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
-	protected void show() {
+	protected void show() throws MospException {
 		// 新規登録モード設定
 		insertMode();
 	}
@@ -186,27 +185,25 @@ public class WorkTypeCardAction extends TimeSettingAction {
 		// 登録クラス取得
 		WorkTypeRegistBeanInterface regist = time().workTypeRegist();
 		WorkTypeItemRegistBeanInterface itemRegist = time().workTypeItemRegist();
-		// 時間重複チェック
-		restCheck();
-		if (mospParams.hasErrorMessage()) {
-			// 登録失敗メッセージ設定
-			addInsertFailedMessage();
-			return;
-		}
 		// DTOの準備
 		WorkTypeDtoInterface dto = regist.getInitDto();
-		WorkTypeItemDtoInterface itemDto = itemRegist.getInitDto();
+		// 勤務形態項目リスト
+		List<WorkTypeItemDtoInterface> list = new ArrayList<WorkTypeItemDtoInterface>();
 		// DTOに値を設定
 		setDtoFields(dto);
 		// 新規追加処理
 		regist.insert(dto);
 		// 勤務形態項目毎に処理
-		for (String item : WorkTypeItemRegistBeanInterface.CODES_WORK_TYPE_ITEM) {
+		for (String item : itemRegist.getCodesWorkTypeItem()) {
+			// DTOの準備
+			WorkTypeItemDtoInterface itemDto = itemRegist.getInitDto();
 			// DTOに値を設定
 			setDtoFieldsItem(itemDto, item);
-			// 新規追加処理
-			itemRegist.insert(itemDto);
+			// リストに追加
+			list.add(itemDto);
 		}
+		// 新規追加処理
+		itemRegist.insert(list);
 		// 履歴追加結果確認
 		if (mospParams.hasErrorMessage()) {
 			// 登録失敗メッセージ設定
@@ -229,27 +226,25 @@ public class WorkTypeCardAction extends TimeSettingAction {
 		// 登録クラス取得
 		WorkTypeRegistBeanInterface regist = time().workTypeRegist();
 		WorkTypeItemRegistBeanInterface itemRegist = time().workTypeItemRegist();
-		// 時間重複チェック
-		restCheck();
-		if (mospParams.hasErrorMessage()) {
-			// 登録失敗メッセージ設定
-			addInsertFailedMessage();
-			return;
-		}
 		// DTOの準備
 		WorkTypeDtoInterface dto = regist.getInitDto();
-		WorkTypeItemDtoInterface itemDto = itemRegist.getInitDto();
+		// 勤務形態項目リスト
+		List<WorkTypeItemDtoInterface> list = new ArrayList<WorkTypeItemDtoInterface>();
 		// DTOに値を設定
 		setDtoFields(dto);
 		// 履歴追加処理
 		regist.add(dto);
 		// 勤務形態項目毎に処理
-		for (String item : WorkTypeItemRegistBeanInterface.CODES_WORK_TYPE_ITEM) {
+		for (String item : itemRegist.getCodesWorkTypeItem()) {
+			// DTOの準備
+			WorkTypeItemDtoInterface itemDto = itemRegist.getInitDto();
 			// DTOに値を設定
 			setDtoFieldsItem(itemDto, item);
-			// 履歴追加処理
-			itemRegist.add(itemDto);
+			// リストに追加
+			list.add(itemDto);
 		}
+		// 履歴追加処理
+		itemRegist.add(list);
 		// 履歴追加結果確認
 		if (mospParams.hasErrorMessage()) {
 			// 登録失敗メッセージ設定
@@ -272,27 +267,25 @@ public class WorkTypeCardAction extends TimeSettingAction {
 		// 登録クラス取得
 		WorkTypeRegistBeanInterface regist = time().workTypeRegist();
 		WorkTypeItemRegistBeanInterface itemRegist = time().workTypeItemRegist();
-		// 時間重複チェック
-		restCheck();
-		if (mospParams.hasErrorMessage()) {
-			// 登録失敗メッセージ設定
-			addInsertFailedMessage();
-			return;
-		}
 		// DTOの準備
 		WorkTypeDtoInterface dto = regist.getInitDto();
-		WorkTypeItemDtoInterface itemDto = itemRegist.getInitDto();
+		// 勤務形態項目リスト
+		List<WorkTypeItemDtoInterface> list = new ArrayList<WorkTypeItemDtoInterface>();
 		// DTOに値を設定
 		setDtoFields(dto);
 		// 更新処理
 		regist.update(dto);
 		// 勤務形態項目毎に処理
-		for (String item : WorkTypeItemRegistBeanInterface.CODES_WORK_TYPE_ITEM) {
+		for (String item : itemRegist.getCodesWorkTypeItem()) {
+			// DTOの準備
+			WorkTypeItemDtoInterface itemDto = itemRegist.getInitDto();
 			// DTOに値を設定
 			setDtoFieldsItem(itemDto, item);
-			// 更新処理
-			itemRegist.update(itemDto);
+			// リストに追加
+			list.add(itemDto);
 		}
+		// 更新処理
+		itemRegist.update(list);
 		// 更新結果確認
 		if (mospParams.hasErrorMessage()) {
 			// 更新失敗メッセージ設定
@@ -341,8 +334,9 @@ public class WorkTypeCardAction extends TimeSettingAction {
 	
 	/**
 	 * 新規登録モードで画面を表示する。<br>
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
-	protected void insertMode() {
+	protected void insertMode() throws MospException {
 		// 編集モード設定
 		setEditInsertMode();
 		// 初期値設定
@@ -379,6 +373,7 @@ public class WorkTypeCardAction extends TimeSettingAction {
 	protected void setEditUpdateMode(String workTypeCode, Date activateDate) throws MospException {
 		// 参照クラス取得
 		WorkTypeReferenceBeanInterface reference = timeReference().workType();
+		WorkTypeItemRegistBeanInterface itemRegist = time().workTypeItemRegist();
 		// 履歴編集対象取得
 		WorkTypeDtoInterface dto = reference.findForKey(workTypeCode, activateDate);
 		// 存在確認
@@ -386,7 +381,7 @@ public class WorkTypeCardAction extends TimeSettingAction {
 		// VOにセット
 		setVoFields(dto);
 		// 勤務形態項目コード毎に勤務形態項目を取得し設定
-		for (String workTypeItemCode : WorkTypeItemRegistBeanInterface.CODES_WORK_TYPE_ITEM) {
+		for (String workTypeItemCode : itemRegist.getCodesWorkTypeItem()) {
 			// 勤務形態項目取得
 			WorkTypeItemDtoInterface itemDto = timeReference().workTypeItem().findForKey(workTypeCode, activateDate,
 					workTypeItemCode);
@@ -401,8 +396,9 @@ public class WorkTypeCardAction extends TimeSettingAction {
 	
 	/**
 	 * 初期値を設定する。<br>
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
-	public void setDefaultValues() {
+	public void setDefaultValues() throws MospException {
 		// VO取得
 		WorkTypeCardVo vo = (WorkTypeCardVo)mospParams.getVo();
 		// 編集項目の表示
@@ -467,7 +463,9 @@ public class WorkTypeCardAction extends TimeSettingAction {
 		vo.setTxtShort2EndHour("");
 		vo.setTxtShort2EndMinute("");
 		vo.setPltShort2Type("");
-		vo.setTmmWorkTypeItemId(new long[WorkTypeItemRegistBeanInterface.CODES_WORK_TYPE_ITEM.length]);
+		WorkTypeItemRegistBeanInterface itemRegist = time().workTypeItemRegist();
+		vo.setTmmWorkTypeItemId(new long[itemRegist.getCodesWorkTypeItem().length]);
+		vo.setPltAutoBeforeOverWork(String.valueOf(MospConst.INACTIVATE_FLAG_ON));
 	}
 	
 	/**
@@ -515,26 +513,32 @@ public class WorkTypeCardAction extends TimeSettingAction {
 	protected void setDtoFieldsItem(WorkTypeItemDtoInterface dto, String itemType) throws MospException {
 		// VO取得
 		WorkTypeCardVo vo = (WorkTypeCardVo)mospParams.getVo();
+		// 勤務形態項目登録クラス取得
+		WorkTypeItemRegistBeanInterface item = time().workTypeItemRegist();
+		WorkTypeItemReferenceBeanInterface itemRefer = timeReference().workTypeItem();
 		// VOの値をDTOに設定
 		dto.setActivateDate(MonthUtility.getYearMonthDate(getInt(vo.getTxtEditActivateYear()),
 				getInt(vo.getTxtEditActivateMonth())));
 		dto.setWorkTypeCode(vo.getTxtWorkTypeCode());
+		dto.setWorkTypeItemValue(DateUtility.getDefaultTime());
 		dto.setPreliminary("");
 		if (itemType.equals(TimeConst.CODE_WORKSTART)) {
 			// 始業時刻
 			dto.setTmmWorkTypeItemId(vo.getTmmWorkTypeItemId(0));
 			dto.setWorkTypeItemCode(TimeConst.CODE_WORKSTART);
-			dto.setWorkTypeItemValue(getDefaultTime(vo.getTxtWorkStartHour(), vo.getTxtWorkStartMinute()));
+			dto.setWorkTypeItemValue(item.getDefaultTime(vo.getTxtWorkStartHour(), vo.getTxtWorkStartMinute()));
 		} else if (itemType.equals(TimeConst.CODE_WORKEND)) {
 			// 終業時刻
 			dto.setTmmWorkTypeItemId(vo.getTmmWorkTypeItemId(1));
 			dto.setWorkTypeItemCode(TimeConst.CODE_WORKEND);
-			dto.setWorkTypeItemValue(getDefaultTime(vo.getTxtWorkEndHour(), vo.getTxtWorkEndMinute()));
+			dto.setWorkTypeItemValue(item.getDefaultTime(vo.getTxtWorkEndHour(), vo.getTxtWorkEndMinute()));
 		} else if (itemType.equals(TimeConst.CODE_WORKTIME)) {
 			// 勤務時間
 			dto.setTmmWorkTypeItemId(vo.getTmmWorkTypeItemId(2));
 			dto.setWorkTypeItemCode(TimeConst.CODE_WORKTIME);
-			dto.setWorkTypeItemValue(getTimestamp(getWorkTime()));
+			dto.setWorkTypeItemValue(getTimestamp(
+					itemRefer.getWorkTime(item.getDefaultTime(vo.getTxtWorkStartHour(), vo.getTxtWorkStartMinute()),
+							item.getDefaultTime(vo.getTxtWorkEndHour(), vo.getTxtWorkEndMinute()), getRestTime())));
 		} else if (itemType.equals(TimeConst.CODE_RESTTIME)) {
 			// 休憩時間
 			dto.setTmmWorkTypeItemId(vo.getTmmWorkTypeItemId(3));
@@ -544,124 +548,114 @@ public class WorkTypeCardAction extends TimeSettingAction {
 			// 休憩開始時刻1
 			dto.setTmmWorkTypeItemId(vo.getTmmWorkTypeItemId(4));
 			dto.setWorkTypeItemCode(TimeConst.CODE_RESTSTART1);
-			dto.setWorkTypeItemValue(DateUtility.getDefaultTime());
 			if (!vo.getTxtRestStart1Hour().isEmpty()) {
-				dto.setWorkTypeItemValue(getDefaultTime(vo.getTxtRestStart1Hour(), vo.getTxtRestStart1Minute()));
+				dto.setWorkTypeItemValue(item.getDefaultTime(vo.getTxtRestStart1Hour(), vo.getTxtRestStart1Minute()));
 			}
 		} else if (itemType.equals(TimeConst.CODE_RESTEND1)) {
 			// 休憩終了時刻1
 			dto.setTmmWorkTypeItemId(vo.getTmmWorkTypeItemId(5));
 			dto.setWorkTypeItemCode(TimeConst.CODE_RESTEND1);
-			dto.setWorkTypeItemValue(DateUtility.getDefaultTime());
 			if (!vo.getTxtRestEnd1Hour().isEmpty()) {
-				dto.setWorkTypeItemValue(getDefaultTime(vo.getTxtRestEnd1Hour(), vo.getTxtRestEnd1Minute()));
+				dto.setWorkTypeItemValue(item.getDefaultTime(vo.getTxtRestEnd1Hour(), vo.getTxtRestEnd1Minute()));
 			}
 		} else if (itemType.equals(TimeConst.CODE_RESTSTART2)) {
 			// 休憩開始時刻2
 			dto.setTmmWorkTypeItemId(vo.getTmmWorkTypeItemId(6));
 			dto.setWorkTypeItemCode(TimeConst.CODE_RESTSTART2);
-			dto.setWorkTypeItemValue(DateUtility.getDefaultTime());
 			if (!vo.getTxtRestStart2Hour().isEmpty()) {
-				dto.setWorkTypeItemValue(getDefaultTime(vo.getTxtRestStart2Hour(), vo.getTxtRestStart2Minute()));
+				dto.setWorkTypeItemValue(item.getDefaultTime(vo.getTxtRestStart2Hour(), vo.getTxtRestStart2Minute()));
 			}
 		} else if (itemType.equals(TimeConst.CODE_RESTEND2)) {
 			// 休憩終了時刻2
 			dto.setTmmWorkTypeItemId(vo.getTmmWorkTypeItemId(7));
 			dto.setWorkTypeItemCode(TimeConst.CODE_RESTEND2);
-			dto.setWorkTypeItemValue(DateUtility.getDefaultTime());
 			if (!vo.getTxtRestEnd2Hour().isEmpty()) {
-				dto.setWorkTypeItemValue(getDefaultTime(vo.getTxtRestEnd2Hour(), vo.getTxtRestEnd2Minute()));
+				dto.setWorkTypeItemValue(item.getDefaultTime(vo.getTxtRestEnd2Hour(), vo.getTxtRestEnd2Minute()));
 			}
 		} else if (itemType.equals(TimeConst.CODE_RESTSTART3)) {
 			// 休憩開始時刻3
 			dto.setTmmWorkTypeItemId(vo.getTmmWorkTypeItemId(8));
 			dto.setWorkTypeItemCode(TimeConst.CODE_RESTSTART3);
-			dto.setWorkTypeItemValue(DateUtility.getDefaultTime());
 			if (!vo.getTxtRestStart3Hour().isEmpty()) {
-				dto.setWorkTypeItemValue(getDefaultTime(vo.getTxtRestStart3Hour(), vo.getTxtRestStart3Minute()));
+				dto.setWorkTypeItemValue(item.getDefaultTime(vo.getTxtRestStart3Hour(), vo.getTxtRestStart3Minute()));
 			}
 		} else if (itemType.equals(TimeConst.CODE_RESTEND3)) {
 			// 休憩終了時刻3
 			dto.setTmmWorkTypeItemId(vo.getTmmWorkTypeItemId(9));
 			dto.setWorkTypeItemCode(TimeConst.CODE_RESTEND3);
-			dto.setWorkTypeItemValue(DateUtility.getDefaultTime());
 			if (!vo.getTxtRestEnd3Hour().isEmpty()) {
-				dto.setWorkTypeItemValue(getDefaultTime(vo.getTxtRestEnd3Hour(), vo.getTxtRestEnd3Minute()));
+				dto.setWorkTypeItemValue(item.getDefaultTime(vo.getTxtRestEnd3Hour(), vo.getTxtRestEnd3Minute()));
 			}
 		} else if (itemType.equals(TimeConst.CODE_RESTSTART4)) {
 			// 休憩開始時刻4
 			dto.setTmmWorkTypeItemId(vo.getTmmWorkTypeItemId(10));
 			dto.setWorkTypeItemCode(TimeConst.CODE_RESTSTART4);
-			dto.setWorkTypeItemValue(DateUtility.getDefaultTime());
 			if (!vo.getTxtRestStart4Hour().isEmpty()) {
-				dto.setWorkTypeItemValue(getDefaultTime(vo.getTxtRestStart4Hour(), vo.getTxtRestStart4Minute()));
+				dto.setWorkTypeItemValue(item.getDefaultTime(vo.getTxtRestStart4Hour(), vo.getTxtRestStart4Minute()));
 			}
 		} else if (itemType.equals(TimeConst.CODE_RESTEND4)) {
 			// 休憩終了時刻4
 			dto.setTmmWorkTypeItemId(vo.getTmmWorkTypeItemId(11));
 			dto.setWorkTypeItemCode(TimeConst.CODE_RESTEND4);
-			dto.setWorkTypeItemValue(DateUtility.getDefaultTime());
 			if (!vo.getTxtRestEnd4Hour().isEmpty()) {
-				dto.setWorkTypeItemValue(getDefaultTime(vo.getTxtRestEnd4Hour(), vo.getTxtRestEnd4Minute()));
+				dto.setWorkTypeItemValue(item.getDefaultTime(vo.getTxtRestEnd4Hour(), vo.getTxtRestEnd4Minute()));
 			}
 		} else if (itemType.equals(TimeConst.CODE_FRONTSTART)) {
 			// 午前休開始時刻
 			dto.setTmmWorkTypeItemId(vo.getTmmWorkTypeItemId(12));
 			dto.setWorkTypeItemCode(TimeConst.CODE_FRONTSTART);
-			dto.setWorkTypeItemValue(getDefaultTime(vo.getTxtFrontStartHour(), vo.getTxtFrontStartMinute()));
+			dto.setWorkTypeItemValue(item.getDefaultTime(vo.getTxtFrontStartHour(), vo.getTxtFrontStartMinute()));
 		} else if (itemType.equals(TimeConst.CODE_FRONTEND)) {
 			// 午前休終了時刻
 			dto.setTmmWorkTypeItemId(vo.getTmmWorkTypeItemId(13));
 			dto.setWorkTypeItemCode(TimeConst.CODE_FRONTEND);
-			dto.setWorkTypeItemValue(getDefaultTime(vo.getTxtFrontEndHour(), vo.getTxtFrontEndMinute()));
+			dto.setWorkTypeItemValue(item.getDefaultTime(vo.getTxtFrontEndHour(), vo.getTxtFrontEndMinute()));
 		} else if (itemType.equals(TimeConst.CODE_BACKSTART)) {
 			// 午後休開始時刻
 			dto.setTmmWorkTypeItemId(vo.getTmmWorkTypeItemId(14));
 			dto.setWorkTypeItemCode(TimeConst.CODE_BACKSTART);
-			dto.setWorkTypeItemValue(getDefaultTime(vo.getTxtBackStartHour(), vo.getTxtBackStartMinute()));
+			dto.setWorkTypeItemValue(item.getDefaultTime(vo.getTxtBackStartHour(), vo.getTxtBackStartMinute()));
 		} else if (itemType.equals(TimeConst.CODE_BACKEND)) {
 			// 午後休終了時刻
 			dto.setTmmWorkTypeItemId(vo.getTmmWorkTypeItemId(15));
 			dto.setWorkTypeItemCode(TimeConst.CODE_BACKEND);
-			dto.setWorkTypeItemValue(getDefaultTime(vo.getTxtBackEndHour(), vo.getTxtBackEndMinute()));
+			dto.setWorkTypeItemValue(item.getDefaultTime(vo.getTxtBackEndHour(), vo.getTxtBackEndMinute()));
 		} else if (itemType.equals(TimeConst.CODE_OVERBEFORE)) {
 			// 残前休憩時間
 			dto.setTmmWorkTypeItemId(vo.getTmmWorkTypeItemId(16));
 			dto.setWorkTypeItemCode(TimeConst.CODE_OVERBEFORE);
-			dto.setWorkTypeItemValue(getDefaultTime(vo.getTxtOverBeforeHour(), vo.getTxtOverBeforeMinute()));
+			dto.setWorkTypeItemValue(item.getDefaultTime(vo.getTxtOverBeforeHour(), vo.getTxtOverBeforeMinute()));
 		} else if (itemType.equals(TimeConst.CODE_OVERPER)) {
 			// 残業休憩時間(毎)
 			dto.setTmmWorkTypeItemId(vo.getTmmWorkTypeItemId(17));
 			dto.setWorkTypeItemCode(TimeConst.CODE_OVERPER);
-			dto.setWorkTypeItemValue(getDefaultTime(vo.getTxtOverPerHour(), vo.getTxtOverPerMinute()));
+			dto.setWorkTypeItemValue(item.getDefaultTime(vo.getTxtOverPerHour(), vo.getTxtOverPerMinute()));
 		} else if (itemType.equals(TimeConst.CODE_OVERREST)) {
 			// 残業休憩時間
 			dto.setTmmWorkTypeItemId(vo.getTmmWorkTypeItemId(18));
 			dto.setWorkTypeItemCode(TimeConst.CODE_OVERREST);
-			dto.setWorkTypeItemValue(getDefaultTime(vo.getTxtOverRestHour(), vo.getTxtOverRestMinute()));
+			dto.setWorkTypeItemValue(item.getDefaultTime(vo.getTxtOverRestHour(), vo.getTxtOverRestMinute()));
 		} else if (itemType.equals(TimeConst.CODE_HALFREST)) {
 			// 半休休憩対象時間
 			dto.setTmmWorkTypeItemId(vo.getTmmWorkTypeItemId(19));
 			dto.setWorkTypeItemCode(TimeConst.CODE_HALFREST);
-			dto.setWorkTypeItemValue(DateUtility.getDefaultTime());
 			if (!vo.getTxtHalfRestHour().isEmpty()) {
-				dto.setWorkTypeItemValue(getDefaultTime(vo.getTxtHalfRestHour(), vo.getTxtHalfRestMinute()));
+				dto.setWorkTypeItemValue(item.getDefaultTime(vo.getTxtHalfRestHour(), vo.getTxtHalfRestMinute()));
 			}
 		} else if (itemType.equals(TimeConst.CODE_HALFRESTSTART)) {
 			// 半休休憩開始時刻
 			dto.setTmmWorkTypeItemId(vo.getTmmWorkTypeItemId(20));
 			dto.setWorkTypeItemCode(TimeConst.CODE_HALFRESTSTART);
-			dto.setWorkTypeItemValue(DateUtility.getDefaultTime());
 			if (!vo.getTxtHalfRestStartHour().isEmpty()) {
-				dto.setWorkTypeItemValue(getDefaultTime(vo.getTxtHalfRestStartHour(), vo.getTxtHalfRestStartMinute()));
+				dto.setWorkTypeItemValue(
+						item.getDefaultTime(vo.getTxtHalfRestStartHour(), vo.getTxtHalfRestStartMinute()));
 			}
 		} else if (itemType.equals(TimeConst.CODE_HALFRESTEND)) {
 			// 半休休憩終了時刻
 			dto.setTmmWorkTypeItemId(vo.getTmmWorkTypeItemId(21));
 			dto.setWorkTypeItemCode(TimeConst.CODE_HALFRESTEND);
-			dto.setWorkTypeItemValue(DateUtility.getDefaultTime());
 			if (!vo.getTxtHalfRestEndHour().isEmpty()) {
-				dto.setWorkTypeItemValue(getDefaultTime(vo.getTxtHalfRestEndHour(), vo.getTxtHalfRestEndMinute()));
+				dto.setWorkTypeItemValue(item.getDefaultTime(vo.getTxtHalfRestEndHour(), vo.getTxtHalfRestEndMinute()));
 			}
 		} else if (itemType.equals(TimeConst.CODE_WORK_TYPE_ITEM_DIRECT_START)) {
 			// 直行
@@ -682,35 +676,38 @@ public class WorkTypeCardAction extends TimeSettingAction {
 			// 時短時間1開始時刻及び給与区分
 			dto.setTmmWorkTypeItemId(vo.getTmmWorkTypeItemId(25));
 			dto.setWorkTypeItemCode(TimeConst.CODE_WORK_TYPE_ITEM_SHORT1_START);
-			dto.setWorkTypeItemValue(DateUtility.getDefaultTime());
 			if (!vo.getTxtShort1StartHour().isEmpty()) {
-				dto.setWorkTypeItemValue(getDefaultTime(vo.getTxtShort1StartHour(), vo.getTxtShort1StartMinute()));
+				dto.setWorkTypeItemValue(item.getDefaultTime(vo.getTxtShort1StartHour(), vo.getTxtShort1StartMinute()));
 				dto.setPreliminary(vo.getPltShort1Type());
 			}
 		} else if (itemType.equals(TimeConst.CODE_WORK_TYPE_ITEM_SHORT1_END)) {
 			// 時短時間1終了時刻
 			dto.setTmmWorkTypeItemId(vo.getTmmWorkTypeItemId(26));
 			dto.setWorkTypeItemCode(TimeConst.CODE_WORK_TYPE_ITEM_SHORT1_END);
-			dto.setWorkTypeItemValue(DateUtility.getDefaultTime());
 			if (!vo.getTxtShort1EndHour().isEmpty()) {
-				dto.setWorkTypeItemValue(getDefaultTime(vo.getTxtShort1EndHour(), vo.getTxtShort1EndMinute()));
+				dto.setWorkTypeItemValue(item.getDefaultTime(vo.getTxtShort1EndHour(), vo.getTxtShort1EndMinute()));
 			}
 		} else if (itemType.equals(TimeConst.CODE_WORK_TYPE_ITEM_SHORT2_START)) {
 			// 時短時間2開始時刻及び給与区分
 			dto.setTmmWorkTypeItemId(vo.getTmmWorkTypeItemId(27));
 			dto.setWorkTypeItemCode(TimeConst.CODE_WORK_TYPE_ITEM_SHORT2_START);
-			dto.setWorkTypeItemValue(DateUtility.getDefaultTime());
 			if (!vo.getTxtShort2StartHour().isEmpty()) {
-				dto.setWorkTypeItemValue(getDefaultTime(vo.getTxtShort2StartHour(), vo.getTxtShort2StartMinute()));
+				dto.setWorkTypeItemValue(item.getDefaultTime(vo.getTxtShort2StartHour(), vo.getTxtShort2StartMinute()));
 				dto.setPreliminary(vo.getPltShort2Type());
 			}
 		} else if (itemType.equals(TimeConst.CODE_WORK_TYPE_ITEM_SHORT2_END)) {
 			// 時短時間2終了時刻
 			dto.setTmmWorkTypeItemId(vo.getTmmWorkTypeItemId(28));
 			dto.setWorkTypeItemCode(TimeConst.CODE_WORK_TYPE_ITEM_SHORT2_END);
-			dto.setWorkTypeItemValue(DateUtility.getDefaultTime());
 			if (!vo.getTxtShort2EndHour().isEmpty()) {
-				dto.setWorkTypeItemValue(getDefaultTime(vo.getTxtShort2EndHour(), vo.getTxtShort2EndMinute()));
+				dto.setWorkTypeItemValue(item.getDefaultTime(vo.getTxtShort2EndHour(), vo.getTxtShort2EndMinute()));
+			}
+		} else if (itemType.equals(TimeConst.CODE_AUTO_BEFORE_OVERWORK)) {
+			// 勤務前残業自動申請
+			dto.setTmmWorkTypeItemId(vo.getTmmWorkTypeItemId(29));
+			dto.setWorkTypeItemCode(TimeConst.CODE_AUTO_BEFORE_OVERWORK);
+			if (!vo.getPltAutoBeforeOverWork().isEmpty()) {
+				dto.setPreliminary(vo.getPltAutoBeforeOverWork());
 			}
 		}
 		// 画面上にはないが必須項目なので設定する
@@ -871,24 +868,12 @@ public class WorkTypeCardAction extends TimeSettingAction {
 			vo.setTmmWorkTypeItemId(dto.getTmmWorkTypeItemId(), 28);
 			vo.setTxtShort2EndHour(getWorkTypeItemHour(dto.getWorkTypeItemValue()));
 			vo.setTxtShort2EndMinute(DateUtility.getStringMinute(dto.getWorkTypeItemValue()));
+		} else if (itemType.equals(TimeConst.CODE_AUTO_BEFORE_OVERWORK)) {
+			// 勤務前残業自動申請
+			vo.setTmmWorkTypeItemId(dto.getTmmWorkTypeItemId(), 29);
+			vo.setPltAutoBeforeOverWork(dto.getPreliminary());
 		}
 		vo.setPltEditInactivate(String.valueOf(dto.getInactivateFlag()));
-	}
-	
-	/**
-	 * 勤務時間取得。<br>
-	 * @return 勤務時間(分)
-	 */
-	protected int getWorkTime() {
-		// VO取得
-		WorkTypeCardVo vo = (WorkTypeCardVo)mospParams.getVo();
-		int minute = getMinute(vo.getTxtWorkStartHour(), vo.getTxtWorkStartMinute(), vo.getTxtWorkEndHour(),
-				vo.getTxtWorkEndMinute())
-				- getRestTime();
-		if (minute > 0) {
-			return minute;
-		}
-		return 0;
 	}
 	
 	/**
@@ -896,303 +881,23 @@ public class WorkTypeCardAction extends TimeSettingAction {
 	 * @return 休憩時間(分)
 	 */
 	protected int getRestTime() {
-		return getRest1Time() + getRest2Time() + getRest3Time() + getRest4Time();
-	}
-	
-	/**
-	 * 休憩1時間取得。<br>
-	 * @return 休憩1時間(分)
-	 */
-	protected int getRest1Time() {
 		// VO取得
 		WorkTypeCardVo vo = (WorkTypeCardVo)mospParams.getVo();
-		if (vo.getTxtRestStart1Hour().isEmpty() || vo.getTxtRestStart1Minute().isEmpty()
-				|| vo.getTxtRestEnd1Hour().isEmpty() || vo.getTxtRestEnd1Minute().isEmpty()) {
-			return 0;
-		}
-		return getMinute(vo.getTxtRestStart1Hour(), vo.getTxtRestStart1Minute(), vo.getTxtRestEnd1Hour(),
-				vo.getTxtRestEnd1Minute());
-	}
-	
-	/**
-	 * 休憩2時間取得。<br>
-	 * @return 休憩2時間(分)
-	 */
-	protected int getRest2Time() {
-		// VO取得
-		WorkTypeCardVo vo = (WorkTypeCardVo)mospParams.getVo();
-		if (vo.getTxtRestStart2Hour().isEmpty() || vo.getTxtRestStart2Minute().isEmpty()
-				|| vo.getTxtRestEnd2Hour().isEmpty() || vo.getTxtRestEnd2Minute().isEmpty()) {
-			return 0;
-		}
-		return getMinute(vo.getTxtRestStart2Hour(), vo.getTxtRestStart2Minute(), vo.getTxtRestEnd2Hour(),
-				vo.getTxtRestEnd2Minute());
-	}
-	
-	/**
-	 * 休憩3時間取得。<br>
-	 * @return 休憩3時間(分)
-	 */
-	protected int getRest3Time() {
-		// VO取得
-		WorkTypeCardVo vo = (WorkTypeCardVo)mospParams.getVo();
-		if (vo.getTxtRestStart3Hour().isEmpty() || vo.getTxtRestStart3Minute().isEmpty()
-				|| vo.getTxtRestEnd3Hour().isEmpty() || vo.getTxtRestEnd3Minute().isEmpty()) {
-			return 0;
-		}
-		return getMinute(vo.getTxtRestStart3Hour(), vo.getTxtRestStart3Minute(), vo.getTxtRestEnd3Hour(),
-				vo.getTxtRestEnd3Minute());
-	}
-	
-	/**
-	 * 休憩4時間取得。<br>
-	 * @return 休憩4時間(分)
-	 */
-	protected int getRest4Time() {
-		// VO取得
-		WorkTypeCardVo vo = (WorkTypeCardVo)mospParams.getVo();
-		if (vo.getTxtRestStart4Hour().isEmpty() || vo.getTxtRestStart4Minute().isEmpty()
-				|| vo.getTxtRestEnd4Hour().isEmpty() || vo.getTxtRestEnd4Minute().isEmpty()) {
-			return 0;
-		}
-		return getMinute(vo.getTxtRestStart4Hour(), vo.getTxtRestStart4Minute(), vo.getTxtRestEnd4Hour(),
-				vo.getTxtRestEnd4Minute());
-	}
-	
-	/**
-	 * 休憩/午前休/午後休重複チェック。<br>
-	 * @throws MospException 例外発生時	
-	 */
-	protected void restCheck() throws MospException {
-		// VO取得
-		WorkTypeCardVo vo = (WorkTypeCardVo)mospParams.getVo();
-		// 始業時刻
-		int startTimeHour = getInt(vo.getTxtWorkStartHour());
-		int startTimeMinute = getInt(vo.getTxtWorkStartMinute());
-		// 終業時刻
-		int endTimeHour = getInt(vo.getTxtWorkEndHour());
-		int endTimeMinute = getInt(vo.getTxtWorkEndMinute());
-		// 休憩1
-		int restStartTime1Hour = getInt(vo.getTxtRestStart1Hour());
-		int restStartTime1Minute = getInt(vo.getTxtRestStart1Minute());
-		int restEndTime1Hour = getInt(vo.getTxtRestEnd1Hour());
-		int restEndTime1Minute = getInt(vo.getTxtRestEnd1Minute());
-		// 休憩2
-		int restStartTime2Hour = getInt(vo.getTxtRestStart2Hour());
-		int restStartTime2Minute = getInt(vo.getTxtRestStart2Minute());
-		int restEndTime2Hour = getInt(vo.getTxtRestEnd2Hour());
-		int restEndTime2Minute = getInt(vo.getTxtRestEnd2Minute());
-		// 休憩3
-		int restStartTime3Hour = getInt(vo.getTxtRestStart3Hour());
-		int restStartTime3Minute = getInt(vo.getTxtRestStart3Minute());
-		int restEndTime3Hour = getInt(vo.getTxtRestEnd3Hour());
-		int restEndTime3Minute = getInt(vo.getTxtRestEnd3Minute());
-		// 休憩4
-		int restStartTime4Hour = getInt(vo.getTxtRestStart4Hour());
-		int restStartTime4Minute = getInt(vo.getTxtRestStart4Minute());
-		int restEndTime4Hour = getInt(vo.getTxtRestEnd4Hour());
-		int restEndTime4Minute = getInt(vo.getTxtRestEnd4Minute());
-		// 午前休
-		int frontStartHour = getInt(vo.getTxtFrontStartHour());
-		int frontStartMinute = getInt(vo.getTxtFrontStartMinute());
-		int frontEndHour = getInt(vo.getTxtFrontEndHour());
-		int frontEndMinute = getInt(vo.getTxtFrontEndMinute());
-		// 午後休
-		int backStartHour = getInt(vo.getTxtBackStartHour());
-		int backStartMinute = getInt(vo.getTxtBackStartMinute());
-		int backEndHour = getInt(vo.getTxtBackEndHour());
-		int backEndMinute = getInt(vo.getTxtBackEndMinute());
-		int[] aryStartTimeHour = { restStartTime1Hour, restStartTime2Hour, restStartTime3Hour, restStartTime4Hour,
-			frontStartHour, backStartHour };
-		int[] aryStartTimeMinute = { restStartTime1Minute, restStartTime2Minute, restStartTime3Minute,
-			restStartTime4Minute, frontStartMinute, backStartMinute };
-		int[] aryEndTimeHour = { restEndTime1Hour, restEndTime2Hour, restEndTime3Hour, restEndTime4Hour, frontEndHour,
-			backEndHour };
-		int[] aryEndTimeMinute = { restEndTime1Minute, restEndTime2Minute, restEndTime3Minute, restEndTime4Minute,
-			frontEndMinute, backEndMinute };
-		// 始業時刻及び終業時刻を取得
+		WorkTypeItemReferenceBeanInterface time = new WorkTypeItemReferenceBean();
 		
-		Date startTime = TimeUtility.getDateTime(startTimeHour, startTimeMinute);
-		Date endTime = TimeUtility.getDateTime(endTimeHour, endTimeMinute);
-		// エラーメッセージの設定
-		String errMes = mospParams.getName("RestTime", "Time");
-		// 始業終業時刻前後確認
-		if (endTime.after(startTime) == false) {
-			// エラーメッセージを設定
-			mospParams.addErrorMessage(TimeMessageConst.MSG_START_END_TIME_CHECK);
-			return;
-		}
-		// 始業時刻が24時以降の場合
-		if (startTimeHour >= TimeConst.TIME_DAY_ALL_HOUR) {
-			// エラーメッセージ追加
-			String rep[] = { mospParams.getName("StartWork", "Moment"),
-				TimeConst.TIME_DAY_ALL_HOUR + mospParams.getName("Hour", "From", "Ahead", "Of", "Time") };
-			mospParams.addErrorMessage(PlatformMessageConst.MSG_CHR_TYPE, rep);
-			return;
-		}
-		for (int i = 0; i < aryStartTimeHour.length; i++) {
-			// 時分がすべて0(未入力)なのでチェックしない
-			if (aryStartTimeHour[i] == 0 && aryStartTimeMinute[i] == 0 && aryEndTimeHour[i] == 0
-					&& aryEndTimeMinute[i] == 0) {
-				continue;
-			}
-			if (startTimeHour > aryStartTimeHour[i]) {
-				mospParams.addErrorMessage(TimeMessageConst.MSG_WORK_TIME_OUT_CHECK, errMes);
-				return;
-			} else if (startTimeHour == aryStartTimeHour[i]) {
-				if (startTimeMinute > aryStartTimeMinute[i]) {
-					mospParams.addErrorMessage(TimeMessageConst.MSG_WORK_TIME_OUT_CHECK, errMes);
-					return;
-				}
-			}
-			if (endTimeHour < aryEndTimeHour[i]) {
-				mospParams.addErrorMessage(TimeMessageConst.MSG_WORK_TIME_OUT_CHECK, errMes);
-				return;
-			} else if (endTimeHour == aryEndTimeHour[i]) {
-				if (endTimeMinute < aryEndTimeMinute[i]) {
-					mospParams.addErrorMessage(TimeMessageConst.MSG_WORK_TIME_OUT_CHECK, errMes);
-					return;
-				}
-			}
-		}
-		// 休憩時間重複チェック
-		for (int i = 0; i < aryStartTimeHour.length - 2; i++) {
-			// 時分がすべて0(未入力)なのでチェックしない
-			if (aryStartTimeHour[i] == 0 && aryStartTimeMinute[i] == 0 && aryEndTimeHour[i] == 0
-					&& aryEndTimeMinute[i] == 0) {
-				continue;
-			}
-			for (int j = i; j < aryStartTimeHour.length - 2; j++) {
-				if (i == j) {
-					continue;
-				}
-				// 時分がすべて0(未入力)なのでチェックしない
-				if (aryStartTimeHour[j] == 0 && aryStartTimeMinute[j] == 0 && aryEndTimeHour[j] == 0
-						&& aryEndTimeMinute[j] == 0) {
-					continue;
-				}
-				if (aryEndTimeHour[i] > aryStartTimeHour[j]) {
-					mospParams.addErrorMessage(TimeMessageConst.MSG_REST_GOING_OUT_CHECK, errMes);
-					return;
-				} else if (aryEndTimeHour[i] == aryStartTimeHour[j]) {
-					if (aryEndTimeMinute[i] > aryStartTimeMinute[j]) {
-						mospParams.addErrorMessage(TimeMessageConst.MSG_REST_GOING_OUT_CHECK, errMes);
-						return;
-					}
-				}
-			}
-		}
-		// デフォルト時刻取得
-		Date defaultTime = DateUtility.getDefaultTime();
-		// 時短勤務時刻取得
-		int short1StartHour = getInt(vo.getTxtShort1StartHour());
-		int short1StartMinute = getInt(vo.getTxtShort1StartMinute());
-		int short1EndHour = getInt(vo.getTxtShort1EndHour());
-		int short1EndMinute = getInt(vo.getTxtShort1EndMinute());
-		int short2StartHour = getInt(vo.getTxtShort2StartHour());
-		int short2StartMinute = getInt(vo.getTxtShort2StartMinute());
-		int short2EndHour = getInt(vo.getTxtShort2EndHour());
-		int short2EndMinute = getInt(vo.getTxtShort2EndMinute());
-		Date short1StartTime = TimeUtility.getDateTime(short1StartHour, short1StartMinute);
-		Date short1EndTime = TimeUtility.getDateTime(short1EndHour, short1EndMinute);
-		Date short2StartTime = TimeUtility.getDateTime(short2StartHour, short2StartMinute);
-		Date short2EndTime = TimeUtility.getDateTime(short2EndHour, short2EndMinute);
-		boolean isShort1Set = short1StartTime.equals(defaultTime) == false
-				|| short1EndTime.equals(defaultTime) == false;
-		boolean isShort2Set = short2StartTime.equals(defaultTime) == false
-				|| short2EndTime.equals(defaultTime) == false;
-		// 時短時間1確認(開始時刻及び終了時刻がデフォルト時刻でない場合)
-		if (isShort1Set) {
-			// 時短勤務1開始時刻と始業時刻を比較
-			if (short1StartTime.equals(startTime) == false) {
-				// エラーメッセージを設定
-				TimeMessageUtility.addErrorShort1TimeBoundary(mospParams);
-			}
-			// 時短勤務1終了時刻と終業時刻の前後を確認
-			if (short1EndTime.after(endTime)) {
-				// エラーメッセージを設定
-				TimeMessageUtility.addErrorShort1OutOfWorkTime(mospParams);
-			}
-			// 時短時間1開始終了前後確認
-			if (short1EndTime.after(short1StartTime) == false) {
-				// エラーメッセージを設定
-				TimeMessageUtility.addErrorShort1EndBeforeStart(mospParams);
-			}
-		}
-		// 時短時間2確認(開始時刻及び終了時刻がデフォルト時刻でない場合)
-		if (isShort2Set) {
-			// 時短勤務2終了時刻と終業時刻を比較
-			if (short2EndTime.equals(endTime) == false) {
-				// エラーメッセージを設定
-				TimeMessageUtility.addErrorShort2TimeBoundary(mospParams);
-			}
-			// 時短勤務2開始時刻と始業時刻の前後を確認
-			if (short2StartTime.before(startTime)) {
-				// エラーメッセージを設定
-				TimeMessageUtility.addErrorShort2OutOfWorkTime(mospParams);
-			}
-			// 時短時間2開始終了前後確認
-			if (short2EndTime.after(short2StartTime) == false) {
-				// エラーメッセージを設定
-				TimeMessageUtility.addErrorShort2EndBeforeStart(mospParams);
-			}
-		}
-		// 時短勤務区分の組合せを確認
-		if (isShort1Set && isShort2Set && vo.getPltShort1Type().equals(WorkTypeEntity.CODE_PAY_TYPE_PAY) == false
-				&& vo.getPltShort2Type().equals(WorkTypeEntity.CODE_PAY_TYPE_PAY)) {
-			// エラーメッセージを設定
-			TimeMessageUtility.addErrorShortTypePair(mospParams);
-		}
-		
-		// 午前/午後休重複チェック
-		// 今後必要になる可能性あり
-		/*
-		int i = aryStartTimeHour.length - 2;
-		if (aryEndTimeHour[i] > aryStartTimeHour[i + 1]) {
-			mospParams.addErrorMessage(TimeMessageConst.MSG_HARF_REST_CHECK, null, null);
-			return;
-		} else if (aryEndTimeHour[i] == aryStartTimeHour[i + 1]) {
-			if (aryEndTimeMinute[i] > aryStartTimeMinute[i + 1]) {
-				mospParams.addErrorMessage(TimeMessageConst.MSG_HARF_REST_CHECK, null, null);
-				return;
-			}
-		}
-		*/
-		return;
-	}
-	
-	/**
-	 * 時刻を取得する。
-	 * 24時を超えた場合、そのまま表示する。
-	 * @param hour 時間
-	 * @param minute 分
-	 * @return フォーマットされた時間
-	 * @throws MospException 例外発生時
-	 */
-	protected Date getDefaultTime(String hour, String minute) throws MospException {
-		// 勤怠自動計算クラス
-		AttendanceCalcBeanInterface calc = time().attendanceCalc();
-		// 基準日取得
-		Date defaultDate = DateUtility.getDefaultTime();
-		return calc.getAttendanceTime(defaultDate, hour, minute);
-	}
-	
-	private int getMinute(String startHour, String startMinute, String endHour, String endMinute) {
-		return getMinute(Integer.parseInt(startHour), Integer.parseInt(startMinute), Integer.parseInt(endHour),
-				Integer.parseInt(endMinute));
-	}
-	
-	private int getMinute(int startHour, int startMinute, int endHour, int endMinute) {
-		return getMinute(startHour * TimeConst.CODE_DEFINITION_HOUR + startMinute, endHour
-				* TimeConst.CODE_DEFINITION_HOUR + endMinute);
-	}
-	
-	private int getMinute(int startMinute, int endMinute) {
-		int minute = endMinute - startMinute;
-		if (minute >= 0) {
-			return minute;
-		}
-		return 0;
+		// 休憩1時間(分)を取得
+		int rest1 = time.getDifferenceTime(vo.getTxtRestStart1Hour(), vo.getTxtRestStart1Minute(),
+				vo.getTxtRestEnd1Hour(), vo.getTxtRestEnd1Minute());
+		// 休憩2時間(分)を取得
+		int rest2 = time.getDifferenceTime(vo.getTxtRestStart2Hour(), vo.getTxtRestStart2Minute(),
+				vo.getTxtRestEnd2Hour(), vo.getTxtRestEnd2Minute());
+		// 休憩3時間(分)を取得
+		int rest3 = time.getDifferenceTime(vo.getTxtRestStart3Hour(), vo.getTxtRestStart3Minute(),
+				vo.getTxtRestEnd3Hour(), vo.getTxtRestEnd3Minute());
+		// 休憩4時間(分)を取得
+		int rest4 = time.getDifferenceTime(vo.getTxtRestStart4Hour(), vo.getTxtRestStart4Minute(),
+				vo.getTxtRestEnd4Hour(), vo.getTxtRestEnd4Minute());
+		return time.getRestTime(rest1, rest2, rest3, rest4);
 	}
 	
 	private Date getTimestamp(int minute) throws MospException {
@@ -1201,21 +906,6 @@ public class WorkTypeCardAction extends TimeSettingAction {
 	
 	private String getWorkTypeItemHour(Date time) throws MospException {
 		return DateUtility.getStringHour(time, DateUtility.getDefaultTime());
-	}
-	
-	/**
-	 * 数値を取得する(String→int)。<br>
-	 * 数値の取得に失敗した場合は、0を返す。<br>
-	 * @param value 値(String)
-	 * @return 値(int)
-	 */
-	@Override
-	protected int getInt(String value) {
-		try {
-			return Integer.parseInt(value);
-		} catch (Throwable e) {
-			return 0;
-		}
 	}
 	
 }

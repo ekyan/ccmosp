@@ -39,7 +39,7 @@ public class TotalLeaveRegistBean extends PlatformBean implements TotalLeaveRegi
 	/**
 	 * 休暇データDAOクラス。<br>
 	 */
-	TotalLeaveDaoInterface	dao;
+	TotalLeaveDaoInterface dao;
 	
 	
 	/**

@@ -23,6 +23,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import jp.mosp.framework.base.BaseDto;
 import jp.mosp.framework.base.BaseDtoInterface;
@@ -160,6 +161,19 @@ public class PfmHumanDao extends PlatformDao implements HumanDaoInterface {
 		return all;
 	}
 	
+	/**
+	 * ResultSetの内容を、人事情報群(キー：個人ID)として取得する。<br>
+	 * @return 人事情報群
+	 * @throws MospException SQL例外が発生した場合
+	 */
+	protected Map<String, HumanDtoInterface> mappingAllMap() throws MospException {
+		Map<String, HumanDtoInterface> all = new HashMap<String, HumanDtoInterface>();
+		while (next()) {
+			all.put(getString(COL_PERSONAL_ID), castDto(mapping()));
+		}
+		return all;
+	}
+	
 	@Override
 	public HumanDtoInterface findForKey(String personalId, Date activateDate) throws MospException {
 		try {
@@ -209,6 +223,33 @@ public class PfmHumanDao extends PlatformDao implements HumanDaoInterface {
 			executeQuery();
 			// 結果取得
 			return mappingAll();
+		} catch (Throwable e) {
+			throw new MospException(e);
+		} finally {
+			releaseResultSet();
+			releasePreparedStatement();
+		}
+	}
+	
+	@Override
+	public Map<String, HumanDtoInterface> findForTargetDate(Date targetDate) throws MospException {
+		try {
+			index = 1;
+			StringBuffer sb = new StringBuffer();
+			// SELECT部追加
+			sb.append(getSelectQuery(getClass()));
+			// WHERE部追加(対象日以前で削除されていない最新の情報を取得)
+			sb.append(getQueryForMaxActivateDate(TABLE, COL_PERSONAL_ID, COL_ACTIVATE_DATE));
+			sb.append(where());
+			sb.append(deleteFlagOff());
+			// ステートメント準備
+			prepareStatement(sb.toString());
+			// パラメータ設定
+			setParam(index++, targetDate);
+			// SQL実行
+			executeQuery();
+			// 結果取得
+			return mappingAllMap();
 		} catch (Throwable e) {
 			throw new MospException(e);
 		} finally {
@@ -361,6 +402,30 @@ public class PfmHumanDao extends PlatformDao implements HumanDaoInterface {
 			prepareStatement(sb.toString());
 			executeQuery();
 			return mappingAll();
+		} catch (Throwable e) {
+			throw new MospException(e);
+		} finally {
+			releaseResultSet();
+			releasePreparedStatement();
+		}
+	}
+	
+	@Override
+	public Set<String> findForEmployeeNumbering() throws MospException {
+		try {
+			index = 1;
+			// SQL作成準備(SELECT文追加)
+			StringBuffer sb = new StringBuffer();
+			sb.append(select() + COL_EMPLOYEE_CODE);
+			sb.append(from(TABLE));
+			// WHERE部追加(削除フラグが立っていない情報全て)
+			sb.append(where());
+			sb.append(deleteFlagOff());
+			// ステートメント取得
+			prepareStatement(sb.toString());
+			// 実行
+			executeQuery();
+			return getResultAsSet(COL_EMPLOYEE_CODE);
 		} catch (Throwable e) {
 			throw new MospException(e);
 		} finally {
@@ -596,6 +661,22 @@ public class PfmHumanDao extends PlatformDao implements HumanDaoInterface {
 		sb.append(deleteFlagOff());
 		sb.append(and());
 		sb.append(equal(COL_SECTION_CODE));
+		return sb.toString();
+	}
+	
+	@Override
+	public String getQueryForLowerSection() throws MospException {
+		// 所属マスタDAO準備(サブクエリ取得用)
+		SectionDaoInterface sectionDao = (SectionDaoInterface)loadDao(SectionDaoInterface.class);
+		StringBuffer sb = new StringBuffer();
+		sb.append(select());
+		sb.append(COL_PERSONAL_ID);
+		sb.append(from(TABLE));
+		sb.append(getQueryForMaxActivateDate(TABLE, COL_PERSONAL_ID, COL_ACTIVATE_DATE));
+		sb.append(where());
+		sb.append(deleteFlagOff());
+		sb.append(and());
+		sb.append(sectionDao.getQueryForLowerSection(COL_SECTION_CODE));
 		return sb.toString();
 	}
 	

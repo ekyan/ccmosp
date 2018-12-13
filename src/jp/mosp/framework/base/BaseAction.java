@@ -175,6 +175,8 @@ public abstract class BaseAction implements ActionInterface {
 	 * 連携用BeanHandlerを生成する。<br>
 	 * BeanHandler生成後、DBコネクションを設定する。<br>
 	 * <br>
+	 * JNDI名を連携用DBコネクションMAPのキーとする。<br>
+	 * <br>
 	 * @param cls           対象BeanHandlerインターフェース
 	 * @param dataSourceKey JNDI名
 	 * @return BeanHandler
@@ -185,6 +187,30 @@ public abstract class BaseAction implements ActionInterface {
 		if (dbConnBean == null) {
 			dbConnBean = new DBConnBean(mospParams, dataSourceKey);
 			dbConnBeanMap.put(dataSourceKey, dbConnBean);
+		}
+		return createHandler(cls, dbConnBean);
+	}
+	
+	/**
+	 * 連携用BeanHandlerを生成する。<br>
+	 * BeanHandler生成後、DBコネクションを設定する。<br>
+	 * <br>
+	 * DBのURLを連携用DBコネクションMAPのキーとする。<br>
+	 * <br>
+	 * @param cls        対象BeanHandlerインターフェース
+	 * @param rdbDriver  JDBCドライバ名
+	 * @param rdbName    DBのURL
+	 * @param userId     DB接続ユーザーID
+	 * @param password   パスワード
+	 * @return 連携用BeanHandler
+	 * @throws MospException インスタンスの取得に失敗した場合
+	 */
+	protected BaseBeanHandlerInterface createHandler(Class<?> cls, String rdbDriver, String rdbName, String userId,
+			String password) throws MospException {
+		DBConnBean dbConnBean = dbConnBeanMap.get(rdbName);
+		if (dbConnBean == null) {
+			dbConnBean = new DBConnBean(mospParams, rdbDriver, rdbName, userId, password);
+			dbConnBeanMap.put(rdbName, dbConnBean);
 		}
 		return createHandler(cls, dbConnBean);
 	}
@@ -222,6 +248,31 @@ public abstract class BaseAction implements ActionInterface {
 		DBConnBean dbConnBean = dbConnBeanMap.get(key);
 		if (dbConnBean != null) {
 			dbConnBean.commit();
+		}
+	}
+	
+	/**
+	 * MosP用トランザクションをロールバックする。<br>
+	 * {@link #dbConnBeanList}のDBコネクションに対してロールバックを行う。
+	 * @throws MospException ロールバック時に例外が発生した場合
+	 */
+	protected void rollback() throws MospException {
+		// ロールバック
+		for (DBConnBean dbConnBean : dbConnBeanList) {
+			dbConnBean.rollback();
+		}
+	}
+	
+	/**
+	 * 連携用トランザクションをロールバックする。<br>
+	 * {@link #dbConnBeanMap}の対象DBコネクションに対してロールバックを行う。
+	 * @param key JNDIキー、又はDB接続情報：URL
+	 * @throws MospException ロールバック時に例外が発生した場合
+	 */
+	protected void rollback(String key) throws MospException {
+		DBConnBean dbConnBean = dbConnBeanMap.get(key);
+		if (dbConnBean != null) {
+			dbConnBean.rollback();
 		}
 	}
 	

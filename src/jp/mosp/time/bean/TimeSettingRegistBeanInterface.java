@@ -68,9 +68,9 @@ public interface TimeSettingRegistBeanInterface {
 	
 	/**
 	 * 論理削除(履歴)を行う。<br>
-	 * @param dto 対象DTO
+	 * @param recordId レコード識別ID
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
-	void delete(TimeSettingDtoInterface dto) throws MospException;
+	void delete(long recordId) throws MospException;
 	
 }

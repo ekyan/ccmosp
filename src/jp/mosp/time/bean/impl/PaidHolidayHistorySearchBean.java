@@ -121,9 +121,11 @@ public class PaidHolidayHistorySearchBean extends TimeApplicationBean implements
 		// 人事情報検索クラス取得
 		humanSearch = (HumanSearchBeanInterface)createBean(HumanSearchBeanInterface.class);
 		// 有給休暇トランザクションDAO取得
-		paidHolidayTransactionDao = (PaidHolidayTransactionDaoInterface)createDao(PaidHolidayTransactionDaoInterface.class);
+		paidHolidayTransactionDao = (PaidHolidayTransactionDaoInterface)createDao(
+				PaidHolidayTransactionDaoInterface.class);
 		// ストック休暇トランザクションDAO取得
-		stockHolidayTransactionDao = (StockHolidayTransactionDaoInterface)createDao(StockHolidayTransactionDaoInterface.class);
+		stockHolidayTransactionDao = (StockHolidayTransactionDaoInterface)createDao(
+				StockHolidayTransactionDaoInterface.class);
 	}
 	
 	@Override
@@ -185,17 +187,17 @@ public class PaidHolidayHistorySearchBean extends TimeApplicationBean implements
 				paidHolidayHistoryListDto.setInactivateFlag(paidHolidayTransactionDto.getInactivateFlag());
 				if (!acquisitionDate.before(currentAcquisitionDate) && acquisitionDate.before(nextAcquisitionDate)) {
 					// 今年度
-					paidHolidayHistoryListDto.setDate(paidHolidayTransactionDto.getGivingDay()
-							- paidHolidayTransactionDto.getCancelDay());
-					paidHolidayHistoryListDto.setTime(paidHolidayTransactionDto.getGivingHour()
-							- paidHolidayTransactionDto.getCancelHour());
+					paidHolidayHistoryListDto
+						.setDate(paidHolidayTransactionDto.getGivingDay() - paidHolidayTransactionDto.getCancelDay());
+					paidHolidayHistoryListDto
+						.setTime(paidHolidayTransactionDto.getGivingHour() - paidHolidayTransactionDto.getCancelHour());
 				} else if (acquisitionDate.before(currentAcquisitionDate)
 						&& !acquisitionDate.before(previousAcquisitionDate)) {
 					// 前年度
-					paidHolidayHistoryListDto.setFormerDate(paidHolidayTransactionDto.getGivingDay()
-							- paidHolidayTransactionDto.getCancelDay());
-					paidHolidayHistoryListDto.setFormerTime(paidHolidayTransactionDto.getGivingHour()
-							- paidHolidayTransactionDto.getCancelHour());
+					paidHolidayHistoryListDto.setFormerDate(
+							paidHolidayTransactionDto.getGivingDay() - paidHolidayTransactionDto.getCancelDay());
+					paidHolidayHistoryListDto.setFormerTime(
+							paidHolidayTransactionDto.getGivingHour() - paidHolidayTransactionDto.getCancelHour());
 				}
 			}
 			// TODO 付与について
@@ -214,8 +216,8 @@ public class PaidHolidayHistorySearchBean extends TimeApplicationBean implements
 			// ---------------------------------------------------------
 			double givingDay = 0;
 			double cancelDay = 0;
-			StockHolidayTransactionDtoInterface stockHolidayTransactionDto = stockHolidayTransactionDao.findForKey(
-					personalId, activateDate, inactivateFlag);
+			StockHolidayTransactionDtoInterface stockHolidayTransactionDto = stockHolidayTransactionDao
+				.findForKey(personalId, activateDate, inactivateFlag);
 			if (null != stockHolidayTransactionDto) {
 				givingDay += stockHolidayTransactionDto.getGivingDay();
 				cancelDay += stockHolidayTransactionDto.getCancelDay();

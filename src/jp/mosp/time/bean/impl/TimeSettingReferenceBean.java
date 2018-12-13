@@ -20,19 +20,26 @@ package jp.mosp.time.bean.impl;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.base.MospParams;
+import jp.mosp.framework.constant.MospConst;
 import jp.mosp.framework.utils.DateUtility;
+import jp.mosp.framework.utils.MospUtility;
 import jp.mosp.platform.base.PlatformBean;
 import jp.mosp.time.base.TimeBean;
 import jp.mosp.time.bean.ApplicationReferenceBeanInterface;
 import jp.mosp.time.bean.TimeSettingReferenceBeanInterface;
 import jp.mosp.time.constant.TimeMessageConst;
+import jp.mosp.time.dao.settings.LimitStandardDaoInterface;
 import jp.mosp.time.dao.settings.TimeSettingDaoInterface;
 import jp.mosp.time.dto.settings.ApplicationDtoInterface;
+import jp.mosp.time.dto.settings.LimitStandardDtoInterface;
 import jp.mosp.time.dto.settings.TimeSettingDtoInterface;
+import jp.mosp.time.entity.TimeSettingEntityInterface;
 
 /**
  * 勤怠設定参照クラス。
@@ -43,6 +50,11 @@ public class TimeSettingReferenceBean extends TimeBean implements TimeSettingRef
 	 * 勤怠設定管理DAO
 	 */
 	private TimeSettingDaoInterface				dao;
+	
+	/**
+	 * 限度基準管理DAO
+	 */
+	private LimitStandardDaoInterface			limitStandardDao;
 	
 	private ApplicationReferenceBeanInterface	applicationReference;
 	
@@ -66,6 +78,7 @@ public class TimeSettingReferenceBean extends TimeBean implements TimeSettingRef
 	@Override
 	public void initBean() throws MospException {
 		dao = (TimeSettingDaoInterface)createDao(TimeSettingDaoInterface.class);
+		limitStandardDao = (LimitStandardDaoInterface)createDao(LimitStandardDaoInterface.class);
 		applicationReference = (ApplicationReferenceBeanInterface)createBean(ApplicationReferenceBeanInterface.class);
 	}
 	
@@ -241,4 +254,92 @@ public class TimeSettingReferenceBean extends TimeBean implements TimeSettingRef
 		// プルダウン用配列取得(略称)
 		return getSelectArray(targetDate, needBlank, false, false);
 	}
+	
+	@Override
+	public boolean isProspectsMonth(int targetMonth, String prospectsMonths) {
+		// 未設定
+		if (prospectsMonths == null) {
+			return false;
+			
+		}
+		// 見込月配列
+		String[] aryMonths = MospUtility.split(prospectsMonths, MospConst.APP_PROPERTY_SEPARATOR);
+		for (String month : aryMonths) {
+			// 見込月であるか判定
+			if (month.equals(String.valueOf(targetMonth))) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	@Override
+	public boolean isProspectsMonth(Date targetDate, String prospectsMonths) {
+		// 対象の月を取得
+		int targetMonth = DateUtility.getMonth(targetDate);
+		return isProspectsMonth(targetMonth, prospectsMonths);
+	}
+	
+	@Override
+	public String getPerformanceInputModeString() {
+		return mospParams.getName("Performance", "Input", "Medium");
+	}
+	
+	@Override
+	public TimeSettingEntityInterface getEntity(String workSettingCode, Date targetDate) throws MospException {
+		//  勤怠設定エンティティ
+		return getEntity(dao.findForInfo(workSettingCode, targetDate));
+	}
+	
+	@Override
+	public TimeSettingEntityInterface getEntityForKey(String workSettingCode, Date activateDate) throws MospException {
+		//  勤怠設定エンティティ
+		return getEntity(dao.findForKey(workSettingCode, activateDate));
+	}
+	
+	@Override
+	public TimeSettingEntityInterface getEntity(TimeSettingDtoInterface dto) throws MospException {
+		// 勤怠設定エンティティを準備
+		TimeSettingEntityInterface entity = (TimeSettingEntityInterface)createObject(TimeSettingEntityInterface.class);
+		// 勤怠設定エンティティに勤怠設定情報を設定
+		entity.setTimeSettingDto(dto);
+		// 勤怠設定情報が存在しない場合
+		if (entity.isExist() == false) {
+			// 空のエンティティを取得
+			return entity;
+		}
+		// 勤怠設定コード及び有効日を取得
+		String workSettingCode = dto.getWorkSettingCode();
+		Date activateDate = dto.getActivateDate();
+		// 勤怠設定エンティティに限度基準情報群を設定
+		entity.setLimitStandardDtos(getLimitStandards(workSettingCode, activateDate));
+		// 勤怠設定エンティティを取得
+		return entity;
+	}
+	
+	/**
+	 * 限度基準情報群(キー：期間)を取得する。<br>
+	 * @param workSettingCode 勤怠設定コード
+	 * @param activateDate    有効日
+	 * @return 限度基準情報群(キー：期間)
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	protected Map<String, LimitStandardDtoInterface> getLimitStandards(String workSettingCode, Date activateDate)
+			throws MospException {
+		// 限度基準情報群(キー：期間)を準備
+		Map<String, LimitStandardDtoInterface> limits = new HashMap<String, LimitStandardDtoInterface>();
+		// 勤怠設定コードか有効日が指定されていない場合
+		if (MospUtility.isEmpty(workSettingCode) || activateDate == null) {
+			// 処理無し
+			return limits;
+		}
+		// 限度基準情報毎に処理
+		for (LimitStandardDtoInterface limit : limitStandardDao.findForSearch(workSettingCode, activateDate)) {
+			// 限度基準情報群(キー：期間)に設定
+			limits.put(limit.getTerm(), limit);
+		}
+		// 限度基準情報群(キー：期間)を取得
+		return limits;
+	}
+	
 }

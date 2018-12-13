@@ -222,6 +222,29 @@ public abstract class TimeApplicationBean extends TimeBean {
 	
 	/**
 	 * 対象個人ID及び対象日付で設定有給休暇情報を取得し、設定する。<br>
+	 * 取得できない場合はエラーメッセージを追加する。<br>
+	 * @param personalId 対象個人ID
+	 * @param targetDate 対象日付
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	protected void setPaidHolidaySettings(String personalId, Date targetDate) throws MospException {
+		// 対象日付における取得対象個人IDの設定適用情報を取得
+		setApplicationSettings(personalId, targetDate);
+		if (mospParams.hasErrorMessage()) {
+			return;
+		}
+		// 対象日付における有給休暇情報を取得
+		paidHolidayDto = paidHolidayRefer.getPaidHolidayInfo(applicationDto.getPaidHolidayCode(), targetDate);
+		// 有給休暇マスタの存在チェック
+		paidHolidayRefer.chkExistPaidHoliday(paidHolidayDto, targetDate);
+		// 有給休暇情報確認
+		if (mospParams.hasErrorMessage()) {
+			return;
+		}
+	}
+	
+	/**
+	 * 対象個人ID及び対象日付で設定有給休暇情報を取得し、設定する。<br>
 	 * @param personalId 対象個人ID
 	 * @param targetDate 対象日付
 	 * @return 取得結果(true：取得成功、false：取得失敗)

@@ -23,26 +23,35 @@ import jp.mosp.platform.bean.file.ExportFieldReferenceBeanInterface;
 import jp.mosp.platform.bean.file.ExportReferenceBeanInterface;
 import jp.mosp.platform.bean.file.ExportSearchBeanInterface;
 import jp.mosp.platform.bean.file.HumanExportBeanInterface;
+import jp.mosp.platform.bean.file.HumanImportBeanInterface;
 import jp.mosp.platform.bean.file.ImportFieldReferenceBeanInterface;
 import jp.mosp.platform.bean.file.ImportReferenceBeanInterface;
 import jp.mosp.platform.bean.file.ImportSearchBeanInterface;
 import jp.mosp.platform.bean.file.SectionExportBeanInterface;
 import jp.mosp.platform.bean.file.UserExportBeanInterface;
+import jp.mosp.platform.bean.file.UserExtraRoleExportBeanInterface;
+import jp.mosp.platform.bean.human.AccountReferenceBeanInterface;
+import jp.mosp.platform.bean.human.AddressReferenceBeanInterface;
 import jp.mosp.platform.bean.human.ConcurrentReferenceBeanInterface;
+import jp.mosp.platform.bean.human.EmployeeNumberingBeanInterface;
 import jp.mosp.platform.bean.human.EntranceReferenceBeanInterface;
 import jp.mosp.platform.bean.human.HumanArrayReferenceBeanInterface;
 import jp.mosp.platform.bean.human.HumanBinaryArrayReferenceBeanInterface;
 import jp.mosp.platform.bean.human.HumanBinaryHistoryReferenceBeanInterface;
 import jp.mosp.platform.bean.human.HumanBinaryNormalReferenceBeanInterface;
 import jp.mosp.platform.bean.human.HumanHistoryReferenceBeanInterface;
+import jp.mosp.platform.bean.human.HumanInfoExtraBeanInterface;
 import jp.mosp.platform.bean.human.HumanNormalReferenceBeanInterface;
 import jp.mosp.platform.bean.human.HumanReferenceBeanInterface;
 import jp.mosp.platform.bean.human.HumanSearchBeanInterface;
+import jp.mosp.platform.bean.human.PhoneReferenceBeanInterface;
 import jp.mosp.platform.bean.human.RetirementReferenceBeanInterface;
 import jp.mosp.platform.bean.human.SuspensionReferenceBeanInterface;
 import jp.mosp.platform.bean.message.MessageReferenceBeanInterface;
 import jp.mosp.platform.bean.message.MessageSearchBeanInterface;
-import jp.mosp.platform.bean.portal.HolidayBeanInterface;
+import jp.mosp.platform.bean.portal.PreActionBeanInterface;
+import jp.mosp.platform.bean.system.BankBaseReferenceBeanInterface;
+import jp.mosp.platform.bean.system.BankBranchReferenceBeanInterface;
 import jp.mosp.platform.bean.system.EmploymentContractReferenceBeanInterface;
 import jp.mosp.platform.bean.system.EmploymentContractSearchBeanInterface;
 import jp.mosp.platform.bean.system.GeneralReferenceBeanInterface;
@@ -50,12 +59,15 @@ import jp.mosp.platform.bean.system.IcCardReferenceBeanInterface;
 import jp.mosp.platform.bean.system.IcCardSearchBeanInterface;
 import jp.mosp.platform.bean.system.NamingReferenceBeanInterface;
 import jp.mosp.platform.bean.system.NamingSearchBeanInterface;
+import jp.mosp.platform.bean.system.PlatformMasterBeanInterface;
 import jp.mosp.platform.bean.system.PositionReferenceBeanInterface;
 import jp.mosp.platform.bean.system.PositionSearchBeanInterface;
+import jp.mosp.platform.bean.system.PostalCodeReferenceBeanInterface;
 import jp.mosp.platform.bean.system.ReceptionIcCardReferenceBeanInterface;
 import jp.mosp.platform.bean.system.RoleReferenceBeanInterface;
 import jp.mosp.platform.bean.system.SectionReferenceBeanInterface;
 import jp.mosp.platform.bean.system.SectionSearchBeanInterface;
+import jp.mosp.platform.bean.system.UserExtraRoleReferenceBeanInterface;
 import jp.mosp.platform.bean.system.UserMasterReferenceBeanInterface;
 import jp.mosp.platform.bean.system.UserMasterSearchBeanInterface;
 import jp.mosp.platform.bean.system.WorkPlaceReferenceBeanInterface;
@@ -92,6 +104,11 @@ public class ReferenceBeanHandler extends BaseBeanHandler implements ReferenceBe
 	}
 	
 	@Override
+	public UserExtraRoleReferenceBeanInterface userExtraRole() throws MospException {
+		return (UserExtraRoleReferenceBeanInterface)createBean(UserExtraRoleReferenceBeanInterface.class);
+	}
+	
+	@Override
 	public SectionReferenceBeanInterface section() throws MospException {
 		return (SectionReferenceBeanInterface)createBean(SectionReferenceBeanInterface.class);
 	}
@@ -109,6 +126,21 @@ public class ReferenceBeanHandler extends BaseBeanHandler implements ReferenceBe
 	@Override
 	public NamingReferenceBeanInterface naming() throws MospException {
 		return (NamingReferenceBeanInterface)createBean(NamingReferenceBeanInterface.class);
+	}
+	
+	@Override
+	public PostalCodeReferenceBeanInterface postalCode() throws MospException {
+		return (PostalCodeReferenceBeanInterface)createBean(PostalCodeReferenceBeanInterface.class);
+	}
+	
+	@Override
+	public BankBaseReferenceBeanInterface bankBase() throws MospException {
+		return (BankBaseReferenceBeanInterface)createBean(BankBaseReferenceBeanInterface.class);
+	}
+	
+	@Override
+	public BankBranchReferenceBeanInterface bankBranch() throws MospException {
+		return (BankBranchReferenceBeanInterface)createBean(BankBranchReferenceBeanInterface.class);
 	}
 	
 	@Override
@@ -139,6 +171,21 @@ public class ReferenceBeanHandler extends BaseBeanHandler implements ReferenceBe
 	@Override
 	public ConcurrentReferenceBeanInterface concurrent() throws MospException {
 		return (ConcurrentReferenceBeanInterface)createBean(ConcurrentReferenceBeanInterface.class);
+	}
+	
+	@Override
+	public AddressReferenceBeanInterface address() throws MospException {
+		return (AddressReferenceBeanInterface)createBean(AddressReferenceBeanInterface.class);
+	}
+	
+	@Override
+	public PhoneReferenceBeanInterface phone() throws MospException {
+		return (PhoneReferenceBeanInterface)createBean(PhoneReferenceBeanInterface.class);
+	}
+	
+	@Override
+	public AccountReferenceBeanInterface account() throws MospException {
+		return (AccountReferenceBeanInterface)createBean(AccountReferenceBeanInterface.class);
 	}
 	
 	@Override
@@ -263,7 +310,8 @@ public class ReferenceBeanHandler extends BaseBeanHandler implements ReferenceBe
 	
 	@Override
 	public RouteApplicationReferenceSearchBeanInterface routeApplicationReferenceSearch() throws MospException {
-		return (RouteApplicationReferenceSearchBeanInterface)createBean(RouteApplicationReferenceSearchBeanInterface.class);
+		return (RouteApplicationReferenceSearchBeanInterface)createBean(
+				RouteApplicationReferenceSearchBeanInterface.class);
 	}
 	
 	@Override
@@ -327,13 +375,13 @@ public class ReferenceBeanHandler extends BaseBeanHandler implements ReferenceBe
 	}
 	
 	@Override
-	public SectionExportBeanInterface sectionExport() throws MospException {
-		return (SectionExportBeanInterface)createBean(SectionExportBeanInterface.class);
+	public UserExtraRoleExportBeanInterface userExtraRoleExport() throws MospException {
+		return (UserExtraRoleExportBeanInterface)createBean(UserExtraRoleExportBeanInterface.class);
 	}
 	
 	@Override
-	public HolidayBeanInterface holiday() throws MospException {
-		return (HolidayBeanInterface)createBean(HolidayBeanInterface.class);
+	public SectionExportBeanInterface sectionExport() throws MospException {
+		return (SectionExportBeanInterface)createBean(SectionExportBeanInterface.class);
 	}
 	
 	@Override
@@ -354,6 +402,31 @@ public class ReferenceBeanHandler extends BaseBeanHandler implements ReferenceBe
 	@Override
 	public ReceptionIcCardReferenceBeanInterface receptionIcCard() throws MospException {
 		return (ReceptionIcCardReferenceBeanInterface)createBean(ReceptionIcCardReferenceBeanInterface.class);
+	}
+	
+	@Override
+	public EmployeeNumberingBeanInterface employeeNumbering() throws MospException {
+		return (EmployeeNumberingBeanInterface)createBean(EmployeeNumberingBeanInterface.class);
+	}
+	
+	@Override
+	public HumanInfoExtraBeanInterface humanInfoExtra(String className) throws MospException {
+		return (HumanInfoExtraBeanInterface)createBean(className);
+	}
+	
+	@Override
+	public HumanImportBeanInterface humanImport() throws MospException {
+		return (HumanImportBeanInterface)createBean(HumanImportBeanInterface.class);
+	}
+	
+	@Override
+	public PreActionBeanInterface preAction() throws MospException {
+		return (PreActionBeanInterface)createBean(PreActionBeanInterface.class);
+	}
+	
+	@Override
+	public PlatformMasterBeanInterface master() throws MospException {
+		return (PlatformMasterBeanInterface)createBean(PlatformMasterBeanInterface.class);
 	}
 	
 }

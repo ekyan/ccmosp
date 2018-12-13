@@ -47,4 +47,27 @@ public interface ScheduleUtilBeanInterface {
 	 */
 	String getScheduledWorkTypeCode(ApplicationDtoInterface dto, Date targetDate) throws MospException;
 	
+	/**
+	 * 対象個人IDの、対象日における、カレンダに登録されている勤務形態コードを取得する。<br>
+	 * 振替休日、振出・休出申請、勤務形態変更申請、時差出勤申請を考慮する。<br>
+	 * @param personalId 個人ID
+	 * @param targetDate 対象日
+	 * @param useRequest 申請要否(true：要、false：否)
+	 * @return 勤務形態コード
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	String getScheduledWorkTypeCode(String personalId, Date targetDate, boolean useRequest) throws MospException;
+	
+	/**
+	 * 対象個人IDの、対象日における、カレンダに登録されている勤務形態コードを取得する。<br>
+	 * 振替休日、振出・休出申請、勤務形態変更申請、時差出勤申請を考慮する。<br>
+	 * @param personalId 個人ID
+	 * @param targetDate 対象日
+	 * @param requestUtil 申請ユーティリティ
+	 * @return 勤務形態コード
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	String getScheduledWorkTypeCode(String personalId, Date targetDate, RequestUtilBeanInterface requestUtil)
+			throws MospException;
+	
 }

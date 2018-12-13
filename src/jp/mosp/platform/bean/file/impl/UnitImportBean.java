@@ -41,7 +41,7 @@ public abstract class UnitImportBean extends PlatformFileBean implements ImportB
 	/**
 	 * ユニット情報登録クラス。<br>
 	 */
-	protected ApprovalUnitRegistBeanInterface	regist;
+	protected ApprovalUnitRegistBeanInterface regist;
 	
 	
 	/**
@@ -153,7 +153,7 @@ public abstract class UnitImportBean extends PlatformFileBean implements ImportB
 			throws MospException {
 		// ユニット情報(DTO)準備
 		ApprovalUnitDtoInterface dto = regist.getInitDto();
-		// 登録情報の内容を取得(登録情報に含まれない場合はnull(数値の場合は0))
+		// 登録情報の内容を取得(登録情報に含まれない場合は空白(数値の場合は0))
 		String unitCode = getFieldValue(PfmApprovalUnitDao.COL_UNIT_CODE, fieldList, data);
 		Date activateDate = getDateFieldValue(PfmApprovalUnitDao.COL_ACTIVATE_DATE, fieldList, data);
 		String unitName = getFieldValue(PfmApprovalUnitDao.COL_UNIT_NAME, fieldList, data);

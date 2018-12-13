@@ -61,10 +61,20 @@ public class AttendanceListDto extends BaseDto {
 	private String				sectionName;
 	
 	/**
+	 * 勤務地名称(ヘッダ項目)。
+	 */
+	private String				workPlaceName;
+	
+	/**
 	 * 帳票アラート(ヘッダ項目)。<br>
 	 * 出勤簿、予定簿等のアラートを保持する。<br>
 	 */
 	private String				alert;
+	
+	/**
+	 * 帳票社員コード項目タイトル(ヘッダ項目)。<br>
+	 */
+	private String				employeeCodeTitle;
 	
 	/**
 	 * 帳票残業項目タイトル(ヘッダ項目)。<br>
@@ -120,6 +130,16 @@ public class AttendanceListDto extends BaseDto {
 	 * 退勤時刻。
 	 */
 	private Date				endTime;
+	
+	/**
+	 * 始業打刻時刻
+	 */
+	private Date				startRecordTime;
+	
+	/**
+	 * 終業打刻時刻
+	 */
+	private Date				EndRecordTime;
 	
 	/**
 	 * 勤務時間(分)。
@@ -212,6 +232,16 @@ public class AttendanceListDto extends BaseDto {
 	private Integer				holidayWorkTime;
 	
 	/**
+	 * 無休時短時間(分)。
+	 */
+	private Integer				shortUnpaid;
+	
+	/**
+	 * カット([外出]+[遅早]+[無給時短時間])
+	 */
+	private Integer				cat;
+	
+	/**
 	 * 申請情報。
 	 */
 	private String				applicationInfo;
@@ -266,6 +296,12 @@ public class AttendanceListDto extends BaseDto {
 	 * チェックボックス要否(勤怠一覧用)。
 	 */
 	private boolean				needCheckbox;
+	
+	/**
+	 * 休日フラグ(出勤簿用)。<br>
+	 * カレンダで所定休日か法定休日が設定されている場合、true。<br>
+	 */
+	private boolean				holidayFlag;
 	
 	/**
 	 * 勤務時間合計(分)。
@@ -328,6 +364,16 @@ public class AttendanceListDto extends BaseDto {
 	private Integer				holidayWorkTimeTotal;
 	
 	/**
+	 * 無休時短時間合計(分)。
+	 */
+	private Integer				shortUnpaidTotal;
+	
+	/**
+	 * カット([外出]+[遅早]+[無給時短時間])合計(分)。
+	 */
+	private Integer				catTotal;
+	
+	/**
 	 * 出勤回数。
 	 */
 	private Integer				workDays;
@@ -368,6 +414,11 @@ public class AttendanceListDto extends BaseDto {
 	private Integer				legalHolidays;
 	
 	/**
+	 * 休日回数(法定休日 + 所定休日)。
+	 */
+	private Integer				holidays;
+	
+	/**
 	 * 振替休日回数。
 	 */
 	private Float				substituteHolidays;
@@ -398,9 +449,19 @@ public class AttendanceListDto extends BaseDto {
 	private Float				specialHolidays;
 	
 	/**
+	 * 特別休暇時間数。
+	 */
+	private Float				specialHolidayHours;
+	
+	/**
 	 * その他休暇回数。
 	 */
 	private Float				otherHolidays;
+	
+	/**
+	 * その他休暇時間数。
+	 */
+	private Float				otherHolidayHours;
 	
 	/**
 	 * 代休回数。
@@ -411,6 +472,11 @@ public class AttendanceListDto extends BaseDto {
 	 * 欠勤回数。
 	 */
 	private Float				absenceDays;
+	
+	/**
+	 * 欠勤時間数。
+	 */
+	private Float				absenceHours;
 	
 	/**
 	 * 分単位休暇A時間合計(分)。
@@ -443,9 +509,19 @@ public class AttendanceListDto extends BaseDto {
 	private String				startTimeString;
 	
 	/**
+	 * 出勤時刻配色。
+	 */
+	private String				startTimeStyle;
+	
+	/**
 	 * 退勤時刻(表示用)。
 	 */
 	private String				endTimeString;
+	
+	/**
+	 * 退勤時刻配色。
+	 */
+	private String				endTimeStyle;
 	
 	/**
 	 * 勤務時間(表示用)。
@@ -471,6 +547,16 @@ public class AttendanceListDto extends BaseDto {
 	 * 休憩時間(表示用)。<br>
 	 */
 	private String				restTimeString;
+	
+	/**
+	 * 始業打刻時間(表示用)
+	 */
+	private String				startRecordTimeString;
+	
+	/**
+	 * 終業打刻時間(表示用)
+	 */
+	private String				endRecordTimeString;
 	
 	/**
 	 * 私用外出時間(表示用)。<br>
@@ -511,6 +597,16 @@ public class AttendanceListDto extends BaseDto {
 	 * 休日勤務時間(表示用)。
 	 */
 	private String				holidayWorkTimeString;
+	
+	/**
+	 * 無休時短時間(表示用)
+	 */
+	private String				shortUnpaidString;
+	
+	/**
+	 * カット(表示用)
+	 */
+	private String				catString;
 	
 	/**
 	 * 勤務時間合計(表示用)。
@@ -573,6 +669,11 @@ public class AttendanceListDto extends BaseDto {
 	private String				holidayWorkTimeTotalString;
 	
 	/**
+	 * カット合計(表示用)。
+	 */
+	private String				catTotalString;
+	
+	/**
 	 * 出勤回数(表示用)。
 	 */
 	private String				workDaysString;
@@ -601,6 +702,11 @@ public class AttendanceListDto extends BaseDto {
 	 * 休日勤務時間回数(表示用)。
 	 */
 	private String				lateNightDaysString;
+	
+	/**
+	 * 無休時短時間合計(表示用)
+	 */
+	private String				shortUnpaidTotalString;
 	
 	/**
 	 * 所定代休発生日数。
@@ -641,6 +747,11 @@ public class AttendanceListDto extends BaseDto {
 	 * 法定休日回数(表示用)。
 	 */
 	private String				legalHolidaysString;
+	
+	/**
+	 * 休日回数(法定休日＋所定休日)(表示用)。
+	 */
+	private String				holidayString;
 	
 	/**
 	 * 振替休日回数(表示用)。
@@ -773,6 +884,20 @@ public class AttendanceListDto extends BaseDto {
 	}
 	
 	/**
+	 * @return workPlaceName
+	 */
+	public String getWorkPlaceName() {
+		return workPlaceName;
+	}
+	
+	/**
+	 * @param workPlaceName セットする workPlaceName
+	 */
+	public void setWorkPlaceName(String workPlaceName) {
+		this.workPlaceName = workPlaceName;
+	}
+	
+	/**
 	 * @return alert
 	 */
 	public String getAlert() {
@@ -784,6 +909,20 @@ public class AttendanceListDto extends BaseDto {
 	 */
 	public void setAlert(String alert) {
 		this.alert = alert;
+	}
+	
+	/**
+	 * @return employeeCodeTitle
+	 */
+	public String getEmployeeCodeTitle() {
+		return employeeCodeTitle;
+	}
+	
+	/**
+	 * @param employeeCodeTitle セットする employeeCodeTitle
+	 */
+	public void setEmployeeCodeTitle(String employeeCodeTitle) {
+		this.employeeCodeTitle = employeeCodeTitle;
 	}
 	
 	/**
@@ -924,6 +1063,34 @@ public class AttendanceListDto extends BaseDto {
 	 */
 	public void setEndTime(Date endTime) {
 		this.endTime = getDateClone(endTime);
+	}
+	
+	/**
+	 * @return startRecordTime
+	 */
+	public Date getStartRecordTime() {
+		return getDateClone(startRecordTime);
+	}
+	
+	/**
+	 * @param startRecordTime セットする startRecordTime
+	 */
+	public void setStartRecordTime(Date startRecordTime) {
+		this.startRecordTime = getDateClone(startRecordTime);
+	}
+	
+	/**
+	 * @return EndRecordTime
+	 */
+	public Date getEndRecordTime() {
+		return getDateClone(EndRecordTime);
+	}
+	
+	/**
+	 * @param EndRecordTime セットする EndRecordTime
+	 */
+	public void setEndRecordTime(Date EndRecordTime) {
+		this.EndRecordTime = getDateClone(EndRecordTime);
 	}
 	
 	/**
@@ -1151,6 +1318,34 @@ public class AttendanceListDto extends BaseDto {
 	}
 	
 	/**
+	 * @return shortUnpaid
+	 */
+	public Integer getShortUnpaid() {
+		return shortUnpaid;
+	}
+	
+	/**
+	 * @param shortUnpaid セットする shortUnpaid
+	 */
+	public void setShortUnpaid(Integer shortUnpaid) {
+		this.shortUnpaid = shortUnpaid;
+	}
+	
+	/**
+	 * @return cat
+	 */
+	public Integer getCat() {
+		return cat;
+	}
+	
+	/**
+	 * @param cat セットする cat
+	 */
+	public void setCat(Integer cat) {
+		this.cat = cat;
+	}
+	
+	/**
 	 * @return applicationInfo
 	 */
 	public String getApplicationInfo() {
@@ -1302,6 +1497,20 @@ public class AttendanceListDto extends BaseDto {
 	 */
 	public void setNeedCheckbox(boolean needCheckbox) {
 		this.needCheckbox = needCheckbox;
+	}
+	
+	/**
+	 * @return holidayFlag
+	 */
+	public boolean isHolidayFlag() {
+		return holidayFlag;
+	}
+	
+	/**
+	 * @param holidayFlag セットする holidayFlag
+	 */
+	public void setHolidayFlag(boolean holidayFlag) {
+		this.holidayFlag = holidayFlag;
 	}
 	
 	/**
@@ -1473,6 +1682,34 @@ public class AttendanceListDto extends BaseDto {
 	}
 	
 	/**
+	 * @return shortUnpaidTotal。
+	 */
+	public Integer getShortUnpaidTotal() {
+		return shortUnpaidTotal;
+	}
+	
+	/**
+	 * @param shortUnpaidTotal セットする shortUnpaidTotal
+	 */
+	public void setShortUnpaidTotal(Integer shortUnpaidTotal) {
+		this.shortUnpaidTotal = shortUnpaidTotal;
+	}
+	
+	/**
+	 * @return catTotal
+	 */
+	public Integer getCatTotal() {
+		return catTotal;
+	}
+	
+	/**
+	 * @param catTotal セットする catTotal
+	 */
+	public void setCatTotal(Integer catTotal) {
+		this.catTotal = catTotal;
+	}
+	
+	/**
 	 * @return workDays
 	 */
 	public Integer getWorkDays() {
@@ -1585,6 +1822,20 @@ public class AttendanceListDto extends BaseDto {
 	}
 	
 	/**
+	 * @return holidays
+	 */
+	public Integer getHolidays() {
+		return holidays;
+	}
+	
+	/**
+	 * @param holidays セットする holidays
+	 */
+	public void setHolidays(Integer holidays) {
+		this.holidays = holidays;
+	}
+	
+	/**
 	 * @return substituteHolidays
 	 */
 	public Float getSubstituteHolidays() {
@@ -1669,6 +1920,20 @@ public class AttendanceListDto extends BaseDto {
 	}
 	
 	/**
+	 * @return specialHolidayHours
+	 */
+	public Float getSpecialHolidayHours() {
+		return specialHolidayHours;
+	}
+	
+	/**
+	 * @param specialHolidayHours セットする specialHolidayHours
+	 */
+	public void setSpecialHolidayHours(Float specialHolidayHours) {
+		this.specialHolidayHours = specialHolidayHours;
+	}
+	
+	/**
 	 * @return otherHolidays
 	 */
 	public Float getOtherHolidays() {
@@ -1680,6 +1945,20 @@ public class AttendanceListDto extends BaseDto {
 	 */
 	public void setOtherHolidays(Float otherHolidays) {
 		this.otherHolidays = otherHolidays;
+	}
+	
+	/**
+	 * @param otherHolidayHours セットする otherHolidayHours
+	 */
+	public void setOtherHolidayHours(Float otherHolidayHours) {
+		this.otherHolidayHours = otherHolidayHours;
+	}
+	
+	/**
+	 * @return otherHolidayHours
+	 */
+	public Float getOtherHolidayHours() {
+		return otherHolidayHours;
 	}
 	
 	/**
@@ -1708,6 +1987,20 @@ public class AttendanceListDto extends BaseDto {
 	 */
 	public void setAbsenceDays(Float absenceDays) {
 		this.absenceDays = absenceDays;
+	}
+	
+	/**
+	 * @return absenceHours
+	 */
+	public Float getAbsenceHours() {
+		return absenceHours;
+	}
+	
+	/**
+	 * @param absenceHours セットする absenceHours
+	 */
+	public void setAbsenceHours(Float absenceHours) {
+		this.absenceHours = absenceHours;
 	}
 	
 	/**
@@ -1767,6 +2060,20 @@ public class AttendanceListDto extends BaseDto {
 	}
 	
 	/**
+	 * @return startTimeStyle
+	 */
+	public String getStartTimeStyle() {
+		return startTimeStyle;
+	}
+	
+	/**
+	 * @param startTimeStyle セットする startTimeStyle
+	 */
+	public void setStartTimeStyle(String startTimeStyle) {
+		this.startTimeStyle = startTimeStyle;
+	}
+	
+	/**
 	 * @return endTimeString
 	 */
 	public String getEndTimeString() {
@@ -1778,6 +2085,20 @@ public class AttendanceListDto extends BaseDto {
 	 */
 	public void setEndTimeString(String endTimeString) {
 		this.endTimeString = endTimeString;
+	}
+	
+	/**
+	 * @return endTimeStyle
+	 */
+	public String getEndTimeStyle() {
+		return endTimeStyle;
+	}
+	
+	/**
+	 * @param endTimeStyle セットする endTimeStyle
+	 */
+	public void setEndTimeStyle(String endTimeStyle) {
+		this.endTimeStyle = endTimeStyle;
 	}
 	
 	/**
@@ -1848,6 +2169,34 @@ public class AttendanceListDto extends BaseDto {
 	 */
 	public void setRestTimeString(String restTimeString) {
 		this.restTimeString = restTimeString;
+	}
+	
+	/**
+	 * @return startRecordTimeString
+	 */
+	public String getStartRecordTimeString() {
+		return startRecordTimeString;
+	}
+	
+	/**
+	 * @param startRecordTimeString セットする startRecordTimeString
+	 */
+	public void setStartRecordTimeString(String startRecordTimeString) {
+		this.startRecordTimeString = startRecordTimeString;
+	}
+	
+	/**
+	 * @return endRecordTimeString
+	 */
+	public String getEndRecordTimeString() {
+		return endRecordTimeString;
+	}
+	
+	/**
+	 * @param endRecordTimeString セットする endRecordTimeString
+	 */
+	public void setEndRecordTimeString(String endRecordTimeString) {
+		this.endRecordTimeString = endRecordTimeString;
 	}
 	
 	/**
@@ -1960,6 +2309,34 @@ public class AttendanceListDto extends BaseDto {
 	 */
 	public void setHolidayWorkTimeString(String holidayWorkTimeString) {
 		this.holidayWorkTimeString = holidayWorkTimeString;
+	}
+	
+	/**
+	 * @return shortUnpaidString
+	 */
+	public String getShortUnpaidString() {
+		return shortUnpaidString;
+	}
+	
+	/**
+	 * @param shortUnpaidString セットする shortUnpaidString
+	 */
+	public void setShortUnpaidString(String shortUnpaidString) {
+		this.shortUnpaidString = shortUnpaidString;
+	}
+	
+	/**
+	 * @return catString
+	 */
+	public String getCatString() {
+		return catString;
+	}
+	
+	/**
+	 * @param catString セットする catString
+	 */
+	public void setCatString(String catString) {
+		this.catString = catString;
 	}
 	
 	/**
@@ -2131,6 +2508,20 @@ public class AttendanceListDto extends BaseDto {
 	}
 	
 	/**
+	 * @return catTotalString
+	 */
+	public String getCatTotalString() {
+		return catTotalString;
+	}
+	
+	/**
+	 * @param catTotalString セットする catTotalString
+	 */
+	public void setCatTotalString(String catTotalString) {
+		this.catTotalString = catTotalString;
+	}
+	
+	/**
 	 * @return workDaysString
 	 */
 	public String getWorkDaysString() {
@@ -2198,6 +2589,20 @@ public class AttendanceListDto extends BaseDto {
 	 */
 	public void setHolidayWorkDaysString(String holidayWorkDaysString) {
 		this.holidayWorkDaysString = holidayWorkDaysString;
+	}
+	
+	/**
+	 * @return shortUnpaidTotalString
+	 */
+	public String getShortUnpaidTotalString() {
+		return shortUnpaidTotalString;
+	}
+	
+	/**
+	 * @param shortUnpaidTotalString セットする shortUnpaidTotalString
+	 */
+	public void setShortUnpaidTotalString(String shortUnpaidTotalString) {
+		this.shortUnpaidTotalString = shortUnpaidTotalString;
 	}
 	
 	/**
@@ -2324,6 +2729,20 @@ public class AttendanceListDto extends BaseDto {
 	 */
 	public void setLegalHolidaysString(String legalHolidaysString) {
 		this.legalHolidaysString = legalHolidaysString;
+	}
+	
+	/**
+	 * @return holidayString
+	 */
+	public String getHolidayString() {
+		return holidayString;
+	}
+	
+	/**
+	 * @param holidayString セットする holidayString
+	 */
+	public void setHolidayString(String holidayString) {
+		this.holidayString = holidayString;
 	}
 	
 	/**

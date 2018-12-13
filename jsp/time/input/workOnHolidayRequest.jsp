@@ -25,6 +25,7 @@ errorPage    = "/jsp/common/error.jsp"
 import = "jp.mosp.framework.base.MospParams"
 import = "jp.mosp.framework.constant.MospConst"
 import = "jp.mosp.framework.utils.HtmlUtility"
+import = "jp.mosp.framework.utils.CalendarHtmlUtility"
 import = "jp.mosp.platform.constant.PlatformConst"
 import = "jp.mosp.platform.utils.PlatformUtility"
 import = "jp.mosp.time.comparator.settings.WorkOnHolidayRequestApproverNameComparator"
@@ -32,13 +33,15 @@ import = "jp.mosp.time.comparator.settings.WorkOnHolidayRequestRequestDateCompar
 import = "jp.mosp.time.comparator.settings.WorkOnHolidayRequestRequestTimeComparator"
 import = "jp.mosp.time.comparator.settings.WorkOnHolidayRequestStateComparator"
 import = "jp.mosp.time.comparator.settings.WorkOnHolidayRequestSubstituteDate1Comparator"
-import = "jp.mosp.time.comparator.settings.WorkOnHolidayRequestSubstituteDate2Comparator"
 import = "jp.mosp.time.constant.TimeConst"
 import = "jp.mosp.time.input.action.WorkOnHolidayRequestAction"
 import = "jp.mosp.time.input.vo.WorkOnHolidayRequestVo"
+import = "jp.mosp.framework.utils.CalendarHtmlUtility"
 %><%
 MospParams params = (MospParams)request.getAttribute(MospConst.ATT_MOSP_PARAMS);
 WorkOnHolidayRequestVo vo = (WorkOnHolidayRequestVo)params.getVo();
+boolean isChanging = vo.isModeActivateDateFixed() == false;
+boolean isSubstituteChanging = vo.isModeActivateDateFixed();
 %>
 <div class="ListHeader">
 	<table class="EmployeeLabelTable">
@@ -48,7 +51,7 @@ WorkOnHolidayRequestVo vo = (WorkOnHolidayRequestVo)params.getVo();
 	</table>
 </div>
 <div class="List" id="divEdit">
-	<table class="InputTable">
+	<table class="InputTable" id="workOnHolidayRequest_tblEdit">
 		<tr>
 			<th class="EditTableTh" colspan="4">
 				<jsp:include page="<%= TimeConst.PATH_TIME_APPLY_INFO_JSP %>" flush="false" />
@@ -57,8 +60,9 @@ WorkOnHolidayRequestVo vo = (WorkOnHolidayRequestVo)params.getVo();
 		<tr>
 			<td class="TitleTd"><%= params.getName("GoingWork","Day") %></td>
 			<td class="InputTd" colspan="3">
+				<%= CalendarHtmlUtility.getCalendarDiv(CalendarHtmlUtility.TYPE_DAY, "pltEditRequest", "", "", false, false, isChanging) %>
 				<select class="Number4PullDown" id="pltEditRequestYear" name="pltEditRequestYear">
-					<%= HtmlUtility.getSelectOption(vo.getAryPltEditRequestYear(), vo.getPltEditRequestYear()) %>
+					<%= HtmlUtility.getSelectOption(vo.getAryPltEditRequestYear(), vo.getPltEditRequestYear(), true) %>
 				</select>
 				<%= params.getName("Year") %>
 				<select class="Number2PullDown" id="pltEditRequestMonth" name="pltEditRequestMonth">
@@ -69,7 +73,10 @@ WorkOnHolidayRequestVo vo = (WorkOnHolidayRequestVo)params.getVo();
 					<%= HtmlUtility.getSelectOption(vo.getAryPltEditRequestDay(), vo.getPltEditRequestDay()) %>
 				</select>
 				<%= params.getName("Day") %>
-				<select class="Name4PullDown" id="pltEditSubstitute" name="pltEditSubstitute">
+				<button type="button" class="Name2Button" id="btnRequestDate" onclick="submitForm(event, null, checkDateExtra, '<%= WorkOnHolidayRequestAction.CMD_SET_ACTIVATION_DATE %>');">
+					<%= vo.getModeActivateDate().equals(PlatformConst.MODE_ACTIVATE_DATE_FIXED) ? params.getName("Change") : params.getName("Decision") %>
+				</button>
+				<select class="Name13PullDown" id="pltEditSubstitute" name="pltEditSubstitute">
 					<%= HtmlUtility.getSelectOption(params, TimeConst.CODE_WORKONHOLIDAY_SUBSTITUTE, vo.getPltEditSubstitute(), false) %>
 				</select>&nbsp;
 <%
@@ -81,14 +88,15 @@ if (vo.isModeHalfSubstitute()) {
 <%
 }
 %>
-				<button type="button" class="Name2Button" id="btnRequestDate" onclick="submitForm(event, null, checkDateExtra, '<%= WorkOnHolidayRequestAction.CMD_SET_ACTIVATION_DATE %>');"><%= vo.getModeActivateDate().equals(PlatformConst.MODE_ACTIVATE_DATE_FIXED) ? params.getName("Change") : params.getName("Decision") %></button>
 			</td>
 		</tr>
-		<tr>
-			<td class="TitleTd"><%= params.getName("Transfer","Day") %><!-- <%= params.getName("No1") %>--></td>
-			<td class="InputTd">
+		<tr id="trSubstitute">
+			<td class="TitleTd"><%= params.getName("Application", "Content") %></td>
+			<td class="InputTd" colspan="3">
+				<%= params.getName("Transfer", "Day", "Colon") %><!-- <%= params.getName("No1") %>-->
+				<%= CalendarHtmlUtility.getCalendarDiv(CalendarHtmlUtility.TYPE_DAY, "pltEditSubstitute1", "", "", false, false, isSubstituteChanging) %>
 				<select class="Number4PullDown" id="pltEditSubstitute1Year" name="pltEditSubstitute1Year">
-					<%= HtmlUtility.getSelectOption(vo.getAryPltEditSubstitute1Year(), vo.getPltEditSubstitute1Year()) %>
+					<%= HtmlUtility.getSelectOption(vo.getAryPltEditSubstitute1Year(), vo.getPltEditSubstitute1Year(), true) %>
 				</select>
 				<%= params.getName("Year") %>
 				<select class="Number2PullDown" id="pltEditSubstitute1Month" name="pltEditSubstitute1Month">
@@ -108,9 +116,16 @@ if (vo.isModeHalfSubstitute()) {
 <%
 }
 %>
+				<span id="spanWorkType">
+					<%= params.getName("Change", "Later", "Work", "Form", "ArrowRight") %>
+					<%= HtmlUtility.getSelectTag("WorkTypeFullNamePullDown", "pltEditWorkType", "pltEditWorkType", vo.getPltEditWorkType(), vo.getAryPltEditWorkType(), false) %>
+				</span>
 			</td>
-			<td class="TitleTd"><%= params.getName("Work","Schedule","Moment") %></td>
-			<td class="InputTd">
+		</tr>
+		<tr id="trWorkOnDayOff">
+			<td class="TitleTd"><%= params.getName("Application", "Content") %></td>
+			<td class="InputTd" colspan="3">
+				<%= params.getName("WorkingHoliday", "Schedule", "Moment", "Colon") %>
 				<select class="Number2PullDown" id="pltEditStartHour" name="pltEditStartHour">
 					<%= HtmlUtility.getSelectOption(vo.getAryPltEditStartHour(), vo.getPltEditStartHour()) %>
 				</select>&nbsp;<%= params.getName("Hour") %>
@@ -133,10 +148,17 @@ if (vo.isModeHalfSubstitute()) {
 		</tr>
 	</table>
 	<jsp:include page="<%= TimeConst.PATH_TIME_APPLY_BUTTON_JSP %>" flush="false" />
+<%
+// 承認個人ID利用
+if(!params.isTargetApprovalUnit()){
+%>
 	<jsp:include page="<%= TimeConst.PATH_TIME_APPROVER_PULLDOWN_JSP %>" flush="false" />
+<%
+}
+%>
 </div>
 <div class="List">
-	<table class="InputTable SearchInputTable">
+	<table class="InputTable SearchInputTable" id="workOnHolidayRequest_tblSearch">
 		<tr>
 			<th class="ListTableTh" colspan="6">
 				<span class="TitleTh"><%= params.getName("Search") %></span>
@@ -148,8 +170,8 @@ if (vo.isModeHalfSubstitute()) {
 		<tr>
 			<td class="TitleTd"><%= params.getName("SubstituteAbbr","GoingWorkAbbr","Slash","WorkingHoliday") %></td>
 			<td class="InputTd">
-				<select class="Name4PullDown" id="pltSearchSubstitute" name="pltSearchSubstitute">
-					<%= HtmlUtility.getSelectOption(params, TimeConst.CODE_SUBSTITUTE, vo.getPltSearchSubstitute(), true) %>
+				<select class="Name13PullDown" id="pltSearchSubstitute" name="pltSearchSubstitute">
+					<%= HtmlUtility.getSelectOption(params, TimeConst.CODE_WORKONHOLIDAY_SUBSTITUTE, vo.getPltSearchSubstitute(), true) %>
 				</select>
 			</td>
 			<td class="TitleTd"><%= params.getName("State") %></td>
@@ -160,8 +182,9 @@ if (vo.isModeHalfSubstitute()) {
 			</td>
 			<td class="TitleTd"><%= params.getName("Display","Period") %></td>
 			<td class="InputTd">
+				<%= CalendarHtmlUtility.getCalendarDiv(CalendarHtmlUtility.TYPE_MONTH, "pltSearchRequest", "", "", false, false, true) %>
 				<select class="Number4PullDown" id="pltSearchRequestYear" name="pltSearchRequestYear">
-					<%= HtmlUtility.getSelectOption(vo.getAryPltSearchRequestYear(), vo.getPltSearchRequestYear()) %>
+					<%= HtmlUtility.getSelectOption(vo.getAryPltSearchRequestYear(), vo.getPltSearchRequestYear(), true) %>
 				</select>
 				<%= params.getName("Year") %>
 				<select class="Number2PullDown" id="pltSearchRequestMonth" name="pltSearchRequestMonth">
@@ -181,12 +204,9 @@ if (vo.isModeHalfSubstitute()) {
 			<tr>
 				<th class="ListSelectTh" id="thButton"></th>
 				<th class="ListSortTh" id="thRequestDate"     onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= WorkOnHolidayRequestRequestDateComparator.class.getName() %>'), '<%= WorkOnHolidayRequestAction.CMD_SORT %>')"><%= params.getName("GoingWork","Day") %><%= PlatformUtility.getSortMark(WorkOnHolidayRequestRequestDateComparator.class.getName(), params) %></th>
-				<th class="ListSortTh" id="thRequestTime"     onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= WorkOnHolidayRequestRequestTimeComparator.class.getName() %>'), '<%= WorkOnHolidayRequestAction.CMD_SORT %>')"><%= params.getName("Schedule","Moment") %><%= PlatformUtility.getSortMark(WorkOnHolidayRequestRequestTimeComparator.class.getName(), params) %></th>
+				<th class="ListSortTh" id="thRequestTime"     onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= WorkOnHolidayRequestRequestTimeComparator.class.getName() %>'), '<%= WorkOnHolidayRequestAction.CMD_SORT %>')"><%= params.getName("Schedule") %><%= PlatformUtility.getSortMark(WorkOnHolidayRequestRequestTimeComparator.class.getName(), params) %></th>
 				<th class="ListSelectTh" id="thRequestReason"><%= params.getName("Reason") %></th>
 				<th class="ListSortTh" id="thSubstituteDate1" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= WorkOnHolidayRequestSubstituteDate1Comparator.class.getName() %>'), '<%= WorkOnHolidayRequestAction.CMD_SORT %>')"><%= params.getName("Transfer","Day") %><!-- <%= params.getName("No1") %> --><%= PlatformUtility.getSortMark(WorkOnHolidayRequestSubstituteDate1Comparator.class.getName(), params) %></th>
-<!--
-				<th class="ListSortTh" id="thSubstituteDate2" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= WorkOnHolidayRequestSubstituteDate2Comparator.class.getName() %>'), '<%= WorkOnHolidayRequestAction.CMD_SORT %>')"><%= params.getName("Transfer","Day","No2") %><%= PlatformUtility.getSortMark(WorkOnHolidayRequestSubstituteDate2Comparator.class.getName(), params) %></th>
--->
 				<th class="ListSortTh" id="thState"           onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= WorkOnHolidayRequestStateComparator.class.getName() %>'), '<%= WorkOnHolidayRequestAction.CMD_SORT %>')"><%= params.getName("State") %><%= PlatformUtility.getSortMark(WorkOnHolidayRequestStateComparator.class.getName(), params) %></th>
 				<th class="ListSortTh" id="thApprover"        onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= WorkOnHolidayRequestApproverNameComparator.class.getName() %>'), '<%= WorkOnHolidayRequestAction.CMD_SORT %>')"><%= params.getName("Approver") %><%= PlatformUtility.getSortMark(WorkOnHolidayRequestApproverNameComparator.class.getName(), params) %></th>
 				<th class="ListSelectTh" id="thSelect">

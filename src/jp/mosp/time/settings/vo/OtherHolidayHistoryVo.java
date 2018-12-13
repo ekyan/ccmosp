@@ -231,7 +231,7 @@ public class OtherHolidayHistoryVo extends TimeSettingVo {
 	 */
 	@Override
 	public String[] getCkbSelect() {
-		return ckbSelect;
+		return getStringArrayClone(ckbSelect);
 	}
 	
 	/**
@@ -239,7 +239,7 @@ public class OtherHolidayHistoryVo extends TimeSettingVo {
 	 */
 	@Override
 	public void setCkbSelect(String[] ckbSelect) {
-		this.ckbSelect = ckbSelect;
+		this.ckbSelect = getStringArrayClone(ckbSelect);
 	}
 	
 	/**
@@ -520,14 +520,14 @@ public class OtherHolidayHistoryVo extends TimeSettingVo {
 	 * @return aryLblHolidayCode
 	 */
 	public String[] getAryLblHolidayCode() {
-		return aryLblHolidayCode;
+		return getStringArrayClone(aryLblHolidayCode);
 	}
 	
 	/**
 	 * @param aryLblHolidayCode セットする aryLblHolidayCode
 	 */
 	public void setAryLblHolidayCode(String[] aryLblHolidayCode) {
-		this.aryLblHolidayCode = aryLblHolidayCode;
+		this.aryLblHolidayCode = getStringArrayClone(aryLblHolidayCode);
 	}
 	
 	/**

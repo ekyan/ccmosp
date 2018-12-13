@@ -15,9 +15,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-/**
- * 
- */
 package jp.mosp.time.dto.settings.impl;
 
 import java.util.Date;
@@ -30,9 +27,6 @@ import jp.mosp.time.dto.settings.PaidHolidayDtoInterface;
  */
 public class TmmPaidHolidayDto extends BaseDto implements PaidHolidayDtoInterface {
 	
-	/**
-	 * 
-	 */
 	private static final long	serialVersionUID	= -5031610009978139473L;
 	
 	/**
@@ -107,6 +101,10 @@ public class TmmPaidHolidayDto extends BaseDto implements PaidHolidayDtoInterfac
 	 * 半日単位取得。
 	 */
 	private int					halfDayUnit;
+	/**
+	 * 休日出勤取扱。
+	 */
+	private int					workOnHolidayCalc;
 	/**
 	 * 基準日(月)。
 	 */
@@ -371,6 +369,16 @@ public class TmmPaidHolidayDto extends BaseDto implements PaidHolidayDtoInterfac
 	@Override
 	public void setTimeAcquisitionLimitTimes(int timeAcquisitionLimitTimes) {
 		this.timeAcquisitionLimitTimes = timeAcquisitionLimitTimes;
+	}
+	
+	@Override
+	public int getWorkOnHolidayCalc() {
+		return workOnHolidayCalc;
+	}
+	
+	@Override
+	public void setWorkOnHolidayCalc(int workOnHolidayCalc) {
+		this.workOnHolidayCalc = workOnHolidayCalc;
 	}
 	
 }

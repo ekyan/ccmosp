@@ -78,114 +78,122 @@
 }
 
 /* === 修正情報テーブル項目名称 === */
-#tblCorrection .TitleTd {
+#attendanceCard_tblCorrection .TitleTd {
 	width: 200px;
 }
 
 /* === 修正情報テーブル項目内容 === */
-#tblCorrection .InputTd {
+#attendanceCard_tblCorrection .InputTd {
 	width: 680px;
 }
 
 /* === 勤怠情報テーブル項目名称 === */
-#tblAttendance .TitleTd {
+#attendanceCard_tblAttendance .TitleTd {
 	width: 105px;
 }
 
 /* === 勤怠情報テーブル項目内容 === */
-#tblAttendance .InputTd {
+#attendanceCard_tblAttendance .InputTd {
 	width: 170px;
 }
 
 /* === 休憩情報テーブル項目名称 === */
-#tblRest .TitleTd {
+#attendanceCard_tblRest .TitleTd {
 	width: 120px;
 }
 
 /* === 休憩情報テーブル項目内容 === */
-#tblRest .InputTd {
+#attendanceCard_tblRest .InputTd {
 	width: 230px;
 }
 
 /* === 休憩情報テーブル項目名称 === */
-#tblRest #tdRestTitle1 {
+#attendanceCard_tblRest #tdRestTitle1 {
 	width: 85px;
 }
 
 /* === 休憩情報テーブル項目名称 === */
-#tblRest #tdRestTitle2 {
+#attendanceCard_tblRest #tdRestTitle2 {
 	width: 85px;
 }
 
 /* === 休憩情報テーブル項目内容 === */
-#tblRest #tdRestInput {
+#attendanceCard_tblRest #tdRestInput {
 	width: 85px;
 }
 
+/* === 休憩情報テーブル項目内容 === */
+#tdPublicGoingOutTitle {
+	border-top: 1px solid black;
+}
+
+/* === 休憩情報テーブル項目内容 === */
+#tdPublicGoingOutInput {
+	border-top: 1px solid black;
+}
+
 /* === 分単位休暇Aテーブル項目名称 === */
-#tblMinutelyHolidayA #tdMinutelyHolidayATitle {
+#attendanceCard_tblMinutelyHolidayA #tdMinutelyHolidayATitle {
 	width: 120px;
 }
 
 /* === 分単位休暇Bテーブル項目名称 === */
-#tblMinutelyHolidayB #tdMinutelyHolidayBTitle {
+#attendanceCard_tblMinutelyHolidayB #tdMinutelyHolidayBTitle {
 	width: 120px;
 }
 
 /* === 分単位休暇Aテーブル項目内容 === */
-#tblMinutelyHolidayA #tdMinutelyHolidayAInput {
+#attendanceCard_tblMinutelyHolidayA #tdMinutelyHolidayAInput {
 	width: 86px;
 }
 
 /* === 分単位休暇Bテーブル項目内容 === */
-#tblMinutelyHolidayB #tdMinutelyHolidayBInput {
+#attendanceCard_tblMinutelyHolidayB #tdMinutelyHolidayBInput {
 	width: 86px;
 }
 
 /* === 分単位休暇Aテーブル項目内容 === */
-#tblMinutelyHolidayA #tdMinutelyHolidayA1Title {
+#attendanceCard_tblMinutelyHolidayA #tdMinutelyHolidayA1Title {
 	width: 86px;
 }
 
 /* === 分単位休暇Aテーブル項目内容 === */
-#tblMinutelyHolidayA #tdMinutelyHolidayA2Title {
+#attendanceCard_tblMinutelyHolidayA #tdMinutelyHolidayA2Title {
 	width: 86px;
 }
 
 /* === 分単位休暇Bテーブル項目内容 === */
-#tblMinutelyHolidayB #tdMinutelyHolidayB1Title {
+#attendanceCard_tblMinutelyHolidayB #tdMinutelyHolidayB1Title {
 	width: 86px;
 }
 
 /* === 分単位休暇Bテーブル項目内容 === */
-#tblMinutelyHolidayB #tdMinutelyHolidayB2Title {
+#attendanceCard_tblMinutelyHolidayB #tdMinutelyHolidayB2Title {
 	width: 86px;
 }
-
-
 
 /* === 遅刻早退情報テーブル項目名称 === */
-#tblLateEarly .TitleTd {
+#attendanceCard_tblLateEarly .TitleTd {
 	width: 110px;
 }
 
 /* === 遅刻早退情報テーブル項目内容 === */
-#tblLateEarly .InputTd {
+#attendanceCard_tblLateEarly .InputTd {
 	width: 170px;
 }
 
 /* === 遅刻早退情報テーブルコメント入力欄 === */
-#tblLateEarly #tdLateEarlyComment {
+#attendanceCard_tblLateEarly #tdLateEarlyComment {
 	width: 650px;
 }
 
 /* === 割増情報テーブル項目名称 === */
-#tblOverTime .TitleTd {
+#attendanceCard_tblOverTime .TitleTd {
 	width: 150px;
 }
 
 /* === 割増情報テーブル項目内容 === */
-#tblOverTime .InputTd {
+#attendanceCard_tblOverTime .InputTd {
 	width: 130px;
 }
 
@@ -205,14 +213,14 @@
 }
 
 /* === 各種承認項目コメント・理由表示欄 === */
-#tblAttendance #tdAttendanceComment {
+#attendanceCard_tblAttendance #tdAttendanceComment {
 	width: 770px;
 	white-space: normal;
 	word-break: break-all; /*IE用*/
 }
 
 /* === 各種承認項目コメント・理由表示欄 === */
-#tblAttendance .Blank {
+#attendanceCard_tblAttendance .Blank {
 	border-bottom: 1px solid black;
 }
 

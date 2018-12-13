@@ -119,6 +119,21 @@ public interface SectionDaoInterface extends BaseDaoInterface {
 	List<SectionDtoInterface> findForTerm(Date fromActivateDate, Date toActivateDate) throws MospException;
 	
 	/**
+	 * 所属情報リストを取得する。<br>
+	 * <br>
+	 * 所属コードFromと所属コードToで、所属情報リストを取得する。<br>
+	 * (section_code >= sectionCodeFrom AND section_code <= sectionCodeTo)<br>
+	 * <br>
+	 * @param sectionCodeFrom 所属コードFrom
+	 * @param sectionCodeTo   所属コードTo
+	 * @param activateDate    有効日
+	 * @return 所属情報リスト
+	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
+	 */
+	List<SectionDtoInterface> findForCodeRange(String sectionCodeFrom, String sectionCodeTo, Date activateDate)
+			throws MospException;
+	
+	/**
 	 * 条件による検索。
 	 * <p>
 	 * 検索条件による所属マスタリストを取得する。
@@ -214,5 +229,28 @@ public interface SectionDaoInterface extends BaseDaoInterface {
 	 * @return 経路条件パラメータ
 	 */
 	String getClassRouteParam(String sectionCode);
+	
+	/**
+	 * 所属コード範囲指定での下位所属条件SQLを作成する。<br>
+	 * @param targetColumn 対象所属コード列名
+	 * @param fromExist    所属コード範囲指定From有無フラグ
+	 * @param toExist      所属コード範囲指定From有無フラグ
+	 * @return 下位所属条件SQL
+	 */
+	StringBuffer getQueryForLowerSectionRange(String targetColumn, boolean fromExist, boolean toExist);
+	
+	/**
+	 * 所属コード範囲指定での下位所属条件パラメータを設定する。<br>
+	 * 設定したパラメータの数だけ、パラメータインデックスが加算される。<br>
+	 * @param index           パラメータインデックス
+	 * @param sectionCodeFrom 所属コードFrom
+	 * @param sectionCodeTo   所属コードTo
+	 * @param targetDate      対象日
+	 * @param ps              ステートメント
+	 * @return 加算されたパラメータインデックス
+	 * @throws MospException SQL例外が発生した場合
+	 */
+	int setParamsForLowerSectionRange(int index, String sectionCodeFrom, String sectionCodeTo, Date targetDate,
+			PreparedStatement ps) throws MospException;
 	
 }

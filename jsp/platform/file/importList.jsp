@@ -124,7 +124,16 @@ for (int i = 0; i < vo.getAryLblInactivate().length; i++) {
 				<td class="ListSelectTd"><%= HtmlUtility.escapeHTML(vo.getAryLblType      (i)) %></td>
 				<td class="ListSelectTd"><%= HtmlUtility.escapeHTML(vo.getAryLblHeader    (i)) %></td>
 				<td class="ListSelectTd"><%= HtmlUtility.escapeHTML(vo.getAryLblInactivate(i)) %></td>
-				<td class="ListSelectTd"><input type="radio" class="RadioButton" name="radSelect" value="<%= HtmlUtility.escapeHTML(vo.getAryLblCode(i)) %>" <%= HtmlUtility.getChecked(vo.getRadSelect().equals(vo.getAryLblCode(i))) %> onclick="checkRadioSelect();"></td>
+				<td class="ListSelectTd">
+<%
+// 無効の場合
+if(vo.getAryLblInactivate(i).equals(params.getName("Effectiveness"))){
+%>
+					<input type="radio" class="RadioButton" name="radSelect" value="<%= HtmlUtility.escapeHTML(vo.getAryLblCode(i)) %>" <%= HtmlUtility.getChecked(vo.getRadSelect().equals(vo.getAryLblCode(i))) %> onclick="checkRadioSelect();">
+<%
+}
+%>
+				</td>
 			</tr>
 <%
 }
@@ -133,12 +142,10 @@ if (vo.getAryLblInactivate().length > 0) {
 			<tr>
 				<td class="TitleTd" id="tdFooter" colspan="8">
 					<span class="FloatLeftSpan">
-						<label for="<%= ImportListAction.PRM_FIL_IMPORT %>"><%= params.getName("Target") %><%= params.getName("File") %></label>&nbsp;:&nbsp;<input type="file" class="FileTextBox" id="<%= ImportListAction.PRM_FIL_IMPORT %>" name="<%= ImportListAction.PRM_FIL_IMPORT %>" size="90" />
+						<label for="<%= ImportListAction.PRM_FIL_IMPORT %>"><%= params.getName("Target") %><%= params.getName("File") %></label>&nbsp;:&nbsp;<input type="file" class="FileTextBox" id="<%= ImportListAction.PRM_FIL_IMPORT %>" name="<%= ImportListAction.PRM_FIL_IMPORT %>" />
 					</span>
 					<span class="TableButtonSpan">
-<%--
-						<button type="button" id="btnTemplate" name="btnTemplate" class="Name6Button" onclick="alert('未実装。');"><%= params.getName("Template") %></button>
---%>
+						<button type="button" id="btnTemplate" name="btnTemplate" class="Name6Button" onclick="submitFile(event, null, null, '<%= HtmlUtility.escapeHTML(vo.getTemplateOutputCommand()) %>');"><%= params.getName("Template") %></button>
 						<button type="button" id="btnExecute" name="btnExecute" class="Name2Button" onclick="submitFormMulti(event, null, checkExtra, '<%= HtmlUtility.escapeHTML(vo.getExecuteCommand()) %>');"><%= params.getName("Execution") %></button>
 					</span>
 				</td>

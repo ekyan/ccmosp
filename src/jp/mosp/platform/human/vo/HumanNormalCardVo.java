@@ -24,6 +24,6 @@ import jp.mosp.platform.human.base.PlatformHumanVo;
  */
 public class HumanNormalCardVo extends PlatformHumanVo {
 	
-	private static final long	serialVersionUID	= -6324801121123352319L;
+	private static final long serialVersionUID = -6324801121123352319L;
 	
 }

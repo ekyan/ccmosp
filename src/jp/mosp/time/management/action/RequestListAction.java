@@ -27,6 +27,7 @@ import jp.mosp.framework.base.BaseVo;
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.property.MospProperties;
 import jp.mosp.framework.utils.DateUtility;
+import jp.mosp.framework.utils.MospUtility;
 import jp.mosp.platform.bean.human.HumanSearchBeanInterface;
 import jp.mosp.platform.bean.system.SectionReferenceBeanInterface;
 import jp.mosp.platform.constant.PlatformConst;
@@ -246,10 +247,7 @@ public class RequestListAction extends TimeSettingAction {
 		// 検索条件確認
 		if (vo.getTxtSearchEmployeeCode().isEmpty() && vo.getTxtSearchEmployeeName().isEmpty()
 				&& vo.getPltSearchWorkPlace().isEmpty() && vo.getPltSearchEmployment().isEmpty()
-				&& vo.getPltSearchSection().isEmpty() && vo.getPltSearchPosition().isEmpty()
-				&& vo.getTxtSearchEmployeeName().isEmpty() && vo.getPltSearchWorkPlace().isEmpty()
-				&& vo.getPltSearchEmployment().isEmpty() && vo.getPltSearchSection().isEmpty()
-				&& vo.getPltSearchPosition().isEmpty()) {
+				&& vo.getPltSearchSection().isEmpty() && vo.getPltSearchPosition().isEmpty()) {
 			return null;
 		}
 		// 社員検索クラス取得
@@ -385,6 +383,7 @@ public class RequestListAction extends TimeSettingAction {
 			// 承認履歴画面へ遷移(連続実行コマンド設定)
 			mospParams.setNextCommand(vo.getAryHistoryCmd(getTransferredIndex()));
 		} else if (actionName.equals(ApprovalCardAction.class.getName())) {
+			mospParams.addGeneralParam(TimeConst.PRM_ROLL_ARRAY, getArray());
 			// 承認管理詳細画面へ遷移(連続実行コマンド設定)
 			mospParams.setNextCommand(vo.getAryRequestTypeCmd(getTransferredIndex()));
 		}
@@ -497,6 +496,7 @@ public class RequestListAction extends TimeSettingAction {
 		String[] aryLblRequestDate = new String[list.size()];
 		String[] aryLblRequestInfo = new String[list.size()];
 		String[] aryLblState = new String[list.size()];
+		String[] aryStateStyle = new String[list.size()];
 		String[] aryWorkflow = new String[list.size()];
 		String[] aryStage = new String[list.size()];
 		String[] aryState = new String[list.size()];
@@ -512,14 +512,15 @@ public class RequestListAction extends TimeSettingAction {
 			ManagementRequestListDtoInterface dto = (ManagementRequestListDtoInterface)list.get(i);
 			// 配列に情報を設定
 			aryLblEmployeeCode[i] = dto.getEmployeeCode();
-			aryLblEmployeeName[i] = dto.getLastName() + dto.getFirstName();
+			aryLblEmployeeName[i] = MospUtility.getHumansName(dto.getFirstName(), dto.getLastName());
 			aryLblSection[i] = section.getSectionAbbr(dto.getSectionCode(), date);
 			aryLblRequestType[i] = getRequestTypeForView(dto);
 			aryLblRequestTypeCmd[i] = getCardCommand(dto);
 			aryLblHistoryCmd[i] = getHistoryCommand(dto.getRequestType());
 			aryLblRequestFunctionCode[i] = dto.getRequestType();
 			aryLblRequestDate[i] = DateUtility.getStringDateAndDay(dto.getRequestDate());
-			aryLblRequestInfo[i] = dto.getRequestInfo();
+			aryLblRequestInfo[i] = getRequestInfo(dto);
+			aryStateStyle[i] = getStatusColor(dto.getState());
 			aryLblState[i] = getStatusStageValueView(dto.getState(), dto.getStage());
 			aryWorkflow[i] = String.valueOf(dto.getWorkflow());
 			aryStage[i] = String.valueOf(dto.getStage());
@@ -534,6 +535,7 @@ public class RequestListAction extends TimeSettingAction {
 		vo.setAryLblRequestDate(aryLblRequestDate);
 		vo.setAryLblRequestInfo(aryLblRequestInfo);
 		vo.setAryLblState(aryLblState);
+		vo.setAryStateStyle(aryStateStyle);
 		vo.setAryRequestTypeCmd(aryLblRequestTypeCmd);
 		vo.setAryHistoryCmd(aryLblHistoryCmd);
 		vo.setAryRequestFunctionCode(aryLblRequestFunctionCode);

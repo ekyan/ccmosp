@@ -18,11 +18,13 @@
 package jp.mosp.time.input.action;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
 import jp.mosp.framework.base.BaseVo;
 import jp.mosp.framework.base.MospException;
+import jp.mosp.framework.instance.InstanceFactory;
 import jp.mosp.framework.utils.DateUtility;
 import jp.mosp.framework.utils.TopicPathUtility;
 import jp.mosp.platform.utils.MonthUtility;
@@ -32,7 +34,10 @@ import jp.mosp.time.base.TimeAction;
 import jp.mosp.time.base.TimeBean;
 import jp.mosp.time.bean.AttendanceListReferenceBeanInterface;
 import jp.mosp.time.bean.AttendanceListRegistBeanInterface;
+import jp.mosp.time.comparator.settings.CutoffErrorListDateComparator;
+import jp.mosp.time.constant.TimeConst;
 import jp.mosp.time.dto.settings.AttendanceDtoInterface;
+import jp.mosp.time.dto.settings.CutoffErrorListDtoInterface;
 import jp.mosp.time.dto.settings.impl.AttendanceListDto;
 import jp.mosp.time.entity.ApplicationEntity;
 import jp.mosp.time.input.vo.AttendanceListVo;
@@ -285,7 +290,7 @@ public class AttendanceListAction extends AttendanceListBaseAction {
 		// 勤怠一覧情報参照クラス取得
 		AttendanceListReferenceBeanInterface attendanceListReference = timeReference().attendanceList();
 		// 基本情報チェック
-		timeReference().attendance().chkBasicInfo(personalId, targetDate);
+		timeReference().holidayRequest().chkBasicInfo(personalId, targetDate);
 		// 表示コマンド確認
 		if (vo.getShowCommand().equals(CMD_SHOW_APPROVAL)) {
 			// 勤怠承認一覧を取得しVOに設定(勤怠承認モードの場合)
@@ -316,6 +321,14 @@ public class AttendanceListAction extends AttendanceListBaseAction {
 		AttendanceListBaseVo vo = (AttendanceListBaseVo)mospParams.getVo();
 		// 個人ID取得(VOから)
 		String personalId = vo.getPersonalId();
+		String searchMode = mospParams.getRequestParam(TimeConst.PRM_TRANSFER_SEARCH_MODE);
+		if (TimeConst.SEARCH_BACK.equals(searchMode)) {
+			// 前の場合
+			personalId = vo.getPrevPersonalId();
+		} else if (TimeConst.SEARCH_NEXT.equals(searchMode)) {
+			// 次の場合
+			personalId = vo.getNextPersonalId();
+		}
 		// パラメータ受取(対象年月)
 		String year = getTransferredYear();
 		String month = getTransferredMonth();
@@ -325,15 +338,22 @@ public class AttendanceListAction extends AttendanceListBaseAction {
 			year = vo.getPltSelectYear();
 			month = vo.getPltSelectMonth();
 		}
+		// 年月を変換
+		int targetYear = getInt(year);
+		int targetMonth = getInt(month);
+		// 年月指定時の基準日取得
+		Date targetDate = MonthUtility.getYearMonthTargetDate(targetYear, targetMonth, mospParams);
+		// 基本情報チェック
+		timeReference().holidayRequest().chkBasicInfo(personalId, targetDate);
 		// 勤怠一覧情報参照クラス取得
 		AttendanceListReferenceBeanInterface attendanceListReference = timeReference().attendanceList();
 		// 表示コマンド確認
 		if (vo.getShowCommand().equals(CMD_SHOW_APPROVAL)) {
 			// 勤怠承認一覧を取得しVOに設定(承認モードの場合)
-			setVoList(attendanceListReference.getApprovalAttendanceList(personalId, getInt(year), getInt(month)));
+			setVoList(attendanceListReference.getApprovalAttendanceList(personalId, targetYear, targetMonth));
 		} else {
 			// 勤怠一覧情報リスト(勤怠一覧)を取得しVOに設定
-			setVoList(attendanceListReference.getAttendanceList(personalId, getInt(year), getInt(month)));
+			setVoList(attendanceListReference.getAttendanceList(personalId, targetYear, targetMonth));
 		}
 		// 勤怠一覧情報参照クラスの情報をVOのフィールドに設定
 		setVoFields(attendanceListReference);
@@ -421,8 +441,8 @@ public class AttendanceListAction extends AttendanceListBaseAction {
 		String[] startTimes = vo.getTxtStartTime();
 		// 終業時刻配列取得
 		String[] endTimes = vo.getTxtEndTime();
-		AttendanceListRegistBeanInterface attendanceListRegist = time().attendanceListRegist(
-				DateUtility.getDate(targetDates[0]));
+		AttendanceListRegistBeanInterface attendanceListRegist = time()
+			.attendanceListRegist(DateUtility.getDate(targetDates[0]));
 		// 一括申請
 		attendanceListRegist.apply(personalId, targetDates, startTimes, endTimes);
 		// 処理結果確認
@@ -488,14 +508,20 @@ public class AttendanceListAction extends AttendanceListBaseAction {
 		// 個人ID取得(VOから)
 		String personalId = vo.getPersonalId();
 		// 計算対象年月取得(VOから)
-		int calculationYear = getInt(vo.getPltSelectYear());
-		int calculationMonth = getInt(vo.getPltSelectMonth());
+		int targetYear = getInt(vo.getPltSelectYear());
+		int targetMonth = getInt(vo.getPltSelectMonth());
 		// 個別仮締
-		time().totalTimePersonal().total(personalId, calculationYear, calculationMonth);
+		List<CutoffErrorListDtoInterface> list = time().totalTimeCalc().tightening(personalId, targetYear, targetMonth);
 		// 処理結果確認
-		if (mospParams.hasErrorMessage()) {
+		if (mospParams.hasErrorMessage() || list.isEmpty() == false) {
 			// 集計失敗メッセージ設定
 			TimeMessageUtility.addMessageTotalFailed(mospParams);
+			// エラーリストをソート
+			Collections.sort(list, InstanceFactory.loadComparator(CutoffErrorListDateComparator.class.getName()));
+			// エラーリストの内容をMosP処理情報(エラーメッセージ)に設定
+			for (CutoffErrorListDtoInterface dto : list) {
+				TimeMessageUtility.addErrorCutoff(mospParams, dto);
+			}
 			return;
 		}
 		// コミット
@@ -609,8 +635,8 @@ public class AttendanceListAction extends AttendanceListBaseAction {
 		// 年月指定時の基準日を取得
 		Date targetDate = MonthUtility.getYearMonthTargetDate(targetYear, targetMonth, mospParams);
 		// 設定適用エンティティ取得
-		ApplicationEntity applicationEntity = timeReference().application()
-			.getApplicationEntity(personalId, targetDate);
+		ApplicationEntity applicationEntity = timeReference().application().getApplicationEntity(personalId,
+				targetDate);
 		// 自己月締確認及び集計ボタン要否設定
 		vo.setTotalButtonVisible(applicationEntity.isSelfTightening());
 	}
@@ -627,6 +653,8 @@ public class AttendanceListAction extends AttendanceListBaseAction {
 		AttendanceListVo vo = (AttendanceListVo)mospParams.getVo();
 		// 設定項目準備
 		String[] aryDate = new String[list.size()];
+		String[] aryLblStartRecordTime = new String[list.size()];
+		String[] aryLblEndRecordTime = new String[list.size()];
 		String[] aryLblPrivateTime = new String[list.size()];
 		String[] aryLblLateTime = new String[list.size()];
 		String[] aryLblLeaveEarlyTime = new String[list.size()];
@@ -635,6 +663,8 @@ public class AttendanceListAction extends AttendanceListBaseAction {
 		String[] aryOvertimeStyle = new String[list.size()];
 		String[] aryLblOverTimeOut = new String[list.size()];
 		String[] aryLblWorkOnHoliday = new String[list.size()];
+		String[] aryLblShortUnpaid = new String[list.size()];
+		String[] aryLblCat = new String[list.size()];
 		String[] aryLblLateNight = new String[list.size()];
 		String[] aryLblState = new String[list.size()];
 		String[] aryStateStyle = new String[list.size()];
@@ -652,6 +682,10 @@ public class AttendanceListAction extends AttendanceListBaseAction {
 			AttendanceListDto dto = list.get(i);
 			// 日付設定
 			aryDate[i] = getStringDate(dto.getWorkDate());
+			// 始業打刻時刻
+			aryLblStartRecordTime[i] = dto.getStartRecordTimeString();
+			// 終業打刻時刻
+			aryLblEndRecordTime[i] = dto.getEndRecordTimeString();
 			// 私用外出時間
 			aryLblPrivateTime[i] = dto.getPrivateTimeString();
 			// 遅刻時間
@@ -668,6 +702,10 @@ public class AttendanceListAction extends AttendanceListBaseAction {
 			aryLblOverTimeOut[i] = dto.getOvertimeOutString();
 			// 休出時間
 			aryLblWorkOnHoliday[i] = dto.getHolidayWorkTimeString();
+			// 無休時短時間
+			aryLblShortUnpaid[i] = dto.getShortUnpaidString();
+			// カット
+			aryLblCat[i] = dto.getCatString();
 			// 深夜時間
 			aryLblLateNight[i] = dto.getLateNightTimeString();
 			// 状態
@@ -693,6 +731,8 @@ public class AttendanceListAction extends AttendanceListBaseAction {
 		}
 		// VOに項目を設定
 		vo.setAryDate(aryDate);
+		vo.setAryLblStartRecordTime(aryLblStartRecordTime);
+		vo.setAryLblEndRecordTime(aryLblEndRecordTime);
 		vo.setAryLblPrivateTime(aryLblPrivateTime);
 		vo.setAryLblLateTime(aryLblLateTime);
 		vo.setAryLblLeaveEarlyTime(aryLblLeaveEarlyTime);
@@ -702,6 +742,8 @@ public class AttendanceListAction extends AttendanceListBaseAction {
 		vo.setAryLblOverTimeOut(aryLblOverTimeOut);
 		vo.setAryLblWorkOnHoliday(aryLblWorkOnHoliday);
 		vo.setAryLblLateNight(aryLblLateNight);
+		vo.setAryLblShortUnpaid(aryLblShortUnpaid);
+		vo.setAryLblCat(aryLblCat);
 		vo.setAryLblState(aryLblState);
 		vo.setAryStateStyle(aryStateStyle);
 		vo.setAryLinkState(aryLinkState);
@@ -727,6 +769,7 @@ public class AttendanceListAction extends AttendanceListBaseAction {
 		vo.setLblTotalOverTimeOut(dto.getOvertimeOutTotalString());
 		vo.setLblTotalWorkOnHoliday(dto.getHolidayWorkTimeTotalString());
 		vo.setLblTotalLateNight(dto.getLateNightTimeTotalString());
+		vo.setLblShortUnpaidTotal(dto.getShortUnpaidTotalString());
 		vo.setLblTimesLate(dto.getLateDaysString());
 		vo.setLblTimesLeaveEarly(dto.getLeaveEarlyDaysString());
 		vo.setLblTimesOverTimeWork(dto.getOvertimeDaysString());
@@ -734,6 +777,7 @@ public class AttendanceListAction extends AttendanceListBaseAction {
 		// 代休発生回数
 		vo.setLblTimesBirthPrescribedSubHolidayday(dto.getBirthPrescribedSubHolidayString());
 		vo.setLblTimesBirthLegalSubHolidayday(dto.getBirthLegalSubHolidayString());
+		vo.setLblTimesHoliday(dto.getHolidayString());
 		// 深夜代休がない場合
 		if (dto.getBirthMidnightSubHolidayString().equals("0.0")) {
 			vo.setLblTimesBirthMidnightSubHolidayday(null);
@@ -753,6 +797,9 @@ public class AttendanceListAction extends AttendanceListBaseAction {
 		// 分単位休暇AB非表示
 		vo.setLblTimesMinutelyHolidayA(false);
 		vo.setLblTimesMinutelyHolidayB(false);
+		vo.setLblTimesCat(false);
+		vo.setLblStartRecordTime(false);
+		vo.setLblEndRecordTime(false);
 	}
 	
 	/**

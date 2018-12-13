@@ -45,6 +45,7 @@ public class RequestListVo extends TimeVo {
 	private String[]			aryLblRequestDate;
 	private String[]			aryLblRequestInfo;
 	private String[]			aryLblState;
+	private String[]			aryStateStyle;
 	private String[]			aryRequestTypeCmd;
 	private String[]			aryHistoryCmd;
 	private String[]			aryRequestFunctionCode;
@@ -544,6 +545,20 @@ public class RequestListVo extends TimeVo {
 	 */
 	public void setJsSearchConditionRequired(boolean jsSearchConditionRequired) {
 		this.jsSearchConditionRequired = jsSearchConditionRequired;
+	}
+	
+	/**
+	 * @return aryStateStyle
+	 */
+	public String[] getAryStateStyle() {
+		return getStringArrayClone(aryStateStyle);
+	}
+	
+	/**
+	 * @param aryStateStyle セットする aryStateStyle
+	 */
+	public void setAryStateStyle(String[] aryStateStyle) {
+		this.aryStateStyle = getStringArrayClone(aryStateStyle);
 	}
 	
 }

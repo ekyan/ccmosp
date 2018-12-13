@@ -28,19 +28,12 @@ public class HolidayRequestVo extends TimeVo {
 	
 	private long				recordId;
 	
-	private String				lblFormerDay;
-	private String				lblFormerGrantDay;
-	// 前年度付与日
-	private String				lblFormerGivingDay;
-	// 前年度期限日
-	private String				lblFormerLimitDay;
-	
-	private String				lblCurrentDay;
-	private String				lblCurrentGrantDay;
-	// 今年度付与日
-	private String				lblCurrentGivingDay;
-	// 今年度期限日
-	private String				lblCurrentLimitDay;
+	private String[]			aryLblStyle;
+	private String[]			aryLblPaidLeaveFiscalYear;
+	private String[]			aryLblPaidLeaveGrantDate;
+	private String[]			aryLblPaidLeaveExpirationDate;
+	private String[]			aryLblPaidLeaveRemainDays;
+	private String[]			aryLblPaidLeaveGrantDays;
 	
 	private String				lblNextGivingDate;
 	private String				lblNextGivingAmount;
@@ -191,8 +184,6 @@ public class HolidayRequestVo extends TimeVo {
 	
 	private String				lblTotalDay;
 	private String				lblTotalTime;
-	private String				lblTotalDayAndHour;
-	private String				lblTotalGrantDay;
 	
 	private String				pltSearchHolidayType;
 	
@@ -202,7 +193,6 @@ public class HolidayRequestVo extends TimeVo {
 	private String				pltSearchSpecialAbsence;
 	
 	private String				pltSearchHolidayRange1;
-	private String				pltSearchHolidayRange2;
 	
 	private String				pltEditStatusWithPay;
 	private String				pltEditStatusSpecial;
@@ -215,12 +205,84 @@ public class HolidayRequestVo extends TimeVo {
 	private long[]				aryWorkflow;
 	private String[]			aryWorkflowStatus;
 	
+	private boolean				jsPaidHolidayReasonRequired;
+	
 	/**
 	 * 追加フィールド。
 	 * アドオンで処理をする。
 	 */
 	private String				jsAddExtraField;
 	
+	
+	/**
+	 * @return aryLblPaidLeaveFiscalYear
+	 */
+	public String[] getAryLblPaidLeaveFiscalYear() {
+		return getStringArrayClone(aryLblPaidLeaveFiscalYear);
+	}
+	
+	/**
+	 * @param aryLblPaidLeaveFiscalYear セットする aryLblPaidLeaveFiscalYear
+	 */
+	public void setAryLblPaidLeaveFiscalYear(String[] aryLblPaidLeaveFiscalYear) {
+		this.aryLblPaidLeaveFiscalYear = getStringArrayClone(aryLblPaidLeaveFiscalYear);
+	}
+	
+	/**
+	 * @return aryLblPaidLeaveGrantDate
+	 */
+	public String[] getAryLblPaidLeaveGrantDate() {
+		return getStringArrayClone(aryLblPaidLeaveGrantDate);
+	}
+	
+	/**
+	 * @param aryLblPaidLeaveGrantDate セットする aryLblPaidLeaveGrantDate
+	 */
+	public void setAryLblPaidLeaveGrantDate(String[] aryLblPaidLeaveGrantDate) {
+		this.aryLblPaidLeaveGrantDate = getStringArrayClone(aryLblPaidLeaveGrantDate);
+	}
+	
+	/**
+	 * @return aryLblPaidLeaveExpirationDate
+	 */
+	public String[] getAryLblPaidLeaveExpirationDate() {
+		return getStringArrayClone(aryLblPaidLeaveExpirationDate);
+	}
+	
+	/**
+	 * @param aryLblPaidLeaveExpirationDate セットする aryLblPaidLeaveExpirationDate
+	 */
+	public void setAryLblPaidLeaveExpirationDate(String[] aryLblPaidLeaveExpirationDate) {
+		this.aryLblPaidLeaveExpirationDate = getStringArrayClone(aryLblPaidLeaveExpirationDate);
+	}
+	
+	/**
+	 * @return aryLblPaidLeaveRemainDays
+	 */
+	public String[] getAryLblPaidLeaveRemainDays() {
+		return getStringArrayClone(aryLblPaidLeaveRemainDays);
+	}
+	
+	/**
+	 * @param aryLblPaidLeaveRemainDays セットする aryLblPaidLeaveRemainDays
+	 */
+	public void setAryLblPaidLeaveRemainDays(String[] aryLblPaidLeaveRemainDays) {
+		this.aryLblPaidLeaveRemainDays = getStringArrayClone(aryLblPaidLeaveRemainDays);
+	}
+	
+	/**
+	 * @return aryLblPaidLeaveGrantDays
+	 */
+	public String[] getAryLblPaidLeaveGrantDays() {
+		return getStringArrayClone(aryLblPaidLeaveGrantDays);
+	}
+	
+	/**
+	 * @param aryLblPaidLeaveGrantDays セットする aryLblPaidLeaveGrantDays
+	 */
+	public void setAryLblPaidLeaveGrantDays(String[] aryLblPaidLeaveGrantDays) {
+		this.aryLblPaidLeaveGrantDays = getStringArrayClone(aryLblPaidLeaveGrantDays);
+	}
 	
 	/**
 	 * @return pltEditStartYear
@@ -346,34 +408,6 @@ public class HolidayRequestVo extends TimeVo {
 	 */
 	public String[] getCkbSelect() {
 		return getStringArrayClone(ckbSelect);
-	}
-	
-	/**
-	 * @return lblFormerDay
-	 */
-	public String getLblFormerDay() {
-		return lblFormerDay;
-	}
-	
-	/**
-	 * @return lblFormerGrantDay
-	 */
-	public String getLblFormerGrantDay() {
-		return lblFormerGrantDay;
-	}
-	
-	/**
-	 * @return lblCurrentDay
-	 */
-	public String getLblCurrentDay() {
-		return lblCurrentDay;
-	}
-	
-	/**
-	 * @return lblCurrentGrantDay
-	 */
-	public String getLblCurrentGrantDay() {
-		return lblCurrentGrantDay;
 	}
 	
 	/**
@@ -752,34 +786,6 @@ public class HolidayRequestVo extends TimeVo {
 	 */
 	public void setCkbSelect(String[] ckbSelect) {
 		this.ckbSelect = getStringArrayClone(ckbSelect);
-	}
-	
-	/**
-	 * @param lblFormerDay セットする lblFormerDay
-	 */
-	public void setLblFormerDay(String lblFormerDay) {
-		this.lblFormerDay = lblFormerDay;
-	}
-	
-	/**
-	 * @param lblFormerGrantDay セットする lblFormerGrantDay
-	 */
-	public void setLblFormerGrantDay(String lblFormerGrantDay) {
-		this.lblFormerGrantDay = lblFormerGrantDay;
-	}
-	
-	/**
-	 * @param lblCurrentDay セットする lblCurrentDay
-	 */
-	public void setLblCurrentDay(String lblCurrentDay) {
-		this.lblCurrentDay = lblCurrentDay;
-	}
-	
-	/**
-	 * @param lblCurrentGrantDay セットする lblCurrentGrantDay
-	 */
-	public void setLblCurrentGrantDay(String lblCurrentGrantDay) {
-		this.lblCurrentGrantDay = lblCurrentGrantDay;
 	}
 	
 	/**
@@ -1655,62 +1661,6 @@ public class HolidayRequestVo extends TimeVo {
 	}
 	
 	/**
-	 * @return lblFormerGivingDay
-	 */
-	public String getLblFormerGivingDay() {
-		return lblFormerGivingDay;
-	}
-	
-	/**
-	 * @param lblFormerGivingDay セットする lblFormerGivingDay
-	 */
-	public void setLblFormerGivingDay(String lblFormerGivingDay) {
-		this.lblFormerGivingDay = lblFormerGivingDay;
-	}
-	
-	/**
-	 * @return lblFormerLimitDay
-	 */
-	public String getLblFormerLimitDay() {
-		return lblFormerLimitDay;
-	}
-	
-	/**
-	 * @param lblFormerLimitDay セットする lblFormerLimitDay
-	 */
-	public void setLblFormerLimitDay(String lblFormerLimitDay) {
-		this.lblFormerLimitDay = lblFormerLimitDay;
-	}
-	
-	/**
-	 * @return lblCurrentGivingDay
-	 */
-	public String getLblCurrentGivingDay() {
-		return lblCurrentGivingDay;
-	}
-	
-	/**
-	 * @param lblCurrentGivingDay セットする lblCurrentGivingDay
-	 */
-	public void setLblCurrentGivingDay(String lblCurrentGivingDay) {
-		this.lblCurrentGivingDay = lblCurrentGivingDay;
-	}
-	
-	/**
-	 * @return lblCurrentLimitDay
-	 */
-	public String getLblCurrentLimitDay() {
-		return lblCurrentLimitDay;
-	}
-	
-	/**
-	 * @param lblCurrentLimitDay セットする lblCurrentLimitDay
-	 */
-	public void setLblCurrentLimitDay(String lblCurrentLimitDay) {
-		this.lblCurrentLimitDay = lblCurrentLimitDay;
-	}
-	
-	/**
 	 * @return aryLblGivingDate
 	 */
 	public String[] getAryLblGivingDate() {
@@ -1806,34 +1756,6 @@ public class HolidayRequestVo extends TimeVo {
 	 */
 	public void setLblTotalTime(String lblTotalTime) {
 		this.lblTotalTime = lblTotalTime;
-	}
-	
-	/**
-	 * @return lblTotalDayAndHour
-	 */
-	public String getLblTotalDayAndHour() {
-		return lblTotalDayAndHour;
-	}
-	
-	/**
-	 * @param lblTotalDayAndHour セットする lblTotalDayAndHour
-	 */
-	public void setLblTotalDayAndHour(String lblTotalDayAndHour) {
-		this.lblTotalDayAndHour = lblTotalDayAndHour;
-	}
-	
-	/**
-	 * @return lblTotalGrantDay
-	 */
-	public String getLblTotalGrantDay() {
-		return lblTotalGrantDay;
-	}
-	
-	/**
-	 * @param lblTotalGrantDay セットする lblTotalGrantDay
-	 */
-	public void setLblTotalGrantDay(String lblTotalGrantDay) {
-		this.lblTotalGrantDay = lblTotalGrantDay;
 	}
 	
 	/**
@@ -2244,20 +2166,6 @@ public class HolidayRequestVo extends TimeVo {
 	}
 	
 	/**
-	 * @return pltSearchHolidayRange2
-	 */
-	public String getPltSearchHolidayRange2() {
-		return pltSearchHolidayRange2;
-	}
-	
-	/**
-	 * @param pltSearchHolidayRange2 セットする pltSearchHolidayRange2
-	 */
-	public void setPltSearchHolidayRange2(String pltSearchHolidayRange2) {
-		this.pltSearchHolidayRange2 = pltSearchHolidayRange2;
-	}
-	
-	/**
 	 * @return isPaidLeaveByHour
 	 */
 	public boolean isPaidLeaveByHour() {
@@ -2272,6 +2180,20 @@ public class HolidayRequestVo extends TimeVo {
 	}
 	
 	/**
+	 * @return jsPaidHolidayReasonRequired
+	 */
+	public boolean isJsPaidHolidayReasonRequired() {
+		return jsPaidHolidayReasonRequired;
+	}
+	
+	/**
+	 * @param jsPaidHolidayReasonRequired セットする jsPaidHolidayReasonRequired
+	 */
+	public void setJsPaidHolidayReasonRequired(boolean jsPaidHolidayReasonRequired) {
+		this.jsPaidHolidayReasonRequired = jsPaidHolidayReasonRequired;
+	}
+	
+	/**
 	 * @return jsAddExtraField
 	 */
 	public String getJsAddExtraField() {
@@ -2283,6 +2205,20 @@ public class HolidayRequestVo extends TimeVo {
 	 */
 	public void setJsAddExtraField(String jsAddExtraField) {
 		this.jsAddExtraField = jsAddExtraField;
+	}
+	
+	/**
+	 * @return aryLblStyle
+	 */
+	public String[] getAryLblStyle() {
+		return getStringArrayClone(aryLblStyle);
+	}
+	
+	/**
+	 * @param aryLblStyle セットする aryLblStyle
+	 */
+	public void setAryLblStyle(String[] aryLblStyle) {
+		this.aryLblStyle = getStringArrayClone(aryLblStyle);
 	}
 	
 }

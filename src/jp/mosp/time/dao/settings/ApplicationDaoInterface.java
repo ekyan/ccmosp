@@ -187,7 +187,17 @@ public interface ApplicationDaoInterface extends BaseDaoInterface {
 	 * @return 設定適用マスタリスト
 	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
 	 */
-	List<ApplicationDtoInterface> findForTerm(Date fromActivateDate, Date toActivateDate) throws MospException;
+	List<ApplicationDtoInterface> findForCheckTerm(Date fromActivateDate, Date toActivateDate) throws MospException;
+	
+	/**
+	 * 有効日の範囲内で情報を取得する。<br>
+	 * 検索結果に、有効日が開始日または終了日の情報も含まる。<br>
+	 * @param startDate  開始日(有効日)
+	 * @param endDate    終了日(有効日)
+	 * @return ルート適用マスタリスト
+	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
+	 */
+	List<ApplicationDtoInterface> findForTerm(Date startDate, Date endDate) throws MospException;
 	
 	/**
 	 * 有効日マスタ一覧。

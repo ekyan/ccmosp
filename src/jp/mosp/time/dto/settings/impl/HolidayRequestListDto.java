@@ -211,11 +211,11 @@ public class HolidayRequestListDto extends BaseDto implements HolidayRequestList
 	
 	@Override
 	public Date getRequestEndDate() {
-		return requestEndDate;
+		return getDateClone(requestEndDate);
 	}
 	
 	@Override
 	public void setRequestEndDate(Date requestEndDate) {
-		this.requestEndDate = requestEndDate;
+		this.requestEndDate = getDateClone(requestEndDate);
 	}
 }

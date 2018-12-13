@@ -32,6 +32,8 @@ public class CancellationRequestVo extends TimeVo {
 	private String				lblRequestInfo;
 	private String				lblState;
 	private String				txtEditRequestReason;
+	private String				ckbWithdrawn;
+	private String				jsRequestType;
 	
 	private String				pltSearchApprovalType;
 	private String				pltSearchRequestYear;
@@ -346,4 +348,31 @@ public class CancellationRequestVo extends TimeVo {
 		this.aryPltSearchRequestDay = getStringArrayClone(aryPltSearchRequestDay);
 	}
 	
+	/**
+	 * @return ckbWithdrawn
+	 */
+	public String getCkbWithdrawn() {
+		return ckbWithdrawn;
+	}
+	
+	/**
+	 * @param ckbWithdrawn セットする ckbWithdrawn
+	 */
+	public void setCkbWithdrawn(String ckbWithdrawn) {
+		this.ckbWithdrawn = ckbWithdrawn;
+	}
+	
+	/**
+	 * @return jsRequestType
+	 */
+	public String getJsRequestType() {
+		return jsRequestType;
+	}
+	
+	/**
+	 * @param jsRequestType セットする jsRequestType
+	 */
+	public void setJsRequestType(String jsRequestType) {
+		this.jsRequestType = jsRequestType;
+	}
 }

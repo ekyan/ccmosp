@@ -40,12 +40,13 @@ import = "jp.mosp.time.management.action.ApprovalCardAction"
 import = "jp.mosp.time.management.action.ApprovalListAction"
 import = "jp.mosp.time.management.vo.ApprovalListVo"
 import = "jp.mosp.time.utils.TimeUtility"
+import = "jp.mosp.platform.utils.PlatformNamingUtility"
 %><%
 MospParams params = (MospParams)request.getAttribute(MospConst.ATT_MOSP_PARAMS);
 ApprovalListVo vo = (ApprovalListVo)params.getVo();
 %>
 <div class="List">
-	<table class="LeftListTable">
+	<table class="LeftListTable" id="approvalList_tblSearch">
 		<tr>
 			<th class="ListSelectTh"><%= params.getName("Approval","Type") %></th>
 			<th class="ListSelectTh"><%= params.getName("Ram","Approval","Count","Num") %></th>
@@ -182,7 +183,7 @@ if (TimeUtility.isCancellationRequestValid(params)) {
 		<thead>
 			<tr>
 				<th class="ListSelectTh" id="thButton"></th>
-				<th class="ListSortTh" id="thEmployeeCode" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= EmployeeCodeComparator.class.getName() %>'), '<%= ApprovalListAction.CMD_SORT %>')"><%= params.getName("Employee","Code") %><%= PlatformUtility.getSortMark(EmployeeCodeComparator.class.getName(), params) %></th>
+				<th class="ListSortTh" id="thEmployeeCode" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= EmployeeCodeComparator.class.getName() %>'), '<%= ApprovalListAction.CMD_SORT %>')"><%= PlatformNamingUtility.employeeCode(params) %><%= PlatformUtility.getSortMark(EmployeeCodeComparator.class.getName(), params) %></th>
 				<th class="ListSortTh" id="thEmployeeName" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= EmployeeNameComparator.class.getName() %>'), '<%= ApprovalListAction.CMD_SORT %>')"><%= params.getName("Employee","FirstName") %><%= PlatformUtility.getSortMark(EmployeeNameComparator.class.getName(), params) %></th>
 				<th class="ListSortTh" id="thSection" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= SectionCodeComparator.class.getName() %>'), '<%= ApprovalListAction.CMD_SORT %>')"><%= params.getName("Section") %><%= PlatformUtility.getSortMark(SectionCodeComparator.class.getName(), params) %></th>
 				<th class="ListSortTh" id="thApprovalType" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= ManagementRequestRequestTypeComparator.class.getName() %>'), '<%= ApprovalListAction.CMD_SORT %>')"><%= params.getName("Type") %><%= PlatformUtility.getSortMark(ManagementRequestRequestTypeComparator.class.getName(), params) %></th>
@@ -213,7 +214,7 @@ for (int i = 0; i < vo.getAryLblEmployeeCode().length; i++) {
 				<td class="ListSelectTd"><%= HtmlUtility.escapeHTML(vo.getAryLblSection()[i]) %></td>
 				<td class="ListSelectTd"><%= HtmlUtility.escapeHTML(vo.getAryLblRequestType()[i]) %></td>
 				<td class="ListSelectTd"><%= HtmlUtility.escapeHTML(vo.getAryLblRequestDate()[i]) %></td>
-				<td class="ListInputTd" <%= vo.getAryBackColor()[i] %>><%= HtmlUtility.escapeHTML(vo.getAryLblRequestInfo()[i]) %></td>
+				<td class="ListInputTd" <%= vo.getAryBackColor()[i] %>><%= vo.getAryLblRequestInfo()[i] %></td>
 				<td class="ListSelectTd">
 					<a class="Link" id="linkApprovalHistory" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_ACTION %>', '<%= ApprovalHistoryAction.class.getName() %>', '<%= PlatformConst.PRM_TRANSFERRED_INDEX %>', '<%= i %>'), '<%= ApprovalListAction.CMD_TRANSFER %>');"><span <%= vo.getAryStateStyle()[i] %>><%= HtmlUtility.escapeHTML(vo.getAryLblState()[i]) %></span></a>
 				</td>

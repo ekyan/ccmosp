@@ -67,6 +67,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<Controller key="TM120*">
 		<ActionClass>jp.mosp.time.input.action.AttendanceCardAction</ActionClass>
 	</Controller>
+	<Controller key="TM122*">
+		<ActionClass>jp.mosp.time.input.action.AttendanceCardAction</ActionClass>
+	</Controller>
 	<Controller key="TM130*">
 		<ActionClass>jp.mosp.time.input.action.ScheduleReferenceAction</ActionClass>
 	</Controller>
@@ -184,6 +187,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<Controller key="TM242*">
 		<ActionClass>jp.mosp.time.input.action.AttendanceListAction</ActionClass>
 	</Controller>
+	<!-- 部下年度一覧 -->
+	<Controller key="TM251*">
+		<ActionClass>jp.mosp.time.management.action.SubordinateFiscalListAction</ActionClass>
+	</Controller>
+	<Controller key="TM259*">
+		<ActionClass>jp.mosp.time.management.action.SubordinateFiscalListAction</ActionClass>
+	</Controller>
+	<Controller key="TM252*">
+		<ActionClass>jp.mosp.time.management.action.SubordinateFiscalReferenceAction</ActionClass>
+	</Controller>
 	<Controller key="PF340*">
 		<ActionClass>jp.mosp.platform.workflow.action.SubApproverSettingAction</ActionClass>
 	</Controller>
@@ -213,8 +226,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<Controller key="TM321*">
 		<ActionClass>jp.mosp.time.file.action.TimeImportListAction</ActionClass>
 	</Controller>
-	<Controller key="TM328*">
+	<Controller key="TM3286">
 		<ActionClass>jp.mosp.time.file.action.TimeImportListAction</ActionClass>
+		<NeedProcSeq>unnecessary</NeedProcSeq>
 	</Controller>
 	<Controller key="TM331*">
 		<ActionClass>jp.mosp.time.file.action.TimeExportListAction</ActionClass>
@@ -319,6 +333,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		<ActionClass>jp.mosp.time.settings.action.ScheduleListAction</ActionClass>
 	</Controller>
 	<Controller key="TM542*">
+		<ActionClass>jp.mosp.time.settings.action.ScheduleCardAction</ActionClass>
+	</Controller>
+	<Controller key="TM543*">
 		<ActionClass>jp.mosp.time.settings.action.ScheduleCardAction</ActionClass>
 	</Controller>
 	<Controller key="TM547*">

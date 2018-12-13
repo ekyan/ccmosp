@@ -38,14 +38,14 @@ function checkRadioSelect() {
 	// ラジオボタン選択値確認
 	if (selectedValue == "") {
 		// テンプレートボタン押下不可
-		setDisabled("btnTemplate", true);
+		setReadOnly("btnTemplate", true);
 		// 実行ボタン押下不可
-		setDisabled("btnExecute", true);
+		setReadOnly("btnExecute", true);
 	} else {
 		// テンプレートボタン押下可
-		setDisabled("btnTemplate", false);
+		setReadOnly("btnTemplate", false);
 		// 実行ボタン押下可
-		setDisabled("btnExecute", false);
+		setReadOnly("btnExecute", false);
 	}
 }
 

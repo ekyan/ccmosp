@@ -19,6 +19,7 @@ package jp.mosp.framework.base;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -46,6 +47,11 @@ public class MospStoredInfo implements Serializable {
 	 */
 	private Map<String, RangeProperty>	rangeMap;
 	
+	/**
+	 * 汎用保持文字列群。
+	 */
+	private Map<String, String>			generalMap;
+	
 	
 	/**
 	 * MosPセッション保持情報を初期化する。
@@ -61,6 +67,7 @@ public class MospStoredInfo implements Serializable {
 		user = null;
 		topicPathList = new ArrayList<TopicPath>();
 		rangeMap = null;
+		generalMap = new HashMap<String, String>();
 	}
 	
 	/**
@@ -103,6 +110,24 @@ public class MospStoredInfo implements Serializable {
 	 */
 	public void setRangeMap(Map<String, RangeProperty> rangeMap) {
 		this.rangeMap = rangeMap;
+	}
+	
+	/**
+	 * 汎用保持文字列群に文字列を設定する。
+	 * @param key   キー
+	 * @param value 値
+	 */
+	public void putGeneralString(String key, String value) {
+		generalMap.put(key, value);
+	}
+	
+	/**
+	 * 汎用保持文字列群から保持文字列を取得する。
+	 * @param key   キー
+	 * @return 保持文字列
+	 */
+	public String getGeneralString(String key) {
+		return generalMap.get(key);
 	}
 	
 }

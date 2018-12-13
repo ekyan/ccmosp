@@ -20,14 +20,30 @@
 /* === 休暇申請画面のスタイル === */
 /* ************************************************************************** */
 
+
+
 .List .Divider {
 	border: none;
 	width: 5px;
 	background-color: #F8F8F8;
 }
 
+.LeftTable {
+	float: left;
+}
+
+.RightTable {
+	float: right;
+	width: 450px;
+}
+
+.RightTable .Blank {
+	border: medium none;
+	background-color: #F8F8F8;
+}
+
 #thFiscalYear {
-	width: 100px;
+	width: 120px;
 }
 
 #thTotal {
@@ -43,7 +59,7 @@
 }
 
 #thGrantDays {
-	width: 180px;
+	width: 160px;
 }
 
 #thPaidLeaveAutomatic {
@@ -69,17 +85,17 @@
 }
 
 /* === 有休・特別・その他情報表示欄(th)。 === */
-#tblPaidHoliday .ListSelectTh {
+#holidayRequest_tblPaidHoliday .ListSelectTh {
 	width: 130px;
 }
 
 /* === 有休・特別・その他情報表示欄(th)。 === */
-#tblSpecialHoliday .ListSelectTh {
+#holidayRequest_tblSpecialHoliday .ListSelectTh {
 	width: 170px;
 }
 
 /* === 特別・その他休暇名称表示欄(th)。 === */
-#tblSpecialHoliday #tdVacationName {
+#holidayRequest_tblSpecialHoliday #tdVacationName {
 	width: 250px;
 }
 

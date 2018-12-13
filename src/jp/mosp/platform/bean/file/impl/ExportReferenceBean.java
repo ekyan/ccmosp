@@ -34,7 +34,7 @@ public class ExportReferenceBean extends PlatformBean implements ExportReference
 	/**
 	 * エクスポートマスタDAO。
 	 */
-	private ExportDaoInterface	dao;
+	private ExportDaoInterface dao;
 	
 	
 	/**

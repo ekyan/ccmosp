@@ -18,9 +18,11 @@
 package jp.mosp.time.bean;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 import jp.mosp.framework.base.MospException;
+import jp.mosp.platform.dto.human.HumanDtoInterface;
 import jp.mosp.time.dto.settings.ApplicationDtoInterface;
 import jp.mosp.time.dto.settings.CutoffDtoInterface;
 import jp.mosp.time.dto.settings.TimeSettingDtoInterface;
@@ -40,6 +42,16 @@ public interface CutoffUtilBeanInterface {
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
 	Set<String> getCutoffPersonalIdSet(String cutoffCode, int targetYear, int targetMonth) throws MospException;
+	
+	/**
+	 * 対象年月において対象締日コードが適用されている人事情報リストを取得する。<br>
+	 * @param cutoffCode 対象締日コード
+	 * @param targetYear 対象年
+	 * @param targetMonth 対象月
+	 * @return 個人IDのセット
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	List<HumanDtoInterface> getCutoffHumanDto(String cutoffCode, int targetYear, int targetMonth) throws MospException;
 	
 	/**
 	 * 締日コードと年月を指定して締日情報を取得する。<br>
@@ -183,6 +195,29 @@ public interface CutoffUtilBeanInterface {
 	 * @throws MospException 日付操作に失敗した場合
 	 */
 	Date getCutoffMonth(String personalId, Date targetDate) throws MospException;
+	
+	/**
+	 * 締日コードと対象日から未承認仮締を取得する。<br>
+	 * 締日コードと対象日から締日情報を取得し、未承認仮締を取得する。<br>
+	 * 締日情報が取得できない場合は、エラーメッセージを追加する。<br>
+	 * @param cutoffCode 締日コード
+	 * @param targetDate 対象日
+	 * @return 未承認仮締
+	 * @throws MospException 締日情報の取得に失敗した場合
+	 */
+	int getNoApproval(String cutoffCode, Date targetDate) throws MospException;
+	
+	/**
+	 * 締日コードと対象年月から未承認仮締を取得する。<br>
+	 * 締日コードと対象年月から締日情報を取得し、未承認仮締を取得する。<br>
+	 * 締日情報が取得できない場合は、エラーメッセージを追加する。<br>
+	 * @param cutoffCode  締日コード
+	 * @param targetYear  対象年
+	 * @param targetMonth 対象月
+	 * @return 未承認仮締
+	 * @throws MospException 締日情報の取得に失敗した場合
+	 */
+	int getNoApproval(String cutoffCode, int targetYear, int targetMonth) throws MospException;
 	
 	/**
 	 * 対象個人ID及び対象日付から勤怠設定情報を取得する。<br>

@@ -39,4 +39,22 @@ public interface TotalTimeTransactionReferenceBeanInterface {
 	 */
 	TotalTimeDtoInterface findForKey(int calculationYear, int calculationMonth, String cutoffCode) throws MospException;
 	
+	/**
+	 * 締状態を取得する。<br>
+	 * <br>
+	 * 保持された勤怠集計管理情報群に対象となる情報がある場合は、それを参照する。<br>
+	 * 保持された勤怠集計管理情報群に対象となる情報がない場合は、
+	 * DBから情報を取得し、保持する。<br>
+	 * <br>
+	 * 部下一覧等、同じ条件で何度も取得することが見込まれる場合に用いることで、
+	 * パフォーマンスの向上を図る。<br>
+	 * <br>
+	 * @param calculationYear  集計年
+	 * @param calculationMonth 集計月
+	 * @param cutoffCode       締日コード
+	 * @return 締状態
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	int getStoredCutoffState(int calculationYear, int calculationMonth, String cutoffCode) throws MospException;
+	
 }

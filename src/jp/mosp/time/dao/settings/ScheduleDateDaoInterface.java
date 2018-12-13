@@ -33,17 +33,6 @@ import jp.mosp.time.dto.settings.ScheduleDateDtoInterface;
 public interface ScheduleDateDaoInterface extends BaseDaoInterface {
 	
 	/**
-	 * カレンダコードと有効日と日からカレンダ日情報を取得する。<br>
-	 * 条件と合致する情報が存在しない場合は、nullを返す。<br>
-	 * @param scheduleCode カレンダコード
-	 * @param activateDate 有効日
-	 * @param scheduleDate 日
-	 * @return カレンダ日マスタDTO
-	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
-	 */
-	ScheduleDateDtoInterface findForKey(String scheduleCode, Date activateDate, Date scheduleDate) throws MospException;
-	
-	/**
 	 * カレンダコードと対象日からカレンダ日情報を取得する。<br>
 	 * 条件と合致する情報が存在しない場合は、nullを返す。<br>
 	 * @param scheduleCode カレンダコード
@@ -63,18 +52,6 @@ public interface ScheduleDateDaoInterface extends BaseDaoInterface {
 	List<ScheduleDateDtoInterface> findForList(String scheduleCode, Date activateDate) throws MospException;
 	
 	/**
-	 * カレンダコードと有効日と開始日と終了日からカレンダ日マスタリストを取得する。<br>
-	 * @param scheduleCode カレンダコード
-	 * @param activateDate 有効日
-	 * @param startDate 開始日
-	 * @param endDate 終了日
-	 * @return カレンダ日マスタリスト
-	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
-	 */
-	List<ScheduleDateDtoInterface> findForList(String scheduleCode, Date activateDate, Date startDate, Date endDate)
-			throws MospException;
-	
-	/**
 	 * カレンダコードと開始日と終了日からカレンダ日マスタリストを取得する。<br>
 	 * @param scheduleCode カレンダコード
 	 * @param startDate 開始日
@@ -83,31 +60,6 @@ public interface ScheduleDateDaoInterface extends BaseDaoInterface {
 	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
 	 */
 	List<ScheduleDateDtoInterface> findForList(String scheduleCode, Date startDate, Date endDate) throws MospException;
-	
-	/**
-	 * カレンダ日マスタ取得。
-	 * <p>
-	 * カレンダコードと有効日と日からカレンダ日マスタを取得する。
-	 * </p>
-	 * @param scheduleCode カレンダコード
-	 * @param activateDate 有効日
-	 * @param scheduleDate 日
-	 * @return カレンダ日管理DTO
-	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
-	 */
-	ScheduleDateDtoInterface findForInfo(String scheduleCode, Date activateDate, Date scheduleDate)
-			throws MospException;
-	
-	/**
-	 * 履歴一覧を取得する。<br>
-	 * カレンダコードと日からカレンダ日マスタリストを取得する。<br>
-	 * 取得したリストは、有効日の昇順で並べられる。<br>
-	 * @param scheduleCode カレンダコード
-	 * @param scheduleDate 日
-	 * @return カレンダ日マスタリスト
-	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
-	 */
-	List<ScheduleDateDtoInterface> findForHistory(String scheduleCode, Date scheduleDate) throws MospException;
 	
 	/**
 	 * 有効日マスタ一覧。
@@ -134,14 +86,5 @@ public interface ScheduleDateDaoInterface extends BaseDaoInterface {
 	 */
 	List<ScheduleDateDtoInterface> findForTerm(Date fromActivateDate, Date toActivateDate, String targetCode)
 			throws MospException;
-	
-	/**
-	 * 条件による検索のための文字列。
-	 * <p>
-	 * 最大有効日レコードのクエリを取得する。
-	 * @return カレンダコードに紐づく有効日が最大であるレコード取得クエリ
-	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
-	 */
-	StringBuffer getQueryForMaxActivateDate() throws MospException;
 	
 }

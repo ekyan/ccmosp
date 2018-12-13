@@ -123,8 +123,8 @@ public class WorkTypeSearchBean extends PlatformBean implements WorkTypeSearchBe
 			workTypeListDto.setWorkTypeName(dto.getWorkTypeName());
 			workTypeListDto.setWorkTypeAbbr(dto.getWorkTypeAbbr());
 			workTypeListDto.setInactivateFlag(dto.getInactivateFlag());
-			workTypeListDto.setStartTime(workTypeItemDao.findForKey(workTypeCode, activateDate,
-					TimeConst.CODE_WORKSTART).getWorkTypeItemValue());
+			workTypeListDto.setStartTime(workTypeItemDao
+				.findForKey(workTypeCode, activateDate, TimeConst.CODE_WORKSTART).getWorkTypeItemValue());
 			workTypeListDto.setEndTime(workTypeItemDao.findForKey(workTypeCode, activateDate, TimeConst.CODE_WORKEND)
 				.getWorkTypeItemValue());
 			workTypeListDto.setWorkTime(workTypeItemDao.findForKey(workTypeCode, activateDate, TimeConst.CODE_WORKTIME)
@@ -182,8 +182,9 @@ public class WorkTypeSearchBean extends PlatformBean implements WorkTypeSearchBe
 		Date defaultTime = DateUtility.getDefaultTime();
 		return getMinute(
 				DateUtility.getHour(startTime, defaultTime) * TimeConst.CODE_DEFINITION_HOUR
-						+ DateUtility.getMinute(startTime), DateUtility.getHour(endTime, defaultTime)
-						* TimeConst.CODE_DEFINITION_HOUR + DateUtility.getMinute(endTime));
+						+ DateUtility.getMinute(startTime),
+				DateUtility.getHour(endTime, defaultTime) * TimeConst.CODE_DEFINITION_HOUR
+						+ DateUtility.getMinute(endTime));
 	}
 	
 	/**

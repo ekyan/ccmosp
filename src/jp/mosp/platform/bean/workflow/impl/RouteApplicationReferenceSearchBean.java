@@ -25,13 +25,14 @@ import java.util.List;
 import java.util.Map;
 
 import jp.mosp.framework.base.MospException;
+import jp.mosp.framework.utils.CapsuleUtility;
 import jp.mosp.framework.utils.MospUtility;
 import jp.mosp.platform.base.PlatformBean;
 import jp.mosp.platform.bean.human.HumanSearchBeanInterface;
+import jp.mosp.platform.bean.system.PlatformMasterBeanInterface;
 import jp.mosp.platform.bean.workflow.ApprovalRouteReferenceBeanInterface;
 import jp.mosp.platform.bean.workflow.ApprovalRouteRegistBeanInterface;
 import jp.mosp.platform.bean.workflow.ApprovalRouteUnitReferenceBeanInterface;
-import jp.mosp.platform.bean.workflow.RouteApplicationReferenceBeanInterface;
 import jp.mosp.platform.bean.workflow.RouteApplicationReferenceSearchBeanInterface;
 import jp.mosp.platform.bean.workflow.WorkflowIntegrateBeanInterface;
 import jp.mosp.platform.comparator.human.HumanPositionGradeComparator;
@@ -46,116 +47,117 @@ import jp.mosp.platform.dto.workflow.impl.RouteApplicationReferenceDto;
 /**
  * ルート適用情報検索クラス。<br>
  */
-public class RouteApplicationReferenceSearchBean extends PlatformBean implements
-		RouteApplicationReferenceSearchBeanInterface {
+public class RouteApplicationReferenceSearchBean extends PlatformBean
+		implements RouteApplicationReferenceSearchBeanInterface {
 	
 	/**
 	 * 有効日。
 	 */
-	protected Date										activateDate;
+	protected Date									activateDate;
 	
 	/**
 	 * 社員コード。
 	 */
-	private String										employeeCode;
+	private String									employeeCode;
 	
 	/**
 	 * 氏名。
 	 */
-	private String										employeeName;
+	private String									employeeName;
 	
 	/**
 	 * 勤務地コード。
 	 */
-	private String										workPlaceCode;
+	private String									workPlaceCode;
 	
 	/**
 	 * 雇用契約コード。
 	 */
-	private String										employmentCode;
+	private String									employmentCode;
 	
 	/**
 	 * 所属名称コード。
 	 */
-	private String										sectionCode;
+	private String									sectionCode;
 	
 	/**
 	 * 職位コード。
 	 */
-	private String										positionCode;
+	private String									positionCode;
 	
 	/**
 	 * フロー区分。
 	 */
-	protected int										workflowType;
+	protected int									workflowType;
 	
 	/**
 	 * ルート適用コード。
 	 */
-	private String										routeApplicationCode;
+	private String									routeApplicationCode;
 	
 	/**
 	 * ルート適用名称。
 	 */
-	private String										routeApplicationName;
+	private String									routeApplicationName;
 	
 	/**
 	 * ルートコード。
 	 */
-	protected String									routeCode;
+	protected String								routeCode;
 	
 	/**
 	 * ルート名称。
 	 */
-	protected String									routeName;
+	protected String								routeName;
 	
 	/**
 	 * 承認者社員コード。
 	 */
-	private String										approverCode;
+	private String									approverCode;
 	
 	/**
 	 * 承認者氏名
 	 */
-	private String										approverName;
+	private String									approverName;
 	
 	/**
 	 * 人事検索クラス。
 	 */
-	protected HumanSearchBeanInterface					humanSearch;
+	protected HumanSearchBeanInterface				humanSearch;
 	
 	/**
-	 * ルート適用参照クラス。
+	 * プラットフォームマスタ参照クラス。<br>
 	 */
-	protected RouteApplicationReferenceBeanInterface	routeApplicationRefer;
+	protected PlatformMasterBeanInterface			platformMaster;
 	
 	/**
 	 * ルート参照クラス。
 	 */
-	private ApprovalRouteReferenceBeanInterface			routeRefer;
+	private ApprovalRouteReferenceBeanInterface		routeRefer;
 	
 	/**
 	 * ルート登録クラス。
 	 */
-	protected ApprovalRouteRegistBeanInterface			routeRegist;
+	protected ApprovalRouteRegistBeanInterface		routeRegist;
 	
 	/**
 	 * ユニット参照クラス。
 	 */
-	private ApprovalRouteUnitReferenceBeanInterface		approvalUnitRefer;
+	private ApprovalRouteUnitReferenceBeanInterface	approvalUnitRefer;
 	
 	/**
 	 * ワークフロー統括クラス。
 	 */
-	protected WorkflowIntegrateBeanInterface			workflowIntegrate;
+	protected WorkflowIntegrateBeanInterface		workflowIntegrate;
 	
 	
 	@Override
 	public void initBean() throws MospException {
 		// 取得
 		humanSearch = (HumanSearchBeanInterface)createBean(HumanSearchBeanInterface.class);
-		routeApplicationRefer = (RouteApplicationReferenceBeanInterface)createBean(RouteApplicationReferenceBeanInterface.class);
-		approvalUnitRefer = (ApprovalRouteUnitReferenceBeanInterface)createBean(ApprovalRouteUnitReferenceBeanInterface.class);
+		platformMaster = (PlatformMasterBeanInterface)createBean(PlatformMasterBeanInterface.class);
+		approvalUnitRefer = (ApprovalRouteUnitReferenceBeanInterface)createBean(
+				ApprovalRouteUnitReferenceBeanInterface.class);
 		routeRefer = (ApprovalRouteReferenceBeanInterface)createBean(ApprovalRouteReferenceBeanInterface.class);
 		routeRegist = (ApprovalRouteRegistBeanInterface)createBean(ApprovalRouteRegistBeanInterface.class);
 		workflowIntegrate = (WorkflowIntegrateBeanInterface)createBean(WorkflowIntegrateBeanInterface.class);
@@ -174,8 +176,8 @@ public class RouteApplicationReferenceSearchBean extends PlatformBean implements
 		// 社員毎に処理
 		for (HumanDtoInterface humanDto : humanList) {
 			// ルート適用情報の取得
-			RouteApplicationDtoInterface routeApplicationDto = routeApplicationRefer.findForPerson(
-					humanDto.getPersonalId(), activateDate, workflowType);
+			RouteApplicationDtoInterface routeApplicationDto = platformMaster.getRouteApplication(humanDto,
+					activateDate, workflowType);
 			// ルート適用検索確認
 			if (isRouteApplicationMatch(routeApplicationDto) == false) {
 				continue;
@@ -281,15 +283,14 @@ public class RouteApplicationReferenceSearchBean extends PlatformBean implements
 		if (approvalRouteDto == null || approvalRouteDto.getRouteCode().isEmpty()) {
 			return routeApproverList;
 		}
-		// ルートユニット情報リスト初期化
-		List<ApprovalRouteUnitDtoInterface> routeUnitList = new ArrayList<ApprovalRouteUnitDtoInterface>();
 		// ルートユニット情報(リスト)の取得(階層毎にユニットを取得)
-		routeUnitList = approvalUnitRefer.getApprovalRouteUnitList(approvalRouteDto.getRouteCode(), activateDate);
+		List<ApprovalRouteUnitDtoInterface> routeUnitList = approvalUnitRefer
+			.getApprovalRouteUnitList(approvalRouteDto.getRouteCode(), activateDate);
 		// ユニット毎に承認者を設定
 		for (ApprovalRouteUnitDtoInterface routeUnitDto : routeUnitList) {
 			// ユニット承認者リスト取得
-			List<HumanDtoInterface> unitApproverList = workflowIntegrate.getUnitApproverList(
-					routeUnitDto.getUnitCode(), activateDate);
+			List<HumanDtoInterface> unitApproverList = workflowIntegrate.getUnitApproverList(routeUnitDto.getUnitCode(),
+					activateDate);
 			// 職位等級でソート
 			Collections.sort(unitApproverList, comparator);
 			// ルート承認者リストに追加
@@ -344,8 +345,8 @@ public class RouteApplicationReferenceSearchBean extends PlatformBean implements
 		if (firstApproverList.isEmpty() == false) {
 			HumanDtoInterface firstApprover = firstApproverList.get(0);
 			// 名前取得
-			dto.setFirstApprovalName(MospUtility.getHumansName(firstApprover.getFirstName(),
-					firstApprover.getLastName()));
+			dto.setFirstApprovalName(
+					MospUtility.getHumansName(firstApprover.getFirstName(), firstApprover.getLastName()));
 		}
 		// 最終承認ユニットの承認者リストを取得
 		List<HumanDtoInterface> endApproverList = routeApproverList.get(routeApproverList.size() - 1);
@@ -558,7 +559,7 @@ public class RouteApplicationReferenceSearchBean extends PlatformBean implements
 	
 	@Override
 	public void setActivateDate(Date activateDate) {
-		this.activateDate = activateDate;
+		this.activateDate = CapsuleUtility.getDateClone(activateDate);
 	}
 	
 	@Override

@@ -1,17 +1,17 @@
 /*
  * MosP - Mind Open Source Project    http://www.mosp.jp/
  * Copyright (C) MIND Co., Ltd.       http://www.e-mind.co.jp/
- *
+ * 
  * This program is free software: you can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License
  * as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -71,7 +71,7 @@ public class InstanceFactory {
 	 * @throws MospException インスタンスの生成に失敗した場合
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T>T simplifiedInstance(String className) throws MospException {
+	public static <T> T simplifiedInstance(String className) throws MospException {
 		T obj = null;
 		try {
 			obj = (T)Class.forName(className).newInstance();
@@ -158,8 +158,8 @@ public class InstanceFactory {
 	 * @return 初期化されたBeanインスタンス
 	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
 	 */
-	public static BaseBeanInterface loadBean(Class<?> cls, Date targetDate, MospParams mospParams, Connection connection)
-			throws MospException {
+	public static BaseBeanInterface loadBean(Class<?> cls, Date targetDate, MospParams mospParams,
+			Connection connection) throws MospException {
 		// モデルクラス名取得
 		String modelClass = MospUtility.getModelClass(cls, mospParams.getProperties(), targetDate);
 		// Beanインスタンスを生成し初期化
@@ -215,7 +215,7 @@ public class InstanceFactory {
 	 * @return 初期化されたDAOインスタンス
 	 * @throws MospException DAOインスタンスの生成及び初期化に失敗した場合
 	 */
-	protected static BaseDaoInterface loadDao(String modelClass, MospParams mospParams, Connection connection)
+	public static BaseDaoInterface loadDao(String modelClass, MospParams mospParams, Connection connection)
 			throws MospException {
 		// DAOインスタンス取得
 		BaseDaoInterface dao = (BaseDaoInterface)loadInstance(modelClass);
@@ -226,6 +226,33 @@ public class InstanceFactory {
 		// デバッグメッセージ
 		LogUtility.debug(mospParams, dao.toString());
 		return dao;
+	}
+	
+	/**
+	 * クラスローダーからインスタンスを生成する。<br>
+	 * <br>
+	 * <br>
+	 * @param cls 対象DAOインターフェース
+	 * @param mospParams MosP処理情報
+	 * @return 対象クラスインスタンス
+	 * @throws MospException インスタンスの生成に失敗した場合
+	 */
+	@SuppressWarnings("unchecked")
+	public static <T> T loadGeneralInstance(Class<T> cls, MospParams mospParams) throws MospException {
+		// モデルクラス名取得
+		String className = MospUtility.getModelClass(cls, mospParams.getProperties(), null);
+		try {
+			// クラスをロードしてインスタンスを生成
+			return (T)Thread.currentThread().getContextClassLoader().loadClass(className).newInstance();
+		} catch (NullPointerException e) {
+			throw new MospException(e, ExceptionConst.EX_NO_CLASS_NAME, null);
+		} catch (ClassNotFoundException e) {
+			throw new MospException(e, ExceptionConst.EX_NO_CLASS, className);
+		} catch (InstantiationException e) {
+			throw new MospException(e, ExceptionConst.EX_FAIL_INSTANTIATE, className);
+		} catch (IllegalAccessException e) {
+			throw new MospException(e, ExceptionConst.EX_FAIL_INSTANTIATE, className);
+		}
 	}
 	
 	/**

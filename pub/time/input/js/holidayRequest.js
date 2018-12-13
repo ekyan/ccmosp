@@ -46,6 +46,8 @@ function onLoadExtra() {
 	setOnChangeHandler("pltEditStatusSpecial", changeHolidayType);
 	setOnChangeHandler("pltEditSpecialOther", changeHolidayType);
 	setOnChangeHandler("pltSearchHolidayType", checkSearchHolidayType);
+	setOnChangeHandler("pltEditHolidayRange2", changeEditTimePulldown);
+	changeEditTimePulldown();
 	checkSearchHolidayType();
 	// 有効日(編集)モード確認
 	if (modeActivateDate == MODE_ACTIVATE_DATE_FIXED) {
@@ -63,8 +65,8 @@ function onLoadExtra() {
 		setDisabled("pltEditSpecialOther", false);
 		setDisabled("pltEditSpecialAbsence", false);
 		// 
-		var startDate = getDate(getFormValue("pltEditStartYear"), getFormValue("pltEditStartMonth"), getFormValue("pltEditStartDay"));
-		var endDate = getDate(getFormValue("pltEditEndYear"), getFormValue("pltEditEndMonth"), getFormValue("pltEditEndDay"));
+		var startDate = getDateObject(getFormValue("pltEditStartYear"), getFormValue("pltEditStartMonth"), getFormValue("pltEditStartDay"));
+		var endDate = getDateObject(getFormValue("pltEditEndYear"), getFormValue("pltEditEndMonth"), getFormValue("pltEditEndDay"));
 		if(startDate.getTime() != endDate.getTime()) {
 			setDisabled("pltEditHolidayRange1", true);
 			setDisabled("pltEditHolidayRange2", true);
@@ -103,9 +105,8 @@ function onLoadExtra() {
 		setDisabled("pltSearchSpecialAbsence", false);
 		setDisabled("pltSearchHolidayRange", false);
 		setDisabled("pltSearchHolidayRange1", false);
-		setDisabled("pltSearchHolidayRange2", false);
 		// 検索ボタン利用可
-		setDisabled("btnSearch", false);
+		setReadOnly("btnSearch", false);
 	} else {
 		// 有効日編集可
 		setDisabled("pltSearchYear", false);
@@ -119,9 +120,8 @@ function onLoadExtra() {
 		setDisabled("pltSearchSpecialAbsence", true);
 		setDisabled("pltSearchHolidayRange", true);
 		setDisabled("pltSearchHolidayRange1", true);
-		setDisabled("pltSearchHolidayRange2", true);
 		// 検索ボタン利用不可
-		setDisabled("btnSearch", true);
+		setReadOnly("btnSearch", true);
 	}
 }
 
@@ -160,6 +160,8 @@ function checkEditHolidayType() {
 		setObjectVisibility("pltEditSpecialAbsence", false);
 		setObjectVisibility("pltEditHolidayRange1", false);
 		setObjectVisibility("pltEditHolidayRange2", true);
+		// 時間休プルダウン設定
+		changeEditTimePulldown();
 	} else if(holidayType == 3) {
 		setObjectVisibility("pltEditStatusWithPay", false);
 		setObjectVisibility("pltEditStatusSpecial", false);
@@ -167,6 +169,8 @@ function checkEditHolidayType() {
 		setObjectVisibility("pltEditSpecialAbsence", false);
 		setObjectVisibility("pltEditHolidayRange1", false);
 		setObjectVisibility("pltEditHolidayRange2", true);
+		// 時間休プルダウン設定
+		changeEditTimePulldown();
 	} else if(holidayType == 4) {
 		setObjectVisibility("pltEditStatusWithPay", false);
 		setObjectVisibility("pltEditStatusSpecial", false);
@@ -174,6 +178,8 @@ function checkEditHolidayType() {
 		setObjectVisibility("pltEditSpecialAbsence", true);
 		setObjectVisibility("pltEditHolidayRange1", false);
 		setObjectVisibility("pltEditHolidayRange2", true);
+		// 時間休プルダウン設定
+		changeEditTimePulldown();
 	}
 	changeHolidayType();
 }
@@ -193,7 +199,6 @@ function checkSearchHolidayType() {
 		setObjectVisibility("pltSearchSpecialAbsence", false);
 		setObjectVisibility("pltSearchHolidayRange", false);
 		setObjectVisibility("pltSearchHolidayRange1", true);
-		setObjectVisibility("pltSearchHolidayRange2", false);
 	} else if(holidayType == 2) {
 		setObjectVisibility("pltSearchStatus", false);
 		setObjectVisibility("pltSearchStatusWithPay", false);
@@ -201,8 +206,7 @@ function checkSearchHolidayType() {
 		setObjectVisibility("pltSearchSpecialOther", false);
 		setObjectVisibility("pltSearchSpecialAbsence", false);
 		setObjectVisibility("pltSearchHolidayRange", false);
-		setObjectVisibility("pltSearchHolidayRange1", false);
-		setObjectVisibility("pltSearchHolidayRange2", true);
+		setObjectVisibility("pltSearchHolidayRange1", true);
 	} else if(holidayType == 3) {
 		setObjectVisibility("pltSearchStatus", false);
 		setObjectVisibility("pltSearchStatusWithPay", false);
@@ -210,8 +214,7 @@ function checkSearchHolidayType() {
 		setObjectVisibility("pltSearchSpecialOther", true);
 		setObjectVisibility("pltSearchSpecialAbsence", false);
 		setObjectVisibility("pltSearchHolidayRange", false);
-		setObjectVisibility("pltSearchHolidayRange1", false);
-		setObjectVisibility("pltSearchHolidayRange2", true);
+		setObjectVisibility("pltSearchHolidayRange1", true);
 	} else if(holidayType == 4) {
 		setObjectVisibility("pltSearchStatus", false);
 		setObjectVisibility("pltSearchStatusWithPay", false);
@@ -219,8 +222,7 @@ function checkSearchHolidayType() {
 		setObjectVisibility("pltSearchSpecialOther", false);
 		setObjectVisibility("pltSearchSpecialAbsence", true);
 		setObjectVisibility("pltSearchHolidayRange", false);
-		setObjectVisibility("pltSearchHolidayRange1", false);
-		setObjectVisibility("pltSearchHolidayRange2", true);
+		setObjectVisibility("pltSearchHolidayRange1", true);
 	} else {
 		setObjectVisibility("pltSearchStatus", true);
 		setObjectVisibility("pltSearchStatusWithPay", false);
@@ -229,7 +231,6 @@ function checkSearchHolidayType() {
 		setObjectVisibility("pltSearchSpecialAbsence", false);
 		setObjectVisibility("pltSearchHolidayRange", true);
 		setObjectVisibility("pltSearchHolidayRange1", false);
-		setObjectVisibility("pltSearchHolidayRange2", false);
 	}
 }
 
@@ -260,24 +261,35 @@ function checkRegistExtra(aryMessage, event) {
  * @return 無し
  */
 function changeEditTimePulldown() {
+	// 時間休無効
 	setDisabled("pltEditStartHour", true);
 	setDisabled("pltEditStartMinute", true);
 	setDisabled("pltEditEndTime", true);
-	var holidayType1 = getFormValue("pltEditHolidayType");
-	var holidayType2 = getFormValue("pltEditStatusWithPay");
+	// 休暇範囲取得
 	var holidayRange = getFormValue("pltEditHolidayRange1");
-	if(holidayType1 == 1 && holidayType2 == 1 && holidayRange == 4) {
-		// 時間休の場合
+	var holidayRange2 = getFormValue("pltEditHolidayRange2");
+	// 時間休の場合
+	if(holidayRange == 4 || holidayRange2 == 4) {
+		// 時間休有効
 		setDisabled("pltEditStartHour", false);
 		setDisabled("pltEditStartMinute", false);
 		setDisabled("pltEditEndTime", false);
 	}
 }
 
+/**
+ * 休暇年月日(開始)変更時の処理を行う。
+ * @param event イベントオブジェクト
+ */
 function changeEndDate(event) {
 	var endYearId = "pltEditEndYear";
 	var endMonthId = "pltEditEndMonth";
 	var endDayId = "pltEditEndDay";
+	// イベント発生元オブジェクトが休暇年月日(開始)年である場合
+	if (getSrcElement(event).id == "pltEditStartYear") {
+		// 休暇年月日(開始)年のオプションを休暇年月日(終了)年にコピー
+		copySelectOptions("pltEditStartYear", endYearId);
+	}
 	setFormValue(endYearId, getFormValue("pltEditStartYear"));
 	setFormValue(endMonthId, getFormValue("pltEditStartMonth"));
 	setFormValue(endDayId, getFormValue("pltEditStartDay"));
@@ -397,8 +409,13 @@ function checkDateExtra(aryMessage, event) {
  */
 function checkRequestReason(aryMessage, event) {
 	var holidayType = getFormValue("pltEditHolidayType");
-	if (holidayType == "1") {
-		// 有給休暇の場合
+	if (holidayType != "1") {
+		// 有給休暇でない場合
+		return;
+	}
+	// 有給休暇である場合
+	if (jsPaidHolidayReasonRequired) {
+		// 申請理由が必須である場合
 		checkRequired("txtEditRequestReason", aryMessage);
 	}
 }
@@ -434,10 +451,6 @@ function checkStatus(aryMessage, event, status) {
 	}
 }
 
-function getDate(fullYear, month, date) {
-	return new Date(fullYear, month - 1, date, 0, 0, 0, 0);
-}
-
 /**
  * 文字列を整数に変換する。
  * @param string 解析する文字列
@@ -445,3 +458,4 @@ function getDate(fullYear, month, date) {
 function parseIntDecimal(string) {
 	return parseInt(string, 10);
 }
+

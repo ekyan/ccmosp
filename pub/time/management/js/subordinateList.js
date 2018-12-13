@@ -36,6 +36,61 @@ function onLoadExtra() {
 	} else {
 		setReadOnly("btnSearch", true);
 	}
+	// イベントハンドラ設定
+	setOnChangeHandler("pltSearchRequestYear",onChangeSearchRequetYear);
+	onChangeSearchRequetYear(null)
+}
+
+/**
+ * フィールドオンチェンジ時の処理。
+ * 検索年のプルダウンを選択した際に変更する。
+ * @param event イベントオブジェクト
+ */
+function onChangeSearchRequetYear(event) {
+	
+	// プルダウン要素取得
+	var objSelect = getSelectOptions("pltSearchRequestYear");
+	// プルダウン要素確認
+	if (objSelect == null || objSelect.selectedIndex == null) {
+		return;
+	}
+	// 選択検索年取得
+	var targetYear = getFormValue("pltSearchRequestYear");
+	// プルダウン初期化
+	for (var i = objSelect.length - 1; i >= 0; i--) {
+		objSelect[i] = null;
+	}
+	// プルダウンインデックス取得
+	var optionArrayLength = 4;
+	// プルダウン生成
+	for (var i = 0; i < optionArrayLength + 1; i++) {
+		if(i == 0){
+			// 選択検索年-3
+			var value0 = parseInt(targetYear) - 3;
+			objSelect[i] = new Option(String(value0), String(value0));
+		} 
+		if(i == 1){
+			// 選択検索年-2
+			var value1 = parseInt(targetYear) - 2;
+			objSelect[i] = new Option(String(value1), String(value1));
+		}
+		if(i == 2){
+			// 選択検索年-1
+			var value2 = parseInt(targetYear) - 1;
+			objSelect[i] = new Option(String(value2), String(value2));
+		}
+		if(i == 3){
+			// 選択検索年
+			objSelect[i] = new Option(targetYear, targetYear);
+		}
+		if(i == 4){
+			// 選択検索年+1
+			var value4 = parseInt(targetYear) + 1;
+			objSelect[i] = new Option(String(value4), String(value4));
+		}
+	}
+	// 選択検索年再設定
+	setFormValue("pltSearchRequestYear", targetYear);
 }
 
 /**
@@ -97,7 +152,8 @@ function hasSearchCondition() {
 			"pltSearchSection",
 			"pltSearchPosition",
 			"pltSearchApproval",
-			"pltSearchCalc"
+			"pltSearchCalc",
+			"pltSearchHumanType"
 	);
 }
 

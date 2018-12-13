@@ -26,13 +26,10 @@ import jp.mosp.framework.base.BaseDto;
 import jp.mosp.time.dto.settings.HolidayRequestDtoInterface;
 
 /**
- * 
+ * 休暇申請情報。<br>
  */
 public class TmdHolidayRequestDto extends BaseDto implements HolidayRequestDtoInterface {
 	
-	/**
-	 * 
-	 */
 	private static final long	serialVersionUID	= -8708564307800682059L;
 	
 	/**
@@ -231,6 +228,11 @@ public class TmdHolidayRequestDto extends BaseDto implements HolidayRequestDtoIn
 	@Override
 	public void setUseHour(int useHour) {
 		this.useHour = useHour;
+	}
+	
+	@Override
+	public long getRecordId() {
+		return getTmdHolidayRequestId();
 	}
 	
 }

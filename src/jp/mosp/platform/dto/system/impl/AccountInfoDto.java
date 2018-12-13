@@ -18,6 +18,7 @@
 package jp.mosp.platform.dto.system.impl;
 
 import java.util.Date;
+import java.util.Map;
 
 import jp.mosp.framework.base.BaseDto;
 import jp.mosp.platform.dto.system.AccountInfoDtoInterface;
@@ -73,6 +74,11 @@ public class AccountInfoDto extends BaseDto implements AccountInfoDtoInterface {
 	 * 	ロールコード。
 	 */
 	private String				roleCode;
+	
+	/**
+	 * ユーザ追加ロールコード群(キー：ロール区分、値：ロールコード)。<br>
+	 */
+	private Map<String, String>	extraRoles;
 	
 	/**
 	 * 	ロール名称。
@@ -229,6 +235,16 @@ public class AccountInfoDto extends BaseDto implements AccountInfoDtoInterface {
 	@Override
 	public void setRoleCode(String roleCode) {
 		this.roleCode = roleCode;
+	}
+	
+	@Override
+	public Map<String, String> getExtraRoles() {
+		return extraRoles;
+	}
+	
+	@Override
+	public void setExtraRoles(Map<String, String> extraRoles) {
+		this.extraRoles = extraRoles;
 	}
 	
 	/**

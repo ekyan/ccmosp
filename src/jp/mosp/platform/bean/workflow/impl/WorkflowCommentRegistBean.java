@@ -34,7 +34,7 @@ import jp.mosp.platform.dto.workflow.impl.PftWorkflowCommentDto;
  */
 public class WorkflowCommentRegistBean extends PlatformBean implements WorkflowCommentRegistBeanInterface {
 	
-	private WorkflowCommentDaoInterface	dao;
+	private WorkflowCommentDaoInterface dao;
 	
 	
 	/**

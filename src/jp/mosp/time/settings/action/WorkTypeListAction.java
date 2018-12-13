@@ -316,7 +316,13 @@ public class WorkTypeListAction extends TimeSettingAction {
 		vo.setAryCkbWorkTypeListId(aryCkbWorkTypeListId);
 	}
 	
-	private String getStringWorkTypeTime(Date time) throws MospException {
+	/**
+	 * 時間をHH.MM形式に変換する。<br>
+	 * @param time 対象時間
+	 * @return HH.MM
+	 * @throws MospException 例外処理が発生した場合
+	 */
+	protected String getStringWorkTypeTime(Date time) throws MospException {
 		if (time == null) {
 			return "";
 		}

@@ -344,15 +344,16 @@ public class RetirementCardAction extends PlatformHumanAction {
 		String[] aryMsg2 = { mospParams.getName("Month") };
 		String[] aryMsg3 = { mospParams.getName("Day") };
 		// 退職日必須
-		InputCheckUtility.checkRequired(vo.getTxtRetirementYear(), aryMsg1, mospParams);
-		InputCheckUtility.checkRequired(vo.getTxtRetirementMonth(), aryMsg2, mospParams);
-		InputCheckUtility.checkRequired(vo.getTxtRetirementDay(), aryMsg3, mospParams);
+		InputCheckUtility.checkRequired(mospParams, vo.getTxtRetirementYear(), aryMsg1);
+		InputCheckUtility.checkRequired(mospParams, vo.getTxtRetirementMonth(), aryMsg2);
+		InputCheckUtility.checkRequired(mospParams, vo.getTxtRetirementDay(), aryMsg3);
 		// 退職日日付妥当性
-		InputCheckUtility.checkNumber(vo.getTxtRetirementYear(), aryMsg1, mospParams);
-		InputCheckUtility.checkNumber(vo.getTxtRetirementMonth(), aryMsg2, mospParams);
-		InputCheckUtility.checkNumber(vo.getTxtRetirementDay(), aryMsg3, mospParams);
-		InputCheckUtility.checkDate(vo.getTxtRetirementYear(), vo.getTxtRetirementMonth(), vo.getTxtRetirementDay(),
-				new String[]{ mospParams.getName("ActivateDate"), mospParams.getName("CorrectDate") }, mospParams);
+		InputCheckUtility.checkNumber(mospParams, vo.getTxtRetirementYear(), aryMsg1);
+		InputCheckUtility.checkNumber(mospParams, vo.getTxtRetirementMonth(), aryMsg2);
+		InputCheckUtility.checkNumber(mospParams, vo.getTxtRetirementDay(), aryMsg3);
+		InputCheckUtility.checkDate(mospParams, vo.getTxtRetirementYear(), vo.getTxtRetirementMonth(),
+				vo.getTxtRetirementDay(),
+				new String[]{ mospParams.getName("ActivateDate"), mospParams.getName("CorrectDate") });
 	}
 	
 }

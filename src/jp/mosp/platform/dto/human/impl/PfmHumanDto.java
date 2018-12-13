@@ -23,63 +23,72 @@ import jp.mosp.framework.base.BaseDto;
 import jp.mosp.platform.dto.human.HumanDtoInterface;
 
 /**
- * 人事マスタDTO
+ * 人事マスタDTO。<br>
  */
 public class PfmHumanDto extends BaseDto implements HumanDtoInterface {
 	
-	/**
-	 * 
-	 */
 	private static final long	serialVersionUID	= -8304374504192172252L;
 	
 	/**
 	 * レコード識別ID。
 	 */
 	private long				pfmHumanId;
+	
 	/**
 	 * 個人ID。
 	 */
 	private String				personalId;
+	
 	/**
 	 * 有効日。
 	 */
 	private Date				activateDate;
+	
 	/**
 	 * 社員コード。
 	 */
 	private String				employeeCode;
+	
 	/**
 	 * 姓。
 	 */
 	private String				lastName;
+	
 	/**
 	 * 名。
 	 */
 	private String				firstName;
+	
 	/**
 	 * カナ姓。
 	 */
 	private String				lastKana;
+	
 	/**
 	 * カナ名。
 	 */
 	private String				firstKana;
+	
 	/**
 	 * 雇用契約コード。
 	 */
 	private String				employmentContractCode;
+	
 	/**
 	 * 所属コード。
 	 */
 	private String				sectionCode;
+	
 	/**
 	 * 職位コード。
 	 */
 	private String				positionCode;
+	
 	/**
 	 * 勤務地コード。
 	 */
 	private String				workPlaceCode;
+	
 	/**
 	 * メールアドレス。
 	 */

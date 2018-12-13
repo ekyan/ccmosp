@@ -19,14 +19,11 @@ package jp.mosp.platform.portal.action;
 
 import jp.mosp.framework.base.BaseVo;
 import jp.mosp.framework.base.MospException;
-import jp.mosp.framework.base.MospUser;
 import jp.mosp.framework.utils.LogUtility;
-import jp.mosp.framework.utils.MospUtility;
 import jp.mosp.platform.base.PlatformAction;
 import jp.mosp.platform.constant.PlatformMessageConst;
-import jp.mosp.platform.dto.human.HumanDtoInterface;
-import jp.mosp.platform.dto.system.UserMasterDtoInterface;
 import jp.mosp.platform.portal.vo.LoginVo;
+import jp.mosp.platform.utils.PlatformNamingUtility;
 
 /**
  * 認証処理を行う。<br>
@@ -37,6 +34,11 @@ public class AuthAction extends PlatformAction {
 	 * 認証処理を行う。
 	 */
 	public static final String	CMD_AUTHENTICATE	= "PF0020";
+	
+	/**
+	 * メール送信処理を行う。
+	 */
+	public static final String	CMD_SEND_MAIL		= "PF0021";
 	
 	
 	/**
@@ -53,6 +55,10 @@ public class AuthAction extends PlatformAction {
 			// 認証
 			prepareVo();
 			auth();
+		} else if (mospParams.getCommand().equals(CMD_SEND_MAIL)) {
+			// メール送信
+			prepareVo();
+			sendMail();
 		} else {
 			throwInvalidCommandException();
 		}
@@ -70,47 +76,18 @@ public class AuthAction extends PlatformAction {
 	protected void auth() throws MospException {
 		// VO取得
 		LoginVo vo = (LoginVo)mospParams.getVo();
-		// ユーザID及びパスワードによる認証
-		platform().auth().authenticate(vo.getTxtUserId(), vo.getTxtPassWord());
-		// 認証結果確認
+		// ユーザID及びパスワード(クライアント暗号化済み)を取得
+		String userId = vo.getTxtUserId();
+		String pass = vo.getTxtPassWord();
+		// 認証及びMosPユーザの設定
+		authAndSetMospUser(userId, pass);
+		// 処理結果確認
 		if (mospParams.hasErrorMessage()) {
-			// 認証失敗メッセージ設定及びMosPセッション保持情報初期化
-			addAuthFailedMessage();
+			// 処理終了
 			return;
 		}
-		// ユーザ確認(対象日はシステム日付)
-		platform().userCheck().checkUserEmployeeForUserId(vo.getTxtUserId(), getSystemDate());
-		// ユーザ確認結果確認
-		if (mospParams.hasErrorMessage()) {
-			// 認証失敗メッセージ設定及びMosPセッション保持情報初期化
-			addAuthFailedMessage();
-			return;
-		}
-		// ロール確認(対象日はシステム日付)
-		platform().userCheck().checkUserRole(vo.getTxtUserId(), getSystemDate());
-		// ロール確認結果確認
-		if (mospParams.hasErrorMessage()) {
-			// 認証失敗メッセージ設定及びMosPセッション保持情報初期化
-			addAuthFailedMessage();
-			return;
-		}
-		// ユーザマスタ取得
-		UserMasterDtoInterface userMasterDto = reference().user().getUserInfo(vo.getTxtUserId(), getSystemDate());
-		// 人事マスタ取得
-		HumanDtoInterface humanDto = reference().human().getHumanInfo(userMasterDto.getPersonalId(), getSystemDate());
-		// MosPユーザ情報作成
-		MospUser user = mospParams.getUser();
-		if (user == null) {
-			user = new MospUser();
-		}
-		user.setUserId(userMasterDto.getUserId());
-		user.setPersonalId(userMasterDto.getPersonalId());
-		user.setRole(userMasterDto.getRoleCode());
-		user.setUserName(MospUtility.getHumansName(humanDto.getFirstName(), humanDto.getLastName()));
-		// MosPユーザ情報設定
-		mospParams.setUser(user);
 		// パスワード確認(堅牢性)
-		platform().passwordCheck().checkPasswordStrength(vo.getTxtUserId());
+		platform().passwordCheck().checkPasswordStrength(userId);
 		// パスワード確認結果確認
 		if (mospParams.hasErrorMessage()) {
 			// パスワード変更画面へ
@@ -118,17 +95,50 @@ public class AuthAction extends PlatformAction {
 			return;
 		}
 		// パスワード確認(有効期間)
-		platform().passwordCheck().checkPasswordPeriod(vo.getTxtUserId(), getSystemDate());
+		platform().passwordCheck().checkPasswordPeriod(userId, getSystemDate());
 		// パスワード確認結果確認
 		if (mospParams.hasErrorMessage()) {
 			// パスワード変更画面へ
 			mospParams.setNextCommand(PasswordChangeAction.CMD_SHOW);
 			return;
 		}
-		// 認証成功
+		// 認証成功(連続実行コマンドを設定)
 		mospParams.setNextCommand(PortalAction.CMD_AFTER_AUTH);
 		// ログ出力
-		LogUtility.application(mospParams, mospParams.getName("Login"));
+		LogUtility.application(mospParams, PlatformNamingUtility.login(mospParams));
+	}
+	
+	/**
+	 * 認証及びMosPユーザの設定を行う。<br>
+	 * @param userId ユーザID
+	 * @param pass   パスワード(クライアント暗号化済)
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	protected void authAndSetMospUser(String userId, String pass) throws MospException {
+		// ユーザID及びパスワードによる認証
+		platform().auth().authenticate(userId, pass);
+		// 認証結果確認
+		if (mospParams.hasErrorMessage()) {
+			// 認証失敗メッセージ設定及びMosPセッション保持情報初期化
+			addAuthFailedMessage();
+			return;
+		}
+		// MosPユーザ情報を設定
+		platform().mospUser().setMospUser(userId);
+		// 処理結果確認
+		if (mospParams.hasErrorMessage()) {
+			// 認証失敗メッセージ設定及びMosPセッション保持情報初期化
+			addAuthFailedMessage();
+			return;
+		}
+	}
+	
+	/**
+	 * メール送信処理を行う。
+	 * @throws MospException 継承先のメソッドで例外が発生した場合
+	 */
+	protected void sendMail() throws MospException {
+		// 処理無し
 	}
 	
 	/**

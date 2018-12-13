@@ -22,12 +22,18 @@ import java.util.Date;
 
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.base.MospParams;
+import jp.mosp.framework.utils.DateUtility;
 import jp.mosp.platform.bean.portal.PortalBeanInterface;
 import jp.mosp.platform.bean.portal.impl.PortalBean;
+import jp.mosp.platform.utils.IpAddressUtility;
+import jp.mosp.time.base.TimeBean;
 import jp.mosp.time.bean.ApplicationReferenceBeanInterface;
 import jp.mosp.time.bean.TimeRecordBeanInterface;
+import jp.mosp.time.bean.TimeRecordReferenceBeanInterface;
+import jp.mosp.time.dto.settings.TimeRecordDtoInterface;
 import jp.mosp.time.entity.ApplicationEntity;
 import jp.mosp.time.utils.TimeMessageUtility;
+import jp.mosp.time.utils.TimeUtility;
 
 /**
  * ポータル用タイムカード処理クラス。<br>
@@ -37,62 +43,72 @@ public class PortalTimeCardBean extends PortalBean implements PortalBeanInterfac
 	/**
 	 * パス(ポータル用打刻機能JSP)。
 	 */
-	protected static final String	PATH_PORTAL_VIEW	= "/jsp/time/portal/portalTimeCard.jsp";
+	protected static final String	PATH_PORTAL_VIEW			= "/jsp/time/portal/portalTimeCard.jsp";
 	
 	/**
 	 * パス(ポータル用打刻機能JS)。
 	 */
-	public static final String		JS_TIME				= "jsTime";
+	public static final String		JS_TIME						= "jsTime";
 	
 	/**
 	 * ポータルパラメータキー(出勤)。
 	 */
-	public static final String		RECODE_START_WORK	= "StartWork";
+	public static final String		RECODE_START_WORK			= "StartWork";
 	
 	/**
 	 * ポータルパラメータキー(退勤)。
 	 */
-	public static final String		RECODE_END_WORK		= "EndWork";
+	public static final String		RECODE_END_WORK				= "EndWork";
 	
 	/**
 	 * ポータルパラメータキー(休憩入)。
 	 */
-	public static final String		RECODE_START_REST	= "StartRest";
+	public static final String		RECODE_START_REST			= "StartRest";
 	
 	/**
 	 * ポータルパラメータキー(休憩戻)。
 	 */
-	public static final String		RECODE_END_REST		= "EndRest";
+	public static final String		RECODE_END_REST				= "EndRest";
 	
 	/**
 	 * ポータルパラメータキー(定時終業)。
 	 */
-	public static final String		RECODE_REGULAR_END	= "RegularEnd";
+	public static final String		RECODE_REGULAR_END			= "RegularEnd";
 	
 	/**
 	 * ポータルパラメータキー(残業有終業)。
 	 */
-	public static final String		RECODE_OVER_END		= "OverEnd";
+	public static final String		RECODE_OVER_END				= "OverEnd";
 	
 	/**
 	 * ポータルパラメータキー(出勤)。
 	 */
-	public static final String		RECODE_REGULAR_WORK	= "RegularWork";
+	public static final String		RECODE_REGULAR_WORK			= "RegularWork";
 	
 	/**
 	 * パラメータキー(押されたボタンの値)。
 	 */
-	public static final String		PRM_RECODE_TYPE		= "RecodeType";
+	public static final String		PRM_RECODE_TYPE				= "RecodeType";
 	
 	/**
 	 * パラメータキー(ポータル出退勤ボタン表示)。
 	 */
-	public static final String		PRM_TIME_BUTTON		= "TimeButton";
+	public static final String		PRM_TIME_BUTTON				= "TimeButton";
 	
 	/**
 	 * パラメータキー(ポータル休憩ボタン表示)。
 	 */
-	public static final String		PRM_REST_BUTTON		= "RestButton";
+	public static final String		PRM_REST_BUTTON				= "RestButton";
+	
+	/**
+	 * ポータル出退勤ボタン表示(非表示)。<br>
+	 */
+	protected static final String	CODE_TIME_BUTTON_DISABLE	= "9";
+	
+	/**
+	 * ポータル休憩ボタン表示(非表示)。<br>
+	 */
+	protected static final String	CODE_REST_BUTTON_DISABLE	= "0";
 	
 	
 	/**
@@ -118,6 +134,11 @@ public class PortalTimeCardBean extends PortalBean implements PortalBeanInterfac
 	
 	@Override
 	public void show() throws MospException {
+		// 勤怠一覧が利用できない場合
+		if (TimeUtility.isAttendanceListAvailable(mospParams) == false) {
+			// 処理無し
+			return;
+		}
 		// ポータル用JSPパス追加
 		addPortalViewList(PATH_PORTAL_VIEW);
 		// ポータル用JS
@@ -127,12 +148,19 @@ public class PortalTimeCardBean extends PortalBean implements PortalBeanInterfac
 		// システム日付取得
 		Date targetDate = getSystemDate();
 		// 設定適用エンティティ取得
-		ApplicationEntity applicationEntity = getApplicationReferenceBean()
-			.getApplicationEntity(personalId, targetDate);
+		ApplicationEntity applicationEntity = getApplicationReferenceBean().getApplicationEntity(personalId,
+				targetDate);
 		// ポータル出退勤ボタン表示設定取得
 		putPortalParameter(PRM_TIME_BUTTON, String.valueOf(applicationEntity.getPortalTimeButtons()));
 		// ポータル休憩ボタン表示設定取得
 		putPortalParameter(PRM_REST_BUTTON, String.valueOf(applicationEntity.getPortalRestButtons()));
+		// IPアドレスが利用可能でない場合
+		if (IpAddressUtility.isAddressAvailable(mospParams) == false) {
+			// 始業終業ボタン表示設定(非表示)
+			putPortalParameter(PRM_TIME_BUTTON, CODE_TIME_BUTTON_DISABLE);
+			// ポータル休憩ボタン表示設定(非表示)
+			putPortalParameter(PRM_REST_BUTTON, CODE_REST_BUTTON_DISABLE);
+		}
 	}
 	
 	@Override
@@ -141,10 +169,10 @@ public class PortalTimeCardBean extends PortalBean implements PortalBeanInterfac
 		String recodeType = getPortalParameter(PRM_RECODE_TYPE);
 		// コマンド毎の処理
 		if (recodeType.equals(RECODE_START_WORK)) {
-			// 出勤	
+			// 出勤
 			recordStartWork();
 		} else if (recodeType.equals(RECODE_END_WORK)) {
-			// 退勤	
+			// 退勤
 			recordEndWork();
 		} else if (recodeType.equals(RECODE_START_REST)) {
 			// 休憩入
@@ -169,16 +197,23 @@ public class PortalTimeCardBean extends PortalBean implements PortalBeanInterfac
 	 * @throws MospException インスタンスの取得及びSQL実行に失敗した場合
 	 */
 	protected void recordStartWork() throws MospException {
+		TimeRecordDtoInterface dto = getTimeRecordReferenceBean().findForKey(mospParams.getUser().getPersonalId(),
+				getSystemDate(), TimeBean.TIMES_WORK_DEFAULT, RECODE_START_WORK);
 		// 始業打刻
-		getTimeRecordBean().recordStartWork();
+		String recordTime = DateUtility.getStringTimeAndSecond(getTimeRecordBean().recordStartWork());
 		// 処理結果確認
 		if (mospParams.hasErrorMessage()) {
+			if (dto == null) {
+				// 打刻失敗メッセージ設定
+				TimeMessageUtility.addMessageRecordTimeFailed(mospParams);
+				return;
+			}
 			// 打刻失敗メッセージ設定
-			TimeMessageUtility.addMessageRecordTimeFailed(mospParams);
+			TimeMessageUtility.addMessageRecordStartTimeFailed(mospParams);
 			return;
 		}
 		// 打刻メッセージ設定
-		TimeMessageUtility.addMessageRecordStartWork(mospParams);
+		TimeMessageUtility.addMessageRecordStartWork(mospParams, recordTime);
 	}
 	
 	/**
@@ -187,7 +222,7 @@ public class PortalTimeCardBean extends PortalBean implements PortalBeanInterfac
 	 */
 	protected void recordEndWork() throws MospException {
 		// 終業打刻
-		getTimeRecordBean().recordEndWork();
+		String recordTime = DateUtility.getStringTimeAndSecond(getTimeRecordBean().recordEndWork());
 		// 処理結果確認
 		if (mospParams.hasErrorMessage()) {
 			// 打刻失敗メッセージ設定
@@ -195,7 +230,7 @@ public class PortalTimeCardBean extends PortalBean implements PortalBeanInterfac
 			return;
 		}
 		// 打刻メッセージ設定
-		TimeMessageUtility.addMessageRecordEndWork(mospParams);
+		TimeMessageUtility.addMessageRecordEndWork(mospParams, recordTime);
 	}
 	
 	/**
@@ -204,7 +239,7 @@ public class PortalTimeCardBean extends PortalBean implements PortalBeanInterfac
 	 */
 	protected void recordStartRest() throws MospException {
 		// 休憩入打刻
-		getTimeRecordBean().recordStartRest();
+		String recordTime = DateUtility.getStringTimeAndSecond(getTimeRecordBean().recordStartRest());
 		// 処理結果確認
 		if (mospParams.hasErrorMessage()) {
 			// 打刻失敗メッセージ設定
@@ -212,7 +247,7 @@ public class PortalTimeCardBean extends PortalBean implements PortalBeanInterfac
 			return;
 		}
 		// 打刻メッセージ設定
-		TimeMessageUtility.addMessageRecordStartRest(mospParams);
+		TimeMessageUtility.addMessageRecordStartRest(mospParams, recordTime);
 	}
 	
 	/**
@@ -221,7 +256,7 @@ public class PortalTimeCardBean extends PortalBean implements PortalBeanInterfac
 	 */
 	protected void recordEndRest() throws MospException {
 		// 休憩戻打刻
-		getTimeRecordBean().recordEndRest();
+		String recordTime = DateUtility.getStringTimeAndSecond(getTimeRecordBean().recordEndRest());
 		// 処理結果確認
 		if (mospParams.hasErrorMessage()) {
 			// 打刻失敗メッセージ設定
@@ -229,7 +264,7 @@ public class PortalTimeCardBean extends PortalBean implements PortalBeanInterfac
 			return;
 		}
 		// 打刻メッセージ設定
-		TimeMessageUtility.addMessageRecordEndRest(mospParams);
+		TimeMessageUtility.addMessageRecordEndRest(mospParams, recordTime);
 	}
 	
 	/**
@@ -238,15 +273,18 @@ public class PortalTimeCardBean extends PortalBean implements PortalBeanInterfac
 	 */
 	protected void recordRegularEnd() throws MospException {
 		// 定時終業打刻
-		getTimeRecordBean().recordRegularEnd();
+		String recordTime = DateUtility.getStringTimeAndSecond(getTimeRecordBean().recordRegularEnd());
 		// 処理結果確認
 		if (mospParams.hasErrorMessage()) {
 			// 打刻失敗メッセージ設定
 			TimeMessageUtility.addMessageRecordTimeFailed(mospParams);
 			return;
 		}
+		if (!mospParams.getMessageList().isEmpty()) {
+			return;
+		}
 		// 打刻メッセージ設定
-		TimeMessageUtility.addMessageRecordRegularEnd(mospParams);
+		TimeMessageUtility.addMessageRecordRegularEnd(mospParams, recordTime);
 	}
 	
 	/**
@@ -269,7 +307,7 @@ public class PortalTimeCardBean extends PortalBean implements PortalBeanInterfac
 	 */
 	protected void recordRegularWork() throws MospException {
 		// 定時終業打刻
-		getTimeRecordBean().recordRegularWork();
+		String recordTime = DateUtility.getStringTimeAndSecond(getTimeRecordBean().recordRegularWork());
 		// 処理結果確認
 		if (mospParams.hasErrorMessage()) {
 			// 打刻失敗メッセージ設定
@@ -277,7 +315,7 @@ public class PortalTimeCardBean extends PortalBean implements PortalBeanInterfac
 			return;
 		}
 		// 打刻メッセージ設定
-		TimeMessageUtility.addMessageRecordRegularWork(mospParams);
+		TimeMessageUtility.addMessageRecordRegularWork(mospParams, recordTime);
 	}
 	
 	/**
@@ -296,6 +334,15 @@ public class PortalTimeCardBean extends PortalBean implements PortalBeanInterfac
 	 */
 	protected TimeRecordBeanInterface getTimeRecordBean() throws MospException {
 		return (TimeRecordBeanInterface)createBean(TimeRecordBeanInterface.class);
+	}
+	
+	/**
+	 * 打刻データ参照クラスを取得する。<br>
+	 * @return 打刻データ参照クラス
+	 * @throws MospException インスタンスの取得に失敗した場合
+	 */
+	protected TimeRecordReferenceBeanInterface getTimeRecordReferenceBean() throws MospException {
+		return (TimeRecordReferenceBeanInterface)createBean(TimeRecordReferenceBeanInterface.class);
 	}
 	
 }

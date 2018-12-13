@@ -1,17 +1,17 @@
 /*
  * MosP - Mind Open Source Project    http://www.mosp.jp/
  * Copyright (C) MIND Co., Ltd.       http://www.e-mind.co.jp/
- *
+ * 
  * This program is free software: you can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License
  * as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -74,6 +74,16 @@ public class DBConnBean {
 	public DBConnBean(MospParams mospParams) throws MospException {
 		// コネクション初期化
 		connection = null;
+		// MosPユーザを取得
+		MospUser user = mospParams.getUser();
+		// SaaSの場合(MosPユーザからASPユーザIDが取得できた場合)
+		if (user != null && user.getAspUserId() != null && user.getAspUserId().isEmpty() == false) {
+			// MosPユーザからDB接続設定を取得してコネクションを生成
+			createConnection(user.getDbDriver(), user.getDbUrl(), user.getDbUser(), user.getDbPass());
+			// DB接続ログ出力
+			LogUtility.dbConnect(mospParams, user.getAspUserId() + connection.toString());
+			return;
+		}
 		// JNDI名(データソース)取得及び確認
 		String jndiName = mospParams.getApplicationProperty(APP_JDNI_DATA_SOURCE);
 		if (jndiName != null && jndiName.isEmpty() == false) {
@@ -101,8 +111,7 @@ public class DBConnBean {
 		String rdbname = "";
 		String userid = "";
 		String password = "";
-		// ユーザから生成
-		MospUser user = mospParams.getUser();
+		// MosPユーザが取得できた場合
 		if (user != null) {
 			rdbdriver = user.getDbDriver() == null ? "" : user.getDbDriver();
 			rdbname = user.getDbUrl() == null ? "" : user.getDbUrl();
@@ -154,21 +163,19 @@ public class DBConnBean {
 	
 	/**
 	 * DBコネクションを取得する。<br>
-	 * @param mospParams 		MosP処理情報
-	 * @param rdbDriverKey 		DB接続情報：ドライバ
-	 * @param rdbNameKey 		DB接続情報：URL
-	 * @param userIdKey 		DB接続情報：ユーザ
-	 * @param passwordKey 		DB接続情報：パスワード
+	 * @param mospParams MosP処理情報
+	 * @param rdbDriver  JDBCドライバ名
+	 * @param rdbName    DBのURL
+	 * @param userId     DB接続ユーザーID
+	 * @param password   パスワード
 	 * @throws MospException DBコネクションの取得に失敗した場合
 	 */
-	public DBConnBean(MospParams mospParams, String rdbDriverKey, String rdbNameKey, String userIdKey,
-			String passwordKey) throws MospException {
+	public DBConnBean(MospParams mospParams, String rdbDriver, String rdbName, String userId, String password)
+			throws MospException {
 		// コネクション初期化
 		connection = null;
 		// DB接続設定を用いてコネクションを生成
-		createConnection(mospParams.getApplicationProperty(rdbDriverKey),
-				mospParams.getApplicationProperty(rdbNameKey), mospParams.getApplicationProperty(userIdKey),
-				mospParams.getApplicationProperty(passwordKey));
+		createConnection(rdbDriver, rdbName, userId, password);
 		// DB接続ログ出力
 		LogUtility.dbConnect(mospParams, connection.toString());
 	}
@@ -245,6 +252,22 @@ public class DBConnBean {
 			if (connection != null && !connection.isClosed()) {
 				// コミット
 				connection.commit();
+			}
+		} catch (SQLException e) {
+			throw new MospException(e);
+		}
+	}
+	
+	/**
+	 * トランザクションをロールバックする。<br>
+	 * {@link #connection}のトランザクションをロールバックする。
+	 * @throws MospException ロールバック時にSQL例外が発生した場合
+	 */
+	public void rollback() throws MospException {
+		try {
+			if (connection != null && !connection.isClosed()) {
+				// ロールバック
+				connection.rollback();
 			}
 		} catch (SQLException e) {
 			throw new MospException(e);

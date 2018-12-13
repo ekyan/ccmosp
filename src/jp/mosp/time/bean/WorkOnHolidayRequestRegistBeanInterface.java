@@ -17,7 +17,11 @@
  */
 package jp.mosp.time.bean;
 
+import java.util.Date;
+import java.util.List;
+
 import jp.mosp.framework.base.MospException;
+import jp.mosp.platform.dto.workflow.WorkflowDtoInterface;
 import jp.mosp.time.dto.settings.WorkOnHolidayRequestDtoInterface;
 
 /**
@@ -41,9 +45,10 @@ public interface WorkOnHolidayRequestRegistBeanInterface {
 	/**
 	 * 一括更新処理を行う。<br>
 	 * @param idArray 対象レコード識別ID配列
+	 * @return ワークフローリスト
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
-	void update(long[] idArray) throws MospException;
+	List<WorkflowDtoInterface> update(long[] idArray) throws MospException;
 	
 	/**
 	 * 登録処理を行う。<br>
@@ -153,8 +158,9 @@ public interface WorkOnHolidayRequestRegistBeanInterface {
 	 * 法定休日でなく且つ所定休日でない場合、エラーメッセージを設定する。
 	 * </p>
 	 * @param dto 対象DTO
+	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
 	 */
-	void checkHolidayDate(WorkOnHolidayRequestDtoInterface dto);
+	void checkHolidayDate(WorkOnHolidayRequestDtoInterface dto) throws MospException;
 	
 	/**
 	 * 申請時の入力チェック。休日出勤申請の項目の必須チェック。<br>
@@ -174,5 +180,20 @@ public interface WorkOnHolidayRequestRegistBeanInterface {
 	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
 	 */
 	void checkTemporaryClosingFinal(WorkOnHolidayRequestDtoInterface dto) throws MospException;
+	
+	/**
+	 * カレンダ勤務形態コードを取得する。<br>
+	 * @param personalId 個人ID
+	 * @param targetDate 対象日
+	 * @return 勤務形態コード
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 */
+	String getScheduledWorkTypeCode(String personalId, Date targetDate) throws MospException;
+	
+	/**
+	 * 出勤日の入力チェック。<br>
+	 * @param dto 対象DTO
+	 */
+	public void checkValidate(WorkOnHolidayRequestDtoInterface dto);
 	
 }

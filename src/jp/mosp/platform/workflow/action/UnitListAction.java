@@ -218,8 +218,8 @@ public class UnitListAction extends PlatformSystemAction {
 					if ((!vo.getTxtSearchEmployeeCode().isEmpty()) && (!vo.getTxtSearchApprover().isEmpty())) {
 						// 承認者社員コード、承認者氏名を両方指定した場合
 						if (humanDto.getEmployeeCode().contains(vo.getTxtSearchEmployeeCode())
-								&& (humanName.contains(vo.getTxtSearchApprover()) || humanNameWithBlank.contains(vo
-									.getTxtSearchApprover()))) {
+								&& (humanName.contains(vo.getTxtSearchApprover())
+										|| humanNameWithBlank.contains(vo.getTxtSearchApprover()))) {
 							listPersonId.add(humanDto.getPersonalId());
 						}
 					} else if (vo.getTxtSearchApprover().isEmpty()) {

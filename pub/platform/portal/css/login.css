@@ -38,6 +38,28 @@
 	width: 340px;
 }
 
+.PasswordChange {
+	text-align: center;
+}
+
+.PasswordChangeTable {
+	width: 500px;
+	margin: 40px auto 20px auto;
+	text-align: center;
+}
+
+.PasswordChangeTable .PasswordChangeTitle {
+	width: 150px;
+	text-align: right;
+	font-size: 15px;
+	font-weight: bold;
+}
+
+.LoginTable .PasswordChangeInput {
+	padding-bottom: 10px;
+	width: 340px;
+}
+
 .Button {
 	float: none;
 	margin-bottom: 30px;

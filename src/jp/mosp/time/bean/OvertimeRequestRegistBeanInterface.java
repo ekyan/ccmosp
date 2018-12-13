@@ -154,17 +154,6 @@ public interface OvertimeRequestRegistBeanInterface {
 	void checkOvertimeOverlap(OvertimeRequestDtoInterface dto) throws MospException;
 	
 	/**
-	 * 申請時の入力チェック。他の申請チェック。<br>
-	 * <p>
-	 * 申請年月日に休日や全休の休暇申請日が行われている場合、エラーメッセージを設定する。
-	 * </p>
-	 * @param dto 対象DTO
-	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
-	 */
-	@Deprecated
-	void checkRequest(OvertimeRequestDtoInterface dto) throws MospException;
-	
-	/**
 	 * 申請時の入力チェック。残業申請の項目の必須チェック。<br>
 	 * <p>
 	 * 必須の項目が入力されていない場合、エラーメッセージを設定する。
@@ -172,17 +161,6 @@ public interface OvertimeRequestRegistBeanInterface {
 	 * @param dto 対象DTO
 	 */
 	void checkRequired(OvertimeRequestDtoInterface dto);
-	
-	/**
-	 * 申請時の入力チェック。勤怠の申請チェック。<br>
-	 * <p>
-	 * 勤怠が申請されている場合、エラーメッセージを設定する。
-	 * </p>
-	 * @param dto 対象DTO
-	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
-	 */
-	@Deprecated
-	void checkAttendance(OvertimeRequestDtoInterface dto) throws MospException;
 	
 	/**
 	 * 申請、下書き時の入力チェック。仮締チェック。<br>

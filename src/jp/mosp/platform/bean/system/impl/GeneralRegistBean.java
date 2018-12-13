@@ -36,7 +36,7 @@ public class GeneralRegistBean extends PlatformBean implements GeneralRegistBean
 	/**
 	 * 汎用マスタDAOクラス。<br>
 	 */
-	private GeneralDaoInterface	dao;
+	private GeneralDaoInterface dao;
 	
 	
 	/**
@@ -68,12 +68,20 @@ public class GeneralRegistBean extends PlatformBean implements GeneralRegistBean
 	
 	@Override
 	public void regist(GeneralDtoInterface dto) throws MospException {
-		if (dao.findForKey(dto.getGeneralType(), dto.getGeneralCode(), dto.getGeneralDate()) == null) {
+		// 値取得
+		String type = dto.getGeneralType();
+		Date date = dto.getGeneralDate();
+		String code = dto.getGeneralCode();
+		// 登録済汎用情報取得
+		GeneralDtoInterface oldDto = dao.findForKey(type, code, date);
+		if (oldDto == null) {
 			// 新規登録
 			insert(dto);
 		} else {
-			// 履歴追加
-			add(dto);
+			// レコード識別ID設定
+			dto.setPfgGeneralId(oldDto.getPfgGeneralId());
+			// 履歴更新
+			update(dto);
 		}
 	}
 	
@@ -154,39 +162,17 @@ public class GeneralRegistBean extends PlatformBean implements GeneralRegistBean
 	}
 	
 	@Override
-	public void checkDraft(GeneralDtoInterface dto) {
-		// 処理なし
-	}
-	
-	@Override
-	public void checkAppli(GeneralDtoInterface dto) {
-		// 処理なし
-	}
-	
-	@Override
 	public void delete(GeneralDtoInterface dto) throws MospException {
 		// 論理削除
 		logicalDelete(dao, dto.getPfgGeneralId());
 	}
 	
 	@Override
-	public void checkApproval(GeneralDtoInterface dto) {
-		// 処理なし
-	}
-	
-	@Override
-	public void checkCancel(GeneralDtoInterface dto) {
-		// 処理なし
-	}
-	
-	@Override
-	public void checkTemporaryClosingFinal(GeneralDtoInterface dto) {
-		// 処理なし
-	}
-	
-	@Override
-	public void delete(String personalId, Date workDate) {
-		// 処理なし
+	public void delete(String generalType, String generalCode, Date generalDate) throws MospException {
+		// 削除対象情報取得
+		GeneralDtoInterface dto = dao.findForKey(generalType, generalCode, generalDate);
+		// 削除
+		delete(dto);
 	}
 	
 }

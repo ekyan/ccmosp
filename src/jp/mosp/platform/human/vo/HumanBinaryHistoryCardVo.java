@@ -53,6 +53,11 @@ public class HumanBinaryHistoryCardVo extends PlatformHumanVo {
 	 */
 	private String				txtFileRemark;
 	
+	/**
+	 * レコード識別ID
+	 */
+	private Long				hidRecordId;
+	
 	
 	/**
 	 * @param txtActivateYear セットする txtActivateYear
@@ -150,6 +155,20 @@ public class HumanBinaryHistoryCardVo extends PlatformHumanVo {
 	 */
 	public String getTxtFileRemark() {
 		return txtFileRemark;
+	}
+	
+	/**
+	 * @return hidRecordId
+	 */
+	public Long getHidRecordId() {
+		return hidRecordId;
+	}
+	
+	/**
+	 * @param hidRecordId セットする hidRecordId
+	 */
+	public void setHidRecordId(Long hidRecordId) {
+		this.hidRecordId = hidRecordId;
 	}
 	
 }

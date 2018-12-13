@@ -28,6 +28,7 @@ import java.util.Map;
 
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.base.MospParams;
+import jp.mosp.framework.utils.CapsuleUtility;
 import jp.mosp.platform.base.PlatformBean;
 import jp.mosp.platform.bean.workflow.WorkflowReferenceBeanInterface;
 import jp.mosp.platform.constant.PlatformConst;
@@ -115,7 +116,8 @@ public class OvertimeRequestSearchBean extends PlatformBean implements OvertimeR
 		// 残業申請マスタDAO取得
 		overtimeRequestDao = (OvertimeRequestDaoInterface)createDao(OvertimeRequestDaoInterface.class);
 		attendanceDao = (AttendanceDaoInterface)createDao(AttendanceDaoInterface.class);
-		approvalInfoReference = (ApprovalInfoReferenceBeanInterface)createBean(ApprovalInfoReferenceBeanInterface.class);
+		approvalInfoReference = (ApprovalInfoReferenceBeanInterface)createBean(
+				ApprovalInfoReferenceBeanInterface.class);
 		workflowReference = (WorkflowReferenceBeanInterface)createBean(WorkflowReferenceBeanInterface.class);
 	}
 	
@@ -333,12 +335,12 @@ public class OvertimeRequestSearchBean extends PlatformBean implements OvertimeR
 	
 	@Override
 	public void setRequestStartDate(Date requestStartDate) {
-		this.requestStartDate = requestStartDate;
+		this.requestStartDate = CapsuleUtility.getDateClone(requestStartDate);
 	}
 	
 	@Override
 	public void setRequestEndDate(Date requestEndDate) {
-		this.requestEndDate = requestEndDate;
+		this.requestEndDate = CapsuleUtility.getDateClone(requestEndDate);
 	}
 	
 	@Override

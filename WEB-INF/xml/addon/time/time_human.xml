@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE MosP>
+<!--
+MosP - Mind Open Source Project    http://www.mosp.jp/
+Copyright (C) MIND Co., Ltd.       http://www.e-mind.co.jp/
+
+This program is free software: you can redistribute it and/or
+modify it under the terms of the GNU Affero General Public License
+as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<MosP>
+	<!--人事汎用管理区分設定-->
+	<Application key="HumanGeneralDivisions">
+		<Value>EmploymentContract</Value>
+		<AddValue>true</AddValue>
+	</Application>
+	
+	<!-- コード追加 -->
+	<Code key="FreeWordType">
+		<CodeItem key="HumanPersonal">
+			<ItemName>個人詳細情報</ItemName>
+			<ViewIndex>5</ViewIndex>
+			<ViewFlag>1</ViewFlag>
+		</CodeItem>
+		<CodeItem key="Address">
+			<ItemName>住所情報</ItemName>
+			<ViewIndex>6</ViewIndex>
+			<ViewFlag>1</ViewFlag>
+		</CodeItem>
+		<CodeItem key="PersonalIdPhoto">
+			<ItemName>証明写真</ItemName>
+			<ViewIndex>9</ViewIndex>
+			<ViewFlag>1</ViewFlag>
+		</CodeItem>
+		<CodeItem key="Qualification">
+			<ItemName>資格情報</ItemName>
+			<ViewIndex>7</ViewIndex>
+			<ViewFlag>1</ViewFlag>
+		</CodeItem>
+		<CodeItem key="Contact">
+			<ItemName>緊急連絡先情報</ItemName>
+			<ViewIndex>8</ViewIndex>
+			<ViewFlag>1</ViewFlag>
+		</CodeItem>
+		<CodeItem key="Training">
+			<ItemName>研修情報</ItemName>
+			<ViewIndex>10</ViewIndex>
+			<ViewFlag>1</ViewFlag>
+		</CodeItem>
+		<CodeItem key="Family">
+			<ItemName>家族情報</ItemName>
+			<ViewIndex>11</ViewIndex>
+			<ViewFlag>1</ViewFlag>
+		</CodeItem>
+		<CodeItem key="EducationalBackground">
+			<ItemName>学歴情報</ItemName>
+			<ViewIndex>12</ViewIndex>
+			<ViewFlag>1</ViewFlag>
+		</CodeItem>
+		<CodeItem key="FormerJob">
+			<ItemName>職歴情報</ItemName>
+			<ViewIndex>13</ViewIndex>
+			<ViewFlag>1</ViewFlag>
+		</CodeItem>
+		<CodeItem key="EmploymentContract">
+			<ItemName>雇用契約情報</ItemName>
+			<ViewIndex>14</ViewIndex>
+		</CodeItem>
+		<CodeItem key="MailAddress">
+			<ItemName>メールアドレス情報</ItemName>
+			<ViewIndex>15</ViewIndex>
+		</CodeItem>
+	</Code>	
+</MosP>

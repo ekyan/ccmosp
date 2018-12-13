@@ -252,6 +252,11 @@ public final class TimeConst {
 	public static final String	CODE_WORK_TYPE_ITEM_SHORT2_END										= "Short2End";
 	
 	/**
+	 * コードキー(勤務形態項目：勤務前残業自動申請)。
+	 */
+	public static final String	CODE_AUTO_BEFORE_OVERWORK											= "AutoBefOverWork";
+	
+	/**
 	 * コードキー(丸め)。
 	 */
 	public static final String	CODE_ROUNDING_ITEMS													= "RoundingItems";
@@ -267,6 +272,11 @@ public final class TimeConst {
 	public static final String	CODE_KEY_SPECIFIC_HOLIDAY											= "SpecificHoliday";
 	
 	/**
+	 * コードキー(勤怠管理対象)。
+	 */
+	public static final String	CODE_KEY_TIME_MANAGEMENT											= "TimeManagement";
+	
+	/**
 	 * コードキー(ポータル出退勤ボタン表示)。
 	 */
 	public static final String	CODE_KEY_PORTAL_TIME_BUTTONS										= "PortalTimeButtons";
@@ -280,6 +290,11 @@ public final class TimeConst {
 	 * コードキー(出勤率計算)。
 	 */
 	public static final String	CODE_KEY_PAID_HOLIDAY_CALC											= "PaidHolidayCalc";
+	
+	/**
+	 * コードキー(休日出勤出勤率計算)。
+	 */
+	public static final String	CODE_KEY_WORK_ON_HOLIDAY_CALC										= "WorkOnHolidayCalc";
 	
 	/**
 	 * コードキー(半休入替取得)。
@@ -382,6 +397,26 @@ public final class TimeConst {
 	public static final int		CODE_NOT_APPROVED_EXIST												= 1;
 	
 	/**
+	 * 検索条件：承認状態(未申)。
+	 */
+	public static final int		CODE_NOT_TIME_APPROVED_EXIST										= 2;
+	
+	/**
+	 * 検索条件：承認状態(未承認・未申請有)。
+	 */
+	public static final int		CODE_NOT_CUTOFF_INFO_EXIST											= 3;
+	
+	/**
+	 * 検索条件：検索区分（承認すべき申請者）。
+	 */
+	public static final int		CODE_SUBORDINATE_SEARCH_TYPE_APPROVER								= 1;
+	
+	/**
+	 * 検索条件：検索区分（部下）。
+	 */
+	public static final int		CODE_SUBORDINATE_SEARCH_TYPE_SUBORDINATE							= 2;
+	
+	/**
 	 * 表示ステータスコード。
 	 */
 	public static final String	CODE_SCHEDULE_OVER													= "ScheduleOver";
@@ -390,11 +425,6 @@ public final class TimeConst {
 	 * 表示ステータスコード。
 	 */
 	public static final String	CODE_OVER_TIME_TYPE													= "OverTimeType";
-	
-	/**
-	 * 表示ステータス(申請)。
-	 */
-	public static final String	CODE_SUBSTITUTE														= "Substitute";
 	
 	/**
 	 * 表示ステータス(申請範囲1)。
@@ -442,6 +472,26 @@ public final class TimeConst {
 	public static final String	CODE_HOLIDAY_TYPE3_RANGE2											= "HolidayType3Range2";
 	
 	/**
+	 * 未承認仮締コード(有効)。<br>
+	 */
+	public static final int		CODE_NO_APPROVAL_VALID												= 0;
+	
+	/**
+	 * 未承認仮締コード(無効(残業事後申請可))。<br>
+	 */
+	public static final int		CODE_NO_APPROVAL_AFTER_OVER_REQ										= 1;
+	
+	/**
+	 * 未承認仮締コード(無効(残業事前申請のみ))。<br>
+	 */
+	public static final int		CODE_NO_APPROVAL_BEFORE_OVER_REQ									= 2;
+	
+	/**
+	 * 未承認仮締コード(無効(残業申請なし))。<br>
+	 */
+	public static final int		CODE_NO_APPROVAL_NO_OVER_REQ										= 3;
+	
+	/**
 	 * ラジオコード(曜日指定)。
 	 */
 	public static final String	CODE_RADIO_WEEK														= "week";
@@ -467,6 +517,17 @@ public final class TimeConst {
 	public static final int		CODE_DEFINITION_HOUR												= 60;
 	
 	/**
+	 * 時間計算用コード。<br>
+	 * 分をミリ秒に直した数値(1000 * 60)。<br>
+	 */
+	public static final int		CODE_DEFINITION_MINUTE_MILLI_SEC									= 60000;
+	
+	/**
+	 * 時間休計算用コード。
+	 */
+	public static final int		CODE_DEFINITION_PAID_HOLIDAY_HOUR									= 8;
+	
+	/**
 	 * コードキー(承認カテゴリ)。
 	 */
 	public static final String	CODE_APPROVAL_TYPE													= "ApprovalType";
@@ -475,6 +536,11 @@ public final class TimeConst {
 	 * コードキー(締状態)。
 	 */
 	public static final String	CODE_CUTOFFSTATE													= "CutoffState";
+	
+	/**
+	 * コードキー(部下検索区分)。
+	 */
+	public static final String	CODE_SUBORDINATE_SEARCH_TYPE										= "SubordinateSearchType";
 	
 	/**
 	 * コードキー(勤怠情報データインポート区分)。
@@ -560,6 +626,41 @@ public final class TimeConst {
 	 * コードキー（ストック休暇）。
 	 */
 	public static final int		CODE_HOLIDAYTYPE_STOCK												= 2;
+	
+	/**
+	 * 有給休暇付与日付コード。
+	 */
+	public static final String	CODE_PAID_LEAVE_GRANT_DATE											= "PaidLeaveGrantDate";
+	
+	/**
+	 * 有給休暇期限日付コード。
+	 */
+	public static final String	CODE_PAID_LEAVE_EXPIRATION_DATE										= "PaidLeaveExpirationDate";
+	
+	/**
+	 * 有給休暇付与日数コード。
+	 */
+	public static final String	CODE_PAID_LEAVE_GRANT_DAYS											= "PaidLeaveGrantDays";
+	
+	/**
+	 * 有給休暇付与時間数コード。
+	 */
+	public static final String	CODE_PAID_LEAVE_GRANT_HOURS											= "PaidLeaveGrantHours";
+	
+	/**
+	 * 有給休暇残日数コード。
+	 */
+	public static final String	CODE_PAID_LEAVE_REMAIN_DAYS											= "PaidLeaveRemainDays";
+	
+	/**
+	 * 有休休暇残時間数コード。
+	 */
+	public static final String	CODE_PAID_LEAVE_REMAIN_HOURS										= "PaidLeaveRemainHours";
+	
+	/**
+	 * 有給休暇年度コード。
+	 */
+	public static final String	CODE_PAID_LEAVE_FISCAL_YEAR											= "PaidLeaveFiscalYear";
 	
 	/**
 	 * 前年度付与日コード。
@@ -807,61 +908,6 @@ public final class TimeConst {
 	public static final String	CODE_TOTAL_TIMES_ABSENCE											= "TotalTimesAbsence";
 	
 	/**
-	 *手当情報
-	 */
-	public static final String	CODE_ALLOWANCE_INFO													= "AllowanceInfo";
-	
-	/**
-	 *手当情報1
-	 */
-	public static final String	CODE_ALLOWANCE_INFO1												= "AllowanceInfo1";
-	
-	/**
-	 *手当情報2
-	 */
-	public static final String	CODE_ALLOWANCE_INFO2												= "AllowanceInfo2";
-	
-	/**
-	 *手当情報3
-	 */
-	public static final String	CODE_ALLOWANCE_INFO3												= "AllowanceInfo3";
-	
-	/**
-	 *手当情報4
-	 */
-	public static final String	CODE_ALLOWANCE_INFO4												= "AllowanceInfo4";
-	
-	/**
-	 *手当情報5
-	 */
-	public static final String	CODE_ALLOWANCE_INFO5												= "AllowanceInfo5";
-	
-	/**
-	 *手当情報6
-	 */
-	public static final String	CODE_ALLOWANCE_INFO6												= "AllowanceInfo6";
-	
-	/**
-	 *手当情報7
-	 */
-	public static final String	CODE_ALLOWANCE_INFO7												= "AllowanceInfo7";
-	
-	/**
-	 *手当情報8
-	 */
-	public static final String	CODE_ALLOWANCE_INFO8												= "AllowanceInfo8";
-	
-	/**
-	 *手当情報9
-	 */
-	public static final String	CODE_ALLOWANCE_INFO9												= "AllowanceInfo9";
-	
-	/**
-	 *手当情報10
-	 */
-	public static final String	CODE_ALLOWANCE_INFO10												= "AllowanceInfo10";
-	
-	/**
 	 *手当コード1
 	 */
 	public static final String	CODE_ALLOWANCE_CODE_INFO1											= "1";
@@ -1057,6 +1103,11 @@ public final class TimeConst {
 	public static final String	PRM_TOTALTIME_ERROR													= "TotalTimeError";
 	
 	/**
+	 * パラメータID(遷移DTO配列)。
+	 */
+	public static final String	PRM_ROLL_ARRAY														= "RollArray";
+	
+	/**
 	 * 休暇最大登録数(特別休暇)。
 	 */
 	public static final int		PRM_HOLIDAYTYPE_SPECIAL_MAX											= 30;
@@ -1070,6 +1121,21 @@ public final class TimeConst {
 	 * 休暇最大登録数(欠勤)。
 	 */
 	public static final int		PRM_HOLIDAYTYPE_ABSENCE_MAX											= 20;
+	
+	/**
+	 * 検索モード。
+	 */
+	public static final String	PRM_TRANSFER_SEARCH_MODE											= "transferSearch";
+	
+	/**
+	 * 検索モード(前)。
+	 */
+	public static final String	SEARCH_BACK															= "searchBack";
+	
+	/**
+	 * 検索モード(次)。
+	 */
+	public static final String	SEARCH_NEXT															= "searchNext";
 	
 	/**
 	 * 申請モード【新規】。
@@ -1165,6 +1231,16 @@ public final class TimeConst {
 	 * 有給休暇設定詳細の付与区分（入社日）。
 	 */
 	public static final int		CODE_PAID_HOLIDAY_TYPE_ENTRANCEDAY									= 2;
+	
+	/**
+	 * 有給休暇設定詳細の付与区分（対象外）。
+	 */
+	public static final int		CODE_PAID_HOLIDAY_TYPE_NOT											= 3;
+	
+	/**
+	 * 有給休暇設定詳細の付与区分（比例）。
+	 */
+	public static final int		CODE_PAID_HOLIDAY_TYPE_PROPORTIONALLY								= 4;
 	
 	/**
 	 * 勤怠詳細(勤務形態の名前)。
@@ -1723,7 +1799,7 @@ public final class TimeConst {
 	 * 勤怠修正(早退30分未満時間)。
 	 */
 	public static final String	CODE_TOTALTIME_ITEM_NAME_LEAVE_EARLY_LESS_THAN_THIRTY_MINUTES_TIME	= "117";
-	// TODO
+	
 	/**
 	 * 勤怠修正(分単位休暇A時間)。
 	 */
@@ -1738,6 +1814,21 @@ public final class TimeConst {
 	 * 勤怠修正(無給時短時間)。
 	 */
 	public static final String	CODE_TOTALTIME_ITEM_NAME_SHORT_UNPAID								= "120";
+	
+	/**
+	 * 勤怠修正(特別休暇時間)。
+	 */
+	public static final String	CODE_TOTALTIME_ITEM_NAME_TOTALLEAVEHOUR								= "121";
+	
+	/**
+	 * 勤怠修正(その他休暇時間)。
+	 */
+	public static final String	CODE_TOTALTIME_ITEM_NAME_OTHERVACATIONHOUR							= "122";
+	
+	/**
+	 * 勤怠修正(欠勤時間)。
+	 */
+	public static final String	CODE_TOTALTIME_ITEM_NAME_ABSENCEHOUR								= "123";
 	
 	/**
 	 * 集計項目1
@@ -1803,6 +1894,11 @@ public final class TimeConst {
 	 * 表示日付更新用コード（日付リセット）
 	 */
 	public static final String	CODE_DATE_RESET														= "Reset";
+	
+	/**
+	 * 表示日付更新用コード（カレンダー日付）
+	 */
+	public static final String	CODE_DATE_CALENDAR													= "Calendar";
 	
 	/**
 	 * 代休種別コード（所定代休）
@@ -1950,6 +2046,11 @@ public final class TimeConst {
 	public static final int		CODE_WORK_ON_HOLIDAY_SUBSTITUTE_PM									= 4;
 	
 	/**
+	 * 休日出勤申請 振替申請する(全日・勤務形態変更)。<br>
+	 */
+	public static final int		CODE_WORK_ON_HOLIDAY_SUBSTITUTE_ON_WORK_TYPE_CHANGE					= 5;
+	
+	/**
 	 * 時差出勤申請 時差出勤区分A<br>
 	 */
 	public static final String	CODE_DIFFERENCE_TYPE_A												= "a";
@@ -1995,14 +2096,9 @@ public final class TimeConst {
 	public static final int		CODE_HOLIDAY_RANGE_TIME												= 4;
 	
 	/**
-	 * スタイル 赤色<br>
+	 * 休暇の範囲 全休(半休+半休)<br>
 	 */
-	public static final String	STYLE_RED															= "style=\"color: red\"";
-	
-	/**
-	 * スタイル 背景黄色<br>
-	 */
-	public static final String	STYLE_BACKGROUND_YELLOW												= "style=\"background-color: yellow\"";
+	public static final int		CODE_HOLIDAY_RANGE_HALF_AND_HALF									= 5;
 	
 	/**
 	 * 締日(月末締)。<br>
@@ -2052,6 +2148,16 @@ public final class TimeConst {
 	public static final String	CODE_ATTENDANCE_TYPE_SUBSTITUTE										= "substitute";
 	
 	/**
+	 * 出勤区分(休職)。<br>
+	 */
+	public static final String	CODE_ATTENDANCE_TYPE_SUSPENSION										= "suspension";
+	
+	/**
+	 * 出勤区分(退職)。<br>
+	 */
+	public static final String	CODE_ATTENDANCE_TYPE_RETIREMENT										= "retirement";
+	
+	/**
 	 * 理由入力(任意)。<br>
 	 */
 	public static final int		CODE_REASON_TYPE_NOT_REQUIRED										= 0;
@@ -2060,6 +2166,21 @@ public final class TimeConst {
 	 * 理由入力(必須)。<br>
 	 */
 	public static final int		CODE_REASON_TYPE_REQUIRED											= 1;
+	
+	/**
+	 * 休暇連続取得区分(必須)。<br>
+	 */
+	public static final int		TYPE_CONTINUOUS_NECESSARY											= 0;
+	
+	/**
+	 * 休暇連続取得区分(警告)。<br>
+	 */
+	public static final int		TYPE_CONTINUOUS_WARNING												= 1;
+	
+	/**
+	 * 休暇連続取得区分(不要)。<br>
+	 */
+	public static final int		TYPE_CONTINUOUS_UNNECESSARY											= 2;
 	
 	/**
 	 * ファイルパス(MosP勤怠管理共通JSP)。
@@ -2147,6 +2268,11 @@ public final class TimeConst {
 	public static final String	APP_ADD_USE_SHORT_UNPAID											= "UseShortUnpaid";
 	
 	/**
+	 * MosPアプリケーション設定キー(有給休暇申請理由必須設定)。
+	 */
+	public static final String	APP_PAID_HOLIDAY_REASON_REQUIRED									= "PaidHolidayReasonRequired";
+	
+	/**
 	 * MosPアプリケーション設定キー(分単位休暇機能利用可否)。
 	 */
 	public static final String	APP_ADD_USE_MINUTELY_HOLIDAY										= "UseMinutelyHoliday";
@@ -2155,4 +2281,25 @@ public final class TimeConst {
 	 * MosPアプリケーション設定キー(ストック休暇出勤率扱い)。
 	 */
 	public static final String	APP_STOCK_HOLIDAY_ATTENDANCE										= "StockHolidayAttendance";
+	
+	/**
+	 * MosPアプリケーション設定キー(ポータル時刻表示機能)。
+	 */
+	public static final String	APP_VIEW_PORTAL_TIME												= "ViewPortalTime";
+	
+	/**
+	 * MosPアプリケーション設定キー(画面遷移後の集計値保持機能)。
+	 */
+	public static final String	APP_VIEW_TOTAL_VALUES												= "ViewTotalValues";
+	
+	/**
+	 * MosPアプリケーション設定キー(部下一覧等未申表示)。
+	 */
+	public static final String	APP_SHOW_APPLIABLE_EXIST											= "ShowAppliableExist";
+	
+	/**
+	 * MosPアプリケーション設定キー(統計情報一覧：季休コード)。
+	 */
+	public static final String	APP_SHOW_SEASON_HOLIDAY_CODE										= "SeasonHolidayCode";
+	
 }

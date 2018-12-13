@@ -1,5 +1,19 @@
-/**
+/*
+ * MosP - Mind Open Source Project    http://www.mosp.jp/
+ * Copyright (C) MIND Co., Ltd.       http://www.e-mind.co.jp/
  * 
+ * This program is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU Affero General Public License
+ * as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package jp.mosp.framework.utils;
 
@@ -7,17 +21,28 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import jp.mosp.framework.base.MospParams;
-import jp.mosp.framework.property.MainMenuProperty;
 import jp.mosp.framework.property.MenuProperty;
-import jp.mosp.framework.property.RoleMenuProperty;
 import net.arnx.jsonic.JSON;
 
 /**
- * メニュー用JS文字列を取得するユーティリティクラス。
+ * メニュー用JS文字列を取得するユーティリティクラス。<br>
  */
 public class MenuJsUtility {
+	
+	/**
+	 * JavaScript変数名(メニュー配列)。<br>
+	 */
+	protected static final String	VAR_ARY_MENU	= "ARY_MENU = ";
+	
+	/**
+	 * デリミタ文字列(JavaScript)。<br>
+	 */
+	protected static final String	DEL_JAVA_SCRIPT	= ";";
+	
 	
 	/**
 	 * メニュー用JS文字列を取得する。<br>
@@ -25,42 +50,68 @@ public class MenuJsUtility {
 	 * @return メニュー用JS文字列
 	 */
 	public static String getMenuJs(MospParams mospParams) {
-		// ロールメニューとして設定されているメインメニュー設定情報リストを取得
-		List<MainMenuProperty> mainMenuList = MenuUtility.getRoleMainMenuList(mospParams);
-		
-		Map<String, MenuItem> map = new LinkedHashMap<String, MenuItem>();
-		
-		// メインメニュー毎に処理
-		for (MainMenuProperty mainMenu : mainMenuList) {
-			String key = mainMenu.getKey();
-			map.put(key, new MenuItem(key, mospParams.getName(mainMenu.getKey())));
+		// メニュー用JS文字列リストを準備
+		List<List<Object>> list = new ArrayList<List<Object>>();
+		// サブメニューリスト群(キー：メインメニューキー)(インデックス昇順)を取得
+		Map<String, List<String[]>> menuLists = getMenuLists(mospParams);
+		// サブメニューリスト毎に処理
+		for (Entry<String, List<String[]>> entry : menuLists.entrySet()) {
+			// メインメニュー情報(メインメニューキー：メインメニュー名：メニューリスト)を準備
+			List<Object> mainMenu = new ArrayList<Object>();
+			// メインメニューキーを取得
+			String mainMenuKey = entry.getKey();
+			// メインメニュー情報(メインメニューキー：メインメニュー名：メニューリスト)に追加
+			mainMenu.add(mainMenuKey);
+			mainMenu.add(mospParams.getName(mainMenuKey));
+			mainMenu.add(entry.getValue());
+			// メニュー用JS文字列リストにメインメニュー情報を追加
+			list.add(mainMenu);
 		}
-		
-		// ロールメニュー設定情報群取得
-		List<RoleMenuProperty> menuList = MenuUtility.getRoleMenuList(mospParams);
-		// ロールメニュー毎に配列に追加
-		for (RoleMenuProperty roleMenu : menuList) {
-			// メニュー設定情報取得
-			MenuProperty menu = MenuUtility.getMenuProperty(mospParams, roleMenu.getKey());
-			// メニュー有効フラグ確認
+		// メニュー用JS文字列リストを取得
+		return new StringBuilder(VAR_ARY_MENU).append(JSON.escapeScript(list)).append(DEL_JAVA_SCRIPT).toString();
+	}
+	
+	/**
+	 * サブメニューリスト群(キー：メインメニューキー)(インデックス昇順)を取得する。<br>
+	 * <br>
+	 * 値のサブメニューリストは、次の値を持つ。<br>
+	 * ・メニューキー<br>
+	 * ・コマンド<br>
+	 * ・メニュー名<br>
+	 * <br>
+	 * @param mospParams MosP処理情報
+	 * @return サブメニューリスト群(キー：メインメニューキー)(インデックス昇順)
+	 */
+	protected static Map<String, List<String[]>> getMenuLists(MospParams mospParams) {
+		// サブメニューリスト群(キー：メインメニューキー)(インデックス昇順)を準備
+		Map<String, List<String[]>> map = new LinkedHashMap<String, List<String[]>>();
+		// ログインユーザのメニューキー群(インデックス昇順)を取得
+		Set<String> menuKeys = RoleUtility.getUserMenuKeys(mospParams);
+		// メニューキー毎に処理
+		for (String menuKey : menuKeys) {
+			// メニュー設定情報を取得
+			MenuProperty menu = MenuUtility.getMenuProperty(mospParams, menuKey);
+			// メニューが有効でない場合
 			if (menu.isMenuValid() == false) {
+				// 処理無し
 				continue;
 			}
-			// メニューからメインメニューを取得
-			map.get(MenuUtility.getMainMenuKey(mospParams, roleMenu.getKey())).add(menu.getKey(), menu.getCommand(),
-					mospParams.getName(menu.getVoClass()));
+			// ロールメニューからメインメニューキーを取得
+			String mainMenuKey = MenuUtility.getMainMenuKey(mospParams, menuKey);
+			// サブメニューリスト群からサブメニューリストを取得
+			List<String[]> subMenuList = map.get(mainMenuKey);
+			// サブメニューリストが取得できなかった場合
+			if (subMenuList == null) {
+				// サブメニューリストを作成
+				subMenuList = new ArrayList<String[]>();
+				// サブメニューリスト群に設定
+				map.put(mainMenuKey, subMenuList);
+			}
+			// サブメニューリストにメニュー情報を追加
+			subMenuList.add(new String[]{ menu.getKey(), menu.getCommand(), mospParams.getName(menu.getVoClass()) });
 		}
-		
-		List<List<Object>> list = new ArrayList<List<Object>>();
-		for (MenuItem item : map.values()) {
-			List<String[]> value = item.getValue();
-			List<Object> element = new ArrayList<Object>();
-			element.add(item.getKey());
-			element.add(item.getName());
-			element.add(value.toArray(new String[value.size()][3]));
-			list.add(element);
-		}
-		return "ARY_MENU = " + JSON.escapeScript(list) + ";";
+		// サブメニューリスト群(キー：メインメニューキー)(インデックス昇順)を取得
+		return map;
 	}
 	
 	/**
@@ -77,80 +128,8 @@ public class MenuJsUtility {
 			// 選択メニュー(大項目)取得
 			return mainMenuKey;
 		}
-		// メインメニュー設定情報リストの先頭を取得
-		List<MainMenuProperty> list = MenuUtility.getRoleMainMenuList(mospParams);
-		return list.get(0).getKey();
+		// 最初のメインメニューキーを取得
+		return MenuUtility.getUserFirstMainMenu(mospParams);
 	}
 	
-	
-	/**
-	 * メニュー要素
-	 */
-	static class MenuItem {
-		
-		private String			key;
-		
-		private String			name;
-		
-		private List<String[]>	value;
-		
-		
-		public MenuItem(String key, String name) {
-			this.key = key;
-			this.name = name;
-			value = new ArrayList<String[]>();
-		}
-		
-		/**
-		 * @return key
-		 */
-		public String getKey() {
-			return key;
-		}
-		
-		/**
-		 * @return name
-		 */
-		public String getName() {
-			return name;
-		}
-		
-		/**
-		 * @return value
-		 */
-		public List<String[]> getValue() {
-			return value;
-		}
-		
-		/**
-		 * @param key セットする key
-		 */
-		public void setKey(String key) {
-			this.key = key;
-		}
-		
-		/**
-		 * @param name セットする name
-		 */
-		public void setName(String name) {
-			this.name = name;
-		}
-		
-		/**
-		 * @param value セットする value
-		 */
-		public void setValue(List<String[]> value) {
-			this.value = value;
-		}
-		
-		/**
-		 * @param key キー
-		 * @param command コマンド
-		 * @param name 名称
-		 */
-		public void add(String key, String command, String name) {
-			value.add(new String[]{ key, command, name });
-		}
-		
-	}
 }

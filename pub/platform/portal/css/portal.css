@@ -27,6 +27,16 @@
 	background-color: #FFE4B5;
 }
 
+
+
+/**
+ * 空白部分(LeftListTable)。
+ */
+.LeftListNonUpperTable .Blank {
+	border: medium none;
+	background-color: #F8F8F8;
+}
+
 /**
  * パンくずリスト下側空白
  */
@@ -182,6 +192,14 @@
 /* ************************************************************************** */
 
 /**
+ * 左寄せ一覧表示欄(table)。
+ */
+.LeftListNonUpperTable {
+	float:left;
+	width:980px;
+}
+
+/**
  * 未承認一覧空白欄(td)
  */
 #divApprovalList .Divider {
@@ -192,3 +210,55 @@
 	border-right:none;
 	background-color: #F8F8F8;
 }
+#divApprovalList  .SelectTitleTd {
+	border: 1px solid;
+	text-align:center;
+	background-color: #FFFFFF;	
+	width:270px;
+
+}
+#divApprovalList  .EditSelectTh {
+	width:280px;
+}
+
+#divApprovalList  .SelectTd {
+	width:120px;
+		
+}
+
+#divApprovalList  .NonTopBottomSelectTd {
+	width:150px;
+	border-top: none;
+	border-bottom: none;
+	border-left:1px solid;;
+	border-right:1px solid;
+	text-align:center;
+	background-color: #F8F8F8;	
+
+}
+
+#divApprovalList  .NonSelectTd {
+	width:150px;
+	border:1px solid;
+	text-align:center;
+	background-color: #F8F8F8;	
+
+}
+
+#divApprovalList  .ButtonTd {
+	width:150px;
+	border: 1px solid;
+	border_left: 0px solid;
+	text-align:center;
+	background-color: #FFFFFF;
+
+}
+#divApprovalList  .TitleTd {
+	font-weight: bold;
+	font-size: 15px;
+	width:200px;
+
+}
+
+
+

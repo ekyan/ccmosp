@@ -62,9 +62,19 @@ public class PlatformFileConst {
 	public static final String	CODE_KEY_TABLE_TYPE_USER			= "pfm_user";
 	
 	/**
+	 * コードキー(データ区分(ユーザ追加ロール情報))。
+	 */
+	public static final String	CODE_KEY_TABLE_TYPE_USER_EXTRA_ROLE	= "pfa_user_extra_role";
+	
+	/**
 	 * コードキー(データ区分(所属情報))。
 	 */
 	public static final String	CODE_KEY_TABLE_TYPE_SECTION			= "pfm_section";
+	
+	/**
+	 * コードキー(データ区分(職位情報))。
+	 */
+	public static final String	CODE_KEY_TABLE_TYPE_POSITION		= "pfm_position";
 	
 	/**
 	 * コードキー(データ区分(パスワード情報))。
@@ -140,6 +150,11 @@ public class PlatformFileConst {
 	 * フィールド(ユーザID)
 	 */
 	public static final String	FIELD_USER_ID						= "user_id";
+	
+	/**
+	 * フィールド(ロール区分)。<br>
+	 */
+	public static final String	FIELD_USER_ROLE_TYPE				= "role_type";
 	
 	/**
 	 * フィールド(ロールコード)

@@ -24,6 +24,7 @@ import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.property.MospProperties;
 import jp.mosp.framework.utils.BinaryUtility;
 import jp.mosp.framework.utils.DateUtility;
+import jp.mosp.framework.utils.RoleUtility;
 import jp.mosp.framework.utils.TopicPathUtility;
 import jp.mosp.platform.base.PlatformAction;
 import jp.mosp.platform.bean.human.HumanBinaryArrayRegistBeanInterface;
@@ -175,6 +176,8 @@ public class HumanBinaryArrayCardAction extends PlatformHumanAction {
 		} else {
 			throwInvalidCommandException();
 		}
+		// 当該画面共通情報設定
+		setCardCommonInfo();
 	}
 	
 	/**
@@ -222,8 +225,8 @@ public class HumanBinaryArrayCardAction extends PlatformHumanAction {
 		// 人事汎用管理区分設定
 		vo.setDivision(getTransferredType());
 		// パンくず名設定
-		TopicPathUtility.setTopicPathName(mospParams, vo.getClassName(), mospParams.getName(vo.getDivision())
-				+ mospParams.getName("Information", "Add"));
+		TopicPathUtility.setTopicPathName(mospParams, vo.getClassName(),
+				mospParams.getName(vo.getDivision()) + mospParams.getName("Information", "Add"));
 		// 人事管理共通情報利用設定
 		setPlatformHumanSettings(CMD_SEARCH, PlatformHumanConst.MODE_HUMAN_NO_ACTIVATE_DATE);
 		// 人事管理共通情報設定
@@ -240,8 +243,8 @@ public class HumanBinaryArrayCardAction extends PlatformHumanAction {
 		// VO取得
 		HumanBinaryArrayCardVo vo = (HumanBinaryArrayCardVo)mospParams.getVo();
 		// 有効日取得
-		Date activeDate = DateUtility
-			.getDate(vo.getTxtActivateYear(), vo.getTxtActivateMonth(), vo.getTxtActivateDay());
+		Date activeDate = DateUtility.getDate(vo.getTxtActivateYear(), vo.getTxtActivateMonth(),
+				vo.getTxtActivateDay());
 		// 入力値確認
 		validate();
 		// 結果確認
@@ -292,8 +295,7 @@ public class HumanBinaryArrayCardAction extends PlatformHumanAction {
 		// 登録クラス取得
 		HumanBinaryArrayRegistBeanInterface regist = platform().humanBinaryArrayRegist();
 		// 登録済のDTO取得
-		HumanBinaryArrayDtoInterface oldDto = reference().humanBinaryArray().findForKey(vo.getPersonalId(),
-				vo.getDivision(), vo.getRowId());
+		HumanBinaryArrayDtoInterface oldDto = reference().humanBinaryArray().findForKey(vo.getHidRecordId(), false);
 		// DTOに設定
 		oldDto.setFileType(vo.getPltFileType());
 		oldDto.setFileName(vo.getFileBinaryArray());
@@ -317,7 +319,7 @@ public class HumanBinaryArrayCardAction extends PlatformHumanAction {
 	/**
 	 * 人事汎用一覧情報を設定する。
 	 * @param rowId 行ID
-	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合 
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
 	protected void setBinaryArrayInfo(int rowId) throws MospException {
 		// VO取得
@@ -329,6 +331,7 @@ public class HumanBinaryArrayCardAction extends PlatformHumanAction {
 		if (dto == null) {
 			// 初期値設定
 			setDefaultValues();
+			return;
 		}
 		// 画面に設定
 		setVoFields(dto);
@@ -371,7 +374,7 @@ public class HumanBinaryArrayCardAction extends PlatformHumanAction {
 	
 	/**
 	 * 削除処理を行う。<br>
-	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合 
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
 	protected void delete() throws MospException {
 		// VO取得
@@ -379,8 +382,7 @@ public class HumanBinaryArrayCardAction extends PlatformHumanAction {
 		// 登録クラス取得
 		HumanBinaryArrayRegistBeanInterface regist = platform().humanBinaryArrayRegist();
 		// 一覧参照クラス取得
-		HumanBinaryArrayDtoInterface dto = reference().humanBinaryArray().findForKey(vo.getPersonalId(),
-				vo.getDivision(), vo.getRowId());
+		HumanBinaryArrayDtoInterface dto = reference().humanBinaryArray().findForKey(vo.getHidRecordId(), false);
 		// 削除処理
 		regist.delete(dto);
 		// 削除結果確認
@@ -432,6 +434,7 @@ public class HumanBinaryArrayCardAction extends PlatformHumanAction {
 		vo.setModeActivateDate(PlatformConst.MODE_ACTIVATE_DATE_CHANGING);
 		// 編集モード設定
 		vo.setModeCardEdit(PlatformConst.MODE_CARD_EDIT_ADD);
+		
 		// プルダウン設定
 		setPulldown();
 	}
@@ -457,6 +460,8 @@ public class HumanBinaryArrayCardAction extends PlatformHumanAction {
 		// VO取得
 		HumanBinaryArrayCardVo vo = (HumanBinaryArrayCardVo)mospParams.getVo();
 		// 有効日編集項目に設定
+		vo.setHidRecordId(dto.getPfaHumanBinaryArrayId());
+		vo.setRowId(dto.getHumanRowId());
 		vo.setTxtActivateYear(DateUtility.getStringYear(dto.getActivateDate()));
 		vo.setTxtActivateMonth(DateUtility.getStringMonth(dto.getActivateDate()));
 		vo.setTxtActivateDay(DateUtility.getStringDay(dto.getActivateDate()));
@@ -492,5 +497,15 @@ public class HumanBinaryArrayCardAction extends PlatformHumanAction {
 	 */
 	protected void validate() throws MospException {
 		// TODO
+	}
+	
+	/**
+	 * 当該画面の共通情報を設定する
+	 */
+	public void setCardCommonInfo() {
+		// VO取得
+		HumanBinaryArrayCardVo vo = (HumanBinaryArrayCardVo)mospParams.getVo();
+		// 人事汎用管理区分参照権限設定
+		vo.setJsIsReferenceDivision(RoleUtility.getReferenceDivisionsList(mospParams).contains(getTransferredType()));
 	}
 }

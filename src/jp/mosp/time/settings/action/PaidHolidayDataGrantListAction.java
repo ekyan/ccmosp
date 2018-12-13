@@ -18,7 +18,6 @@
 package jp.mosp.time.settings.action;
 
 import java.text.Format;
-import java.text.NumberFormat;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
@@ -414,6 +413,11 @@ public class PaidHolidayDataGrantListAction extends TimeAction {
 		calc();
 		// 出勤率未計算設定
 		vo.setJsCalcAttendanceRate("true");
+		if (mospParams.hasErrorMessage()) {
+			return;
+		}
+		// コミット
+		commit();
 	}
 	
 	/**
@@ -442,7 +446,11 @@ public class PaidHolidayDataGrantListAction extends TimeAction {
 		}
 		// 出勤率未計算設定
 		vo.setJsCalcAttendanceRate("true");
-		
+		if (mospParams.hasErrorMessage()) {
+			return;
+		}
+		// コミット
+		commit();
 	}
 	
 	/**
@@ -519,21 +527,16 @@ public class PaidHolidayDataGrantListAction extends TimeAction {
 		// 勤怠トランザクション登録クラスを取得
 		AttendanceTransactionRegistBeanInterface attendanceTransactionRegist = time().attendanceTransactionRegist();
 		// 社員毎に処理
-		for (int i = 0; i < vo.getAryPersonalId().length; i++) {
-			// 個人ID取得
-			String personalId = vo.getAryPersonalId()[i];
-			// 
-			for (BaseDtoInterface baseDto : vo.getList()) {
-				// DTO準備
-				PaidHolidayDataGrantListDtoInterface paidHolidayDataGrantListDto = (PaidHolidayDataGrantListDtoInterface)baseDto;
-				// 個人IDが同じでない場合
-				if (!personalId.equals(paidHolidayDataGrantListDto.getPersonalId())) {
-					continue;
-				}
-				// 登録
-				attendanceTransactionRegist.regist(personalId, paidHolidayDataGrantListDto.getFirstDate(),
-						paidHolidayDataGrantListDto.getLastDate(), false);
+		for (BaseDtoInterface baseDto : vo.getList()) {
+			// DTO準備
+			PaidHolidayDataGrantListDtoInterface paidHolidayDataGrantListDto = (PaidHolidayDataGrantListDtoInterface)baseDto;
+			if (paidHolidayDataGrantListDto.getFirstDate() == null
+					|| paidHolidayDataGrantListDto.getLastDate() == null) {
+				continue;
 			}
+			// 登録
+			attendanceTransactionRegist.regist(paidHolidayDataGrantListDto.getPersonalId(),
+					paidHolidayDataGrantListDto.getFirstDate(), paidHolidayDataGrantListDto.getLastDate(), false);
 		}
 		// コミット
 		commit();
@@ -617,6 +620,8 @@ public class PaidHolidayDataGrantListAction extends TimeAction {
 		vo.setPltSearchGrant("");
 		// 出勤率計算確認フラグ
 		vo.setJsCalcAttendanceRate("");
+		// 検索項目必須設定
+		vo.setJsSearchConditionRequired(isSearchConditionRequired());
 	}
 	
 	/**
@@ -675,8 +680,8 @@ public class PaidHolidayDataGrantListAction extends TimeAction {
 		if (year.isEmpty() && month.isEmpty() && day.isEmpty()) {
 			return null;
 		}
-		// 年がある場合
-		return MonthUtility.getFiscalYearFirstDate(getInt(year), mospParams);
+		// 年がある場合(検索年の初日を取得)
+		return MonthUtility.getYearMonthTermFirstDate(getInt(year), 1, mospParams);
 	}
 	
 	/**
@@ -705,9 +710,8 @@ public class PaidHolidayDataGrantListAction extends TimeAction {
 		if (year.isEmpty() && month.isEmpty() && day.isEmpty()) {
 			return null;
 		}
-		// 年がある場合
-		return MonthUtility.getFiscalYearLastDate(getInt(year), mospParams);
-		
+		// 年がある場合(検索年の最終日を取得)
+		return MonthUtility.getYearMonthTermLastDate(getInt(year), 12, mospParams);
 	}
 	
 	/**
@@ -751,17 +755,19 @@ public class PaidHolidayDataGrantListAction extends TimeAction {
 		String[] aryLblGrant = new String[list.size()];
 		String[] aryLblGrantDate = new String[list.size()];
 		String[] aryLblGrantDays = new String[list.size()];
+		String[] aryLblNumberOfAttendance = new String[list.size()];
 		String[] aryPersonalId = new String[list.size()];
-		Format format = getPercentFormat();
+		Format format = getPercentFormat(1);
 		for (int i = 0; i < list.size(); i++) {
 			PaidHolidayDataGrantListDtoInterface dto = (PaidHolidayDataGrantListDtoInterface)list.get(i);
 			aryLblEmployeeCode[i] = dto.getEmployeeCode();
-			aryLblEmployeeName[i] = getEmployeeName(dto);
+			aryLblEmployeeName[i] = getLastFirstName(dto.getLastName(), dto.getFirstName());
 			aryLblAttendanceRate[i] = getAttendanceRate(dto, format);
 			aryLblAccomplish[i] = dto.getAccomplish();
 			aryLblGrant[i] = dto.getGrant();
 			aryLblGrantDate[i] = getGrantDate(dto);
 			aryLblGrantDays[i] = getGrantDays(dto);
+			aryLblNumberOfAttendance[i] = getNumberOfAttendance(dto);
 			aryPersonalId[i] = dto.getPersonalId();
 		}
 		// データをVOに設定
@@ -772,16 +778,8 @@ public class PaidHolidayDataGrantListAction extends TimeAction {
 		vo.setAryLblGrant(aryLblGrant);
 		vo.setAryLblGrantDate(aryLblGrantDate);
 		vo.setAryLblGrantDays(aryLblGrantDays);
+		vo.setAryLblNumberOfAttendance(aryLblNumberOfAttendance);
 		vo.setAryPersonalId(aryPersonalId);
-	}
-	
-	/**
-	 * 社員名を取得する。<br>
-	 * @param dto 対象DTO
-	 * @return 社員名
-	 */
-	protected String getEmployeeName(PaidHolidayDataGrantListDtoInterface dto) {
-		return getLastFirstName(dto.getLastName(), dto.getFirstName());
 	}
 	
 	/**
@@ -813,19 +811,22 @@ public class PaidHolidayDataGrantListAction extends TimeAction {
 	 * @return 付与日付
 	 */
 	protected String getGrantDate(PaidHolidayDataGrantListDtoInterface dto) {
-		return getGrantDate(dto.getGrantDate());
-	}
-	
-	/**
-	 * 付与日付を取得する。<br>
-	 * @param grantDate 付与日付
-	 * @return 付与日付
-	 */
-	protected String getGrantDate(Date grantDate) {
-		if (grantDate == null) {
+		if (dto.getGrantDate() == null) {
 			return mospParams.getName("Hyphen");
 		}
-		return getStringDateAndDay(grantDate);
+		// テストキー取得
+		boolean isTest = mospParams.isTestSupport();
+		StringBuffer sb = new StringBuffer();
+		sb.append(getStringDateAndDay(dto.getGrantDate()));
+		// テスト補助が有効の場合
+		if ((isTest)) {
+			sb.append(mospParams.getName("FrontParentheses"));
+			sb.append(getStringDateAndDay(dto.getFirstDate()));
+			sb.append(mospParams.getName("Wave"));
+			sb.append(getStringDateAndDay(dto.getLastDate()));
+			sb.append(mospParams.getName("BackParentheses"));
+		}
+		return sb.toString();
 	}
 	
 	/**
@@ -847,20 +848,21 @@ public class PaidHolidayDataGrantListAction extends TimeAction {
 			return mospParams.getName("Hyphen");
 		}
 		StringBuffer sb = new StringBuffer();
-		sb.append(grantDays);
+		sb.append(grantDays.toString());
 		sb.append(mospParams.getName("Day"));
 		return sb.toString();
 	}
 	
 	/**
-	 * パーセントフォーマットを取得する。<br>
-	 * @return パーセントフォーマット
+	 * 出勤数を取得する。
+	 * @param dto 対象DTO
+	 * @return 出勤数
 	 */
-	protected Format getPercentFormat() {
-		NumberFormat nf = NumberFormat.getPercentInstance();
-		// 小数部分の最小表示桁数を1とする
-		nf.setMinimumFractionDigits(1);
-		return nf;
+	protected String getNumberOfAttendance(PaidHolidayDataGrantListDtoInterface dto) {
+		if (!mospParams.isTestSupport() || dto.getWorkDays() == null || dto.getTotalWorkDays() == null) {
+			return "";
+		}
+		return addParenthesis(getFraction(dto.getWorkDays(), dto.getTotalWorkDays()));
 	}
 	
 	/**

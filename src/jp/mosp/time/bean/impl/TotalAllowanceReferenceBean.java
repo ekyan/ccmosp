@@ -37,7 +37,7 @@ public class TotalAllowanceReferenceBean extends PlatformBean implements TotalAl
 	/**
 	 * 勤怠集計手当データDAOクラス。<br>
 	 */
-	TotalAllowanceDaoInterface	totalAllowanceDao;
+	TotalAllowanceDaoInterface totalAllowanceDao;
 	
 	
 	/**
@@ -72,8 +72,8 @@ public class TotalAllowanceReferenceBean extends PlatformBean implements TotalAl
 			String allowanceCode) throws MospException {
 		int times = 0;
 		for (String personalId : personalIdArray) {
-			TotalAllowanceDtoInterface dto = totalAllowanceDao.findForKey(personalId, calculationYear,
-					calculationMonth, allowanceCode);
+			TotalAllowanceDtoInterface dto = totalAllowanceDao.findForKey(personalId, calculationYear, calculationMonth,
+					allowanceCode);
 			if (dto != null) {
 				times += dto.getTimes();
 			}

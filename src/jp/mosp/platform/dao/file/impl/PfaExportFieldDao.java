@@ -154,6 +154,46 @@ public class PfaExportFieldDao extends PlatformDao implements ExportFieldDaoInte
 	}
 	
 	@Override
+	public List<ExportFieldDtoInterface> findLikeStartNameList(String exportCode, String[] aryFieldName)
+			throws MospException {
+		try {
+			index = 1;
+			StringBuffer sb = getSelectQuery(getClass());
+			sb.append(where());
+			sb.append(deleteFlagOff());
+			sb.append(and());
+			sb.append(equal(COL_EXPORT_CODE));
+			// データ区分制限条件SQL追加
+			for (int i = 0; i < aryFieldName.length; i++) {
+				if (i == 0) {
+					sb.append(and());
+					sb.append(leftParenthesis());
+				}
+				sb.append(like(COL_FIELD_NAME));
+				if (i == aryFieldName.length - 1) {
+					sb.append(rightParenthesis());
+				} else {
+					sb.append(or());
+				}
+			}
+			
+			sb.append(getOrderByColumn(COL_FIELD_ORDER));
+			prepareStatement(sb.toString());
+			setParam(index++, exportCode);
+			for (String element : aryFieldName) {
+				setParam(index++, startWithParam(element));
+			}
+			executeQuery();
+			return mappingAll();
+		} catch (Throwable e) {
+			throw new MospException(e);
+		} finally {
+			releaseResultSet();
+			releasePreparedStatement();
+		}
+	}
+	
+	@Override
 	public List<String> getFieldNameList(String exportCode) throws MospException {
 		try {
 			index = 1;

@@ -1,3 +1,20 @@
+/*
+ * MosP - Mind Open Source Project    http://www.mosp.jp/
+ * Copyright (C) MIND Co., Ltd.       http://www.e-mind.co.jp/
+ * 
+ * This program is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU Affero General Public License
+ * as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package jp.mosp.time.bean.impl;
 
 import java.util.Date;
@@ -24,6 +41,7 @@ import jp.mosp.time.entity.RequestEntity;
 import jp.mosp.time.entity.WorkTypeEntity;
 import jp.mosp.time.input.action.AttendanceCardAction;
 import jp.mosp.time.portal.bean.impl.PortalTimeCardBean;
+import jp.mosp.time.utils.AttendanceUtility;
 import jp.mosp.time.utils.TimeMessageUtility;
 import jp.mosp.time.utils.TimeUtility;
 
@@ -70,7 +88,7 @@ public class TimeRecordBean extends AttendanceListRegistBean implements TimeReco
 	}
 	
 	@Override
-	public void recordStartWork(String personalId, Date recordTime) throws MospException {
+	public Date recordStartWork(String personalId, Date recordTime) throws MospException {
 		// ポータル時刻を打刻
 		recordPortalTime(personalId, recordTime, recordTime, PortalTimeCardBean.RECODE_START_WORK);
 		// 対象個人ID設定
@@ -82,8 +100,9 @@ public class TimeRecordBean extends AttendanceListRegistBean implements TimeReco
 		// 勤怠情報確認
 		if (dto != null) {
 			// エラーメッセージ設定
-			TimeMessageUtility.addErrorStartWorkAlreadyRecorded(mospParams, targetDate);
-			return;
+			mospParams.addErrorMessage(TimeMessageUtility.MSG_ALREADY_RECORDED, DateUtility.getStringDate(targetDate),
+					mospParams.getName("WorkManage"), mospParams.getName("RecordTime"));
+			return null;
 		}
 		// 設定適用エンティティを取得
 		ApplicationEntity applicationEntity = applicationReference.getApplicationEntity(personalId, targetDate);
@@ -95,18 +114,22 @@ public class TimeRecordBean extends AttendanceListRegistBean implements TimeReco
 		if (workTypeEntity.isWorkTypeForWork() == false) {
 			// エラーメッセージ設定
 			addNotWorkDateErrorMessage(targetDate);
-			return;
+			return null;
 		}
 		// 始業時刻取得
-		Date startTime = getStartTime(applicationEntity, requestEntity, workTypeEntity, recordTime);
+		Date startTime = AttendanceUtility.getStartTime(applicationEntity, requestEntity, workTypeEntity, recordTime);
 		// 勤怠データ作成
 		// TODO getAttendanceDtoも作り直し、AttendanceListRegistBeanとは切り離すことを検討
 		dto = getAttendanceDto(startTime, startTime, null, false, false, false, false, false);
+		// エラーメッセージ確認
+		if (mospParams.hasErrorMessage()) {
+			return null;
+		}
 		// 勤務形態情報が保持している直行直帰を勤怠データに設定
 		setDirectStartEnd(dto, workTypeEntity);
 		// エラーメッセージ確認
 		if (mospParams.hasErrorMessage()) {
-			return;
+			return null;
 		}
 		// 始業・終業必須チェック
 		attendanceRegist.checkTimeExist(dto);
@@ -116,83 +139,35 @@ public class TimeRecordBean extends AttendanceListRegistBean implements TimeReco
 		attendanceRegist.checkDraft(dto);
 		// エラー確認
 		if (mospParams.hasErrorMessage()) {
-			return;
+			return null;
 		}
 		// ワークフロー番号設定
 		draft(dto);
 		// 処理結果確認
 		if (mospParams.hasErrorMessage()) {
-			return;
+			return null;
 		}
 		// 勤務形態に登録されている休憩情報のリストを取得
 		List<RestDtoInterface> restList = registRest(startTime, workTypeEntity.getEndTime(requestEntity));
 		// 休憩情報毎に処理
 		for (RestDtoInterface restDto : restList) {
-			//	休憩時間登録
+			// 休憩時間登録
 			restRegist.regist(restDto);
 		}
 		// 勤怠データ登録
 		attendanceRegist.regist(dto);
-	}
-	
-	/**
-	 * 始業時刻を取得する。<br>
-	 * <br>
-	 * 1.直行の場合：始業予定時刻<br>
-	 * 2.遅刻の場合：<br>
-	 *   勤務予定時間表示設定が有効である場合：勤怠設定で丸めた打刻時刻<br>
-	 *   勤務予定時間表示設定が無効である場合：打刻時刻<br>
-	 * 3.勤務予定時間表示設定が有効である場合：勤務前残業を考慮した始業予定時刻<br>
-	 * 4.その他の場合：打刻時刻<br>
-	 * <br>
-	 * @param applicationEntity 設定適用エンティティ
-	 * @param requestEntity     申請エンティティ
-	 * @param workTypeEntity    勤務形態エンティティ
-	 * @param recordTime        打刻時刻
-	 * @return 始業時刻
-	 * @throws MospException 日付の変換に失敗した場合
-	 */
-	protected Date getStartTime(ApplicationEntity applicationEntity, RequestEntity requestEntity,
-			WorkTypeEntity workTypeEntity, Date recordTime) throws MospException {
-		// 始業予定時刻を取得(勤務形態エンティティ及び申請エンティティから)
-		Date scheduledTime = workTypeEntity.getStartTime(requestEntity);
-		// 残業申請(勤務前残業)の申請時間(分)を取得
-		int overtimeMinutesBeforeWork = requestEntity.getOvertimeMinutesBeforeWork(false);
-		// 勤務前残業を考慮した始業予定時刻を取得
-		Date ovrrScheduledTime = DateUtility.addMinute(scheduledTime, -overtimeMinutesBeforeWork);
-		// 1.直行の場合(勤務形態の直行設定を確認)
-		if (workTypeEntity.isDirectStart()) {
-			// 始業予定時刻を取得
-			return scheduledTime;
-		}
-		// 2.遅刻の場合
-		if (recordTime.after(ovrrScheduledTime)) {
-			// 勤務予定時間表示設定が有効である場合
-			if (applicationEntity.useScheduledTime()) {
-				// 勤怠設定で丸めた打刻時刻を取得
-				return applicationEntity.getRoundedStartTime(recordTime);
-			}
-			// 打刻時刻を取得
-			return recordTime;
-		}
-		// 3.勤務予定時間表示設定が有効である場合(勤怠設定の勤務予定時間表示設定を確認)
-		if (applicationEntity.useScheduledTime()) {
-			// 勤務前残業を考慮した始業予定時刻を取得
-			return ovrrScheduledTime;
-		}
-		// 4.その他(打刻時刻を取得)
 		return recordTime;
 	}
 	
 	@Override
-	public void recordEndWork(String personalId, Date recordTime) throws MospException {
+	public Date recordEndWork(String personalId, Date recordTime) throws MospException {
 		// 対象個人ID設定
 		this.personalId = personalId;
 		// 対象日設定及び対象日の勤怠情報取得
 		AttendanceDtoInterface dto = setTargetDate(TimeMessageUtility.getNameEndWork(mospParams));
 		// 処理結果確認
 		if (mospParams.hasErrorMessage()) {
-			return;
+			return null;
 		}
 		// ポータル時刻を打刻
 		recordPortalTime(personalId, targetDate, recordTime, PortalTimeCardBean.RECODE_END_WORK);
@@ -200,12 +175,12 @@ public class TimeRecordBean extends AttendanceListRegistBean implements TimeReco
 		checkRestEnd();
 		// ワークフロー番号設定
 		if (mospParams.hasErrorMessage()) {
-			return;
+			return null;
 		}
 		apply(dto);
 		// エラー確認
 		if (mospParams.hasErrorMessage()) {
-			return;
+			return null;
 		}
 		// 設定適用エンティティを取得
 		ApplicationEntity applicationEntity = applicationReference.getApplicationEntity(personalId, targetDate);
@@ -217,9 +192,15 @@ public class TimeRecordBean extends AttendanceListRegistBean implements TimeReco
 		Date endTime = getEndTime(applicationEntity, requestEntity, workTypeEntity, recordTime);
 		// 登録用勤怠データを取得(各種自動計算実施)
 		dto = getAttendanceDto(dto.getStartTime(), dto.getActualStartTime(), endTime, false, true, false, false, false);
+		// エラーメッセージ確認
+		if (mospParams.hasErrorMessage()) {
+			return null;
+		}
+		// 勤務形態情報が保持している直行直帰を勤怠データに設定
+		setDirectStartEnd(dto, workTypeEntity);
 		// 処理結果確認
 		if (mospParams.hasErrorMessage()) {
-			return;
+			return null;
 		}
 		// 始業・終業必須チェック
 		attendanceRegist.checkTimeExist(dto);
@@ -229,12 +210,15 @@ public class TimeRecordBean extends AttendanceListRegistBean implements TimeReco
 		attendanceRegist.checkAppli(dto);
 		// 処理結果確認
 		if (mospParams.hasErrorMessage()) {
-			return;
+			return null;
 		}
 		// 勤怠データ登録
 		attendanceRegist.regist(dto);
 		// 代休登録
 		registSubHoliday(dto);
+		// 勤怠申請後処理群を実行
+		afterApplyAttendance(dto);
+		return recordTime;
 	}
 	
 	/**
@@ -243,9 +227,9 @@ public class TimeRecordBean extends AttendanceListRegistBean implements TimeReco
 	 * 1.直帰の場合：終業予定時刻<br>
 	 * 2.早退の場合：<br>
 	 *   勤務予定時間表示設定が有効である場合：勤怠設定で丸めた打刻時刻<br>
-	 *   勤務予定時間表示設定が無効である場合：打刻時刻<br>
+	 *   勤務予定時間表示設定が無効である場合：勤怠設定で丸めた実打刻時刻<br>
 	 * 3.勤務予定時間表示設定が有効である場合：勤怠設定で丸めた打刻時刻<br>
-	 * 4.その他の場合：打刻時刻<br>
+	 * 4.その他の場合：勤怠設定で丸めた実打刻時刻<br>
 	 * <br>
 	 * @param applicationEntity 設定適用エンティティ
 	 * @param requestEntity     申請エンティティ
@@ -270,27 +254,27 @@ public class TimeRecordBean extends AttendanceListRegistBean implements TimeReco
 				// 勤怠設定で丸めた打刻時刻を取得
 				return applicationEntity.getRoundedEndTime(recordTime);
 			}
-			// 打刻時刻を取得
-			return recordTime;
+			// 勤怠設定で丸めた実打刻時刻を取得
+			return applicationEntity.getRoundedActualEndTime(recordTime);
 		}
 		// 3.勤務予定時間表示設定が有効である場合(勤怠設定の勤務予定時間表示設定を確認)
 		if (applicationEntity.useScheduledTime()) {
 			// 勤怠設定で丸めた打刻時刻を取得
 			return applicationEntity.getRoundedEndTime(recordTime);
 		}
-		// 4.その他(打刻時刻を取得)
-		return recordTime;
+		// 4.その他(勤怠設定で丸めた実打刻時刻を取得)
+		return applicationEntity.getRoundedActualEndTime(recordTime);
 	}
 	
 	@Override
-	public void recordStartRest(String personalId, Date recordTime) throws MospException {
+	public Date recordStartRest(String personalId, Date recordTime) throws MospException {
 		// 対象個人ID設定
 		this.personalId = personalId;
 		// 対象日設定及び対象日の勤怠情報取得
 		setTargetDate(TimeMessageUtility.getNameStartRest(mospParams));
 		// 処理結果確認
 		if (mospParams.hasErrorMessage()) {
-			return;
+			return null;
 		}
 		// 休憩情報取得
 		List<RestDtoInterface> list = restDao.findForList(this.personalId, targetDate, TIMES_WORK_DEFAULT);
@@ -305,7 +289,7 @@ public class TimeRecordBean extends AttendanceListRegistBean implements TimeReco
 				sb.append(mospParams.getName("Official", "GoingOut"));
 				sb.append(goOutDto.getTimesGoOut());
 				addStartRestDuplicationErrorMessage(DateUtility.getStringDateAndDay(recordTime), sb.toString());
-				return;
+				return null;
 			}
 		}
 		for (GoOutDtoInterface goOutDto : privateList) {
@@ -313,33 +297,35 @@ public class TimeRecordBean extends AttendanceListRegistBean implements TimeReco
 				// 私用外出と重複している場合
 				addStartRestDuplicationErrorMessage(DateUtility.getStringDateAndDay(recordTime),
 						mospParams.getName("PrivateGoingOut" + goOutDto.getTimesGoOut()));
-				return;
+				return null;
 			}
 		}
 		// 休憩デフォルト日時取得
 		Date restDefaultTime = targetDate;
 		// 処理対象情報準備
 		RestDtoInterface dto = null;
+		// 設定適用エンティティを取得
+		ApplicationEntity applicationEntity = applicationReference.getApplicationEntity(personalId, targetDate);
 		// 休憩情報毎に処理
 		for (RestDtoInterface restDto : list) {
 			if (checkRestDuplication(recordTime, restDto.getRestStart(), restDto.getRestEnd())) {
 				// 休憩と重複している場合
 				addStartRestDuplicationErrorMessage(DateUtility.getStringDateAndDay(recordTime),
 						mospParams.getName("Rest" + restDto.getRest()));
-				return;
+				return null;
 			}
 			// 休憩入日時確認
 			if (restDefaultTime.equals(restDto.getRestStart())) {
 				// 処理対象情報設定
 				dto = restDto;
-				dto.setRestStart(recordTime);
+				dto.setRestStart(applicationEntity.getRoundedRestStartTime(recordTime));
 				break;
 			}
 			// 休憩戻り確認
 			if (restDefaultTime.equals(restDto.getRestEnd())) {
 				// エラーメッセージ追加
 				TimeMessageUtility.addErrorStartRestAlreadyRecorded(mospParams, targetDate);
-				return;
+				return null;
 			}
 		}
 		// 処理対象情報確認
@@ -350,7 +336,7 @@ public class TimeRecordBean extends AttendanceListRegistBean implements TimeReco
 			dto.setWorkDate(targetDate);
 			dto.setTimesWork(TIMES_WORK_DEFAULT);
 			dto.setRest(list.size() + 1);
-			dto.setRestStart(recordTime);
+			dto.setRestStart(applicationEntity.getRoundedRestStartTime(recordTime));
 			dto.setRestEnd(restDefaultTime);
 			dto.setRestTime(0);
 		}
@@ -358,27 +344,28 @@ public class TimeRecordBean extends AttendanceListRegistBean implements TimeReco
 		if (dto == null) {
 			// エラーメッセージ設定
 			TimeMessageUtility.addErrorRestOverLimit(mospParams, targetDate);
-			return;
+			return null;
 		}
 		// 休憩情報登録
 		restRegist.regist(dto);
+		return recordTime;
 	}
 	
 	@Override
-	public void recordEndRest(String personalId, Date recordTime) throws MospException {
+	public Date recordEndRest(String personalId, Date recordTime) throws MospException {
 		// 対象個人ID設定
 		this.personalId = personalId;
 		// 対象日設定及び対象日の勤怠情報取得
 		setTargetDate(TimeMessageUtility.getNameEndRest(mospParams));
 		// 処理結果確認
 		if (mospParams.hasErrorMessage()) {
-			return;
+			return null;
 		}
 		// 勤怠関連各種情報取得
 		setTimeDtos(false, false);
 		// エラーメッセージ確認
 		if (mospParams.hasErrorMessage()) {
-			return;
+			return null;
 		}
 		// 休憩情報取得
 		List<RestDtoInterface> list = restDao.findForList(this.personalId, targetDate, TIMES_WORK_DEFAULT);
@@ -393,7 +380,7 @@ public class TimeRecordBean extends AttendanceListRegistBean implements TimeReco
 				sb.append(mospParams.getName("Official", "GoingOut"));
 				sb.append(goOutDto.getTimesGoOut());
 				addEndRestDuplicationErrorMessage(DateUtility.getStringDateAndDay(recordTime), sb.toString());
-				return;
+				return null;
 			}
 		}
 		for (GoOutDtoInterface goOutDto : privateList) {
@@ -401,11 +388,13 @@ public class TimeRecordBean extends AttendanceListRegistBean implements TimeReco
 				// 私用外出と重複している場合
 				addEndRestDuplicationErrorMessage(DateUtility.getStringDateAndDay(recordTime),
 						mospParams.getName("PrivateGoingOut" + goOutDto.getTimesGoOut()));
-				return;
+				return null;
 			}
 		}
 		// 休憩デフォルト日時取得
 		Date restDefaultTime = targetDate;
+		// 設定適用エンティティを取得
+		ApplicationEntity applicationEntity = applicationReference.getApplicationEntity(personalId, targetDate);
 		// 処理対象情報準備
 		RestDtoInterface dto = null;
 		// 休憩情報毎に処理
@@ -414,13 +403,14 @@ public class TimeRecordBean extends AttendanceListRegistBean implements TimeReco
 				// 休憩と重複している場合
 				addEndRestDuplicationErrorMessage(DateUtility.getStringDateAndDay(recordTime),
 						mospParams.getName("Rest" + restDto.getRest()));
-				return;
+				return null;
 			}
 			// 休憩入日時確認
-			if (restDefaultTime.equals(restDto.getRestStart()) == false && restDefaultTime.equals(restDto.getRestEnd())) {
+			if (restDefaultTime.equals(restDto.getRestStart()) == false
+					&& restDefaultTime.equals(restDto.getRestEnd())) {
 				// 処理対象情報設定
 				dto = restDto;
-				dto.setRestEnd(recordTime);
+				dto.setRestEnd(applicationEntity.getRoundedRestEndTime(recordTime));
 				// 休憩時間計算
 				dto.setRestTime(restRegist.getCalcRestTime(dto.getRestStart(), dto.getRestEnd(), timeSettingDto));
 				break;
@@ -430,34 +420,35 @@ public class TimeRecordBean extends AttendanceListRegistBean implements TimeReco
 		if (dto == null) {
 			// エラーメッセージ設定
 			TimeMessageUtility.addErrorStartRestNotRecorded(mospParams, targetDate);
-			return;
+			return null;
 		}
 		// 休憩情報登録
 		restRegist.regist(dto);
+		return recordTime;
 	}
 	
 	@Override
-	public void recordRegularEnd(String personalId, Date recordTime) throws MospException {
+	public Date recordRegularEnd(String personalId, Date recordTime) throws MospException {
 		// 対象個人ID設定
 		this.personalId = personalId;
 		// 対象日設定及び対象日の勤怠情報取得
 		AttendanceDtoInterface dto = setTargetDate(TimeMessageUtility.getNameRegularEnd(mospParams));
 		// 処理結果確認
 		if (mospParams.hasErrorMessage()) {
-			return;
+			return null;
 		}
 		// ポータル時刻を打刻
 		recordPortalTime(personalId, targetDate, recordTime, PortalTimeCardBean.RECODE_END_WORK);
 		// 休憩戻確認
 		checkRestEnd();
 		if (mospParams.hasErrorMessage()) {
-			return;
+			return null;
 		}
 		// ワークフロー番号設定(自己承認)
 		applyAndApprove(dto);
 		// エラー確認
 		if (mospParams.hasErrorMessage()) {
-			return;
+			return null;
 		}
 		// 申請エンティティを取得
 		RequestEntity requestEntity = requestUtil.getRequestEntity(personalId, targetDate);
@@ -480,7 +471,7 @@ public class TimeRecordBean extends AttendanceListRegistBean implements TimeReco
 			mospParams.setNextCommand(AttendanceCardAction.CMD_SELECT_SHOW_FROM_PORTAL);
 			// エラーメッセージ設定
 			TimeMessageUtility.addErrorSelfApproveFailed(mospParams);
-			return;
+			return null;
 		}
 		// 勤務形態の終業時刻を取得
 		Date endTime = workTypeEntity.getEndTime(requestEntity);
@@ -493,9 +484,15 @@ public class TimeRecordBean extends AttendanceListRegistBean implements TimeReco
 		}
 		// 登録用勤怠データを取得(各種自動計算実施)
 		dto = getAttendanceDto(dto.getStartTime(), dto.getActualStartTime(), endTime, false, true, false, false, false);
+		// エラーメッセージ確認
+		if (mospParams.hasErrorMessage()) {
+			return null;
+		}
+		// 勤務形態情報が保持している直行直帰を勤怠データに設定
+		setDirectStartEnd(dto, workTypeEntity);
 		// 処理結果確認
 		if (mospParams.hasErrorMessage()) {
-			return;
+			return null;
 		}
 		// 始業・終業必須チェック
 		attendanceRegist.checkTimeExist(dto);
@@ -505,12 +502,15 @@ public class TimeRecordBean extends AttendanceListRegistBean implements TimeReco
 		attendanceRegist.checkAppli(dto);
 		// 処理結果確認
 		if (mospParams.hasErrorMessage()) {
-			return;
+			return null;
 		}
 		// 勤怠データ登録
 		attendanceRegist.regist(dto);
 		// 代休登録
 		registSubHoliday(dto);
+		// 勤怠申請後処理群を実行
+		afterApplyAttendance(dto);
+		return recordTime;
 	}
 	
 	/**
@@ -594,7 +594,7 @@ public class TimeRecordBean extends AttendanceListRegistBean implements TimeReco
 		// 対象個人ID設定
 		this.personalId = personalId;
 		// 対象日設定及び対象日の勤怠情報取得
-		setTargetDate(TimeMessageUtility.getNameOverEnd(mospParams));
+		AttendanceDtoInterface dto = setTargetDate(TimeMessageUtility.getNameOverEnd(mospParams));
 		// 処理結果確認
 		if (mospParams.hasErrorMessage()) {
 			// 勤怠データが有り終業が設定されている場合等
@@ -612,12 +612,27 @@ public class TimeRecordBean extends AttendanceListRegistBean implements TimeReco
 		mospParams.addGeneralParam(PlatformConst.PRM_TARGET_DATE, targetDate);
 		// MosP処理情報に終業時刻(丸め)を設定
 		mospParams.addGeneralParam(TimeConst.PRM_TARGET_TIME, targetTime);
+		// 勤怠情報がある場合
+		if (dto != null && dto.getWorkTypeCode() != null) {
+			// 勤怠情報の勤務形態コードから勤務形態エンティティを取得
+			WorkTypeEntity workTypeEntity = workTypeReference.getWorkTypeEntity(dto.getWorkTypeCode(), targetDate);
+			// MosP処理情報に前出を設定
+			if (workTypeEntity.isDirectStart()) {
+				// 前出フラグを設定
+				mospParams.addGeneralParam(TimeConst.PRM_TRANSFERRED_DIRECT_START, MospConst.CHECKBOX_ON);
+			}
+			// 勤務形態の後出設定を確認
+			if (workTypeEntity.isDirectEnd()) {
+				// 後出フラグを設定
+				mospParams.addGeneralParam(TimeConst.PRM_TRANSFERRED_DIRECT_END, MospConst.CHECKBOX_ON);
+			}
+		}
 		// 勤怠詳細画面へ遷移(連続実行コマンド設定)
 		mospParams.setNextCommand(AttendanceCardAction.CMD_SELECT_SHOW_FROM_PORTAL);
 	}
 	
 	@Override
-	public void recordRegularWork(String personalId, Date recordTime) throws MospException {
+	public Date recordRegularWork(String personalId, Date recordTime) throws MospException {
 		// ポータル時刻を打刻
 		recordPortalTime(personalId, recordTime, recordTime, PortalTimeCardBean.RECODE_START_WORK);
 		// 対象個人ID設定
@@ -630,7 +645,7 @@ public class TimeRecordBean extends AttendanceListRegistBean implements TimeReco
 		if (dto != null) {
 			// エラーメッセージ設定
 			TimeMessageUtility.addErrorStartWorkAlreadyRecorded(mospParams, targetDate);
-			return;
+			return null;
 		}
 		// 申請エンティティを取得
 		RequestEntity requestEntity = requestUtil.getRequestEntity(personalId, targetDate);
@@ -640,7 +655,7 @@ public class TimeRecordBean extends AttendanceListRegistBean implements TimeReco
 		if (workTypeEntity.isWorkTypeForWork() == false) {
 			// エラーメッセージ設定
 			addNotWorkDateErrorMessage(targetDate);
-			return;
+			return null;
 		}
 		// 始業時刻取得
 		Date startTime = workTypeEntity.getStartTime(requestEntity);
@@ -648,11 +663,15 @@ public class TimeRecordBean extends AttendanceListRegistBean implements TimeReco
 		Date endTime = workTypeEntity.getEndTime(requestEntity);
 		// 勤怠データ作成
 		dto = getAttendanceDto(startTime, startTime, endTime, false, true, false, false, false);
+		// エラーメッセージ確認
+		if (mospParams.hasErrorMessage()) {
+			return null;
+		}
 		// 勤務形態情報が保持している直行直帰を勤怠データに設定
 		setDirectStartEnd(dto, workTypeEntity);
 		// エラーメッセージ確認
 		if (mospParams.hasErrorMessage()) {
-			return;
+			return null;
 		}
 		// 始業・終業必須チェック
 		attendanceRegist.checkTimeExist(dto);
@@ -662,69 +681,68 @@ public class TimeRecordBean extends AttendanceListRegistBean implements TimeReco
 		attendanceRegist.checkAppli(dto);
 		// エラー確認
 		if (mospParams.hasErrorMessage()) {
-			return;
+			return null;
 		}
 		// ワークフロー番号設定(自己承認)
 		applyAndApprove(dto);
 		// 処理結果確認
 		if (mospParams.hasErrorMessage()) {
-			return;
+			return null;
 		}
 		// 勤務形態に登録されている休憩情報のリストを取得
 		List<RestDtoInterface> restList = registRest(startTime, endTime);
 		// 休憩情報毎に処理
 		for (RestDtoInterface restDto : restList) {
-			//	休憩時間登録
+			// 休憩時間登録
 			restRegist.regist(restDto);
 		}
 		// 勤怠データ登録
 		attendanceRegist.regist(dto);
 		// 代休登録
 		registSubHoliday(dto);
+		return recordTime;
 	}
 	
 	@Override
-	public void recordStartWork() throws MospException {
-		Date systemTime = getSystemTime();
+	public Date recordStartWork() throws MospException {
 		// 対象個人ID(ログインユーザの個人ID)及び打刻日時(システム日時)を取得し打刻
-		recordStartWork(mospParams.getUser().getPersonalId(), systemTime);
+		return recordStartWork(mospParams.getUser().getPersonalId(), getSystemTimeAndSecond());
 	}
 	
 	@Override
-	public void recordEndWork() throws MospException {
-		Date systemTime = getSystemTime();
+	public Date recordEndWork() throws MospException {
 		// 対象個人ID(ログインユーザの個人ID)及び打刻日時(システム日時)を取得し打刻
-		recordEndWork(mospParams.getUser().getPersonalId(), systemTime);
+		return recordEndWork(mospParams.getUser().getPersonalId(), getSystemTimeAndSecond());
 	}
 	
 	@Override
-	public void recordStartRest() throws MospException {
+	public Date recordStartRest() throws MospException {
 		// 対象個人ID(ログインユーザの個人ID)及び打刻日時(システム日時)を取得し打刻
-		recordStartRest(mospParams.getUser().getPersonalId(), getSystemTime());
+		return recordStartRest(mospParams.getUser().getPersonalId(), getSystemTimeAndSecond());
 	}
 	
 	@Override
-	public void recordEndRest() throws MospException {
+	public Date recordEndRest() throws MospException {
 		// 対象個人ID(ログインユーザの個人ID)及び打刻日時(システム日時)を取得し打刻
-		recordEndRest(mospParams.getUser().getPersonalId(), getSystemTime());
+		return recordEndRest(mospParams.getUser().getPersonalId(), getSystemTimeAndSecond());
 	}
 	
 	@Override
-	public void recordRegularEnd() throws MospException {
+	public Date recordRegularEnd() throws MospException {
 		// 対象個人ID(ログインユーザの個人ID)及び打刻日時(システム日時)を取得し打刻
-		recordRegularEnd(mospParams.getUser().getPersonalId(), getSystemTime());
+		return recordRegularEnd(mospParams.getUser().getPersonalId(), getSystemTimeAndSecond());
 	}
 	
 	@Override
 	public void recordOverEnd() throws MospException {
 		// 対象個人ID(ログインユーザの個人ID)及び打刻日時(システム日時)を取得し打刻
-		recordOverEnd(mospParams.getUser().getPersonalId(), getSystemTime());
+		recordOverEnd(mospParams.getUser().getPersonalId(), getSystemTimeAndSecond());
 	}
 	
 	@Override
-	public void recordRegularWork() throws MospException {
+	public Date recordRegularWork() throws MospException {
 		// 対象個人ID(ログインユーザの個人ID)及び打刻日時(システム日時)を取得し打刻
-		recordRegularWork(mospParams.getUser().getPersonalId(), getSystemTime());
+		return recordRegularWork(mospParams.getUser().getPersonalId(), getSystemTimeAndSecond());
 	}
 	
 	/**
@@ -774,8 +792,9 @@ public class TimeRecordBean extends AttendanceListRegistBean implements TimeReco
 	 * 勤務形態情報が保持している直行直帰を勤怠データに設定する。<br>
 	 * @param dto            勤怠データ
 	 * @param workTypeEntity 勤務形態エンティティ
+	 * @throws MospException インスタンスの取得及びSQL実行に失敗した場合
 	 */
-	protected void setDirectStartEnd(AttendanceDtoInterface dto, WorkTypeEntity workTypeEntity) {
+	protected void setDirectStartEnd(AttendanceDtoInterface dto, WorkTypeEntity workTypeEntity) throws MospException {
 		// 勤務形態の直行設定を確認
 		if (workTypeEntity.isDirectStart()) {
 			// 勤怠データに直行フラグを設定

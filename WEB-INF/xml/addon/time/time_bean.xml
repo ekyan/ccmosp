@@ -54,6 +54,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<Model key="PaidHolidayDataReference">
 		jp.mosp.time.bean.impl.PaidHolidayDataReferenceBean
 	</Model>
+	<Model key="PaidHolidayGrantReference">
+		jp.mosp.time.bean.impl.PaidHolidayGrantReferenceBean
+	</Model>
 	<Model key="StockHolidayInfoReference">
 		jp.mosp.time.bean.impl.StockHolidayInfoReferenceBean
 	</Model>
@@ -83,6 +86,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	</Model>
 	<Model key="PaidHolidayReference">
 		jp.mosp.time.bean.impl.PaidHolidayReferenceBean
+	</Model>
+	<Model key="PaidHolidayProportionallyReference">
+		jp.mosp.time.bean.impl.PaidHolidayProportionallyReferenceBean
 	</Model>
 	<Model key="PaidHolidayFirstYearReference">
 		jp.mosp.time.bean.impl.PaidHolidayFirstYearReferenceBean
@@ -210,6 +216,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<Model key="HolidayExport">
 		jp.mosp.time.bean.impl.HolidayExportBean
 	</Model>
+	<Model key="AttendanceReapplicationExport">
+		jp.mosp.time.bean.impl.AttendanceReapplicationExportBean
+	</Model>
+	<Model key="AppliReasonDataExport">
+		jp.mosp.time.bean.impl.AppliReasonDataExportBean
+	</Model>
 	<Model key="CutoffUtil">
 		jp.mosp.time.bean.impl.CutoffUtilBean
 	</Model>
@@ -219,7 +231,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<Model key="ScheduleUtil">
 		jp.mosp.time.bean.impl.ScheduleUtilBean
 	</Model>
-
+	<Model key="TimeMaster">
+		jp.mosp.time.bean.impl.TimeMasterBean
+	</Model>
+	<Model key="AttendanceTotalInfo">
+		jp.mosp.time.bean.impl.AttendanceTotalInfoBean
+	</Model>
+	
 <!--Search-->
 	<Model key="HolidaySearch">
 		jp.mosp.time.bean.impl.HolidaySearchBean
@@ -284,6 +302,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<Model key="SubordinateSearch">
 		jp.mosp.time.bean.impl.SubordinateSearchBean
 	</Model>
+	<Model key="SubordinateFiscalSearch">
+		jp.mosp.time.bean.impl.SubordinateFiscalSearchBean
+	</Model>
 	<Model key="TotalTimeTransactionSearch">
 		jp.mosp.time.bean.impl.TotalTimeTransactionSearchBean
 	</Model>
@@ -310,11 +331,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<Model key="PaidHolidayTransactionRegist">
 		jp.mosp.time.bean.impl.PaidHolidayTransactionRegistBean
 	</Model>
+	<Model key="PaidHolidayGrantRegist">
+		jp.mosp.time.bean.impl.PaidHolidayGrantRegistBean
+	</Model>
 	<Model key="PaidHolidayDataRegist">
 		jp.mosp.time.bean.impl.PaidHolidayDataRegistBean
-	</Model>
-	<Model key="TimelyPaidHolidayRegist">
-		jp.mosp.time.bean.impl.TimelyPaidHolidayRegistBean
 	</Model>
 	<Model key="StockHolidayDataRegist">
 		jp.mosp.time.bean.impl.StockHolidayDataRegistBean
@@ -342,6 +363,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	</Model>
 	<Model key="PaidHolidayRegist">
 		jp.mosp.time.bean.impl.PaidHolidayRegistBean
+	</Model>
+	<Model key="PaidHolidayProportionallyRegist">
+		jp.mosp.time.bean.impl.PaidHolidayProportionallyRegistBean
 	</Model>
 	<Model key="PaidHolidayFirstYearRegist">
 		jp.mosp.time.bean.impl.PaidHolidayFirstYearRegistBean
@@ -445,16 +469,46 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<Model key="TimeApproval">
 		jp.mosp.time.bean.impl.TimeApprovalBean
 	</Model>
-	<Model key="TotalTimePersonal">
-		jp.mosp.time.bean.impl.TotalTimePersonalBean
-	</Model>
 	<Model key="PaidHolidayDataGrant">
 		jp.mosp.time.bean.impl.PaidHolidayDataGrantBean
 	</Model>
 	<Model key="StockHolidayDataGrant">
 		jp.mosp.time.bean.impl.StockHolidayDataGrantBean
 	</Model>
-
+	<Model key="HolidayRequestImport">
+		jp.mosp.time.bean.impl.HolidayRequestImportBean
+	</Model>
+	<Model key="WorkOnHolidayRequestImport">
+		jp.mosp.time.bean.impl.WorkOnHolidayRequestImportBean
+	</Model>
+	<Model key="AfterApplyAttendancesExecute">
+		jp.mosp.time.bean.impl.AfterApplyAttendancesExecuteBean
+	</Model>
+	
+	
+	<Model key="TotalTimeEntityReference">
+		jp.mosp.time.bean.impl.TotalTimeEntityReferenceBean
+	</Model>
+	
+	<Model key="TotalTimeEntity">
+		jp.mosp.time.entity.TotalTimeEntity
+	</Model>
+	<Model key="RequestDetectEntity">
+		jp.mosp.time.entity.RequestDetectEntity
+	</Model>
+	<Model key="TimeSettingEntity">
+		jp.mosp.time.entity.TimeSettingEntity
+	</Model>
+	<Model key="WorkTypeEntity">
+		jp.mosp.time.entity.WorkTypeEntity
+	</Model>
+	<Model key="RequestEntity">
+		jp.mosp.time.entity.RequestEntity
+	</Model>
+	<Model key="HolidayRequestEntity">
+		jp.mosp.time.entity.HolidayRequestEntity
+	</Model>
+	
 <!--jp.mosp.time.report.bean-->
 	<Model key="ScheduleBook">
 		jp.mosp.time.report.bean.impl.ScheduleBookBean

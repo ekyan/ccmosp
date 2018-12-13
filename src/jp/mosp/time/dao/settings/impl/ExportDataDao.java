@@ -66,7 +66,8 @@ public class ExportDataDao extends PlatformDao implements ExportDataDaoInterface
 	
 	@Override
 	public ResultSet findForAttendance(Date startDate, Date endDate, String cutoffCode, String workPlaceCode,
-			String employmentCode, String sectionCode, String positionCode) throws MospException {
+			String employmentCode, String sectionCode, int ckbNeedLowerSection, String positionCode)
+			throws MospException {
 		try {
 			index = 1;
 			StringBuffer sb = new StringBuffer();
@@ -144,7 +145,12 @@ public class ExportDataDao extends PlatformDao implements ExportDataDaoInterface
 				sb.append(getExplicitTableColumn(TmdAttendanceDao.TABLE, TmdAttendanceDao.COL_PERSONAL_ID));
 				sb.append(in());
 				sb.append(leftParenthesis());
-				sb.append(humanDao.getQueryForSectionCode());
+				// 下位所属含むチェックボックスで判定
+				if (ckbNeedLowerSection == 1) {
+					sb.append(humanDao.getQueryForLowerSection());
+				} else {
+					sb.append(humanDao.getQueryForSectionCode());
+				}
 				sb.append(rightParenthesis());
 			}
 			if (!positionCode.isEmpty()) {
@@ -161,19 +167,27 @@ public class ExportDataDao extends PlatformDao implements ExportDataDaoInterface
 			setParam(index++, startDate);
 			setParam(index++, endDate);
 			if (!workPlaceCode.isEmpty()) {
-				setParam(index++, startDate);
+				setParam(index++, endDate);
 				setParam(index++, workPlaceCode);
 			}
 			if (!employmentCode.isEmpty()) {
-				setParam(index++, startDate);
+				setParam(index++, endDate);
 				setParam(index++, employmentCode);
 			}
 			if (!sectionCode.isEmpty()) {
-				setParam(index++, startDate);
-				setParam(index++, sectionCode);
+				// 下位所属含むチェックボックスで判定
+				if (ckbNeedLowerSection == 1) {
+					setParam(index++, endDate);
+					setParam(index++, endDate);
+					setParam(index++, sectionCode);
+					setParam(index++, containsParam(sectionCode));
+				} else {
+					setParam(index++, endDate);
+					setParam(index++, sectionCode);
+				}
 			}
 			if (!positionCode.isEmpty()) {
-				setParam(index++, startDate);
+				setParam(index++, endDate);
 				setParam(index++, positionCode);
 			}
 			executeQuery();
@@ -185,7 +199,8 @@ public class ExportDataDao extends PlatformDao implements ExportDataDaoInterface
 	
 	@Override
 	public ResultSet findForTotalTime(Date startDate, Date endDate, String cutoffCode, String workPlaceCode,
-			String employmentCode, String sectionCode, String positionCode) throws MospException {
+			String employmentCode, String sectionCode, int ckbNeedLowerSection, String positionCode)
+			throws MospException {
 		try {
 			index = 1;
 			StringBuffer sb = new StringBuffer();
@@ -251,7 +266,12 @@ public class ExportDataDao extends PlatformDao implements ExportDataDaoInterface
 				sb.append(getExplicitTableColumn(TmdTotalTimeDao.TABLE, TmdTotalTimeDao.COL_PERSONAL_ID));
 				sb.append(in());
 				sb.append(leftParenthesis());
-				sb.append(humanDao.getQueryForSectionCode());
+				// 下位所属含むチェックボックスで判定
+				if (ckbNeedLowerSection == 1) {
+					sb.append(humanDao.getQueryForLowerSection());
+				} else {
+					sb.append(humanDao.getQueryForSectionCode());
+				}
 				sb.append(rightParenthesis());
 			}
 			if (!positionCode.isEmpty()) {
@@ -267,19 +287,27 @@ public class ExportDataDao extends PlatformDao implements ExportDataDaoInterface
 			setParam(index++, startDate);
 			setParam(index++, endDate);
 			if (!workPlaceCode.isEmpty()) {
-				setParam(index++, startDate);
+				setParam(index++, endDate);
 				setParam(index++, workPlaceCode);
 			}
 			if (!employmentCode.isEmpty()) {
-				setParam(index++, startDate);
+				setParam(index++, endDate);
 				setParam(index++, employmentCode);
 			}
 			if (!sectionCode.isEmpty()) {
-				setParam(index++, startDate);
-				setParam(index++, sectionCode);
+				// 下位所属含むチェックボックスで判定
+				if (ckbNeedLowerSection == 1) {
+					setParam(index++, endDate);
+					setParam(index++, endDate);
+					setParam(index++, sectionCode);
+					setParam(index++, containsParam(sectionCode));
+				} else {
+					setParam(index++, endDate);
+					setParam(index++, sectionCode);
+				}
 			}
 			if (!positionCode.isEmpty()) {
-				setParam(index++, startDate);
+				setParam(index++, endDate);
 				setParam(index++, positionCode);
 			}
 			executeQuery();
@@ -291,7 +319,8 @@ public class ExportDataDao extends PlatformDao implements ExportDataDaoInterface
 	
 	@Override
 	public ResultSet findForPaidHoliday(Date startDate, Date endDate, String cutoffCode, String workPlaceCode,
-			String employmentCode, String sectionCode, String positionCode) throws MospException {
+			String employmentCode, String sectionCode, int ckbNeedLowerSection, String positionCode)
+			throws MospException {
 		try {
 			index = 1;
 			StringBuffer sb = new StringBuffer();
@@ -333,7 +362,8 @@ public class ExportDataDao extends PlatformDao implements ExportDataDaoInterface
 			sb.append(getExplicitTableColumn(TmdPaidHolidayDao.TABLE, TmdPaidHolidayDao.COL_ACTIVATE_DATE));
 			sb.append(rightParenthesis());
 			sb.append(and());
-			sb.append(greaterEqual(getExplicitTableColumn(TmdPaidHolidayDao.TABLE, TmdPaidHolidayDao.COL_ACTIVATE_DATE)));
+			sb.append(
+					greaterEqual(getExplicitTableColumn(TmdPaidHolidayDao.TABLE, TmdPaidHolidayDao.COL_ACTIVATE_DATE)));
 			sb.append(and());
 			sb.append(lessEqual(getExplicitTableColumn(TmdPaidHolidayDao.TABLE, TmdPaidHolidayDao.COL_ACTIVATE_DATE)));
 			if (!workPlaceCode.isEmpty()) {
@@ -357,7 +387,12 @@ public class ExportDataDao extends PlatformDao implements ExportDataDaoInterface
 				sb.append(getExplicitTableColumn(TmdPaidHolidayDao.TABLE, TmdTotalTimeDao.COL_PERSONAL_ID));
 				sb.append(in());
 				sb.append(leftParenthesis());
-				sb.append(humanDao.getQueryForSectionCode());
+				// 下位所属含むチェックボックスで判定
+				if (ckbNeedLowerSection == 1) {
+					sb.append(humanDao.getQueryForLowerSection());
+				} else {
+					sb.append(humanDao.getQueryForSectionCode());
+				}
 				sb.append(rightParenthesis());
 			}
 			if (!positionCode.isEmpty()) {
@@ -374,19 +409,27 @@ public class ExportDataDao extends PlatformDao implements ExportDataDaoInterface
 			setParam(index++, startDate);
 			setParam(index++, endDate);
 			if (!workPlaceCode.isEmpty()) {
-				setParam(index++, startDate);
+				setParam(index++, endDate);
 				setParam(index++, workPlaceCode);
 			}
 			if (!employmentCode.isEmpty()) {
-				setParam(index++, startDate);
+				setParam(index++, endDate);
 				setParam(index++, employmentCode);
 			}
 			if (!sectionCode.isEmpty()) {
-				setParam(index++, startDate);
-				setParam(index++, sectionCode);
+				// 下位所属含むチェックボックスで判定
+				if (ckbNeedLowerSection == 1) {
+					setParam(index++, endDate);
+					setParam(index++, endDate);
+					setParam(index++, sectionCode);
+					setParam(index++, containsParam(sectionCode));
+				} else {
+					setParam(index++, endDate);
+					setParam(index++, sectionCode);
+				}
 			}
 			if (!positionCode.isEmpty()) {
-				setParam(index++, startDate);
+				setParam(index++, endDate);
 				setParam(index++, positionCode);
 			}
 			executeQuery();
@@ -398,7 +441,8 @@ public class ExportDataDao extends PlatformDao implements ExportDataDaoInterface
 	
 	@Override
 	public ResultSet findForStockHoliday(Date startDate, Date endDate, String cutoffCode, String workPlaceCode,
-			String employmentCode, String sectionCode, String positionCode) throws MospException {
+			String employmentCode, String sectionCode, int ckbNeedLowerSection, String positionCode)
+			throws MospException {
 		try {
 			index = 1;
 			StringBuffer sb = new StringBuffer();
@@ -440,10 +484,11 @@ public class ExportDataDao extends PlatformDao implements ExportDataDaoInterface
 			sb.append(getExplicitTableColumn(TmdStockHolidayDao.TABLE, TmdStockHolidayDao.COL_ACTIVATE_DATE));
 			sb.append(rightParenthesis());
 			sb.append(and());
-			sb.append(greaterEqual(getExplicitTableColumn(TmdStockHolidayDao.TABLE,
-					TmdStockHolidayDao.COL_ACTIVATE_DATE)));
+			sb.append(greaterEqual(
+					getExplicitTableColumn(TmdStockHolidayDao.TABLE, TmdStockHolidayDao.COL_ACTIVATE_DATE)));
 			sb.append(and());
-			sb.append(lessEqual(getExplicitTableColumn(TmdStockHolidayDao.TABLE, TmdStockHolidayDao.COL_ACTIVATE_DATE)));
+			sb.append(
+					lessEqual(getExplicitTableColumn(TmdStockHolidayDao.TABLE, TmdStockHolidayDao.COL_ACTIVATE_DATE)));
 			if (!workPlaceCode.isEmpty()) {
 				sb.append(and());
 				sb.append(getExplicitTableColumn(TmdStockHolidayDao.TABLE, TmdStockHolidayDao.COL_PERSONAL_ID));
@@ -465,7 +510,12 @@ public class ExportDataDao extends PlatformDao implements ExportDataDaoInterface
 				sb.append(getExplicitTableColumn(TmdStockHolidayDao.TABLE, TmdStockHolidayDao.COL_PERSONAL_ID));
 				sb.append(in());
 				sb.append(leftParenthesis());
-				sb.append(humanDao.getQueryForSectionCode());
+				// 下位所属含むチェックボックスで判定
+				if (ckbNeedLowerSection == 1) {
+					sb.append(humanDao.getQueryForLowerSection());
+				} else {
+					sb.append(humanDao.getQueryForSectionCode());
+				}
 				sb.append(rightParenthesis());
 			}
 			if (!positionCode.isEmpty()) {
@@ -482,124 +532,27 @@ public class ExportDataDao extends PlatformDao implements ExportDataDaoInterface
 			setParam(index++, startDate);
 			setParam(index++, endDate);
 			if (!workPlaceCode.isEmpty()) {
-				setParam(index++, startDate);
+				setParam(index++, endDate);
 				setParam(index++, workPlaceCode);
 			}
 			if (!employmentCode.isEmpty()) {
-				setParam(index++, startDate);
+				setParam(index++, endDate);
 				setParam(index++, employmentCode);
 			}
 			if (!sectionCode.isEmpty()) {
-				setParam(index++, startDate);
-				setParam(index++, sectionCode);
+				// 下位所属含むチェックボックスで判定
+				if (ckbNeedLowerSection == 1) {
+					setParam(index++, endDate);
+					setParam(index++, endDate);
+					setParam(index++, sectionCode);
+					setParam(index++, containsParam(sectionCode));
+				} else {
+					setParam(index++, endDate);
+					setParam(index++, sectionCode);
+				}
 			}
 			if (!positionCode.isEmpty()) {
-				setParam(index++, startDate);
-				setParam(index++, positionCode);
-			}
-			executeQuery();
-			return rs;
-		} catch (Throwable e) {
-			throw new MospException(e);
-		}
-	}
-	
-	@Override
-	public ResultSet findForTimelyPaidHoliday(Date startDate, Date endDate, String cutoffCode, String workPlaceCode,
-			String employmentCode, String sectionCode, String positionCode) throws MospException {
-		try {
-			index = 1;
-			StringBuffer sb = new StringBuffer();
-			sb.append(select());
-			sb.append(getExplicitTableColumn(PfmHumanDao.TABLE, PfmHumanDao.COL_EMPLOYEE_CODE));
-			sb.append(", ");
-			sb.append(getExplicitTableColumn(PfmHumanDao.TABLE, PfmHumanDao.COL_LAST_NAME));
-			sb.append(", ");
-			sb.append(getExplicitTableColumn(PfmHumanDao.TABLE, PfmHumanDao.COL_FIRST_NAME));
-			sb.append(", ");
-			sb.append(getExplicitTableColumn(PfmHumanDao.TABLE, PfmHumanDao.COL_SECTION_CODE));
-			sb.append(", ");
-			sb.append(getExplicitTableColumn(TmdTimelyPaidHolidayDao.TABLE, "*"));
-			sb.append(from(TmdTimelyPaidHolidayDao.TABLE));
-			sb.append("LEFT JOIN ");
-			sb.append(PfmHumanDao.TABLE);
-			sb.append(" ON ");
-			sb.append(getExplicitTableColumn(TmdTimelyPaidHolidayDao.TABLE, TmdTimelyPaidHolidayDao.COL_PERSONAL_ID));
-			sb.append(" = ");
-			sb.append(getExplicitTableColumn(PfmHumanDao.TABLE, PfmHumanDao.COL_PERSONAL_ID));
-			sb.append(where());
-			sb.append(deleteFlagOff(getExplicitTableColumn(TmdTimelyPaidHolidayDao.TABLE, colDeleteFlag)));
-			sb.append(and());
-			sb.append(deleteFlagOff(getExplicitTableColumn(PfmHumanDao.TABLE, colDeleteFlag)));
-			sb.append(and());
-			sb.append(getExplicitTableColumn(PfmHumanDao.TABLE, PfmHumanDao.COL_ACTIVATE_DATE));
-			sb.append(" =");
-			sb.append(leftParenthesis());
-			sb.append(selectMax(PfmHumanDao.COL_ACTIVATE_DATE));
-			sb.append(from(PfmHumanDao.TABLE));
-			sb.append(asTmpTable(PfmHumanDao.TABLE));
-			sb.append(where());
-			sb.append(deleteFlagOff());
-			sb.append(and());
-			sb.append(equalTmpColumn(PfmHumanDao.TABLE, PfmHumanDao.COL_PERSONAL_ID));
-			sb.append(and());
-			sb.append(PfmHumanDao.COL_ACTIVATE_DATE);
-			sb.append(" <= ");
-			sb.append(getExplicitTableColumn(TmdTimelyPaidHolidayDao.TABLE, TmdTimelyPaidHolidayDao.COL_ACTIVATE_DATE));
-			sb.append(rightParenthesis());
-			sb.append(and());
-			sb.append(greaterEqual(getExplicitTableColumn(TmdTimelyPaidHolidayDao.TABLE,
-					TmdTimelyPaidHolidayDao.COL_ACTIVATE_DATE)));
-			sb.append(and());
-			sb.append(lessEqual(getExplicitTableColumn(TmdTimelyPaidHolidayDao.TABLE,
-					TmdTimelyPaidHolidayDao.COL_ACTIVATE_DATE)));
-			if (!workPlaceCode.isEmpty()) {
-				sb.append(and());
-				sb.append(getExplicitTableColumn(TmdTimelyPaidHolidayDao.TABLE, TmdTimelyPaidHolidayDao.COL_PERSONAL_ID));
-				sb.append(in());
-				sb.append(leftParenthesis());
-				sb.append(humanDao.getQueryForWorkPlaceCode());
-				sb.append(rightParenthesis());
-			}
-			if (!employmentCode.isEmpty()) {
-				sb.append(and());
-				sb.append(getExplicitTableColumn(TmdTimelyPaidHolidayDao.TABLE, TmdTimelyPaidHolidayDao.COL_PERSONAL_ID));
-				sb.append(in());
-				sb.append(leftParenthesis());
-				sb.append(humanDao.getQueryForEmploymentContractCode());
-				sb.append(rightParenthesis());
-			}
-			if (!sectionCode.isEmpty()) {
-				sb.append(and());
-				sb.append(getExplicitTableColumn(TmdTimelyPaidHolidayDao.TABLE, TmdTimelyPaidHolidayDao.COL_PERSONAL_ID));
-				sb.append(in());
-				sb.append(leftParenthesis());
-				sb.append(humanDao.getQueryForSectionCode());
-				sb.append(rightParenthesis());
-			}
-			if (!positionCode.isEmpty()) {
-				sb.append(and());
-				sb.append(getExplicitTableColumn(TmdTimelyPaidHolidayDao.TABLE, TmdTimelyPaidHolidayDao.COL_PERSONAL_ID));
-				sb.append(in());
-				sb.append(leftParenthesis());
-				sb.append(humanDao.getQueryForPositionCode());
-				sb.append(rightParenthesis());
-			}
-			sb.append(getOrderByColumns(PfmHumanDao.COL_EMPLOYEE_CODE, TmdTimelyPaidHolidayDao.COL_ACQUISITION_DATE,
-					TmdTimelyPaidHolidayDao.COL_ACTIVATE_DATE));
-			prepareStatement(sb.toString());
-			setParam(index++, startDate);
-			setParam(index++, endDate);
-			if (!workPlaceCode.isEmpty()) {
-				setParam(index++, workPlaceCode);
-			}
-			if (!employmentCode.isEmpty()) {
-				setParam(index++, employmentCode);
-			}
-			if (!sectionCode.isEmpty()) {
-				setParam(index++, sectionCode);
-			}
-			if (!positionCode.isEmpty()) {
+				setParam(index++, endDate);
 				setParam(index++, positionCode);
 			}
 			executeQuery();
@@ -611,7 +564,8 @@ public class ExportDataDao extends PlatformDao implements ExportDataDaoInterface
 	
 	@Override
 	public ResultSet findForHolidayData(Date startDate, Date endDate, String cutoffCode, String workPlaceCode,
-			String employmentCode, String sectionCode, String positionCode) throws MospException {
+			String employmentCode, String sectionCode, int ckbNeedLowerSection, String positionCode)
+			throws MospException {
 		try {
 			index = 1;
 			StringBuffer sb = new StringBuffer();
@@ -653,7 +607,8 @@ public class ExportDataDao extends PlatformDao implements ExportDataDaoInterface
 			sb.append(getExplicitTableColumn(TmdHolidayDataDao.TABLE, TmdHolidayDataDao.COL_ACTIVATE_DATE));
 			sb.append(rightParenthesis());
 			sb.append(and());
-			sb.append(greaterEqual(getExplicitTableColumn(TmdHolidayDataDao.TABLE, TmdHolidayDataDao.COL_ACTIVATE_DATE)));
+			sb.append(
+					greaterEqual(getExplicitTableColumn(TmdHolidayDataDao.TABLE, TmdHolidayDataDao.COL_ACTIVATE_DATE)));
 			sb.append(and());
 			sb.append(lessEqual(getExplicitTableColumn(TmdHolidayDataDao.TABLE, TmdHolidayDataDao.COL_ACTIVATE_DATE)));
 			if (!workPlaceCode.isEmpty()) {
@@ -677,7 +632,12 @@ public class ExportDataDao extends PlatformDao implements ExportDataDaoInterface
 				sb.append(getExplicitTableColumn(TmdHolidayDataDao.TABLE, TmdHolidayDataDao.COL_PERSONAL_ID));
 				sb.append(in());
 				sb.append(leftParenthesis());
-				sb.append(humanDao.getQueryForSectionCode());
+				// 下位所属含むチェックボックスで判定
+				if (ckbNeedLowerSection == 1) {
+					sb.append(humanDao.getQueryForLowerSection());
+				} else {
+					sb.append(humanDao.getQueryForSectionCode());
+				}
 				sb.append(rightParenthesis());
 			}
 			if (!positionCode.isEmpty()) {
@@ -694,19 +654,27 @@ public class ExportDataDao extends PlatformDao implements ExportDataDaoInterface
 			setParam(index++, startDate);
 			setParam(index++, endDate);
 			if (!workPlaceCode.isEmpty()) {
-				setParam(index++, startDate);
+				setParam(index++, endDate);
 				setParam(index++, workPlaceCode);
 			}
 			if (!employmentCode.isEmpty()) {
-				setParam(index++, startDate);
+				setParam(index++, endDate);
 				setParam(index++, employmentCode);
 			}
 			if (!sectionCode.isEmpty()) {
-				setParam(index++, startDate);
-				setParam(index++, sectionCode);
+				// 下位所属含むチェックボックスで判定
+				if (ckbNeedLowerSection == 1) {
+					setParam(index++, endDate);
+					setParam(index++, endDate);
+					setParam(index++, sectionCode);
+					setParam(index++, containsParam(sectionCode));
+				} else {
+					setParam(index++, endDate);
+					setParam(index++, sectionCode);
+				}
 			}
 			if (!positionCode.isEmpty()) {
-				setParam(index++, startDate);
+				setParam(index++, endDate);
 				setParam(index++, positionCode);
 			}
 			executeQuery();

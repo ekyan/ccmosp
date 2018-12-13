@@ -19,18 +19,27 @@ package jp.mosp.platform.message.action;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import jp.mosp.framework.base.BaseVo;
 import jp.mosp.framework.base.MospException;
+import jp.mosp.framework.constant.MospConst;
 import jp.mosp.platform.base.PlatformAction;
 import jp.mosp.platform.base.PlatformBeanHandlerInterface;
+import jp.mosp.platform.bean.human.HumanNormalReferenceBeanInterface;
 import jp.mosp.platform.bean.human.HumanReferenceBeanInterface;
+import jp.mosp.platform.bean.human.HumanSearchBeanInterface;
+import jp.mosp.platform.bean.mail.MailBeanInterface;
 import jp.mosp.platform.bean.message.MessageReferenceBeanInterface;
 import jp.mosp.platform.bean.message.MessageRegistBeanInterface;
 import jp.mosp.platform.constant.PlatformConst;
+import jp.mosp.platform.constant.PlatformMessageConst;
+import jp.mosp.platform.dto.human.HumanDtoInterface;
+import jp.mosp.platform.dto.human.HumanNormalDtoInterface;
 import jp.mosp.platform.dto.message.MessageDtoInterface;
 import jp.mosp.platform.message.vo.MessageCardVo;
 import jp.mosp.platform.system.base.PlatformSystemAction;
+import jp.mosp.platform.utils.PlatformMessageUtility;
 
 /**
  * ポータル画面の通知欄に表示するメッセージの内容やその公開範囲について登録する。<br>
@@ -111,6 +120,11 @@ public class MessageCardAction extends PlatformSystemAction {
 	 */
 	public static final String	CMD_REPLICATION_MODE	= "PF4174";
 	
+	/**
+	 * メール送信コマンド。<br>
+	 */
+	public static final String	CMD_SEND_MAIL			= "PF4175";
+	
 	
 	/**
 	 * {@link PlatformAction#PlatformAction()}を実行する。<br>
@@ -155,6 +169,10 @@ public class MessageCardAction extends PlatformSystemAction {
 			// 複製モード切替
 			prepareVo();
 			replicationMode();
+		} else if (mospParams.getCommand().equals(CMD_SEND_MAIL)) {
+			// メール送信
+			prepareVo();
+			sendMail();
 		}
 	}
 	
@@ -251,7 +269,7 @@ public class MessageCardAction extends PlatformSystemAction {
 	
 	/**
 	 * 削除処理を行う。<br>
-	 * @throws MospException  インスタンスの取得或いはSQL実行に失敗した場合
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
 	protected void delete() throws MospException {
 		// 登録クラス取得
@@ -359,6 +377,131 @@ public class MessageCardAction extends PlatformSystemAction {
 		MessageCardVo vo = (MessageCardVo)mospParams.getVo();
 		// コードを空白に設定
 		vo.setLblMessageNo("");
+	}
+	
+	/**
+	 * メール送信処理を行う。<br>
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	protected void sendMail() throws MospException {
+		// VO準備
+		MessageCardVo vo = (MessageCardVo)mospParams.getVo();
+		// 参照クラス取得
+		MessageReferenceBeanInterface message = reference().message();
+		MailBeanInterface mail = platform().mail();
+		MessageDtoInterface dto = message.findForKey(vo.getLblMessageNo());
+		String[][] aryPersonalIds = getMailAddressArray(dto);
+		if (mospParams.hasErrorMessage()) {
+			// エラーメッセージ
+			addSendMailFailedMessage();
+			return;
+		}
+		if (aryPersonalIds.length <= 0) {
+			// エラーメッセージ
+			addSendMailFailedMessage();
+			mospParams.addErrorMessage(PlatformMessageConst.MSG_NO_DATA);
+			return;
+		}
+		if (!mail.canUseMailServer()) {
+			// エラーメッセージ
+			addSendMailFailedMessage();
+			mospParams.addErrorMessage(PlatformMessageConst.MSG_WORKFORM_EXISTENCE, mospParams.getName("Set"));
+			return;
+		}
+		int count = 0;
+		for (String[] strings : aryPersonalIds) {
+			if (mail.sendMail(new String[][]{ strings }, dto.getMessageTitle(), dto.getMessageBody(), null)) {
+				count++;
+				continue;
+			}
+		}
+		if (count > 0) {
+			// 0より大きい場合
+			addSendMailMessage(count);
+			return;
+		}
+		// 0以下の場合
+		addSendMailFailedMessage();
+	}
+	
+	/**
+	 * メールアドレス配列を取得する。
+	 * @param dto 対象DTO
+	 * @return メールアドレス配列
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 */
+	protected String[][] getMailAddressArray(MessageDtoInterface dto) throws MospException {
+		HumanReferenceBeanInterface human = reference().human();
+		HumanSearchBeanInterface humanSearch = reference().humanSearch();
+		Date startDate = getEditActivateDate();
+		int applicationType = dto.getApplicationType();
+		if (applicationType == 0) {
+			// 勤務地・雇用契約・所属・職位
+			// 検索条件設定
+			humanSearch.setTargetDate(dto.getStartDate());
+			humanSearch.setWorkPlaceCode(dto.getWorkPlaceCode());
+			humanSearch.setSectionCode(dto.getSectionCode());
+			humanSearch.setPositionCode(dto.getPositionCode());
+			humanSearch.setEmploymentContractCode(dto.getEmploymentContractCode());
+			// 検索条件設定(状態)
+			humanSearch.setStateType(PlatformConst.EMPLOYEE_STATE_PRESENCE);
+			// 検索条件設定(下位所属要否)
+			humanSearch.setNeedLowerSection(true);
+			// 検索条件設定(兼務要否)
+			humanSearch.setNeedConcurrent(true);
+			// 検索条件設定(操作区分)
+			humanSearch.setOperationType(MospConst.OPERATION_TYPE_REFER);
+			// 人事情報検索
+			List<HumanDtoInterface> list = humanSearch.search();
+			String[][] mailAddressArray = new String[list.size()][2];
+			for (int i = 0; i < mailAddressArray.length; i++) {
+				HumanDtoInterface humanDto = list.get(i);
+				String mailAddress = getMailAddress(humanDto.getPersonalId());
+				mailAddressArray[i][0] = humanDto.getPersonalId();
+				mailAddressArray[i][1] = "";
+				if (mailAddress != null && !mailAddress.isEmpty()) {
+					mailAddressArray[i][1] = mailAddress;
+				}
+			}
+			return mailAddressArray;
+		} else if (applicationType == 1) {
+			// 個人
+			String[] aryPersonalId = dto.getPersonalId().split(",");
+			String[][] mailAddressArray = new String[aryPersonalId.length][2];
+			for (int i = 0; i < mailAddressArray.length; i++) {
+				String mailAddress = getMailAddress(aryPersonalId[i]);
+				if (mailAddress == null || mailAddress.isEmpty()) {
+					String employeeCode = "";
+					HumanDtoInterface humanDto = human.getHumanInfo(aryPersonalId[i], startDate);
+					if (humanDto != null) {
+						employeeCode = humanDto.getEmployeeCode();
+					}
+					// エラーメッセージ
+					PlatformMessageUtility.addErrorUnregisteredMailAddress(mospParams, startDate, employeeCode);
+					return mailAddressArray;
+				}
+				mailAddressArray[i][0] = aryPersonalId[i];
+				mailAddressArray[i][1] = mailAddress;
+			}
+			return mailAddressArray;
+		}
+		return new String[0][0];
+	}
+	
+	/**
+	 * メールアドレスを取得する。
+	 * @param personalId 個人ID
+	 * @return メールアドレス
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 */
+	protected String getMailAddress(String personalId) throws MospException {
+		final String itemName = "mailAddress";
+		HumanNormalReferenceBeanInterface humanNormal = reference().humanNormal();
+		HumanNormalDtoInterface dto = humanNormal.getHumanNormalInfo(itemName, personalId);
+		if (dto == null) {
+			return "";
+		}
+		return dto.getHumanItemValue();
 	}
 	
 	/**
@@ -516,6 +659,17 @@ public class MessageCardAction extends PlatformSystemAction {
 		vo.setLblEmployeeName(human.getHumanNames(dto.getPersonalId(), dto.getStartDate()));
 		// 登録者
 		vo.setLblRegistUser(getInsertUserName(dto));
+	}
+	
+	/**
+	 * メール送信成功メッセージの設定。
+	 * @param count 件数
+	 */
+	protected void addSendMailMessage(int count) {
+		StringBuffer sb = new StringBuffer();
+		sb.append(count);
+		sb.append(mospParams.getName("Count", "SendMail"));
+		mospParams.addMessage(PlatformMessageConst.MSG_PROCESS_SUCCEED, sb.toString());
 	}
 	
 }

@@ -18,8 +18,6 @@
 package jp.mosp.platform.human.action;
 
 import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 import jp.mosp.framework.base.BaseVo;
 import jp.mosp.framework.base.MospException;
@@ -172,8 +170,8 @@ public class HumanHistoryListAction extends PlatformHumanAction {
 		// 人事汎用管理区分設定
 		vo.setDivision(getTransferredType());
 		// パンくず名設定
-		TopicPathUtility.setTopicPathName(mospParams, vo.getClassName(), mospParams.getName(vo.getDivision())
-				+ mospParams.getName("History", "List"));
+		TopicPathUtility.setTopicPathName(mospParams, vo.getClassName(),
+				mospParams.getName(vo.getDivision()) + mospParams.getName("History", "List"));
 		// 人事管理共通情報利用設定
 		setPlatformHumanSettings(CMD_SEARCH, PlatformHumanConst.MODE_HUMAN_NO_ACTIVATE_DATE);
 		// 人事管理共通情報設定
@@ -228,7 +226,8 @@ public class HumanHistoryListAction extends PlatformHumanAction {
 		// 有効日取得
 		Date activeDate = DateUtility.getDate(getTransferredActivateDate());
 		// 削除
-		platform().humanHistoryRegist().delete(division, KEY_VIEW_HUMAN_HISTORY_CARD, vo.getPersonalId(), activeDate);
+		platform().humanHistoryRegist().delete(division, KEY_VIEW_HUMAN_HISTORY_CARD,
+				vo.getAryHistoryRecordIdMap(DateUtility.getStringDate(activeDate)));
 		if (mospParams.hasErrorMessage()) {
 			// 履歴削除メッセージ設定
 			addDeleteHistoryFailedMessage();
@@ -296,26 +295,33 @@ public class HumanHistoryListAction extends PlatformHumanAction {
 		}
 		// 人事汎用通常情報参照クラス取得
 		HumanHistoryReferenceBeanInterface humanReference = reference().humanHistory();
-		// 人事汎用履歴情報取得
-		LinkedHashMap<String, Map<String, String>> activateDateMap = humanReference.getActiveDateHistoryMapInfo(
-				division, KEY_VIEW_HISTORY_LIST, personalId, vo.getTargetDate());
+		// 人事汎用履歴情報取得（レコード識別ID取得のために編集画面KEYで取得）
+		humanReference.getActiveDateHistoryMapInfo(division, KEY_VIEW_HUMAN_HISTORY_CARD, personalId,
+				vo.getTargetDate());
+		// 人事汎用履歴情報をリスト用に加工（識別ID取得のための措置）
+		humanReference.getHistoryListData(division, KEY_VIEW_HISTORY_LIST);
 		// 人事汎用履歴情報リスト確認
-		if (activateDateMap.isEmpty()) {
+		if (humanReference.getHistoryHumanInfoMap().isEmpty()) {
 			return;
 		}
 		// 件数確認フラグ
 		boolean isLastHistory = false;
 		// マップ情報のサイズを取得
-		if (activateDateMap.size() == 1) {
+		if (humanReference.getHistoryHumanInfoMap().size() == 1) {
 			// 1件だけの場合
 			isLastHistory = true;
 		}
 		// 件数確認フラグ設定
 		vo.setJsIsLastHistory(isLastHistory);
 		// 有効日配列準備
-		String[] activeDate = humanReference.getArrayActiveDate(activateDateMap);
+		String[] activeDate = humanReference.getArrayActiveDate(humanReference.getHistoryHumanInfoMap());
+		
 		// 登録情報を取得しVOに設定
-		vo.putHistoryItem(division, activateDateMap);
+		vo.putHistoryItem(division, humanReference.getHistoryHumanInfoMap());
+		
+		// レコード識別IDマップ情報取得
+		vo.setAryHistoryRecordIdMap(humanReference.getHistoryReferenceInfoMap());
+		
 		// 有効日配列設定
 		vo.setAryActiveteDate(activeDate);
 	}

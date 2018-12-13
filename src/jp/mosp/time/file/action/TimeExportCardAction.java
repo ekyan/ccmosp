@@ -32,7 +32,7 @@ public class TimeExportCardAction extends ExportCardAction {
 	/**
 	 * MosP勤怠管理参照用BeanHandler。
 	 */
-	protected TimeReferenceBeanHandlerInterface	timeReference;
+	protected TimeReferenceBeanHandlerInterface timeReference;
 	
 	
 	@Override
@@ -45,8 +45,8 @@ public class TimeExportCardAction extends ExportCardAction {
 		if (vo.getModeActivateDate().equals(PlatformConst.MODE_ACTIVATE_DATE_FIXED)
 				&& TimeFileConst.CODE_EXPORT_TYPE_HOLIDAY_REQUEST_DATA.equals(vo.getPltEditTable())) {
 			// プルダウン設定(データ区分を条件にコード配列を取得)
-			vo.setJsPltSelectTable(concat(getCodeArray(vo.getPltEditTable(), false), timeReference.holiday()
-				.getExportArray(getSystemDate())));
+			vo.setJsPltSelectTable(concat(getCodeArray(vo.getPltEditTable(), false),
+					timeReference.holiday().getExportArray(getSystemDate())));
 		}
 	}
 	

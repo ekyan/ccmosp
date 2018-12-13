@@ -25,11 +25,13 @@ import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.constant.MospConst;
 import jp.mosp.platform.base.PlatformAction;
 import jp.mosp.platform.bean.file.ImportSearchBeanInterface;
+import jp.mosp.platform.bean.file.TemplateOutputBeanInterface;
 import jp.mosp.platform.comparator.file.ImportMasterImportCodeComparator;
 import jp.mosp.platform.constant.PlatformConst;
 import jp.mosp.platform.constant.PlatformFileConst;
 import jp.mosp.platform.dto.file.ImportDtoInterface;
 import jp.mosp.platform.file.vo.ImportListVo;
+import jp.mosp.platform.utils.PlatformUtility;
 
 /**
  * インポート一覧におけるActionの基本機能を提供する。<br>
@@ -39,7 +41,7 @@ public abstract class ImportListAction extends PlatformAction {
 	/**
 	 * パラメータID(インポートファイル)。
 	 */
-	public static final String	PRM_FIL_IMPORT	= "filImport";
+	public static final String PRM_FIL_IMPORT = "filImport";
 	
 	
 	/**
@@ -70,11 +72,25 @@ public abstract class ImportListAction extends PlatformAction {
 		search.setType(vo.getPltSearchType());
 		search.setHeader(vo.getPltSearchHeader());
 		search.setInactivateFlag(vo.getPltSearchInactivate());
-		search.setTableTypeArray(getCodeArray(vo.getTableTypeCodeKey(), false));
+		search.setTableTypeArray(PlatformUtility.getTableTypeArray(mospParams, vo.getTableTypeCodeKey(), false));
 		// 検索条件をもとに検索クラスからマスタリストを取得
 		List<ImportDtoInterface> list = search.getSearchList();
 		// 検索結果リスト設定
+		setDtoToVoList(list);
+		
+	}
+	
+	/**
+	 * リスト情報取得後の処理
+	 * @param list インポート情報リスト
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	protected void setDtoToVoList(List<ImportDtoInterface> list) throws MospException {
+		// VO準備
+		ImportListVo vo = (ImportListVo)mospParams.getVo();
+		// リストの設定
 		vo.setList(list);
+		
 		// デフォルトソートキー及びソート順設定
 		vo.setComparatorName(ImportMasterImportCodeComparator.class.getName());
 		vo.setAscending(false);
@@ -87,6 +103,7 @@ public abstract class ImportListAction extends PlatformAction {
 			// 検索結果無しメッセージ設定
 			addNoSearchResultMessage();
 		}
+		
 	}
 	
 	/**
@@ -105,11 +122,22 @@ public abstract class ImportListAction extends PlatformAction {
 	}
 	
 	/**
+	 * テンプレート出力処理を行う。
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	protected void tempOutput() throws MospException {
+		// VO取得
+		ImportListVo vo = (ImportListVo)mospParams.getVo();
+		TemplateOutputBeanInterface templateOutput = platform().templateOutput();
+		// テンプレート出力
+		templateOutput.output(vo.getRadSelect());
+	}
+	
+	/**
 	 * 検索結果リストの内容をVOに設定する。<br>
 	 * @param list 対象リスト
 	 */
 	protected void setVoList(List<? extends BaseDtoInterface> list) {
-		
 		// VO取得
 		ImportListVo vo = (ImportListVo)mospParams.getVo();
 		// データ配列初期化
@@ -155,7 +183,7 @@ public abstract class ImportListAction extends PlatformAction {
 		vo.setPltSearchType(PlatformFileConst.FILE_TYPE_CSV);
 		vo.setPltSearchInactivate(String.valueOf(MospConst.DELETE_FLAG_OFF));
 		// データ区分設定
-		vo.setAryPltTableType(getCodeArray(vo.getTableTypeCodeKey(), true));
+		vo.setAryPltTableType(PlatformUtility.getTableTypeArray(mospParams, vo.getTableTypeCodeKey(), true));
 		// ソートキー設定
 		vo.setComparatorName(ImportMasterImportCodeComparator.class.getName());
 	}

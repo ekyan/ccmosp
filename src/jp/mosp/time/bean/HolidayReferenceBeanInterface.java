@@ -130,4 +130,13 @@ public interface HolidayReferenceBeanInterface {
 	 */
 	String getHolidayType1NameForHolidayRequest(int type1, String type2) throws MospException;
 	
+	/**
+	 * 有効な休暇情報に時間休利用可の情報が存在するか確認する。<br>
+	 * 休暇申請画面休暇区分3プルダウンで利用する。<br>
+	 * @param activateDate 有効日
+	 * @return 確認結果(true：時間休利用、false：時間休不可)
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	boolean isTimelyHoliday(Date activateDate) throws MospException;
+	
 }

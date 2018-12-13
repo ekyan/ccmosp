@@ -38,7 +38,7 @@ public class StockHolidayReferenceBean extends PlatformBean implements StockHoli
 	/**
 	 * ストック休暇設定DAO。
 	 */
-	private StockHolidayDaoInterface	dao;
+	private StockHolidayDaoInterface dao;
 	
 	
 	/**

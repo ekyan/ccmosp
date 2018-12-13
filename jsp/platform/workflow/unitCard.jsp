@@ -57,10 +57,10 @@ UnitCardVo vo = (UnitCardVo)params.getVo();
 			<td class="TitleTd"><span class="RequiredLabel">*&nbsp;</span><label for="txtUnitCode"><%= params.getName("WorkflowUnit","Code") %></label></td>
 			<td class="InputTd"><input type="text" class="Code10RequiredTextBox" id="txtUnitCode" name="txtUnitCode" value="<%= HtmlUtility.escapeHTML(vo.getTxtUnitCode()) %>"/></td>
 			<td class="TitleTd"><span class="RequiredLabel">*&nbsp;</span><label for="txtUnitName"><%= params.getName("WorkflowUnit","Name") %></label></td>
-			<td class="InputTd"><input type="text" class="Name15RequiredTextBox" id="txtUnitName" name="txtUnitName" value="<%= HtmlUtility.escapeHTML(vo.getTxtUnitName()) %>"/></td>	
+			<td class="InputTd"><input type="text" class="Name15RequiredTextBox" id="txtUnitName" name="txtUnitName" value="<%= HtmlUtility.escapeHTML(vo.getTxtUnitName()) %>"/></td>
 		</tr>
 		<tr>
-<%--		
+<%--
 			<td class="TitleTd"><span><label for="pltRouteStage"><%= params.getName("Multiple") %><%= params.getName("Settlement") %></label></span></td>
 			<td class="InputTd">
 				<select class="Name2PullDown" id="pltRouteStage" name="pltRouteStage">
@@ -98,6 +98,9 @@ UnitCardVo vo = (UnitCardVo)params.getVo();
 			<td class="InputTd">
 				<select class="Name15PullDown" id="pltPositionMaster" name="pltPositionMaster">
 					<%= HtmlUtility.getSelectOption(vo.getAryPltPositionMaster(), vo.getPltPositionMaster()) %>
+				</select>
+				<select class="Name2PullDown" id="pltPositionGradeRange" name="pltPositionGradeRange">
+					<%=HtmlUtility.getSelectOption(params, PlatformConst.CODE_KEY_UNIT_POSITION_GRADE_RANGE, vo.getPltPositionGradeRange(), true)%>
 				</select>
 			</td>
 		</tr>

@@ -17,6 +17,10 @@
  */
 package jp.mosp.time.settings.vo;
 
+import jp.mosp.framework.constant.MospConst;
+import jp.mosp.framework.js.DirectJs;
+import jp.mosp.time.constant.TimeConst;
+import jp.mosp.time.settings.action.HolidayMasterAction;
 import jp.mosp.time.settings.base.TimeSettingVo;
 
 /**
@@ -24,7 +28,7 @@ import jp.mosp.time.settings.base.TimeSettingVo;
  */
 public class HolidayMasterVo extends TimeSettingVo {
 	
-	private static final long	serialVersionUID	= -5307653458155393367L;
+	private static final long	serialVersionUID			= -5307653458155393367L;
 	
 	private String				txtEditHolidayCode;
 	private String				pltEditHolidayType;
@@ -35,6 +39,7 @@ public class HolidayMasterVo extends TimeSettingVo {
 	private String				txtEditHolidayLimitDay;
 	private String				pltEditHalfHolidayRequest;
 	private String				pltEditContinue;
+	private String				pltEditHourlyHoliday;
 	private String				pltEditSalary;
 	private String				pltEditReasonType;
 	private String				pltEditPaidHolidayCalc;
@@ -55,7 +60,32 @@ public class HolidayMasterVo extends TimeSettingVo {
 	private String[]			aryLblHolidayGiving;
 	private String[]			aryLblHolidayLimit;
 	private String[]			aryLblHolidayContinue;
+	private String[]			aryLblTimelyHoliday;
 	private String[]			aryLblHolidaySalary;
+	
+	/**
+	 * 休暇連続取得区分(不要)。<br>
+	 */
+	@DirectJs
+	private static final int	TYPE_HOLIDAY_ABSENCE		= TimeConst.CODE_HOLIDAYTYPE_ABSENCE;
+	
+	/**
+	 * 休暇連続取得区分(不要)。<br>
+	 */
+	@DirectJs
+	private static final int	TYPE_CONTINUOUS_UNNECESSARY	= TimeConst.TYPE_CONTINUOUS_UNNECESSARY;
+	
+	/**
+	 * 時間単位取得フラグ(有効)。<br>
+	 */
+	@DirectJs
+	private static final int	FLAG_HOURLY_VALID			= MospConst.INACTIVATE_FLAG_OFF;
+	
+	/**
+	 * 休暇連続取得区分(不要)。<br>
+	 */
+	@DirectJs
+	private static final int	TYPE_SALARY_PAY_NONE		= HolidayMasterAction.TYPE_SALARY_PAY_NONE;
 	
 	
 	/**
@@ -367,6 +397,20 @@ public class HolidayMasterVo extends TimeSettingVo {
 	}
 	
 	/**
+	 * @return aryLblTimelyHoliday
+	 */
+	public String[] getAryLblTimelyHoliday() {
+		return getStringArrayClone(aryLblTimelyHoliday);
+	}
+	
+	/**
+	 * @param aryLblTimelyHoliday セットする aryLblTimelyHoliday
+	 */
+	public void setAryLblTimelyHoliday(String[] aryLblTimelyHoliday) {
+		this.aryLblTimelyHoliday = getStringArrayClone(aryLblTimelyHoliday);
+	}
+	
+	/**
 	 * @return aryLblHolidaySalary
 	 */
 	public String[] getAryLblHolidaySalary() {
@@ -449,4 +493,19 @@ public class HolidayMasterVo extends TimeSettingVo {
 	public void setPltEditPaidHolidayCalc(String pltEditPaidHolidayCalc) {
 		this.pltEditPaidHolidayCalc = pltEditPaidHolidayCalc;
 	}
+	
+	/**
+	 * @return pltEditHourlyHoliday
+	 */
+	public String getPltEditHourlyHoliday() {
+		return pltEditHourlyHoliday;
+	}
+	
+	/**
+	 * @param pltEditHourlyHoliday セットする pltEditHourlyHoliday
+	 */
+	public void setPltEditHourlyHoliday(String pltEditHourlyHoliday) {
+		this.pltEditHourlyHoliday = pltEditHourlyHoliday;
+	}
+	
 }

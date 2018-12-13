@@ -1,5 +1,19 @@
-/**
- *
+/*
+ * MosP - Mind Open Source Project    http://www.mosp.jp/
+ * Copyright (C) MIND Co., Ltd.       http://www.e-mind.co.jp/
+ * 
+ * This program is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU Affero General Public License
+ * as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package jp.mosp.framework.xml;
 
@@ -12,35 +26,34 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
- * @author yoshida
- *
+ * MosP設定情報(コマンド)を作成する。<br>
  */
 public class ControllerTagConverter implements TagConverterInterface {
 	
 	/**
-	 * コントローラー要素の下位要素名(アクションクラス)。
+	 * コマンド要素の下位要素名(アクションクラス)。
 	 */
 	static final String	ACTION_CLASS		= "ActionClass";
 	
 	/**
-	 * コントローラー要素の下位要素名(HTTPセッション要否)。
+	 * コマンド要素の下位要素名(HTTPセッション要否)。
 	 */
 	static final String	TAG_NEED_SESSION	= "NeedSession";
 	
 	/**
-	 * コントローラー要素の下位要素名(処理シーケンス要否)。
+	 * コマンド要素の下位要素名(処理シーケンス要否)。
 	 */
 	static final String	TAG_NEED_PROC_SEQ	= "NeedProcSeq";
 	
 	/**
-	 * コントローラー要素の下位要素名(許可HTTPメソッド)。
+	 * コマンド要素の下位要素名(許可HTTPメソッド)。
 	 */
 	static final String	TAG_ACCEPT_METHOD	= "AcceptMethod";
 	
 	
 	@Override
 	public void put(Map<String, BaseProperty> properties, NodeWrapper wrapper) {
-		// Controller
+		// コマンド要素を取得
 		Node node = wrapper.getNode();
 		int index = wrapper.index;
 		String path = wrapper.path;
@@ -89,9 +102,9 @@ public class ControllerTagConverter implements TagConverterInterface {
 			TagUtility.invalidMassage(path, node);
 			return;
 		}
-		// コントローラー設定情報
+		// コマンド設定情報
 		CommandProperty value = new CommandProperty(key, actionClass, needSession, needProcSeq, acceptMethod);
-		// コントローラー設定情報追加
+		// コマンド設定情報追加
 		properties.put(key, value);
 	}
 	

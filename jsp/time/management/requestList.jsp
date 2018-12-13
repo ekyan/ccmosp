@@ -39,12 +39,13 @@ import = "jp.mosp.time.input.action.ApprovalHistoryAction"
 import = "jp.mosp.time.management.action.ApprovalCardAction"
 import = "jp.mosp.time.management.action.RequestListAction"
 import = "jp.mosp.time.management.vo.RequestListVo"
+import = "jp.mosp.platform.utils.PlatformNamingUtility"
 %><%
 MospParams params = (MospParams)request.getAttribute(MospConst.ATT_MOSP_PARAMS);
 RequestListVo vo = (RequestListVo)params.getVo();
 %>
 <div class="List">
-	<table class="InputTable">
+	<table class="InputTable" id="requestList_tblSearch">
 		<thead>
 			<tr>
 				<th class="ListTableTh" colspan="6">
@@ -70,7 +71,7 @@ RequestListVo vo = (RequestListVo)params.getVo();
 					<%= params.getName("Day") %>&nbsp;
 					<button type="button" class="Name2Button" id="btnRequestDate" onclick="submitForm(event, 'divSearchActiveDate', checkExtra, '<%= RequestListAction.CMD_SET_ACTIVATION_DATE %>')"><%= vo.getModeActivateDate().equals(PlatformConst.MODE_ACTIVATE_DATE_FIXED) ? params.getName("Change") : params.getName("Decision") %></button>
 				</td>
-				<td class="TitleTd"><%= params.getName("Employee","Code") %></td>
+				<td class="TitleTd"><%= PlatformNamingUtility.employeeCode(params) %></td>
 				<td class="InputTd">
 					<input type="text" class="Code10TextBox" id="txtSearchEmployeeCode" name="txtSearchEmployeeCode" value="<%= HtmlUtility.escapeHTML(vo.getTxtSearchEmployeeCode()) %>" />
 				</td>
@@ -135,7 +136,7 @@ RequestListVo vo = (RequestListVo)params.getVo();
 		<thead>
 			<tr>
 				<th class="ListSelectTh" id="thButton"></th>
-				<th class="ListSortTh" id="thEmployeeCode" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= EmployeeCodeComparator.class.getName() %>'), '<%= RequestListAction.CMD_SORT %>')"><%= params.getName("Employee","Code") %><%= PlatformUtility.getSortMark(EmployeeCodeComparator.class.getName(), params) %></th>
+				<th class="ListSortTh" id="thEmployeeCode" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= EmployeeCodeComparator.class.getName() %>'), '<%= RequestListAction.CMD_SORT %>')"><%= PlatformNamingUtility.employeeCode(params) %><%= PlatformUtility.getSortMark(EmployeeCodeComparator.class.getName(), params) %></th>
 				<th class="ListSortTh" id="thEmployeeName" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= EmployeeNameComparator.class.getName() %>'), '<%= RequestListAction.CMD_SORT %>')"><%= params.getName("Employee","FirstName") %><%= PlatformUtility.getSortMark(EmployeeNameComparator.class.getName(), params) %></th>
 				<th class="ListSortTh" id="thSection" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= SectionCodeComparator.class.getName() %>'), '<%= RequestListAction.CMD_SORT %>')"><%= params.getName("Section") %><%= PlatformUtility.getSortMark(SectionCodeComparator.class.getName(), params) %></th>
 				<th class="ListSortTh" id="thApprovalType" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= ManagementRequestRequestTypeComparator.class.getName() %>'), '<%= RequestListAction.CMD_SORT %>')"><%= params.getName("Type") %><%= PlatformUtility.getSortMark(ManagementRequestRequestTypeComparator.class.getName(), params) %></th>
@@ -159,7 +160,7 @@ for (int i = 0; i < vo.getAryLblEmployeeCode().length; i++) {
 				<td class="ListSelectTd" id=""><%= HtmlUtility.escapeHTML(vo.getAryLblRequestDate()[i]) %></td>
 				<td class="ListInputTd" id="" <%-- vo.getAryBackColor()[i] --%>><%= vo.getAryLblRequestInfo()[i] %></td>
 				<td class="ListSelectTd" id="">
-					<a class="Link" id="linkApprovalHistory" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_ACTION %>', '<%= ApprovalHistoryAction.class.getName() %>', '<%= PlatformConst.PRM_TRANSFERRED_INDEX %>', '<%= i %>'), '<%= RequestListAction.CMD_TRANSFER %>');"><%= HtmlUtility.escapeHTML(vo.getAryLblState()[i]) %></a>
+					<a class="Link" id="linkApprovalHistory" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_ACTION %>', '<%= ApprovalHistoryAction.class.getName() %>', '<%= PlatformConst.PRM_TRANSFERRED_INDEX %>', '<%= i %>'), '<%= RequestListAction.CMD_TRANSFER %>');"><span <%= vo.getAryStateStyle()[i] %>><%= HtmlUtility.escapeHTML(vo.getAryLblState()[i]) %></span></a>
 				</td>
 			</tr>
 <%

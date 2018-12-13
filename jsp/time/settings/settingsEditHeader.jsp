@@ -26,6 +26,7 @@ import = "jp.mosp.framework.base.MospParams"
 import = "jp.mosp.framework.constant.MospConst"
 import = "jp.mosp.framework.utils.HtmlUtility"
 import = "jp.mosp.platform.constant.PlatformConst"
+import = "jp.mosp.platform.utils.PlatformNamingUtility"
 import = "jp.mosp.time.settings.action.ApplicationCardAction"
 import = "jp.mosp.time.settings.action.CutoffMasterAction"
 import = "jp.mosp.time.settings.action.HolidayMasterAction"
@@ -48,7 +49,12 @@ import = "jp.mosp.time.settings.vo.WorkTypePatternCardVo"
 MospParams params = (MospParams)request.getAttribute(MospConst.ATT_MOSP_PARAMS);
 TimeSettingVo vo = (TimeSettingVo)params.getVo();
 // 編集ヘッダタイトル宣言(デフォルト：基本情報)
-String headerTitle = params.getName("Basis") + params.getName("Information");
+String headerTitle = PlatformNamingUtility.basisInfo(params);
+//ヘッダで使う文字列を作成
+String newInsert = PlatformNamingUtility.cornerParentheses(params, PlatformNamingUtility.newInsert(params));
+String addHistory = PlatformNamingUtility.cornerParentheses(params, PlatformNamingUtility.addHistory(params));
+String edtiHistory = PlatformNamingUtility.cornerParentheses(params, PlatformNamingUtility.edtiHistory(params));
+String replication = PlatformNamingUtility.cornerParentheses(params, PlatformNamingUtility.replication(params));
 // モード変更コマンド宣言
 String insertModeCommand = "";
 String addModeCommand = "";
@@ -65,14 +71,14 @@ if (vo instanceof ApplicationCardVo) {
 	keyCode = ((ApplicationCardVo)vo).getTxtEditApplicationCode();
 } else if (vo instanceof CutoffMasterVo) {
 	// 締日管理
-	headerTitle = params.getName("Edit");
+	headerTitle = PlatformNamingUtility.edit(params);
 	insertModeCommand = CutoffMasterAction.CMD_INSERT_MODE;
 	addModeCommand = CutoffMasterAction.CMD_ADD_MODE;
 	editModeCommand = CutoffMasterAction.CMD_EDIT_MODE;
 	keyCode = ((CutoffMasterVo)vo).getTxtEditCutoffCode();
 } else if (vo instanceof HolidayMasterVo) {
 	// 休暇種別管理
-	headerTitle = params.getName("Edit");
+	headerTitle = PlatformNamingUtility.edit(params);
 	insertModeCommand = HolidayMasterAction.CMD_INSERT_MODE;
 	addModeCommand = HolidayMasterAction.CMD_ADD_MODE;
 	editModeCommand = HolidayMasterAction.CMD_EDIT_MODE;
@@ -111,41 +117,60 @@ if (vo instanceof ApplicationCardVo) {
 	editModeCommand = WorkTypePatternCardAction.CMD_SELECT_SHOW;
 	keyCode = ((WorkTypePatternCardVo)vo).getTxtPatternCode();
 }
-// モード毎に設定
+//新規登録モードの場合
 if (vo.getModeCardEdit().equals(PlatformConst.MODE_CARD_EDIT_INSERT)) {
 %>
-<span class="TitleTh"><%= headerTitle + params.getName("FrontWithCornerParentheses") + params.getName("New") + params.getName("Insert") + params.getName("BackWithCornerParentheses") %></span>
+<span class="TitleTh"><%= headerTitle %><%= newInsert %></span>
 <%
-} else if (vo.getModeCardEdit().equals(PlatformConst.MODE_CARD_EDIT_ADD)) {
+}
+// 履歴追加モードの場合
+if (vo.getModeCardEdit().equals(PlatformConst.MODE_CARD_EDIT_ADD)) {
 %>
-<span class="TitleTh"><%= headerTitle + params.getName("FrontWithCornerParentheses") + params.getName("History") + params.getName("Add") + params.getName("BackWithCornerParentheses") %></span>
-<a onclick="submitTransfer(event, 'divEdit', null, null, '<%= insertModeCommand %>');"><%= params.getName("FrontWithCornerParentheses") + params.getName("New") + params.getName("Insert") + params.getName("BackWithCornerParentheses") %></a>
+<span class="TitleTh"><%= headerTitle %><%= addHistory %></span>
+<a onclick="submitTransfer(event, 'divEdit', null, null, '<%= insertModeCommand %>');"><%= newInsert %></a>
 <%
-} else if (vo.getModeCardEdit().equals(PlatformConst.MODE_CARD_EDIT_EDIT)) {
+}
+//履歴更新モードの場合
+if (vo.getModeCardEdit().equals(PlatformConst.MODE_CARD_EDIT_EDIT)) {
 %>
-<span class="TitleTh"><%= headerTitle + params.getName("FrontWithCornerParentheses") + params.getName("History") + params.getName("Edit") + params.getName("BackWithCornerParentheses") %></span>
-<a onclick="submitTransfer(event, 'divEdit', null, null, '<%= insertModeCommand %>');"><%= params.getName("FrontWithCornerParentheses") + params.getName("New") + params.getName("Insert") + params.getName("BackWithCornerParentheses") %></a>
-<a onclick="submitTransfer(event, null, null, null, '<%= addModeCommand %>');"><%= params.getName("FrontWithCornerParentheses") + params.getName("History") + params.getName("Add") + params.getName("BackWithCornerParentheses") %></a>
+<span class="TitleTh"><%= headerTitle %><%= edtiHistory %></span>
+<a onclick="submitTransfer(event, 'divEdit', null, null, '<%= insertModeCommand %>');"><%= newInsert %></a>
+<a onclick="submitTransfer(event, null, null, null, '<%= addModeCommand %>');"><%= addHistory %></a>
 <% if (replicationModeCommand.isEmpty() == false) { %>
-<a onclick="submitTransfer(event, null, confirmReplicationMode, null, '<%= replicationModeCommand %>')"><%= params.getName("FrontWithCornerParentheses") + params.getName("Replication") + params.getName("BackWithCornerParentheses") %></a>
-<% } %>
+<a onclick="submitTransfer(event, null, confirmReplicationMode, null, '<%= replicationModeCommand %>')"><%= replication %></a>
+<%
+}
+%>
 <div class="TableLabelSpan">
-<% if (vo.getLblBackActivateDate() != null && vo.getLblBackActivateDate().isEmpty() == false) { %>
+<%
+// 前履歴有効日が設定されている場合
+if (vo.getLblBackActivateDate() != null && vo.getLblBackActivateDate().isEmpty() == false) {
+%>
 	<a class="ActivateDateRollLink"
 		onclick="submitTransfer(event, 'divEdit', null, new Array('<%= PlatformConst.PRM_TRANSFERRED_ACTIVATE_DATE %>', '<%= HtmlUtility.escapeHTML(vo.getLblBackActivateDate()) %>', '<%= PlatformConst.PRM_TRANSFERRED_CODE %>' , '<%= HtmlUtility.escapeHTML(keyCode) %>'), '<%= editModeCommand %>');">
 		&lt;&lt;&nbsp;
 	</a>
-<% } %>
-	<span class=""><%= params.getName("ActivateDate") %></span>
-<% if (vo.getLblNextActivateDate() == null || vo.getLblNextActivateDate().isEmpty()) { %>
-	&nbsp;<%= params.getName("Latest") %>
-<% } else { %>
+<%
+}
+%>
+	<span class=""><%= PlatformNamingUtility.activateDate(params) %></span>
+<%
+// 次履歴有効日が設定されていない場合
+if (vo.getLblNextActivateDate() == null || vo.getLblNextActivateDate().isEmpty()) {
+%>
+	&nbsp;<%= PlatformNamingUtility.latest(params) %>
+<%
+} else {
+// 次履歴有効日が設定されている場合
+%>
 	<a class="ActivateDateRollLink"
 		onclick="submitTransfer(event, 'divEdit', null, new Array('<%= PlatformConst.PRM_TRANSFERRED_ACTIVATE_DATE %>', '<%= HtmlUtility.escapeHTML(vo.getLblNextActivateDate()) %>', '<%= PlatformConst.PRM_TRANSFERRED_CODE %>' , '<%= HtmlUtility.escapeHTML(keyCode) %>'), '<%= editModeCommand %>');">
 		&nbsp;&gt;&gt;
 	</a>
-<% } %>
-	&nbsp;<%= params.getName("History") %>&nbsp;<%= params.getName("All") + vo.getCountHistory() + params.getName("Count")%>
+<%
+}
+%>
+	&nbsp;<%= PlatformNamingUtility.history(params) %>&nbsp;<%= PlatformNamingUtility.allCount(params, vo.getCountHistory()) %>
 </div>
 <%
 }

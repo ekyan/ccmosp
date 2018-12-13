@@ -28,6 +28,7 @@ import java.util.Map;
 
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.base.MospParams;
+import jp.mosp.framework.utils.CapsuleUtility;
 import jp.mosp.platform.base.PlatformBean;
 import jp.mosp.platform.bean.workflow.WorkflowReferenceBeanInterface;
 import jp.mosp.platform.constant.PlatformConst;
@@ -103,7 +104,8 @@ public class DifferenceRequestSearchBean extends PlatformBean implements Differe
 		differenceDao = (DifferenceRequestDaoInterface)createDao(DifferenceRequestDaoInterface.class);
 		// Bean初期化
 		workflowReference = (WorkflowReferenceBeanInterface)createBean(WorkflowReferenceBeanInterface.class);
-		approvalInfoReference = (ApprovalInfoReferenceBeanInterface)createBean(ApprovalInfoReferenceBeanInterface.class);
+		approvalInfoReference = (ApprovalInfoReferenceBeanInterface)createBean(
+				ApprovalInfoReferenceBeanInterface.class);
 	}
 	
 	@Override
@@ -199,12 +201,12 @@ public class DifferenceRequestSearchBean extends PlatformBean implements Differe
 	
 	@Override
 	public void setRequestStartDate(Date requestStartDate) {
-		this.requestStartDate = requestStartDate;
+		this.requestStartDate = CapsuleUtility.getDateClone(requestStartDate);
 	}
 	
 	@Override
 	public void setRequestEndDate(Date requestEndDate) {
-		this.requestEndDate = requestEndDate;
+		this.requestEndDate = CapsuleUtility.getDateClone(requestEndDate);
 	}
 	
 	@Override

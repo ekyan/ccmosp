@@ -134,8 +134,8 @@ public class TmtPaidHolidayDao extends PlatformDao implements PaidHolidayTransac
 	}
 	
 	@Override
-	public List<PaidHolidayTransactionDtoInterface> findForList(String personalId, Date acquisitionDate,
-			Date startDate, Date endDate) throws MospException {
+	public List<PaidHolidayTransactionDtoInterface> findForList(String personalId, Date acquisitionDate, Date startDate,
+			Date endDate) throws MospException {
 		try {
 			index = 1;
 			StringBuffer sb = getSelectQuery(getClass());
@@ -373,7 +373,7 @@ public class TmtPaidHolidayDao extends PlatformDao implements PaidHolidayTransac
 			setParam(index++, personalId);
 			setParam(index++, activateDate);
 			if (!inactivateFlag.isEmpty()) {
-				setParam(index++, Integer.valueOf(inactivateFlag));
+				setParam(index++, Integer.parseInt(inactivateFlag));
 			}
 			executeQuery();
 			return mappingAll();
@@ -443,39 +443,6 @@ public class TmtPaidHolidayDao extends PlatformDao implements PaidHolidayTransac
 	}
 	
 	@Override
-	public List<PaidHolidayTransactionDtoInterface> findForList(String personalId, Date firstDate, Date lastDate)
-			throws MospException {
-		try {
-			index = 1;
-			StringBuffer sb = getSelectQuery(getClass());
-			sb.append(where());
-			sb.append(deleteFlagOff());
-			sb.append(and());
-			sb.append(COL_INACTIVATE_FLAG);
-			sb.append(" = ");
-			sb.append(MospConst.DELETE_FLAG_OFF);
-			sb.append(and());
-			sb.append(equal(COL_PERSONAL_ID));
-			sb.append(and());
-			sb.append(greaterEqual(COL_ACTIVATE_DATE));
-			sb.append(and());
-			sb.append(lessEqual(COL_ACTIVATE_DATE));
-			sb.append(getOrderByColumn(COL_ACQUISITION_DATE));
-			prepareStatement(sb.toString());
-			setParam(index++, personalId);
-			setParam(index++, firstDate);
-			setParam(index++, lastDate);
-			executeQuery();
-			return mappingAll();
-		} catch (Throwable e) {
-			throw new MospException(e);
-		} finally {
-			releaseResultSet();
-			releasePreparedStatement();
-		}
-	}
-	
-	@Override
 	public List<PaidHolidayTransactionDtoInterface> findForHistoryList(String personalId) throws MospException {
 		try {
 			index = 1;
@@ -487,6 +454,32 @@ public class TmtPaidHolidayDao extends PlatformDao implements PaidHolidayTransac
 			sb.append(getOrderByColumn(COL_ACTIVATE_DATE));
 			prepareStatement(sb.toString());
 			setParam(index++, personalId);
+			executeQuery();
+			return mappingAll();
+		} catch (Throwable e) {
+			throw new MospException(e);
+		} finally {
+			releaseResultSet();
+			releasePreparedStatement();
+		}
+	}
+	
+	@Override
+	public List<PaidHolidayTransactionDtoInterface> findForAcquisitionList(String personalId, Date acquisitionDate)
+			throws MospException {
+		try {
+			index = 1;
+			StringBuffer sb = getSelectQuery(getClass());
+			sb.append(where());
+			sb.append(deleteFlagOff());
+			sb.append(and());
+			sb.append(equal(COL_PERSONAL_ID));
+			sb.append(and());
+			sb.append(equal(COL_ACQUISITION_DATE));
+			sb.append(getOrderByColumn(COL_ACTIVATE_DATE, COL_ACQUISITION_DATE));
+			prepareStatement(sb.toString());
+			setParam(index++, personalId);
+			setParam(index++, acquisitionDate);
 			executeQuery();
 			return mappingAll();
 		} catch (Throwable e) {

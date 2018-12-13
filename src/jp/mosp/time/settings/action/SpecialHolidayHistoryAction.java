@@ -48,15 +48,27 @@ import jp.mosp.time.utils.TimeUtility;
  * <ul><li>
  * {@link #CMD_SHOW}
  * </li><li>
+ * {@link #CMD_SELECT_SHOW}
+ * </li><li>
  * {@link #CMD_SEARCH}
+ * </li><li>
+ * {@link #CMD_RE_SHOW}
+ * </li><li>
+ * {@link #CMD_REGISTER}
  * </li><li>
  * {@link #CMD_SORT}
  * </li><li>
  * {@link #CMD_PAGE}
  * </li><li>
+ * {@link #CMD_SET_EMPLOYEE_DECISION}
+ * </li><li>
  * {@link #CMD_SET_DAY_GRANT}
  * </li><li>
  * {@link #CMD_INSERT_MODE}
+ * </li><li>
+ * {@link #CMD_EDIT_MODE}
+ * </li><li>
+ * {@link #CMD_SET_ACTIVATION_DATE}
  * </li></ul>
  */
 public class SpecialHolidayHistoryAction extends TimeSettingAction {
@@ -248,7 +260,7 @@ public class SpecialHolidayHistoryAction extends TimeSettingAction {
 			vo.setComparatorName(ActivateDateComparator.class.getName());
 			editMode();
 			// 編集モード設定
-			vo.setModeCardEdit(PlatformConst.MODE_CARD_EDIT_INSERT);
+			vo.setModeCardEdit(PlatformConst.MODE_CARD_EDIT_EDIT);
 		} catch (Exception e) {
 			throw new MospException(e);
 		}
@@ -273,8 +285,8 @@ public class SpecialHolidayHistoryAction extends TimeSettingAction {
 		search.setPositionCode(vo.getPltSearchPosition());
 		search.setInactivateFlag(vo.getPltSearchInactivate());
 		// 検索条件をもとに検索クラスからマスタリストを取得
-		List<HolidayHistoryListDtoInterface> list = search.getSearchList(Integer.parseInt(mospParams.getProperties()
-			.getCodeArray(TimeConst.CODE_KEY_HOLIDAY_TYPE_MASTER, false)[0][0]));
+		List<HolidayHistoryListDtoInterface> list = search.getSearchList(
+				getInt(mospParams.getProperties().getCodeArray(TimeConst.CODE_KEY_HOLIDAY_TYPE_MASTER, false)[0][0]));
 		// 検索結果リスト設定
 		vo.setList(list);
 		// デフォルトソートキー及びソート順設定
@@ -338,40 +350,6 @@ public class SpecialHolidayHistoryAction extends TimeSettingAction {
 	}
 	
 	/**
-	 * 履歴追加処理を行う。<br>
-	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
-	 */
-	protected void add() throws MospException {
-		// 登録クラス取得
-//		SpecialHolidayHistoryVo vo = (SpecialHolidayHistoryVo)mospParams.getVo();
-		// DTOの準備
-		HolidayDataDtoInterface dto = new TmdHolidayDataDto();
-		// 登録クラス取得
-//		HolidayDataRegistBeanInterface regist = time().holidayDataRegist();
-		// DTOに値を設定
-		setDtoFields(dto);
-		// 履歴追加処理
-//		履歴追加はないので未対応
-//		regist.add(dto);
-		// 履歴追加結果確認
-		if (mospParams.hasErrorMessage()) {
-			// 登録失敗メッセージ設定
-			addInsertFailedMessage();
-			return;
-		}
-		// コミット
-		commit();
-		// 履歴追加成功メッセージ設定
-		addInsertHistoryMessage();
-		// 履歴編集モード設定
-		setEditUpdateMode(dto.getPersonalId(), dto.getActivateDate(), dto.getHolidayCode());
-		// 検索有効日設定(登録有効日を検索条件に設定)
-		setSearchActivateDate(getEditActivateDate());
-		// 検索
-		search();
-	}
-	
-	/**
 	 * 更新処理を行う。<br>
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
@@ -425,7 +403,7 @@ public class SpecialHolidayHistoryAction extends TimeSettingAction {
 			vo.setTxtEditEmployeeCode("");
 			vo.setLblEmployeeName("");
 			// エラーメッセージ設定
-			String message = mospParams.getName("Vacation") + mospParams.getName("Classification");
+			String message = mospParams.getName("Vacation", "Classification");
 			mospParams.addMessage(TimeMessageConst.MSG_WORKFORM_EXISTENCE, message);
 		}
 	}
@@ -743,19 +721,21 @@ public class SpecialHolidayHistoryAction extends TimeSettingAction {
 		dto.setActivateDate(getEditActivateDate());
 		dto.setPersonalId(vo.getPersonalId());
 		dto.setGivingDay(Double.valueOf(vo.getTxtEditHolidayGiving()));
+		dto.setGivingHour(0);
 		// 取得期間が0ヶ月0日の場合、Date型の最大日付を設定する。
 		if ("0".equals(vo.getTxtEditHolidayLimitMonth()) && "0".equals(vo.getTxtEditHolidayLimitDay())) {
 			dto.setHolidayLimitDate(TimeUtility.getUnlimitedDate());
 		} else {
 			dto.setHolidayLimitDate(DateUtility.addDay(
-					DateUtility.addMonth(getEditActivateDate(), Integer.parseInt(vo.getTxtEditHolidayLimitMonth())),
-					Integer.parseInt(vo.getTxtEditHolidayLimitDay()) - 1));
+					DateUtility.addMonth(getEditActivateDate(), getInt(vo.getTxtEditHolidayLimitMonth())),
+					getInt(vo.getTxtEditHolidayLimitDay()) - 1));
 		}
-		dto.setHolidayLimitMonth(Integer.parseInt(vo.getTxtEditHolidayLimitMonth()));
-		dto.setHolidayLimitDay(Integer.parseInt(vo.getTxtEditHolidayLimitDay()));
+		dto.setHolidayLimitMonth(getInt(vo.getTxtEditHolidayLimitMonth()));
+		dto.setHolidayLimitDay(getInt(vo.getTxtEditHolidayLimitDay()));
 		dto.setHolidayType(TimeConst.CODE_HOLIDAYTYPE_SPECIAL);
-		dto.setInactivateFlag(Integer.parseInt(vo.getPltEditInactivate()));
+		dto.setInactivateFlag(getInt(vo.getPltEditInactivate()));
 		dto.setCancelDay(0);
+		dto.setCancelHour(0);
 		dto.setHolidayCode(vo.getPltEditHolidayType());
 	}
 	
@@ -789,7 +769,6 @@ public class SpecialHolidayHistoryAction extends TimeSettingAction {
 		// VO取得
 		SpecialHolidayHistoryVo vo = (SpecialHolidayHistoryVo)mospParams.getVo();
 		// データ配列初期化
-//		long[] aryCkbRecordId = new long[list.size()];
 		String[] aryLblActivateDate = new String[list.size()];
 		String[] aryLblEmployeeCode = new String[list.size()];
 		String[] aryLblEmployeeName = new String[list.size()];
@@ -804,7 +783,6 @@ public class SpecialHolidayHistoryAction extends TimeSettingAction {
 			// リストから情報を取得
 			HolidayHistoryListDtoInterface dto = (HolidayHistoryListDtoInterface)list.get(i);
 			// 配列に情報を設定
-//			aryCkbRecordId[i] = dto.getTmdHolidayId();
 			aryLblActivateDate[i] = getStringDate(dto.getActivateDate());
 			aryLblEmployeeCode[i] = dto.getEmployeeCode();
 			aryLblEmployeeName[i] = getLastFirstName(dto.getLastName(), dto.getFirstName());
@@ -812,7 +790,6 @@ public class SpecialHolidayHistoryAction extends TimeSettingAction {
 			aryLblHolidayCode[i] = dto.getHolidayCode();
 			aryLblHolidayType[i] = getHolidayAbbr(dto.getHolidayCode(), getSearchActivateDate(),
 					TimeConst.CODE_HOLIDAYTYPE_SPECIAL);
-			String.valueOf(dto.getHolidayCode());
 			if (TimeUtility.getUnlimitedDate().compareTo(dto.getHolidayLimit()) == 0) {
 				aryLblHolidayGiving[i] = mospParams.getName("NoLimit");
 				aryLblHolidayLimit[i] = mospParams.getName("NoLimit");
@@ -823,7 +800,6 @@ public class SpecialHolidayHistoryAction extends TimeSettingAction {
 			aryLblInactivate[i] = getInactivateFlagName(dto.getInactivateFlag());
 		}
 		// データをVOに設定
-//		vo.setAryCkbRecordId(aryCkbRecordId);
 		vo.setAryLblActivateDate(aryLblActivateDate);
 		vo.setAryLblEmployeeCode(aryLblEmployeeCode);
 		vo.setAryLblEmployeeName(aryLblEmployeeName);
@@ -836,6 +812,7 @@ public class SpecialHolidayHistoryAction extends TimeSettingAction {
 	}
 	
 	/**
+	 * JSのモードを設定する。<br>
 	 */
 	protected void setJsMode() {
 		// VO取得

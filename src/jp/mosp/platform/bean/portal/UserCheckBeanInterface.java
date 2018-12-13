@@ -20,11 +20,47 @@ package jp.mosp.platform.bean.portal;
 import java.util.Date;
 
 import jp.mosp.framework.base.MospException;
+import jp.mosp.platform.dto.system.UserMasterDtoInterface;
 
 /**
  * ユーザ確認インターフェース。<br>
  */
 public interface UserCheckBeanInterface {
+	
+	/**
+	 * ユーザ存在確認を行う。<br>
+	 * 有効日及び有効/無効は不問とし、対象ユーザIDが存在するかのみを確認する。<br>
+	 * ユーザパスワード情報登録時等に用いられる。<br>
+	 * @param userId ユーザID
+	 * @param row    行インデックス
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	void checkUserExist(String userId, Integer row) throws MospException;
+	
+	/**
+	 * ユーザ存在確認を行う。<br>
+	 * 有効/無効は不問とし、
+	 * ユーザID及び有効日が合致する情報が存在するかのみを確認する。<br>
+	 * ユーザ追加ロール情報登録時等に用いられる。<br>
+	 * @param userId       ユーザID
+	 * @param activateDate 有効日
+	 * @param row          行インデックス
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	void checkUserExist(String userId, Date activateDate, Integer row) throws MospException;
+	
+	/**
+	 * ユーザ存在確認を行う。<br>
+	 * 対象日における有効なユーザが存在することを確認する。<br>
+	 * <br>
+	 * 後処理で用いるため、存在確認したユーザ情報を返す。<br>
+	 * <br>
+	 * @param userId     ユーザID
+	 * @param targetDate 対象日
+	 * @return 対象日におけるユーザ情報
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	UserMasterDtoInterface checkUserExist(String userId, Date targetDate) throws MospException;
 	
 	/**
 	 * ユーザ社員の確認を行う。<br>
@@ -33,7 +69,7 @@ public interface UserCheckBeanInterface {
 	 * 認証時等に用いられる。<br>
 	 * @param userId     ユーザID
 	 * @param targetDate 対象日
-	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
 	void checkUserEmployeeForUserId(String userId, Date targetDate) throws MospException;
 	
@@ -48,7 +84,7 @@ public interface UserCheckBeanInterface {
 	 * </li></ul>
 	 * @param personalId 個人ID
 	 * @param targetDate 対象日
-	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
 	void checkUserEmployee(String personalId, Date targetDate) throws MospException;
 	
@@ -56,9 +92,30 @@ public interface UserCheckBeanInterface {
 	 * ユーザロールの存在確認を行う。<br>
 	 * @param roleCode   ロールコード
 	 * @param targetDate 対象日
-	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 * @param row        行インデックス
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	void checkRoleExist(String roleCode, Date targetDate, Integer row) throws MospException;
+	
+	/**
+	 * ユーザロールの存在確認を行う。<br>
+	 * @param roleCode   ロールコード
+	 * @param targetDate 対象日
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
 	void checkRoleExist(String roleCode, Date targetDate) throws MospException;
+	
+	/**
+	 * ユーザロールの存在確認を行う。<br>
+	 * ロール自体は存在しても、ロール区分が異なる場合は存在しないと判断する。<br>
+	 * <br>
+	 * @param roleType   ロール区分
+	 * @param roleCode   ロールコード
+	 * @param targetDate 対象日
+	 * @param row        行インデックス
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	void checkRoleExist(String roleType, String roleCode, Date targetDate, Integer row) throws MospException;
 	
 	/**
 	 * ユーザロールの存在確認を行う。<br>
@@ -66,8 +123,18 @@ public interface UserCheckBeanInterface {
 	 * {@link #checkRoleExist(String, Date)}を行う。<br>
 	 * @param userId     ユーザID
 	 * @param targetDate 対象日
-	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
 	void checkUserRole(String userId, Date targetDate) throws MospException;
+	
+	/**
+	 * ロール区分存在確認を行う。<br>
+	 * ユーザ追加ロール情報登録時等に用いられる。<br>
+	 * @param roleType   ロール区分
+	 * @param targetDate 対象日
+	 * @param row        行インデックス
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	void checkRoleTypeExist(String roleType, Date targetDate, Integer row) throws MospException;
 	
 }

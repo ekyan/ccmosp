@@ -27,9 +27,9 @@ import jp.mosp.platform.dto.workflow.SubApproverListDtoInterface;
 /**
  * 代理承認者テーブル検索リストDTO。
  */
-public class SubApproverListDto extends PftSubApproverDto implements SubApproverListDtoInterface,
-		WorkflowTypeDtoInterface, EndDateDtoInterface, EmployeeCodeDtoInterface, EmployeeNameDtoInterface,
-		SectionCodeDtoInterface {
+public class SubApproverListDto extends PftSubApproverDto
+		implements SubApproverListDtoInterface, WorkflowTypeDtoInterface, EndDateDtoInterface, EmployeeCodeDtoInterface,
+		EmployeeNameDtoInterface, SectionCodeDtoInterface {
 	
 	private static final long	serialVersionUID	= 3537352514596296192L;
 	

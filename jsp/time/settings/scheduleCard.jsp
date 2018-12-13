@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 <%@ page
 language     = "java"
 pageEncoding = "UTF-8"
-buffer       = "256kb"
+buffer       = "1024kb"
 autoFlush    = "false"
 errorPage    = "/jsp/common/error.jsp"
 %><%@ page
@@ -60,15 +60,15 @@ ScheduleCardVo vo = (ScheduleCardVo)params.getVo();
 					</select>
 					<button type="button" class="Name2Button" id="btnPatternSet" name="btnPatternSet" onclick="submitTransfer(event, 'divSchedule', null, new Array('null', 'null', 'null' , 'null'), '<%= ScheduleCardAction.CMD_SET_PATTERN %>')"><%= vo.getModePattern().equals(PlatformConst.MODE_ACTIVATE_DATE_FIXED) ? params.getName("Change") : params.getName("Decision") %></button>
 				</td>
-				<td class="TitleTd"><span class="RequiredLabel">*&nbsp;</span><label for="txtScheduleCode"><%= params.getName("Calendar") %><%= params.getName("Code") %></label></td>
+				<td class="TitleTd"><span class="RequiredLabel">*&nbsp;</span><label for="txtScheduleCode"><%= params.getName("Calendar","Code") %></label></td>
 				<td class="InputTd"><input type="text" class="Code10RequiredTextBox" id="txtScheduleCode" name="txtScheduleCode" value="<%= HtmlUtility.escapeHTML(vo.getTxtScheduleCode()) %>"/></td>
 			</tr>
 			<tr>
-				<td class="TitleTd"><span class="RequiredLabel">*&nbsp;</span><label for="txtScheduleName"><%= params.getName("Calendar") %><%= params.getName("Name") %></label></td>
+				<td class="TitleTd"><span class="RequiredLabel">*&nbsp;</span><label for="txtScheduleName"><%= params.getName("Calendar","Name") %></label></td>
 				<td class="InputTd"><input type="text" class="Name15RequiredTextBox" id="txtScheduleName" name="txtScheduleName" value="<%= HtmlUtility.escapeHTML(vo.getTxtScheduleName()) %>"/></td>
-				<td class="TitleTd"><span class="RequiredLabel">*&nbsp;</span><label for="txtScheduleAbbr"><%= params.getName("Calendar") %><%= params.getName("Abbreviation") %></label></td>
+				<td class="TitleTd"><span class="RequiredLabel">*&nbsp;</span><label for="txtScheduleAbbr"><%= params.getName("Calendar","Abbreviation") %></label></td>
 				<td class="InputTd"><input type="text" class="Byte6RequiredTextBox" id="txtScheduleAbbr" name="txtScheduleAbbr" value="<%= HtmlUtility.escapeHTML(vo.getTxtScheduleAbbr()) %>"/></td>
-				<td class="TitleTd"><label for="pltWorkTypeChange"><%= params.getName("Work") %><%= params.getName("Form") %><%= params.getName("Change") %></label></td>
+				<td class="TitleTd"><label for="pltWorkTypeChange"><%= params.getName("Work","Form","Change") %></label></td>
 				<td class="InputTd">
 					<select class="Name2PullDown" id="pltWorkTypeChange" name="pltWorkTypeChange">
 						<%= HtmlUtility.getSelectOption(params, PlatformConst.CODE_KEY_INACTIVATE_FLAG, vo.getPltWorkTypeChange(), false) %>
@@ -76,7 +76,7 @@ ScheduleCardVo vo = (ScheduleCardVo)params.getVo();
 				</td>
 			</tr>
 			<tr>
-				<td class="TitleTd"><label for="pltSearchInactivate"><%= params.getName("Effectiveness") %><%= params.getName("Slash") %><%= params.getName("Inactivate") %></label></td>
+				<td class="TitleTd"><label for="pltSearchInactivate"><%= params.getName("Effectiveness","Slash","Inactivate") %></label></td>
 				<td class="InputTd">
 					<select class="Name2PullDown" id="pltEditInactivate" name="pltEditInactivate">
 						<%= HtmlUtility.getSelectOption(params, PlatformConst.CODE_KEY_INACTIVATE_FLAG, vo.getPltEditInactivate(), false) %>
@@ -154,7 +154,7 @@ if (vo.getPltWorkTypeMonth().length > 1) {
 %>
 	<table class="InputTable" id="tblWorkTypeSelect">
 		<tr>
-			<td class="ListTableTh"><span class="TitleTh"><%= params.getName("Work") %><%= params.getName("Form") %><%= params.getName("Given") %></span></td>
+			<td class="ListTableTh"><span class="TitleTh"><%= params.getName("Work","Form","Given") %></span></td>
 			<td class="InputTd" id="">
 				<select class="Name25PullDown" id="pltWorkType" name="pltWorkType">
 					<%= HtmlUtility.getSelectOption(vo.getAryPltWorkType(), vo.getPltWorkType()) %>
@@ -163,22 +163,22 @@ if (vo.getPltWorkTypeMonth().length > 1) {
 		</tr>
 		<tr>
 			<td class="TitleInputTd">
-				<input type="radio" class="RadioButton" name="radioSelect" id="radioWeek" value="<%= HtmlUtility.escapeHTML(vo.getRadioWeek()) %>"/>&nbsp;<%= params.getName("DayOfTheWeek") %><%= params.getName("Given") %>
+				<input type="radio" class="RadioButton" name="radioSelect" id="radioWeek" value="<%= HtmlUtility.escapeHTML(vo.getRadioWeek()) %>"/>&nbsp;<%= params.getName("DayOfTheWeek","Given") %>
 			</td>
 			<td class="InputTd">
-				<input type="checkbox" class="CheckBox" id="ckbMonday" name="ckbMonday">&nbsp;<span><%= params.getName("Monday") %><%= params.getName("Day") %></span> 
-				<input type="checkbox" class="CheckBox" id="ckbTuesday" name="ckbTuesday">&nbsp;<%= params.getName("Tuesday") %><%= params.getName("Day") %> 
-				<input type="checkbox" class="CheckBox" id="ckbWednesday" name="ckbWednesday">&nbsp;<%= params.getName("Wednesday") %><%= params.getName("Day") %> 
-				<input type="checkbox" class="CheckBox" id="ckbThursday" name="ckbThursday">&nbsp;<%= params.getName("Thursday") %><%= params.getName("Day") %> 
-				<input type="checkbox" class="CheckBox" id="ckbFriday" name="ckbFriday">&nbsp;<%= params.getName("Friday") %><%= params.getName("Day") %> 
-				<input type="checkbox" class="CheckBox" id="ckbSatureday" name="ckbSatureday">&nbsp;<%= params.getName("Saturday") %><%= params.getName("Day") %> 
-				<input type="checkbox" class="CheckBox" id="ckbSunday" name="ckbSunday">&nbsp;<%= params.getName("Sunday") %><%= params.getName("Day") %> 
+				<input type="checkbox" class="CheckBox" id="ckbMonday" name="ckbMonday">&nbsp;<span><%= params.getName("Monday","Day") %></span> 
+				<input type="checkbox" class="CheckBox" id="ckbTuesday" name="ckbTuesday">&nbsp;<%= params.getName("Tuesday","Day") %> 
+				<input type="checkbox" class="CheckBox" id="ckbWednesday" name="ckbWednesday">&nbsp;<%= params.getName("Wednesday","Day") %> 
+				<input type="checkbox" class="CheckBox" id="ckbThursday" name="ckbThursday">&nbsp;<%= params.getName("Thursday","Day") %> 
+				<input type="checkbox" class="CheckBox" id="ckbFriday" name="ckbFriday">&nbsp;<%= params.getName("Friday","Day") %> 
+				<input type="checkbox" class="CheckBox" id="ckbSatureday" name="ckbSatureday">&nbsp;<%= params.getName("Saturday","Day") %> 
+				<input type="checkbox" class="CheckBox" id="ckbSunday" name="ckbSunday">&nbsp;<%= params.getName("Sunday","Day") %> 
 				<input type="checkbox" class="CheckBox" id="ckbNationalHoliday" name="ckbNationalHoliday">&nbsp;<%= params.getName("NationalHoliday") %>
 			</td>
 		</tr>
 		<tr>
 			<td class="TitleInputTd">
-				<input type="radio" class="RadioButton" name="radioSelect" id="radioPeriod" value="<%= HtmlUtility.escapeHTML(vo.getRadioPeriod()) %>"/>&nbsp;<%= params.getName("Period") %><%= params.getName("Given") %>
+				<input type="radio" class="RadioButton" name="radioSelect" id="radioPeriod" value="<%= HtmlUtility.escapeHTML(vo.getRadioPeriod()) %>"/>&nbsp;<%= params.getName("Period","Given") %>
 			</td>
 			<td class="InputTd">
 				<select id="pltScheduleStartDay" name="pltScheduleStartDay">
@@ -198,7 +198,10 @@ if (vo.getPltWorkTypeMonth().length > 1) {
 	<table class="ButtonTable">
 		<tr>
 			<td class="ButtonTd" id="">
-				<button type="button" id="btnRegist" class="Name2Button" onclick="submitTransfer(event, null, null, null, '<%= ScheduleCardAction.CMD_REFLECTION %>');"><%= params.getName("Reflection") %></button>
+				<button type="button" id="btnRegist" class="Name4Button" onclick="submitTransfer(event, null, null, null, '<%= ScheduleCardAction.CMD_REFLECTION %>');"><%= params.getName("This","Month","Reflection") %></button>
+			</td>
+			<td class="ButtonTd" id="">
+				<button type="button" id="btnAllReflection" class="Name4Button" onclick="submitRegistExtra(event, '', null, null, '<%= ScheduleCardAction.CMD_ALL_REFLECTION %>');"><%= params.getName("FiscalYear","Insert") %></button>
 			</td>
 		</tr>
 	</table>
@@ -293,9 +296,9 @@ if (vo.getPltWorkTypeMonth().length > 1) {
 <div class="Button">
 	<button type="button" class="Name6Button" id="btnRegist" onclick="submitRegist(event, '', null, '<%= ScheduleCardAction.CMD_REGIST %>')"><%= params.getName("Insert") %></button>
 <% if (vo.getModeCardEdit().equals(PlatformConst.MODE_CARD_EDIT_EDIT)) { %>
-	<button type="button" class="Name6Button" id="btnDelete" onclick="submitDelete(event, null, null, '<%= ScheduleCardAction.CMD_DELETE %>')"><%= params.getName("History") %><%= params.getName("Delete") %></button>
+	<button type="button" class="Name6Button" id="btnDelete" onclick="submitDelete(event, null, null, '<%= ScheduleCardAction.CMD_DELETE %>')"><%= params.getName("History","Delete") %></button>
 <% } %>
-	<button type="button" class="Name6Button" id="btnScheduleManagementList" onclick="submitTransfer(event, null, null, null, '<%= ScheduleListAction.CMD_RE_SHOW %>')"><%= params.getName("Calendar") %><%= params.getName("List") %></button>
+	<button type="button" class="Name6Button" id="btnScheduleManagementList" onclick="submitTransfer(event, null, null, null, '<%= ScheduleListAction.CMD_RE_SHOW %>')"><%= params.getName("Calendar","List") %></button>
 <%
 }
 %>

@@ -25,6 +25,7 @@ errorPage    = "/jsp/common/error.jsp"
 import = "jp.mosp.framework.base.MospParams"
 import = "jp.mosp.framework.constant.MospConst"
 import = "jp.mosp.framework.utils.HtmlUtility"
+import = "jp.mosp.framework.utils.CalendarHtmlUtility"
 import = "jp.mosp.platform.constant.PlatformConst"
 import = "jp.mosp.platform.utils.PlatformUtility"
 import = "jp.mosp.time.comparator.settings.RequestApproverNameComparator"
@@ -37,6 +38,8 @@ import = "jp.mosp.time.input.vo.WorkTypeChangeRequestVo"
 %><%
 MospParams params = (MospParams)request.getAttribute(MospConst.ATT_MOSP_PARAMS);
 WorkTypeChangeRequestVo vo = (WorkTypeChangeRequestVo)params.getVo();
+boolean isChanging = vo.isModeActivateDateFixed() == false;
+boolean isSearchChanging = PlatformUtility.isActivateDateChanging(vo.getModeSearchActivateDate());
 %>
 <div class="ListHeader">
 	<table class="EmployeeLabelTable">
@@ -46,7 +49,7 @@ WorkTypeChangeRequestVo vo = (WorkTypeChangeRequestVo)params.getVo();
 	</table>
 </div>
 <div class="List" id="divEdit">
-	<table class="InputTable">
+	<table class="InputTable" id="workTypeChangeRequest_tblEdit">
 		<tr>
 			<th class="EditTableTh" colspan="6">
 				<jsp:include page="<%= TimeConst.PATH_TIME_APPLY_INFO_JSP %>" flush="false" />
@@ -55,8 +58,9 @@ WorkTypeChangeRequestVo vo = (WorkTypeChangeRequestVo)params.getVo();
 		<tr>
 			<td class="TitleTd"><%= params.getName("GoingWork", "Day") %></td>
 			<td class="InputTd" id="tdWorkDate">
+				<%= CalendarHtmlUtility.getCalendarDiv(CalendarHtmlUtility.TYPE_DAY, "pltEditRequest", "", "", false, false, isChanging) %>
 				<select class="Number4PullDown" id="pltEditRequestYear" name="pltEditRequestYear">
-					<%= HtmlUtility.getSelectOption(vo.getAryPltEditRequestYear(), vo.getPltEditRequestYear()) %>
+					<%= HtmlUtility.getSelectOption(vo.getAryPltEditRequestYear(), vo.getPltEditRequestYear(), true) %>
 				</select>
 				<%= params.getName("Year") %>
 				<select class="Number2PullDown" id="pltEditRequestMonth" name="pltEditRequestMonth">
@@ -71,8 +75,9 @@ WorkTypeChangeRequestVo vo = (WorkTypeChangeRequestVo)params.getVo();
 			</td>
 			<td class="TitleTd"><%= params.getName("Period", "End", "Day") %></td>
 			<td class="InputTd" id="tdEndDate">
+				<%= CalendarHtmlUtility.getCalendarDiv(CalendarHtmlUtility.TYPE_DAY, "pltEditEnd", "", "", false, false, true) %>
 				<select class="Number4PullDown" id="pltEditEndYear" name="pltEditEndYear">
-					<%= HtmlUtility.getSelectOption(vo.getAryPltEditEndYear(), vo.getPltEditEndYear()) %>
+					<%= HtmlUtility.getSelectOption(vo.getAryPltEditEndYear(), vo.getPltEditEndYear(), true) %>
 				</select>
 				<%= params.getName("Year") %>
 				<select class="Number2PullDown" id="pltEditEndMonth" name="pltEditEndMonth">
@@ -103,10 +108,17 @@ WorkTypeChangeRequestVo vo = (WorkTypeChangeRequestVo)params.getVo();
 		</tr>
 	</table>
 	<jsp:include page="<%= TimeConst.PATH_TIME_APPLY_BUTTON_JSP %>" flush="false" />
+<%
+// 承認個人ID利用
+if(!params.isTargetApprovalUnit()){
+%>
 	<jsp:include page="<%= TimeConst.PATH_TIME_APPROVER_PULLDOWN_JSP %>" flush="false" />
+<%
+}
+%>
 </div>
 <div class="List">
-	<table class="InputTable SearchInputTable">
+	<table class="InputTable SearchInputTable" id="workTypeChangeRequest_tblSearch">
 		<tr>
 			<th class="ListTableTh" colspan="6">
 				<span class="TitleTh"><%= params.getName("Search") %></span>
@@ -131,8 +143,9 @@ WorkTypeChangeRequestVo vo = (WorkTypeChangeRequestVo)params.getVo();
 			</td>
 			<td class="TitleTd"><%= params.getName("Display", "Period") %></td>
 			<td class="InputTd">
+				<%= CalendarHtmlUtility.getCalendarDiv(CalendarHtmlUtility.TYPE_MONTH, "pltSearchRequest", "", "", false, false, isSearchChanging) %>
 				<select class="Number4PullDown" id="pltSearchRequestYear" name="pltSearchRequestYear">
-					<%= HtmlUtility.getSelectOption(vo.getAryPltSearchRequestYear(), vo.getPltSearchRequestYear()) %>
+					<%= HtmlUtility.getSelectOption(vo.getAryPltSearchRequestYear(), vo.getPltSearchRequestYear(), true) %>
 				</select>
 				<%= params.getName("Year") %>&nbsp;
 				<select class="Number2PullDown" id="pltSearchRequestMonth" name="pltSearchRequestMonth">

@@ -35,17 +35,19 @@ import jp.mosp.framework.constant.ExceptionConst;
 import jp.mosp.framework.constant.MospConst;
 import jp.mosp.framework.instance.InstanceFactory;
 import jp.mosp.framework.property.RangeProperty;
-import jp.mosp.framework.property.RoleMenuProperty;
-import jp.mosp.framework.property.RoleProperty;
 import jp.mosp.framework.utils.DateUtility;
 import jp.mosp.framework.utils.MospUtility;
+import jp.mosp.framework.utils.RoleUtility;
 import jp.mosp.framework.utils.TopicPathUtility;
 import jp.mosp.framework.utils.ViewFileLocationUtility;
 import jp.mosp.platform.bean.human.HumanSearchBeanInterface;
 import jp.mosp.platform.constant.PlatformConst;
 import jp.mosp.platform.constant.PlatformMessageConst;
+import jp.mosp.platform.dto.base.PersonalIdDtoInterface;
 import jp.mosp.platform.dto.human.HumanDtoInterface;
 import jp.mosp.platform.dto.system.UserMasterDtoInterface;
+import jp.mosp.platform.system.base.PlatformSystemVo;
+import jp.mosp.platform.utils.PlatformMessageUtility;
 
 /**
  * MosPプラットフォームにおけるActionの基本機能を提供する。<br>
@@ -94,6 +96,11 @@ public abstract class PlatformAction extends BaseAction {
 	protected static final String			MGP_JS_SCROLL_TO	= "jsScrollTo";
 	
 	/**
+	 * メニューキー(メインメニュー：トップ)。<br>
+	 */
+	protected static final String			MEN_MAIN_TOP		= "Top";
+	
+	/**
 	 * MosPプラットフォーム用BeanHandler。
 	 */
 	protected PlatformBeanHandlerInterface	platform;
@@ -140,6 +147,11 @@ public abstract class PlatformAction extends BaseAction {
 			// パンくずリスト初期化(ポータルのみ残す)
 			removeAfterIndex(mospParams.getTopicPathList(), 0);
 		}
+		// ログインユーザが存在する場合
+		if (mospParams.getUser() != null) {
+			// アクション前処理クラスの処理を実行
+			reference().preAction().preAction();
+		}
 	}
 	
 	/**
@@ -185,17 +197,14 @@ public abstract class PlatformAction extends BaseAction {
 	}
 	
 	/**
-	 * 範囲設定を設定する。<br>
-	 * ログインユーザからロールを取得し、メニューキーで範囲情報を取得する。<br>
+	 * 範囲設定情報群を設定する。<br>
+	 * ログインユーザのロール(追加ロール含む)及びメニューキーから
+	 * 範囲設定情報群を取得する。<br>
 	 * @param menuKey メニューキー
 	 */
 	protected void setRangeMap(String menuKey) {
-		// ロール設定情報を取得
-		RoleProperty role = mospParams.getUserRole();
-		// ロールメニュー設定情報を取得
-		RoleMenuProperty menu = role.getRoleMenuMap().get(menuKey);
-		// 範囲情報を取得し設定
-		mospParams.getStoredInfo().setRangeMap(menu.getRangeMap());
+		// ログインユーザのロールから操作範囲設定情報群(キー：操作区分)を取得し設定
+		mospParams.getStoredInfo().setRangeMap(RoleUtility.getUserRanges(mospParams, menuKey));
 	}
 	
 	/**
@@ -481,6 +490,27 @@ public abstract class PlatformAction extends BaseAction {
 	}
 	
 	/**
+	 * VOに設定されているキーで再ソートし、1ページ目のリストを取得する。<br>
+	 * <br>
+	 * @return ソート後1ページ目分のリスト
+	 * @throws MospException 比較クラスのインスタンス生成に失敗した場合
+	 */
+	public List<? extends BaseDtoInterface> reSortList() throws MospException {
+		// VO取得
+		PlatformVo vo = (PlatformVo)mospParams.getVo();
+		// ソートキー取得
+		String sortKey = vo.getComparatorName();
+		// 昇順降順フラグを逆に設定
+		if (vo.isAscending()) {
+			vo.setAscending(false);
+		} else {
+			vo.setAscending(true);
+		}
+		// 再ソートし1ページ目のリストを取得
+		return sortList(sortKey);
+	}
+	
+	/**
 	 * 1ページ目のリストを取得する。<br>
 	 * @return 1ページ目分のリスト
 	 */
@@ -507,6 +537,16 @@ public abstract class PlatformAction extends BaseAction {
 			list.add(vo.getList().get(i));
 		}
 		return list;
+	}
+	
+	/**
+	 * 配列を取得する。<br>
+	 * @return 配列
+	 */
+	protected BaseDtoInterface[] getArray() {
+		// VO取得
+		PlatformVo vo = (PlatformVo)mospParams.getVo();
+		return vo.getList().toArray(new BaseDtoInterface[0]);
 	}
 	
 	/**
@@ -739,7 +779,7 @@ public abstract class PlatformAction extends BaseAction {
 	 */
 	protected String getCodeName(String code, String codeKey) {
 		// コード名称を取得
-		return MospUtility.getCodeName(code, getCodeArray(codeKey, false));
+		return MospUtility.getCodeName(mospParams, code, codeKey);
 	}
 	
 	/**
@@ -750,7 +790,7 @@ public abstract class PlatformAction extends BaseAction {
 	 */
 	protected String getCodeName(int code, String codeKey) {
 		// コード名称を取得
-		return getCodeName(String.valueOf(code), codeKey);
+		return MospUtility.getCodeName(mospParams, code, codeKey);
 	}
 	
 	/**
@@ -826,11 +866,69 @@ public abstract class PlatformAction extends BaseAction {
 			return "";
 		}
 		// 人事情報取得及び確認
-		HumanDtoInterface humanDto = reference().human().getHumanInfo(userDto.getPersonalId(), dto.getInsertDate());
+		HumanDtoInterface humanDto = getHumanInfo(userDto.getPersonalId(), dto.getInsertDate());
 		if (humanDto == null) {
 			return "";
 		}
 		return MospUtility.getHumansName(humanDto.getFirstName(), humanDto.getLastName());
+	}
+	
+	/**
+	 * 人事情報を取得する。<br>
+	 * @param personalId 個人ID
+	 * @param targetDate 対象日
+	 * @return 人事情報
+	 * @throws MospException 人事情報の取得に失敗した場合
+	 */
+	protected HumanDtoInterface getHumanInfo(String personalId, Date targetDate) throws MospException {
+		// 人事情報取得及び確認
+		return reference().human().getHumanInfo(personalId, targetDate);
+	}
+	
+	/**
+	 * 苗字と名前を受け取りスペースを挿入した名前を返す。<br>
+	 * @param lastName 姓
+	 * @param firstName 名
+	 * @return スペースを挿入したフルネーム
+	 */
+	public String getLastFirstName(String lastName, String firstName) {
+		return MospUtility.getHumansName(firstName, lastName);
+	}
+	
+	/**
+	 * 個人IDからシステム日付時点の社員名を取得する。<br>
+	 * @param personalId 個人ID
+	 * @return システム日付時点の社員名
+	 * @throws MospException 例外発生時
+	 */
+	protected String getEmployeeName(String personalId) throws MospException {
+		// 取得したユーザIDとシステム日付から個人IDを取得する
+		HumanDtoInterface humanDto = getHumanInfo(personalId, getSystemDate());
+		if (humanDto == null) {
+			// 取得したユーザIDに該当する人事マスタのデータがNULLなら処理終了
+			PlatformMessageUtility.addErrorEmployeeNotExist(mospParams);
+			return null;
+		}
+		// 社員名を返す
+		return getLastFirstName(humanDto.getLastName(), humanDto.getFirstName());
+	}
+	
+	/**
+	 * 個人IDからシステム日付時点の社員コードを取得する。<br>
+	 * @param personalId 個人ID
+	 * @return 社員コード
+	 * @throws MospException 例外発生時
+	 */
+	protected String getEmployeeCode(String personalId) throws MospException {
+		// 取得したユーザIDとシステム日付から個人IDを取得する
+		HumanDtoInterface humanDto = getHumanInfo(personalId, getSystemDate());
+		if (humanDto == null) {
+			// 取得したユーザIDに該当する人事マスタのデータがNULLなら処理終了
+			PlatformMessageUtility.addErrorEmployeeNotExist(mospParams);
+			return null;
+		}
+		// 社員コードを返す
+		return humanDto.getEmployeeCode();
 	}
 	
 	/**
@@ -870,6 +968,15 @@ public abstract class PlatformAction extends BaseAction {
 	}
 	
 	/**
+	 * 検索中のプルダウンを取得する。<br>
+	 * @return コード検索中プルダウン
+	 */
+	protected String[][] getPleaseSearchPulldown() {
+		String[][] aryPulldown = { { "", mospParams.getName("PleaseSearch") } };
+		return aryPulldown;
+	}
+	
+	/**
 	 * 文字列配列からレコード識別ID配列を作成する。<br>
 	 * 但し、空文字列は除く。<br>
 	 * @param aryString 文字列配列
@@ -901,6 +1008,28 @@ public abstract class PlatformAction extends BaseAction {
 			aryLong[i] = getLong(list.get(i));
 		}
 		return aryLong;
+	}
+	
+	/**
+	 * 選択レコード識別ID配列を取得する。<br>
+	 * @return 選択レコード識別ID配列
+	 */
+	protected long[] getRecordIdArray() {
+		// VOを準備
+		PlatformSystemVo vo = (PlatformSystemVo)mospParams.getVo();
+		// 選択インデックス配列を取得
+		int[] indexArray = getIndexArray(vo.getCkbSelect());
+		// 全レコード識別ID配列を取得
+		long[] aryCkbRecordId = vo.getAryCkbRecordId();
+		// 選択レコード識別ID配列を準備
+		long[] recordIdArray = new long[indexArray.length];
+		// インデックス毎に処理
+		for (int i = 0; i < indexArray.length; i++) {
+			// レコード識別IDを追加
+			recordIdArray[i] = aryCkbRecordId[indexArray[i]];
+		}
+		// 選択レコード識別ID配列を取得
+		return recordIdArray;
 	}
 	
 	/**
@@ -954,6 +1083,82 @@ public abstract class PlatformAction extends BaseAction {
 			idArray[i] = aryId[aryIndex[i]];
 		}
 		return getIdArray(idArray);
+	}
+	
+	/**
+	 * VOに設定されているリストから選択された一覧情報を取得する。<br>
+	 * <br>
+	 * @param idx インデックス
+	 * @return 選択された一覧情報
+	 */
+	protected BaseDtoInterface getSelectedListDto(String idx) {
+		return getSelectedListDto(getInt(idx));
+	}
+	
+	/**
+	 * VOに設定されているリストから選択された一覧情報を取得する。<br>
+	 * <br>
+	 * @param idx インデックス
+	 * @return 選択された一覧情報
+	 */
+	protected BaseDtoInterface getSelectedListDto(int idx) {
+		// VO準備
+		PlatformVo vo = (PlatformVo)mospParams.getVo();
+		// 一覧の開始位置を取得
+		int offset = (getInt(vo.getSelectIndex()) - 1) * vo.getDataPerPage();
+		// 選択インデックスを加算
+		int index = offset + idx;
+		// 選択インデックスの一覧情報を取得
+		return vo.getList().get(index);
+	}
+	
+	/**
+	 * VOに設定されているリストから選択された個人IDを取得する。<br>
+	 * <br>
+	 * {@link PlatformAction#getSelectedListDto(String)}<br>
+	 * で一覧情報を取得し、一覧情報から個人IDを取得する。<br>
+	 * <br>
+	 * 但し、対象となる一覧情報は、
+	 * {@link PersonalIdDtoInterface}<br>
+	 * を実装していなくてはならない。<br>
+	 * <br>
+	 * @param idx インデックス
+	 * @return 選択された個人ID
+	 */
+	protected String getSelectedPersonalId(int idx) {
+		// VOに設定されているリストから選択された一覧情報を取得
+		PersonalIdDtoInterface dto = (PersonalIdDtoInterface)getSelectedListDto(idx);
+		// 個人IDを取得
+		return dto.getPersonalId();
+	}
+	
+	/**
+	 * VOに設定されているリストから選択された個人IDを取得する。<br>
+	 * <br>
+	 * @param idx インデックス
+	 * @return 選択された個人ID
+	 */
+	protected String getSelectedPersonalId(String idx) {
+		// VOに設定されているリストから選択された個人IDを取得
+		return getSelectedPersonalId(getInt(idx));
+	}
+	
+	/**
+	 * VOに設定されているリストから選択された個人ID配列を取得する。<br>
+	 * <br>
+	 * @param indexes インデックス配列
+	 * @return 選択された個人ID配列
+	 */
+	protected String[] getSelectedPersonalIds(String[] indexes) {
+		// 個人IDリストを準備
+		List<String> list = new ArrayList<String>();
+		// インデックス毎に処理
+		for (String idx : indexes) {
+			// 個人IDを取得
+			list.add(getSelectedPersonalId(idx));
+		}
+		// 個人ID配列を取得
+		return MospUtility.toArray(list);
 	}
 	
 	/**
@@ -1111,6 +1316,34 @@ public abstract class PlatformAction extends BaseAction {
 	}
 	
 	/**
+	 * 日付文字列から日付を取得する。<br>
+	 * <br>
+	 * 日付文字列が空白である場合、nullを返す。<br>
+	 * 日付の解析に失敗した場合、MosP処理情報にエラーメッセージを設定する。<br>
+	 * <br>
+	 * @param strDate   日付文字列
+	 * @param fieldName フィールド名称(エラーメッセージ用)
+	 * @param row       行インデックス
+	 * @return 日付
+	 */
+	protected Date getDateFromString(String strDate, String fieldName, Integer row) {
+		// 日付文字列が空白である場合
+		if (strDate == null || strDate.isEmpty()) {
+			return null;
+		}
+		// 日付取得(yyyy/MM/dd)
+		Date date = DateUtility.getVariousDate(strDate);
+		// 日付が取得できた場合
+		if (date != null) {
+			return date;
+		}
+		// 日付が取得できなかった場合
+		// エラーメッセージを設定
+		PlatformMessageUtility.addErrorDateInvalid(mospParams, fieldName, row);
+		return date;
+	}
+	
+	/**
 	 * ドキュメントルートを取得する。<br>
 	 * @return ドキュメントルート
 	 */
@@ -1169,7 +1402,11 @@ public abstract class PlatformAction extends BaseAction {
 	 * @return メニューキー
 	 */
 	protected String getTransferredMenuKey() {
-		return mospParams.getRequestParam(PlatformConst.PRM_TRANSFERRED_MENU_KEY);
+		String key = mospParams.getRequestParam(PlatformConst.PRM_TRANSFERRED_MENU_KEY);
+		if (key != null && key.equals(MEN_MAIN_TOP)) {
+			key = null;
+		}
+		return key;
 	}
 	
 	/**
@@ -1264,8 +1501,7 @@ public abstract class PlatformAction extends BaseAction {
 	 * 新規登録成功メッセージの設定。
 	 */
 	protected void addInsertNewMessage() {
-		String rep = mospParams.getName("New", "Insert");
-		mospParams.addMessage(PlatformMessageConst.MSG_PROCESS_SUCCEED, rep);
+		PlatformMessageUtility.addInsertNewSucceed(mospParams);
 	}
 	
 	/**
@@ -1359,13 +1595,20 @@ public abstract class PlatformAction extends BaseAction {
 	}
 	
 	/**
+	 * メール送信失敗メッセージの設定。
+	 */
+	protected void addSendMailFailedMessage() {
+		mospParams.addMessage(PlatformMessageConst.MSG_PROCESS_FAILED, mospParams.getName("SendMail"));
+	}
+	
+	/**
 	 * 決定した日付時点で入社日を過ぎていない社員の社員コードが入力されている場合の設定。
 	 * @param employeesCode 社員コード
 	 * @param targetDate 対象日
 	 */
 	protected void addNotJoinedEmployeesErrorMessage(Date targetDate, String employeesCode) {
-		mospParams.addErrorMessage(PlatformMessageConst.MSG_NOT_JOINED_EMPLOYEES,
-				DateUtility.getStringDate(targetDate), employeesCode);
+		mospParams.addErrorMessage(PlatformMessageConst.MSG_NOT_JOINED_EMPLOYEES, DateUtility.getStringDate(targetDate),
+				employeesCode);
 	}
 	
 	/**

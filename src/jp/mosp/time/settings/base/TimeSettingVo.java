@@ -245,6 +245,14 @@ public abstract class TimeSettingVo extends TimeVo {
 	}
 	
 	/**
+	 * @param idx インデックス
+	 * @return aryLblActivateDate
+	 */
+	public String getAryLblActivateDate(int idx) {
+		return aryLblActivateDate[idx];
+	}
+	
+	/**
 	 * @param aryLblActivateDate セットする aryLblActivateDate
 	 */
 	public void setAryLblActivateDate(String[] aryLblActivateDate) {
@@ -256,6 +264,14 @@ public abstract class TimeSettingVo extends TimeVo {
 	 */
 	public String[] getAryLblInactivate() {
 		return getStringArrayClone(aryLblInactivate);
+	}
+	
+	/**
+	 * @param idx インデックス
+	 * @return aryLblInactivate
+	 */
+	public String getAryLblInactivate(int idx) {
+		return aryLblInactivate[idx];
 	}
 	
 	/**

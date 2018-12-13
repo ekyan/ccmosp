@@ -33,7 +33,7 @@ public class MospParametersMapper {
 	/**
 	 * チェックボックスパラメータ接頭辞。
 	 */
-	protected static final String	PREFIX_CHECK_BOX	= "ckb";
+	protected static final String PREFIX_CHECK_BOX = "ckb";
 	
 	
 	/**
@@ -75,6 +75,12 @@ public class MospParametersMapper {
 						// マッピング
 						if (values != null) {
 							field.set(obj, parameters.get(fieldName));
+						}
+						// チェックボックスの場合(値が送信されない場合は空の配列を設定)
+						if (values == null || values.length == 0) {
+							if (fieldName.startsWith(PREFIX_CHECK_BOX)) {
+								field.set(obj, new String[0]);
+							}
 						}
 					} else if (type.isAssignableFrom(String.class)) {
 						// マッピング

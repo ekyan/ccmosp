@@ -1,5 +1,22 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE MosP>
+<!--
+MosP - Mind Open Source Project    http://www.mosp.jp/
+Copyright (C) MIND Co., Ltd.       http://www.e-mind.co.jp/
+
+This program is free software: you can redistribute it and/or
+modify it under the terms of the GNU Affero General Public License
+as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
 <MosP>
 <!--
 LDAP関連機能アドオン設定ファイル。
@@ -14,6 +31,7 @@ LDAPを用いた認証機能の利用方法：
 ・パスワード有効期限(Application key="PasswordPeriod")を期限無しとする。
 ・パスワード確認(Application key="CheckPassword")を確認無しとする。
 ・パスワード変更画面(Menu key="PasswordChange")を利用不可とする。
+・システム設定画面(Menu key="SystemManagement")を利用不可とする。
 -->
 	<!-- アドオン設定情報 -->
 	<Addon key="Ldap">
@@ -37,6 +55,13 @@ LDAPを用いた認証機能の利用方法：
 	<!-- パスワード変更画面利用不可 -->
 	<MainMenu key="menuIndividualSetting">
 		<Menu key="PasswordChange">
+			<MenuValid>false</MenuValid>
+		</Menu>
+	</MainMenu>
+	
+	<!-- システム設定画面利用不可 -->
+	<MainMenu key="menuBaseSetting">
+		<Menu key="SystemManagement">
 			<MenuValid>false</MenuValid>
 		</Menu>
 	</MainMenu>

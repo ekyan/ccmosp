@@ -20,6 +20,8 @@ package jp.mosp.time.base;
 import java.util.Date;
 
 import jp.mosp.framework.base.MospException;
+import jp.mosp.platform.bean.file.ImportBeanInterface;
+import jp.mosp.time.bean.AfterApplyAttendancesExecuteBeanInterface;
 import jp.mosp.time.bean.AllowanceRegistBeanInterface;
 import jp.mosp.time.bean.ApplicationRegistBeanInterface;
 import jp.mosp.time.bean.AttendanceCalcBeanInterface;
@@ -39,7 +41,9 @@ import jp.mosp.time.bean.PaidHolidayDataGrantBeanInterface;
 import jp.mosp.time.bean.PaidHolidayDataRegistBeanInterface;
 import jp.mosp.time.bean.PaidHolidayEntranceDateRegistBeanInterface;
 import jp.mosp.time.bean.PaidHolidayFirstYearRegistBeanInterface;
+import jp.mosp.time.bean.PaidHolidayGrantRegistBeanInterface;
 import jp.mosp.time.bean.PaidHolidayPointDateRegistBeanInterface;
+import jp.mosp.time.bean.PaidHolidayProportionallyRegistBeanInterface;
 import jp.mosp.time.bean.PaidHolidayRegistBeanInterface;
 import jp.mosp.time.bean.PaidHolidayTransactionRegistBeanInterface;
 import jp.mosp.time.bean.RestRegistBeanInterface;
@@ -53,8 +57,8 @@ import jp.mosp.time.bean.SubHolidayRegistBeanInterface;
 import jp.mosp.time.bean.SubHolidayRequestRegistBeanInterface;
 import jp.mosp.time.bean.SubstituteRegistBeanInterface;
 import jp.mosp.time.bean.TimeApprovalBeanInterface;
+import jp.mosp.time.bean.TimeRecordBeanInterface;
 import jp.mosp.time.bean.TimeSettingRegistBeanInterface;
-import jp.mosp.time.bean.TimelyPaidHolidayRegistBeanInterface;
 import jp.mosp.time.bean.TotalAbsenceRegistBeanInterface;
 import jp.mosp.time.bean.TotalAllowanceRegistBeanInterface;
 import jp.mosp.time.bean.TotalLeaveRegistBeanInterface;
@@ -62,7 +66,6 @@ import jp.mosp.time.bean.TotalOtherVacationRegistBeanInterface;
 import jp.mosp.time.bean.TotalTimeCalcBeanInterface;
 import jp.mosp.time.bean.TotalTimeCorrectionRegistBeanInterface;
 import jp.mosp.time.bean.TotalTimeEmployeeTransactionRegistBeanInterface;
-import jp.mosp.time.bean.TotalTimePersonalBeanInterface;
 import jp.mosp.time.bean.TotalTimeRegistBeanInterface;
 import jp.mosp.time.bean.TotalTimeTransactionRegistBeanInterface;
 import jp.mosp.time.bean.WorkOnHolidayRequestRegistBeanInterface;
@@ -253,13 +256,6 @@ public interface TimeBeanHandlerInterface {
 	PaidHolidayTransactionRegistBeanInterface paidHolidayTransactionRegist() throws MospException;
 	
 	/**
-	 * 時間単位有給休暇データ登録クラスを取得する。
-	 * @return 時間単位有給休暇データ登録クラス
-	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
-	 */
-	TimelyPaidHolidayRegistBeanInterface timelyPaidHolidayRegist() throws MospException;
-	
-	/**
 	 * ストック休暇データ登録クラスを取得する。
 	 * @return ストック休暇データ登録クラス
 	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
@@ -321,6 +317,13 @@ public interface TimeBeanHandlerInterface {
 	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
 	 */
 	PaidHolidayRegistBeanInterface paidHolidayRegist() throws MospException;
+	
+	/**
+	 * 有給休暇比例付与登録クラスを取得する。
+	 * @return 有給休暇比例付与登録クラス
+	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
+	 */
+	PaidHolidayProportionallyRegistBeanInterface paidHolidayProportionallyRegist() throws MospException;
 	
 	/**
 	 * 有給休暇初年度付与登録クラスを取得する。
@@ -430,11 +433,11 @@ public interface TimeBeanHandlerInterface {
 	TimeApprovalBeanInterface timeApproval() throws MospException;
 	
 	/**
-	 * 個別仮締クラスを取得する。
-	 * @return 個別仮締クラス
+	 * 有給休暇付与登録クラスを取得する。
+	 * @return 有給休暇付与登録クラス
 	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
 	 */
-	TotalTimePersonalBeanInterface totalTimePersonal() throws MospException;
+	PaidHolidayGrantRegistBeanInterface paidHolidayGrantRegist() throws MospException;
 	
 	/**
 	 * 有給休暇データ付与クラスを取得する。
@@ -449,5 +452,31 @@ public interface TimeBeanHandlerInterface {
 	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
 	 */
 	StockHolidayDataGrantBeanInterface stockHolidayDataGrant() throws MospException;
+	
+	/**
+	 * 休暇申請インポートクラスを取得する。<br>
+	 * @return 休暇申請インポートクラス
+	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
+	 */
+	ImportBeanInterface holidayRequestImport() throws MospException;
+	
+	/**
+	 * 振出・休出申請インポートクラスを取得する。<br>
+	 * @return 振出・休出申請インポートクラス
+	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
+	 */
+	ImportBeanInterface workOnHolidayRequestImport() throws MospException;
+	
+	/**
+	 * @return 勤怠申請後処理群実行処理
+	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
+	 */
+	AfterApplyAttendancesExecuteBeanInterface afterApplyAttendancesExecute() throws MospException;
+	
+	/**
+	 * @return 打刻処理クラスを取得
+	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
+	 */
+	TimeRecordBeanInterface timeRecord() throws MospException;
 	
 }

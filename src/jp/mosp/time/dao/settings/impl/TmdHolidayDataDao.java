@@ -73,9 +73,19 @@ public class TmdHolidayDataDao extends PlatformDao implements HolidayDataDaoInte
 	public static final String	COL_GIVING_DAY			= "giving_day";
 	
 	/**
+	 * 付与時間数。
+	 */
+	public static final String	COL_GIVING_HOUR			= "giving_hour";
+	
+	/**
 	 * 廃棄日数。
 	 */
 	public static final String	COL_CANCEL_DAY			= "cancel_day";
+	
+	/**
+	 * 廃棄時間数。
+	 */
+	public static final String	COL_CANCEL_HOUR			= "cancel_hour";
 	
 	/**
 	 * 取得期限。
@@ -124,7 +134,9 @@ public class TmdHolidayDataDao extends PlatformDao implements HolidayDataDaoInte
 		dto.setHolidayCode(getString(COL_HOLIDAY_CODE));
 		dto.setHolidayType(getInt(COL_HOLIDAY_TYPE));
 		dto.setGivingDay(getDouble(COL_GIVING_DAY));
+		dto.setGivingHour(getInt(COL_GIVING_HOUR));
 		dto.setCancelDay(getDouble(COL_CANCEL_DAY));
+		dto.setCancelHour(getInt(COL_CANCEL_HOUR));
 		dto.setHolidayLimitDate(getDate(COL_HOLIDAY_LIMIT_DATE));
 		dto.setHolidayLimitMonth(getInt(COL_HOLIDAY_LIMIT_MONTH));
 		dto.setHolidayLimitDay(getInt(COL_HOLIDAY_LIMIT_DAY));
@@ -178,8 +190,8 @@ public class TmdHolidayDataDao extends PlatformDao implements HolidayDataDaoInte
 	}
 	
 	@Override
-	public HolidayDataDtoInterface findForInfo(String personalId, Date activateDate, String holidayCode, int holidayType)
-			throws MospException {
+	public HolidayDataDtoInterface findForInfo(String personalId, Date activateDate, String holidayCode,
+			int holidayType) throws MospException {
 		try {
 			index = 1;
 			StringBuffer sb = getSelectQuery(getClass());
@@ -245,7 +257,7 @@ public class TmdHolidayDataDao extends PlatformDao implements HolidayDataDaoInte
 			setParam(index++, activateDate);
 			setParam(index++, activateDate);
 			if (!inactivateFlag.isEmpty()) {
-				setParam(index++, Integer.valueOf(inactivateFlag));
+				setParam(index++, Integer.parseInt(inactivateFlag));
 			}
 			executeQuery();
 			return mappingAll();
@@ -258,8 +270,8 @@ public class TmdHolidayDataDao extends PlatformDao implements HolidayDataDaoInte
 	}
 	
 	@Override
-	public List<HolidayDataDtoInterface> findPersonTerm(String personalId, Date startDate, Date endDate, int holidayType)
-			throws MospException {
+	public List<HolidayDataDtoInterface> findPersonTerm(String personalId, Date startDate, Date endDate,
+			int holidayType) throws MospException {
 		try {
 			index = 1;
 			StringBuffer sb = getSelectQuery(getClass());
@@ -379,7 +391,9 @@ public class TmdHolidayDataDao extends PlatformDao implements HolidayDataDaoInte
 		setParam(index++, dto.getHolidayCode());
 		setParam(index++, dto.getHolidayType());
 		setParam(index++, dto.getGivingDay());
+		setParam(index++, dto.getGivingHour());
 		setParam(index++, dto.getCancelDay());
+		setParam(index++, dto.getCancelHour());
 		setParam(index++, dto.getHolidayLimitDate());
 		setParam(index++, dto.getHolidayLimitMonth());
 		setParam(index++, dto.getHolidayLimitDay());
@@ -397,8 +411,7 @@ public class TmdHolidayDataDao extends PlatformDao implements HolidayDataDaoInte
 		StringBuffer sb = new StringBuffer();
 		sb.append(COL_ACTIVATE_DATE);
 		sb.append(" IN (");
-		sb.append("SELECT ");
-		sb.append("MAX(" + COL_ACTIVATE_DATE + ")");
+		sb.append(selectMax(COL_ACTIVATE_DATE));
 		sb.append(from(TABLE) + " AS A ");
 		sb.append(where());
 		sb.append(TABLE + "." + COL_PERSONAL_ID);

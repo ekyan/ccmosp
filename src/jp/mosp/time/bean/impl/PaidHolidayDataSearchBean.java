@@ -27,25 +27,24 @@ import java.util.Set;
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.base.MospParams;
 import jp.mosp.framework.utils.DateUtility;
-import jp.mosp.platform.base.PlatformBean;
 import jp.mosp.platform.bean.human.EntranceReferenceBeanInterface;
 import jp.mosp.platform.bean.human.HumanSearchBeanInterface;
 import jp.mosp.platform.constant.PlatformConst;
 import jp.mosp.platform.dto.human.HumanDtoInterface;
-import jp.mosp.time.bean.ApplicationReferenceBeanInterface;
+import jp.mosp.time.base.TimeApplicationBean;
 import jp.mosp.time.bean.AttendanceTransactionReferenceBeanInterface;
 import jp.mosp.time.bean.PaidHolidayDataGrantBeanInterface;
 import jp.mosp.time.bean.PaidHolidayDataReferenceBeanInterface;
 import jp.mosp.time.bean.PaidHolidayDataSearchBeanInterface;
-import jp.mosp.time.bean.PaidHolidayReferenceBeanInterface;
+import jp.mosp.time.bean.PaidHolidayGrantReferenceBeanInterface;
+import jp.mosp.time.bean.PaidHolidayGrantRegistBeanInterface;
 import jp.mosp.time.bean.ScheduleDateReferenceBeanInterface;
 import jp.mosp.time.bean.ScheduleReferenceBeanInterface;
 import jp.mosp.time.constant.TimeConst;
-import jp.mosp.time.dto.settings.ApplicationDtoInterface;
 import jp.mosp.time.dto.settings.AttendanceTransactionDtoInterface;
 import jp.mosp.time.dto.settings.PaidHolidayDataDtoInterface;
 import jp.mosp.time.dto.settings.PaidHolidayDataGrantListDtoInterface;
-import jp.mosp.time.dto.settings.PaidHolidayDtoInterface;
+import jp.mosp.time.dto.settings.PaidHolidayGrantDtoInterface;
 import jp.mosp.time.dto.settings.ScheduleDateDtoInterface;
 import jp.mosp.time.dto.settings.ScheduleDtoInterface;
 import jp.mosp.time.dto.settings.impl.PaidHolidayDataGrantListDto;
@@ -53,7 +52,7 @@ import jp.mosp.time.dto.settings.impl.PaidHolidayDataGrantListDto;
 /**
  * 有給休暇データ検索クラス。
  */
-public class PaidHolidayDataSearchBean extends PlatformBean implements PaidHolidayDataSearchBeanInterface {
+public class PaidHolidayDataSearchBean extends TimeApplicationBean implements PaidHolidayDataSearchBeanInterface {
 	
 	/**
 	 * 人事情報検索クラス。
@@ -66,14 +65,19 @@ public class PaidHolidayDataSearchBean extends PlatformBean implements PaidHolid
 	protected EntranceReferenceBeanInterface				entranceReference;
 	
 	/**
+	 * 有給休暇付与参照クラス。
+	 */
+	protected PaidHolidayGrantReferenceBeanInterface		paidHolidayGrantReference;
+	
+	/**
+	 * 有給休暇付与登録クラス。
+	 */
+	protected PaidHolidayGrantRegistBeanInterface			paidHolidayGrantRegist;
+	
+	/**
 	 * 有給休暇データ参照クラス。
 	 */
 	protected PaidHolidayDataReferenceBeanInterface			paidHolidayDataReference;
-	
-	/**
-	 * 設定適用参照クラス。
-	 */
-	protected ApplicationReferenceBeanInterface				applicationReference;
 	
 	/**
 	 * カレンダ管理参照クラス。
@@ -86,11 +90,6 @@ public class PaidHolidayDataSearchBean extends PlatformBean implements PaidHolid
 	protected ScheduleDateReferenceBeanInterface			scheduleDateReference;
 	
 	/**
-	 * 有給休暇設定参照クラス。
-	 */
-	protected PaidHolidayReferenceBeanInterface				paidHolidayReference;
-	
-	/**
 	 * 有給休暇データ付与クラス。
 	 */
 	protected PaidHolidayDataGrantBeanInterface				paidHolidayDataGrant;
@@ -100,7 +99,10 @@ public class PaidHolidayDataSearchBean extends PlatformBean implements PaidHolid
 	 */
 	protected AttendanceTransactionReferenceBeanInterface	attendanceTransactionReference;
 	
-	private Date											activateDate;
+	/**
+	 * 有効日。
+	 */
+	protected Date											activateDate;
 	private Date											entranceFromDate;
 	private Date											entranceToDate;
 	private String											employeeCode;
@@ -111,18 +113,26 @@ public class PaidHolidayDataSearchBean extends PlatformBean implements PaidHolid
 	private String											positionCode;
 	private String											paidHolidayCode;
 	private String											grant;
-	private boolean											calcAttendanceRate;
+	/**
+	 * 出勤率計算。
+	 */
+	protected boolean										calcAttendanceRate;
 	private Set<String>										personalIdSet;
+	
+	/**
+	 * 未計算
+	 */
+	public static final int									NOT_CALCULATED	= 1;
 	
 	/**
 	 * 未付与
 	 */
-	public static final String								NOT_GRANTED	= "0";
+	public static final int									NOT_GRANTED		= 2;
 	
 	/**
 	 * 付与済
 	 */
-	public static final String								GRANTED		= "1";
+	public static final int									GRANTED			= 3;
 	
 	
 	/**
@@ -143,59 +153,38 @@ public class PaidHolidayDataSearchBean extends PlatformBean implements PaidHolid
 	
 	@Override
 	public void initBean() throws MospException {
+		super.initBean();
 		humanSearch = (HumanSearchBeanInterface)createBean(HumanSearchBeanInterface.class);
 		entranceReference = (EntranceReferenceBeanInterface)createBean(EntranceReferenceBeanInterface.class);
-		paidHolidayDataReference = (PaidHolidayDataReferenceBeanInterface)createBean(PaidHolidayDataReferenceBeanInterface.class);
-		applicationReference = (ApplicationReferenceBeanInterface)createBean(ApplicationReferenceBeanInterface.class);
+		paidHolidayGrantReference = (PaidHolidayGrantReferenceBeanInterface)createBean(
+				PaidHolidayGrantReferenceBeanInterface.class);
+		paidHolidayGrantRegist = (PaidHolidayGrantRegistBeanInterface)createBean(
+				PaidHolidayGrantRegistBeanInterface.class);
+		paidHolidayDataReference = (PaidHolidayDataReferenceBeanInterface)createBean(
+				PaidHolidayDataReferenceBeanInterface.class);
 		scheduleReference = (ScheduleReferenceBeanInterface)createBean(ScheduleReferenceBeanInterface.class);
-		scheduleDateReference = (ScheduleDateReferenceBeanInterface)createBean(ScheduleDateReferenceBeanInterface.class);
-		paidHolidayReference = (PaidHolidayReferenceBeanInterface)createBean(PaidHolidayReferenceBeanInterface.class);
+		scheduleDateReference = (ScheduleDateReferenceBeanInterface)createBean(
+				ScheduleDateReferenceBeanInterface.class);
 		paidHolidayDataGrant = (PaidHolidayDataGrantBeanInterface)createBean(PaidHolidayDataGrantBeanInterface.class);
-		attendanceTransactionReference = (AttendanceTransactionReferenceBeanInterface)createBean(AttendanceTransactionReferenceBeanInterface.class);
+		attendanceTransactionReference = (AttendanceTransactionReferenceBeanInterface)createBean(
+				AttendanceTransactionReferenceBeanInterface.class);
 	}
 	
 	@Override
 	public List<PaidHolidayDataGrantListDtoInterface> getSearchList() throws MospException {
+		// 有給休暇データ一覧準備
 		List<PaidHolidayDataGrantListDtoInterface> list = new ArrayList<PaidHolidayDataGrantListDtoInterface>();
+		// 人事マスタリストを取得
 		List<HumanDtoInterface> humanList = getHumanList();
+		// 人事マスタリスト毎に処理
 		for (HumanDtoInterface humanDto : humanList) {
-			// 個人ID
-			if (!searchPersonalId(humanDto)) {
+			PaidHolidayDataGrantListDtoInterface dto = getDto(humanDto);
+			if (dto == null) {
 				continue;
 			}
-			// 入社日
-			if (!searchEntranceDate(humanDto)) {
-				continue;
-			}
-			ApplicationDtoInterface applicationDto = applicationReference.findForPerson(humanDto.getPersonalId(),
-					activateDate);
-			if (applicationDto == null) {
-				continue;
-			}
-			PaidHolidayDtoInterface paidHolidayDto = paidHolidayReference.getPaidHolidayInfo(
-					applicationDto.getPaidHolidayCode(), activateDate);
-			if (paidHolidayDto == null) {
-				continue;
-			}
-			// 有給休暇設定
-			if (!searchPaidHoliday(paidHolidayDto)) {
-				continue;
-			}
-			int grantTimes = paidHolidayDataGrant.getGrantTimes(humanDto.getPersonalId(), activateDate);
-			Date grantDate = paidHolidayDataGrant.getGrantDate(humanDto.getPersonalId(), activateDate, grantTimes);
-			PaidHolidayDataDtoInterface paidHolidayDataDto = paidHolidayDataReference.findForKey(
-					humanDto.getPersonalId(), grantDate, grantDate);
-			// 付与状態
-			if (!searchGrant(paidHolidayDataDto)) {
-				continue;
-			}
-			Date startDate = getStartDate(humanDto, grantTimes, grantDate);
-			Date endDate = getEndDate(startDate, grantTimes);
-			PaidHolidayDataGrantListDtoInterface dto = new PaidHolidayDataGrantListDto();
-			setAttendanceRate(dto, humanDto, grantDate, startDate, endDate);
-			boolean isAccomplished = isAccomplished(dto, paidHolidayDto);
-			setDto(dto, humanDto, paidHolidayDataDto, grantDate, startDate, endDate, isAccomplished);
+			// 有給休暇データ一覧に追加
 			list.add(dto);
+			paidHolidayGrantRegist(dto);
 		}
 		return list;
 	}
@@ -217,6 +206,72 @@ public class PaidHolidayDataSearchBean extends PlatformBean implements PaidHolid
 		humanSearch.setSectionCode(sectionCode);
 		humanSearch.setStateType(PlatformConst.EMPLOYEE_STATE_PRESENCE);
 		return humanSearch.search();
+	}
+	
+	/**
+	 * 有給休暇データ一覧DTOを取得する。<br>
+	 * @param dto 対象DTO
+	 * @return 有給休暇データ一覧DTO
+	 * @throws MospException インスタンスの取得、SQLの作成及び実行に失敗した場合
+	 */
+	protected PaidHolidayDataGrantListDtoInterface getDto(HumanDtoInterface dto) throws MospException {
+		// 個人ID
+		if (!searchPersonalId(dto)) {
+			return null;
+		}
+		// 入社日
+		if (!searchEntranceDate(dto)) {
+			return null;
+		}
+		// 有給休暇情報を取得
+		if (!hasPaidHolidaySettings(dto.getPersonalId(), activateDate)) {
+			return null;
+		}
+		// 付与区分が対象外かどうか確認
+		if (isPaidHolidayTypeNot()) {
+			return null;
+		}
+		// 有給休暇確認
+		if (!searchPaidHoliday()) {
+			return null;
+		}
+		// 有給休暇付与回数を取得
+		int grantTimes = paidHolidayDataGrant.getGrantTimes(dto.getPersonalId(), activateDate);
+		// 有給休暇付与日を取得
+		Date grantDate = paidHolidayDataGrant.getGrantDate(dto.getPersonalId(), activateDate, grantTimes);
+		// 有給休暇データからレコードを取得
+		PaidHolidayDataDtoInterface paidHolidayDataDto = paidHolidayDataReference.findForKey(dto.getPersonalId(),
+				grantDate, grantDate);
+		// 付与状態確認
+		if (!searchGrant(paidHolidayDataDto, dto.getPersonalId(), grantDate)) {
+			return null;
+		}
+		return getDto(dto, paidHolidayDataDto, grantDate, grantTimes);
+	}
+	
+	/**
+	 * 有給休暇データ一覧DTOを取得する。<br>
+	 * @param dto 対象DTO
+	 * @param paidHolidayDataDto 有給休暇データDTO
+	 * @param grantDate 付与日
+	 * @param grantTimes 有給休暇付与回数
+	 * @return 有給休暇データ一覧DTO
+	 * @throws MospException インスタンスの取得、SQLの作成及び実行に失敗した場合
+	 */
+	protected PaidHolidayDataGrantListDtoInterface getDto(HumanDtoInterface dto,
+			PaidHolidayDataDtoInterface paidHolidayDataDto, Date grantDate, int grantTimes) throws MospException {
+		// 有給休暇データ一覧情報準備
+		PaidHolidayDataGrantListDtoInterface paidHolidayDataGrantListDto = new PaidHolidayDataGrantListDto();
+		// 開始日を取得
+		Date startDate = getStartDate(dto, grantTimes, grantDate);
+		// 終了日を取得
+		Date endDate = getEndDate(startDate, grantTimes);
+		// 出勤率設定
+		setAttendanceRate(paidHolidayDataGrantListDto, dto, grantDate, startDate, endDate);
+		// 有給休暇データ一覧情報設定
+		setDto(paidHolidayDataGrantListDto, dto, paidHolidayDataDto, grantDate, startDate, endDate);
+		// 有給休暇データ一覧に追加
+		return paidHolidayDataGrantListDto;
 	}
 	
 	/**
@@ -271,32 +326,50 @@ public class PaidHolidayDataSearchBean extends PlatformBean implements PaidHolid
 	}
 	
 	/**
-	 * 有給休暇設定判断。<br>
-	 * @param dto 対象DTO
-	 * @return 検索条件に一致する場合true、そうでない場合false
+	 * 付与区分が対象外であるかを確認する。<br>
+	 * @return 確認結果(true：対象外である、false：対象外でない)
 	 */
-	protected boolean searchPaidHoliday(PaidHolidayDtoInterface dto) {
-		if (paidHolidayCode.isEmpty()) {
-			return true;
-		}
-		return paidHolidayCode.equals(dto.getPaidHolidayCode());
+	protected boolean isPaidHolidayTypeNot() {
+		return paidHolidayDto.getPaidHolidayType() == TimeConst.CODE_PAID_HOLIDAY_TYPE_NOT;
 	}
 	
 	/**
-	 * 付与状態判断。
-	 * @param dto 対象DTO
+	 * 有給休暇設定判断。<br>
 	 * @return 検索条件に一致する場合true、そうでない場合false
 	 */
-	protected boolean searchGrant(PaidHolidayDataDtoInterface dto) {
+	protected boolean searchPaidHoliday() {
+		if (paidHolidayCode.isEmpty()) {
+			return true;
+		}
+		return paidHolidayCode.equals(paidHolidayDto.getPaidHolidayCode());
+	}
+	
+	/**
+	 * 出勤率計算フラグ判断。
+	 * @param dto 対象DTO
+	 * @param personalId 個人ID
+	 * @param grantDate 付与日
+	 * @return 検索条件に一致する場合true、そうでない場合false
+	 * @throws MospException 例外発生時
+	 */
+	protected boolean searchGrant(PaidHolidayDataDtoInterface dto, String personalId, Date grantDate)
+			throws MospException {
 		if (grant.isEmpty()) {
 			return true;
 		}
-		if (dto == null) {
+		PaidHolidayGrantDtoInterface paidHolidayGrantDto = paidHolidayGrantReference.findForKey(personalId, grantDate);
+		if (Integer.toString(NOT_CALCULATED).equals(grant)) {
+			// 未計算の場合
+			return dto == null
+					&& (paidHolidayGrantDto == null || paidHolidayGrantDto.getGrantStatus() == NOT_CALCULATED);
+		} else if (Integer.toString(NOT_GRANTED).equals(grant)) {
 			// 未付与の場合
-			return NOT_GRANTED.equals(grant);
+			return dto == null && paidHolidayGrantDto != null && paidHolidayGrantDto.getGrantStatus() == NOT_GRANTED;
+		} else if (Integer.toString(GRANTED).equals(grant)) {
+			// 付与済の場合
+			return dto != null || (paidHolidayGrantDto != null && paidHolidayGrantDto.getGrantStatus() == GRANTED);
 		}
-		// 付与済の場合
-		return GRANTED.equals(grant);
+		return false;
 	}
 	
 	/**
@@ -307,11 +380,9 @@ public class PaidHolidayDataSearchBean extends PlatformBean implements PaidHolid
 	 * @param grantDate 付与日付
 	 * @param firstDate 開始日付
 	 * @param lastDate 終了日付
-	 * @param isAccomplished 出勤率基準
 	 */
 	protected void setDto(PaidHolidayDataGrantListDtoInterface dto, HumanDtoInterface humanDto,
-			PaidHolidayDataDtoInterface paidHolidayDataDto, Date grantDate, Date firstDate, Date lastDate,
-			boolean isAccomplished) {
+			PaidHolidayDataDtoInterface paidHolidayDataDto, Date grantDate, Date firstDate, Date lastDate) {
 		dto.setPersonalId(humanDto.getPersonalId());
 		dto.setEmployeeCode(humanDto.getEmployeeCode());
 		dto.setLastName(humanDto.getLastName());
@@ -320,7 +391,7 @@ public class PaidHolidayDataSearchBean extends PlatformBean implements PaidHolid
 		dto.setFirstDate(firstDate);
 		dto.setLastDate(lastDate);
 		dto.setAccomplish(mospParams.getName("Ram", "Accomplish"));
-		if (isAccomplished) {
+		if (isAccomplished(dto.getAttendanceRate())) {
 			// 達成の場合
 			dto.setAccomplish(mospParams.getName("Accomplish"));
 		}
@@ -328,6 +399,9 @@ public class PaidHolidayDataSearchBean extends PlatformBean implements PaidHolid
 			dto.setAccomplish(mospParams.getName("Hyphen"));
 		}
 		if (dto.getAttendanceRate() == null) {
+			dto.setAccomplish(mospParams.getName("Hyphen"));
+		}
+		if (!dto.getError().isEmpty()) {
 			dto.setAccomplish(mospParams.getName("Hyphen"));
 		}
 		dto.setGrant(mospParams.getName("Ram", "Giving"));
@@ -343,20 +417,53 @@ public class PaidHolidayDataSearchBean extends PlatformBean implements PaidHolid
 	
 	/**
 	 * 出勤率を達成しているかどうかを確認する。<br>
-	 * @param dto 対象DTO
-	 * @param paidHolidayDto 有給休暇管理DTO
+	 * @param attendanceRate 出勤率
 	 * @return 達成している場合true、そうでない場合false
 	 */
-	protected boolean isAccomplished(PaidHolidayDataGrantListDtoInterface dto, PaidHolidayDtoInterface paidHolidayDto) {
+	protected boolean isAccomplished(Double attendanceRate) {
 		if (paidHolidayDto.getWorkRatio() <= 0) {
-			// 有給休暇設定の出勤率が0以下の場合
+			// 有給休暇設定の出勤率が0以下である場合
 			return true;
 		}
-		if (dto.getAttendanceRate() == null) {
+		// 有給休暇設定の出勤率が0以下でない場合
+		if (attendanceRate == null) {
 			return false;
 		}
-		// 有給休暇設定の出勤率が0以下でない場合
-		return Double.compare(dto.getAttendanceRate() * 100, paidHolidayDto.getWorkRatio()) >= 0;
+		return Double.compare(attendanceRate.doubleValue() * 100, paidHolidayDto.getWorkRatio()) >= 0;
+	}
+	
+	/**
+	 * 有給休暇付与登録処理を行う。
+	 * @param dto 対象DTO
+	 * @throws MospException 例外発生時
+	 */
+	protected void paidHolidayGrantRegist(PaidHolidayDataGrantListDtoInterface dto) throws MospException {
+		if (dto.getAttendanceRate() == null) {
+			return;
+		}
+		// 出勤率が計算されている場合
+		paidHolidayGrantRegist(dto.getPersonalId(), dto.getGrantDate());
+	}
+	
+	/**
+	 * 有給休暇付与登録処理を行う。
+	 * @param personalId 個人ID
+	 * @param grantDate 付与日
+	 * @throws MospException 例外発生時
+	 */
+	protected void paidHolidayGrantRegist(String personalId, Date grantDate) throws MospException {
+		PaidHolidayGrantDtoInterface dto = paidHolidayGrantReference.findForKey(personalId, grantDate);
+		if (dto != null && dto.getGrantStatus() == GRANTED) {
+			// 付与済の場合
+			return;
+		}
+		if (dto == null) {
+			dto = paidHolidayGrantRegist.getInitDto();
+			dto.setPersonalId(personalId);
+			dto.setGrantDate(grantDate);
+		}
+		dto.setGrantStatus(NOT_GRANTED);
+		paidHolidayGrantRegist.regist(dto);
 	}
 	
 	/**
@@ -371,15 +478,8 @@ public class PaidHolidayDataSearchBean extends PlatformBean implements PaidHolid
 		return getStartDate(dto.getPersonalId(), grantTimes, grantDate);
 	}
 	
-	/**
-	 * 開始日を取得する。<br>
-	 * @param personalId 個人ID
-	 * @param grantTimes 有給休暇付与回数
-	 * @param grantDate 付与日
-	 * @return 開始日
-	 * @throws MospException 例外発生時
-	 */
-	protected Date getStartDate(String personalId, int grantTimes, Date grantDate) throws MospException {
+	@Override
+	public Date getStartDate(String personalId, int grantTimes, Date grantDate) throws MospException {
 		Date entranceDate = entranceReference.getEntranceDate(personalId);
 		if (grantTimes <= 0) {
 			// 0以下の場合
@@ -407,13 +507,8 @@ public class PaidHolidayDataSearchBean extends PlatformBean implements PaidHolid
 		return entranceDate;
 	}
 	
-	/**
-	 * 終了日を取得する。
-	 * @param startDate 開始日
-	 * @param grantTimes 有給休暇付与回数
-	 * @return 終了日
-	 */
-	protected Date getEndDate(Date startDate, int grantTimes) {
+	@Override
+	public Date getEndDate(Date startDate, int grantTimes) {
 		if (startDate == null) {
 			return null;
 		}
@@ -453,9 +548,10 @@ public class PaidHolidayDataSearchBean extends PlatformBean implements PaidHolid
 	 */
 	protected void setAttendanceRate(PaidHolidayDataGrantListDtoInterface dto, String personalId, Date grantDate,
 			Date startDate, Date endDate) throws MospException {
-		dto.setWorkDays(0);
-		dto.setTotalWorkDays(0);
+		dto.setWorkDays(null);
+		dto.setTotalWorkDays(null);
 		dto.setAttendanceRate(null);
+		dto.setError("");
 		if (startDate == null) {
 			return;
 		}
@@ -477,17 +573,17 @@ public class PaidHolidayDataSearchBean extends PlatformBean implements PaidHolid
 					continue;
 				}
 				Date date = new Date(i);
-				ApplicationDtoInterface applicationDto = applicationReference.findForPerson(personalId, date);
-				if (applicationDto == null) {
+				if (!hasApplicationSettings(personalId, date)) {
 					continue;
 				}
+				
 				ScheduleDtoInterface scheduleDto = scheduleReference.getScheduleInfo(applicationDto.getScheduleCode(),
 						date);
 				if (scheduleDto == null) {
 					continue;
 				}
-				ScheduleDateDtoInterface scheduleDateDto = scheduleDateReference.getScheduleDateInfo(
-						scheduleDto.getScheduleCode(), scheduleDto.getActivateDate(), date);
+				ScheduleDateDtoInterface scheduleDateDto = scheduleDateReference
+					.getScheduleDateInfo(scheduleDto.getScheduleCode(), date);
 				if (scheduleDateDto == null) {
 					continue;
 				}
@@ -500,8 +596,10 @@ public class PaidHolidayDataSearchBean extends PlatformBean implements PaidHolid
 				totalWorkDays++;
 			}
 		}
+		// 勤怠トランザクションの和を取得
 		AttendanceTransactionDtoInterface attendanceTransactionDto = attendanceTransactionReference.sum(personalId,
 				firstDate, lastDate);
+		// 勤怠トランザクションの和がある場合
 		if (attendanceTransactionDto != null) {
 			attendanceDays += attendanceTransactionDto.getNumerator();
 			totalWorkDays += attendanceTransactionDto.getDenominator();

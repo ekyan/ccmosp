@@ -118,4 +118,13 @@ public interface TimeApprovalBeanInterface {
 	void reDraft(String personalId, Date workDate, boolean deleteRest, boolean useWorkTypeChangeRequest,
 			boolean useSchedule) throws MospException;
 	
+	/**
+	 * @param personalId 個人ID
+	 * @param workDate 勤務日
+	 * @param requestDto 申請DTO
+	 * @throws MospException インスタンスの取得及びSQL実行に失敗した場合
+	 */
+	void registAttendanceTransaction(String personalId, Date workDate, BaseDtoInterface requestDto)
+			throws MospException;
+	
 }

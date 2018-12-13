@@ -72,10 +72,12 @@ public interface WorkflowRegistBeanInterface {
 	 * 承認解除申請を行う。<br>
 	 * @param dto 対象DTO
 	 * @param workflowComment ワークフローコメント
+	 * @param ckbWithdrawn 取下げ希望チェックボックス
 	 * @return ワークフロー情報
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
-	WorkflowDtoInterface cancelAppli(WorkflowDtoInterface dto, String workflowComment) throws MospException;
+	WorkflowDtoInterface cancelAppli(WorkflowDtoInterface dto, String workflowComment, String ckbWithdrawn)
+			throws MospException;
 	
 	/**
 	 * 承認を行う。<br>
@@ -129,12 +131,27 @@ public interface WorkflowRegistBeanInterface {
 	WorkflowDtoInterface cancelApprove(WorkflowDtoInterface dto, String workflowComment) throws MospException;
 	
 	/**
+	 * 解除承認(取下希望)を行う。
+	 * @param dto 対象DTO
+	 * @param workflowComment ワークフローコメント
+	 * @return ワークフロー情報
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 */
+	WorkflowDtoInterface cancelWithdrawnApprove(WorkflowDtoInterface dto, String workflowComment) throws MospException;
+	
+	/**
 	 * 承認者個人IDを設定する。<br>
 	 * @param dto 対象DTO
 	 * @param aryApproverId 承認者個人ID配列
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
 	void setDtoApproverIds(WorkflowDtoInterface dto, String[] aryApproverId) throws MospException;
+	
+	/**
+	 * 自己承認を設定する。<br>
+	 * @param dto 対象DTO
+	 */
+	void setSelfApproval(WorkflowDtoInterface dto);
 	
 	/**
 	 * 削除を行う。<br>
@@ -144,15 +161,25 @@ public interface WorkflowRegistBeanInterface {
 	void delete(WorkflowDtoInterface dto) throws MospException;
 	
 	/**
-	 * 一括承認を行う。<br>
-	 * @param aryId           レコード識別ID一覧
-	 * @param aryPersonalId   申請者個人ID一覧
-	 * @param aryRequestDate  申請対象日一覧
-	 * @param workflowType    フロー区分
-	 * @param workflowComment ワークフローコメント
+	 * 削除を行う。<br>
+	 * <br>
+	 * 対象ワークフロー番号のワークフロー情報
+	 * 及びワークフローコメント情報を、削除する。<br>
+	 * <br>
+	 * @param workflow ワークフロー番号
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
-	void approval(long[] aryId, String[] aryPersonalId, Date[] aryRequestDate, int workflowType, String workflowComment)
+	void delete(long workflow) throws MospException;
+	
+	/**
+	 * 承認解除申請を行う。<br>
+	 * @param dto 対象DTO
+	 * @param workflowComment ワークフローコメント
+	 * @param ckbWithdrawn 取下げ希望チェックボックス
+	 * @return ワークフロー情報
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 */
+	WorkflowDtoInterface cancelAttendanceAppli(WorkflowDtoInterface dto, String workflowComment, String ckbWithdrawn)
 			throws MospException;
 	
 }

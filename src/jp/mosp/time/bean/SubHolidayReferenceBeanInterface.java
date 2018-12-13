@@ -32,37 +32,45 @@ public interface SubHolidayReferenceBeanInterface {
 	/**
 	 * プルダウン用配列取得。
 	 * <p>
-	 * 個人IDと開始年月日と終了年月日からプルダウン用配列を取得。
+	 * 個人ID、対象日、休暇範囲から申請可能な代休プルダウン用配列を取得。
 	 * </p>
 	 * @param personalId 個人ID
-	 * @param targetDate 対象年月日
-	 * @param holidayRange 休暇範囲
+	 * @param targetDate 対象日（代休申請予定日）
+	 * @param holidayRange 休暇範囲（代休申請予定休暇範囲）
 	 * @param dto 代休申請DTO
-	 * @return プルダウン用配列
+	 * @return 申請可能代休プルダウン用配列（例：【法定】2017/1/1【全休】）
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
-	String[][] getSelectArray(String personalId, Date targetDate, String holidayRange, SubHolidayRequestDtoInterface dto)
+	String[][] getSelectArray(String personalId, Date targetDate, String holidayRange,
+			SubHolidayRequestDtoInterface dto) throws MospException;
+	
+	/**
+	 * 対象期間で有効な残代休データリストを取得する。<br>
+	 * 開始日時点の勤怠設定データから取得期限を取得し、
+	 * （開始日-取得期限）～終了日までの期間内で代休データを取得する。<br>
+	 * 申請済代休申請を除外した残代休データを取得する。<br>
+	 * @param personalId 個人ID
+	 * @param startDate 対象期間開始日
+	 * @param endDate 対象期間終了日
+	 * @param subHolidayDays 代休日数
+	 * @return 対象期間で有効な代休データリスト
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	List<SubHolidayDtoInterface> getfindForList(String personalId, Date startDate, Date endDate, double subHolidayDays)
 			throws MospException;
 	
 	/**
-	 * 代休データリストを取得する。<br>
+	 * 有効な代休データリストを取得する。<br>
+	 * 対象休日出勤日の勤怠が承認済か確認する。<br>
 	 * @param personalId 個人ID
 	 * @param startDate 開始日
 	 * @param endDate 終了日
+	 * @param subHolidayDays 代休日数
 	 * @return 代休データリスト
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
-	List<SubHolidayDtoInterface> getSubHolidayList(String personalId, Date startDate, Date endDate)
-			throws MospException;
-	
-	/**
-	 * 代休データリストを取得する。<br>
-	 * @param personalId 個人ID
-	 * @param targetDate 対象日
-	 * @return 代休データリスト
-	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
-	 */
-	List<SubHolidayDtoInterface> getSubHolidayList(String personalId, Date targetDate) throws MospException;
+	List<SubHolidayDtoInterface> getSubHolidayList(String personalId, Date startDate, Date endDate,
+			double subHolidayDays) throws MospException;
 	
 	/**
 	 * 申請可能日数を取得する。<br>

@@ -48,8 +48,7 @@ ViewProperty viewProperty = viewConfig.getView(view);
 //人事汎用表示テーブル配列取得
 String[] viewTables = viewProperty.getViewTableKeys();
 %>
-<jsp:include page="<%= PlatformHumanConst.PATH_HUMAN_COMMON_INFO_JSP %>" flush="false" />
-
+<jsp:include page="<%= params.getApplicationProperty(PlatformHumanConst.APP_HUMAN_COMMON_INFO_JSP) %>" flush="false" />
 <div class="List" id="divNormalCard">
 <%
 // 表示テーブル毎に処理

@@ -18,11 +18,12 @@
 package jp.mosp.time.dto.settings;
 
 import jp.mosp.platform.base.PlatformDtoInterface;
+import jp.mosp.platform.dto.base.ApplicationMasterDtoInterface;
 
 /**
  * 設定適用マスタDTOインターフェース。
  */
-public interface ApplicationDtoInterface extends PlatformDtoInterface {
+public interface ApplicationDtoInterface extends PlatformDtoInterface, ApplicationMasterDtoInterface {
 	
 	/**
 	 * @return レコード識別ID。
@@ -35,11 +36,6 @@ public interface ApplicationDtoInterface extends PlatformDtoInterface {
 	String getApplicationCode();
 	
 	/**
-	 * @return 設定適用区分
-	 */
-	int getApplicationType();
-	
-	/**
 	 * @return 設定適用名称。
 	 */
 	String getApplicationName();
@@ -48,6 +44,11 @@ public interface ApplicationDtoInterface extends PlatformDtoInterface {
 	 * @return 設定適用略称。
 	 */
 	String getApplicationAbbr();
+	
+	/**
+	 * @return 設定適用区分
+	 */
+	int getApplicationType();
 	
 	/**
 	 * @return 勤怠設定コード。
@@ -65,31 +66,6 @@ public interface ApplicationDtoInterface extends PlatformDtoInterface {
 	String getPaidHolidayCode();
 	
 	/**
-	 * @return 勤務地コード。
-	 */
-	String getWorkPlaceCode();
-	
-	/**
-	 * @return 雇用契約コード。
-	 */
-	String getEmploymentContractCode();
-	
-	/**
-	 * @return 所属コード。
-	 */
-	String getSectionCode();
-	
-	/**
-	 * @return 職位コード。
-	 */
-	String getPositionCode();
-	
-	/**
-	 * @return 個人ID
-	 */
-	String getPersonalId();
-	
-	/**
 	 * @param tmmApplicationId セットする レコード識別ID。
 	 */
 	void setTmmApplicationId(long tmmApplicationId);
@@ -100,11 +76,6 @@ public interface ApplicationDtoInterface extends PlatformDtoInterface {
 	void setApplicationCode(String applicationCode);
 	
 	/**
-	 * @param applicationType セットする 設定適用区分
-	 */
-	void setApplicationType(int applicationType);
-	
-	/**
 	 * @param applicationName セットする 設定適用名称。
 	 */
 	void setApplicationName(String applicationName);
@@ -113,6 +84,11 @@ public interface ApplicationDtoInterface extends PlatformDtoInterface {
 	 * @param applicationAbbr セットする 設定適用略称。
 	 */
 	void setApplicationAbbr(String applicationAbbr);
+	
+	/**
+	 * @param applicationType セットする 設定適用区分
+	 */
+	void setApplicationType(int applicationType);
 	
 	/**
 	 * @param workSettingCode セットする 勤怠設定コード。
@@ -128,30 +104,5 @@ public interface ApplicationDtoInterface extends PlatformDtoInterface {
 	 * @param paidHolidayCode セットする 有休コード。
 	 */
 	void setPaidHolidayCode(String paidHolidayCode);
-	
-	/**
-	 * @param workPlaceCode セットする 勤務地コード。
-	 */
-	void setWorkPlaceCode(String workPlaceCode);
-	
-	/**
-	 * @param employmentContractCode セットする 雇用契約コード。
-	 */
-	void setEmploymentContractCode(String employmentContractCode);
-	
-	/**
-	 * @param sectionCode セットする 所属コード。
-	 */
-	void setSectionCode(String sectionCode);
-	
-	/**
-	 * @param positionCode セットする 職位コード。
-	 */
-	void setPositionCode(String positionCode);
-	
-	/**
-	 * @param personalIds セットする 個人ID
-	 */
-	void setPersonalId(String personalIds);
 	
 }

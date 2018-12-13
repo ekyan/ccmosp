@@ -43,6 +43,17 @@ public interface GeneralDaoInterface extends BaseDaoInterface {
 	GeneralDtoInterface findForKey(String generalType, String generalCode, Date generalDate) throws MospException;
 	
 	/**
+	 * 汎用情報を取得する。<br>
+	 * 汎用区分、汎用コード及び汎用日付で情報を取得する<br>
+	 * @param generalType 汎用区分
+	 * @param generalCode 汎用コード
+	 * @param generalDate 汎用日付
+	 * @return 汎用情報
+	 * @throws MospException SQL例外が発生した場合
+	 */
+	GeneralDtoInterface findForInfo(String generalType, String generalCode, Date generalDate) throws MospException;
+	
+	/**
 	 * 汎用区分、汎用コードを指定し、<br>
 	 * 対象期間に対象日付が含まれる情報を取得する。<br>
 	 * @param generalType 汎用区分

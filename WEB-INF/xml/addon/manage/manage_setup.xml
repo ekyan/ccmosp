@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE MosP>
+<MosP>
+	
+	<!-- 経営管理SQLファイルディレクトリ -->
+	<Application key="SetUpDatabase">
+		<Value>addon/manage</Value>
+		<AddValue>true</AddValue>
+	</Application>
+	
+</MosP>

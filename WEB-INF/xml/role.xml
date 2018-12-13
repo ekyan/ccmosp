@@ -22,6 +22,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		<RoleName>一般従業員</RoleName>
 		<RoleExtra>default</RoleExtra>
 		<ViewIndex>10</ViewIndex>
+		<Menu key="Top">
+			<Index>100</Index>
+		</Menu>
 		<Menu key="PasswordChange">
 			<Index>9000</Index>
 		</Menu>
@@ -30,6 +33,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		<RoleName>勤怠管理者</RoleName>
 		<RoleExtra>approver</RoleExtra>
 		<ViewIndex>20</ViewIndex>
+		<Menu key="Top">
+			<Index>100</Index>
+		</Menu>
 		<Menu key="PasswordChange">
 			<Index>9000</Index>
 		</Menu>
@@ -38,6 +44,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		<RoleName>計算管理者</RoleName>
 		<RoleExtra>approver,calculator</RoleExtra>
 		<ViewIndex>30</ViewIndex>
+		<Menu key="Top">
+			<Index>100</Index>
+		</Menu>
 		<Menu key="MessageList">
 			<Index>8000</Index>
 		</Menu>
@@ -49,6 +58,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		<RoleName>人事管理者</RoleName>
 		<RoleExtra>approver</RoleExtra>
 		<ViewIndex>40</ViewIndex>
+		<Menu key="Top">
+			<Index>100</Index>
+		</Menu>
 		<Menu key="HumanList">
 			<Index>110</Index>
 			<Range key="1">
@@ -108,6 +120,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		<RoleName>人事計算管理者</RoleName>
 		<RoleExtra>approver,calculator</RoleExtra>
 		<ViewIndex>50</ViewIndex>
+		<Menu key="Top">
+			<Index>100</Index>
+		</Menu>
 		<Menu key="HumanList">
 			<Index>110</Index>
 			<Range key="1">
@@ -170,6 +185,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		<RoleName>スーパーユーザ</RoleName>
 		<RoleExtra>needed,super,approver,calculator</RoleExtra>
 		<ViewIndex>90</ViewIndex>
+		<Menu key="Top">
+			<Index>100</Index>
+		</Menu>
 		<Menu key="HumanList">
 			<Index>110</Index>
 			<Range key="1">
@@ -205,6 +223,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		</Menu>
 		<Menu key="AccountMaster">
 			<Index>250</Index>
+		</Menu>
+		<Menu key="SystemManagement">
+			<Index>290</Index>
 		</Menu>
 		<Menu key="UnitList">
 			<Index>310</Index>

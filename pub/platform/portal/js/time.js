@@ -15,6 +15,12 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+/**
+ * 画面背景色。
+ */
+var COLOR_TABLE_TODAY = "#ccffcc";
+
 /**
  * ポータル画面用日付曜日時刻表示
  */
@@ -43,4 +49,56 @@ function time(){
 	document.form.clock.value = watch1;
 
 	setTimeout("time()", 1000);
+}
+
+/**
+ * 勤怠一覧用当日背景色設定
+ * @param strTargetTable 設定対象テーブルオブジェクトID
+ * @return 無し
+ * @throws 実行時例外
+ */
+function setToDayTableColor(strTargetTable){
+	
+	var objTable = getObject(strTargetTable);
+	if (objTable == null) {
+		return;
+	}
+	var objTarget = null;
+	var numHeader = 0;
+	var numFooter = 0;
+	if (objTable.tHead) {
+		numHeader = objTable.tHead.rows.length;
+	}
+	if (objTable.tFoot) {
+		numFooter = objTable.tFoot.rows.length;
+	}
+
+	var trElements = getElementsByTagName(objTable, TAG_TR);
+	
+	// システム日付取得
+	var now = new Date() ;
+	
+	// システム日付(時間)初期化
+	now.setHours(0) ;
+	// システム日付(分)初期化
+	now.setMinutes(0) ;
+	// システム日付(秒)初期化
+	now.setSeconds(0) ;
+	// システム日付(ミリ秒)初期化
+	now.setMilliseconds(0) ;
+	
+	// システム日付をミリ秒単位に変換(Date → long)
+	var targetDate = now.getTime();
+	
+	var rowslength = objTable.rows.length - numFooter;
+	for (var i = numHeader; i < rowslength; i ++) {
+		var trElement = trElements.item(i);
+		var tdElements = getElementsByTagName(trElement, TAG_TD);
+		if (tdElements.length > 0 && tdElements.item(1) != null) {
+			// 日付をミリ秒単位に変換(String → long)
+			var chackDate = Date.parse( tdElements.item(1).title );
+			objTable.rows[i].bgColor = chackDate == targetDate ?  COLOR_TABLE_TODAY : objTable.rows[i].bgColor ;
+			objTable.rows[i].onmouseout = function() { this.bgColor = Date.parse(getElementsByTagName(trElements.item(this.rowIndex), TAG_TD).item(1).title) == targetDate ? COLOR_TABLE_TODAY: this.rowIndex % 2 == 0 ? COLOR_TABLE_ROW2 : COLOR_TABLE_ROW1;};
+		}
+	}
 }

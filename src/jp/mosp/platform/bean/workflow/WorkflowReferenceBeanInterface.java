@@ -19,6 +19,7 @@ package jp.mosp.platform.bean.workflow;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import jp.mosp.framework.base.MospException;
@@ -217,4 +218,14 @@ public interface WorkflowReferenceBeanInterface {
 	List<WorkflowDtoInterface> getPersonalList(String personalId, Date startDate, Date endDate,
 			Set<String> functionCodeSet) throws MospException;
 	
+	/**
+	 * 個人IDと対象日で対象機能コードのワークフロー情報群を取得する。
+	 * @param personalId 個人ID
+	 * @param workflowDate 対象日
+	 * @param functionCode 機能コード
+	 * @return ワークフロー情報群(対象機能コード)
+	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
+	 */
+	Map<Long, WorkflowDtoInterface> findForPersonAndDay(String personalId, Date workflowDate, Set<String> functionCode)
+			throws MospException;
 }

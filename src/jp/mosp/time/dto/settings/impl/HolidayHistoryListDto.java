@@ -70,12 +70,12 @@ public class HolidayHistoryListDto extends BaseDto implements HolidayHistoryList
 	
 	@Override
 	public Date getActivateDate() {
-		return activateDate;
+		return getDateClone(activateDate);
 	}
 	
 	@Override
 	public void setActivateDate(Date activateDate) {
-		this.activateDate = activateDate;
+		this.activateDate = getDateClone(activateDate);
 	}
 	
 	@Override
@@ -130,12 +130,12 @@ public class HolidayHistoryListDto extends BaseDto implements HolidayHistoryList
 	
 	@Override
 	public Date getHolidayLimit() {
-		return holidayLimit;
+		return getDateClone(holidayLimit);
 	}
 	
 	@Override
 	public void setHolidayLimit(Date holidayLimit) {
-		this.holidayLimit = holidayLimit;
+		this.holidayLimit = getDateClone(holidayLimit);
 	}
 	
 	@Override

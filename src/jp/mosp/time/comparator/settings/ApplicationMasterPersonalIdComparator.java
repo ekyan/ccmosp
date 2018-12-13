@@ -28,7 +28,7 @@ public class ApplicationMasterPersonalIdComparator implements Comparator<Applica
 	
 	@Override
 	public int compare(ApplicationDtoInterface dto1, ApplicationDtoInterface dto2) {
-		return dto1.getPersonalId().compareTo(dto2.getPersonalId());
+		return dto1.getPersonalIds().compareTo(dto2.getPersonalIds());
 	}
 	
 }

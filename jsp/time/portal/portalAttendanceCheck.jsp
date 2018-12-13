@@ -35,6 +35,11 @@ String mes = (String)params.getGeneralParam(PortalAttendanceCheckBean.PRM_ATTEND
 <script language="Javascript">
 <!--
 function onLoadExtra(){
+	// setToDayTableColor関数が存在する場合
+	if (typeof setToDayTableColor == "function") {
+		// 勤怠一覧用当日背景色設定
+		setToDayTableColor("list");
+	}
 	alert("<%=mes%>");
 }
 //-->

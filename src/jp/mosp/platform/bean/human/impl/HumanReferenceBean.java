@@ -26,11 +26,13 @@ import java.util.Map;
 import jp.mosp.framework.base.BaseDto;
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.base.MospParams;
+import jp.mosp.framework.constant.MospConst;
 import jp.mosp.platform.base.PlatformBean;
 import jp.mosp.platform.bean.human.HumanReferenceBeanInterface;
 import jp.mosp.platform.bean.human.base.PlatformHumanBean;
 import jp.mosp.platform.dao.human.HumanDaoInterface;
 import jp.mosp.platform.dto.human.HumanDtoInterface;
+import jp.mosp.platform.utils.PlatformUtility;
 
 /**
  * 人事マスタ参照クラス。
@@ -40,7 +42,7 @@ public class HumanReferenceBean extends PlatformHumanBean implements HumanRefere
 	/**
 	 * 人事マスタDAO。
 	 */
-	private HumanDaoInterface	humanDao;
+	private HumanDaoInterface humanDao;
 	
 	
 	/**
@@ -186,7 +188,7 @@ public class HumanReferenceBean extends PlatformHumanBean implements HumanRefere
 		// 社員コードリスト取得
 		List<String> employeeCodeList = getEmployeeCodeList(personalIdList, targetDate);
 		// 社員コードリストを文字列に変換
-		return toSeparatedString(employeeCodeList, SEPARATOR_DATA + STR_SB_SAPCE);
+		return toSeparatedString(employeeCodeList, SEPARATOR_DATA + MospConst.STR_SB_SPACE);
 	}
 	
 	@Override
@@ -194,7 +196,7 @@ public class HumanReferenceBean extends PlatformHumanBean implements HumanRefere
 		// 氏名リスト取得
 		List<String> humanNameList = getHumanNameList(personalIdList, targetDate);
 		// 氏名リストを文字列に変換
-		return toSeparatedString(humanNameList, SEPARATOR_DATA + STR_SB_SAPCE);
+		return toSeparatedString(humanNameList, SEPARATOR_DATA + MospConst.STR_SB_SPACE);
 	}
 	
 	@Override
@@ -206,6 +208,17 @@ public class HumanReferenceBean extends PlatformHumanBean implements HumanRefere
 	@Override
 	public Map<String, String> getEmployeeCodeMap(Date activateDate, String... personalIds) throws MospException {
 		return humanDao.findForEmployeeCodeMap(activateDate, personalIds);
+	}
+	
+	@Override
+	public void addHuman(List<HumanDtoInterface> list, String personalId, Date targetDate) throws MospException {
+		// 対象個人IDの人事情報が既にリストに含まれる場合
+		if (PlatformUtility.getPersonalIdSet(list).contains(personalId)) {
+			// 処理無し
+			return;
+		}
+		// 対象個人IDの人事情報を取得し追加
+		list.add(getHumanInfo(personalId, targetDate));
 	}
 	
 }

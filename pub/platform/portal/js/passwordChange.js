@@ -15,10 +15,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-/**
- * パスワード文字種の妥当性が確認できなかった場合のメッセージコード。
- */
-var MSG_CHAR_PASSWORD_ERR = "PFW9116";
 
 /**
  * 画面読込時追加処理を行う。
@@ -31,37 +27,15 @@ function onLoadExtra(){
 }
 
 /**
- * パスワード確認を行う。
+ * 追加確認処理を行う。
  * @param aryMessage メッセージ配列
  * @param event      イベントオブジェクト
  */
-function checkPassword(aryMessage, event) {
-	// 最低文字数確認
-	if (typeof(jsMinPassword) != "undefined" && jsMinPassword != "") {
-		checkMinLength("txtNewPassword", jsMinPassword, aryMessage);
-	}
-	// 文字種確認
-	if (typeof(jsCharPassword) != "undefined" && jsCharPassword != "") {
-		checkCharPassword("txtNewPassword", jsCharPassword, aryMessage);
-	}
-	// パスワード設定
+function extraCheck(aryMessage, event) {
+	// パスワードの確認
+	checkPassword("txtNewPassword", aryMessage)
+	// パスワードを設定
 	setPassword();
-}
-
-/**
- * 文字形式確認を行う。
- * @param target     確認対象(StringあるいはObject)
- * @param reg        正規表現
- * @param aryMessage メッセージ配列
- */
-function checkCharPassword(target, reg, aryMessage) {
-	if (!checkRegexNoMsg(target, reg)) {
-		if (aryMessage.length == 0) {
-			setFocus(target);
-		}
-		setBgColor(target, COLOR_FIELD_ERROR);
-		aryMessage.push(getMessage(MSG_CHAR_PASSWORD_ERR , ""));
-	}
 }
 
 /**

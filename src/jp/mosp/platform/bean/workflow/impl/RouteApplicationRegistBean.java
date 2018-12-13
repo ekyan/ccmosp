@@ -83,7 +83,8 @@ public class RouteApplicationRegistBean extends PlatformBean implements RouteApp
 	public void initBean() throws MospException {
 		dao = (RouteApplicationDaoInterface)createDao(RouteApplicationDaoInterface.class);
 		masterCheck = (PlatformMasterCheckBeanInterface)createBean(PlatformMasterCheckBeanInterface.class);
-		routeApplicationReference = (RouteApplicationReferenceBeanInterface)createBean(RouteApplicationReferenceBeanInterface.class);
+		routeApplicationReference = (RouteApplicationReferenceBeanInterface)createBean(
+				RouteApplicationReferenceBeanInterface.class);
 	}
 	
 	@Override
@@ -250,6 +251,8 @@ public class RouteApplicationRegistBean extends PlatformBean implements RouteApp
 	private void checkAdd(RouteApplicationDtoInterface dto) throws MospException {
 		// 対象レコードの有効日が重複していないかを確認
 		checkDuplicateAdd(dao.findForKey(dto.getRouteApplicationCode(), dto.getActivateDate()));
+		// 設定の重複を確認
+		checkSettingDuplicate(dto, false);
 		// 無効フラグ確認
 		if (isDtoActivate(dto)) {
 			return;
@@ -261,9 +264,6 @@ public class RouteApplicationRegistBean extends PlatformBean implements RouteApp
 			// 無効期間は発生しない
 			return;
 		}
-		// 設定の重複を確認
-		checkSettingDuplicate(dto, false);
-		
 	}
 	
 	/**
@@ -272,14 +272,16 @@ public class RouteApplicationRegistBean extends PlatformBean implements RouteApp
 	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
 	 */
 	private void validate(RouteApplicationDtoInterface dto) throws MospException {
+		// 個人IDの重複を修正
+		revisionPersonalIds(dto);
 		// 無効の場合
 		if (dto.getInactivateFlag() == MospConst.INACTIVATE_FLAG_ON) {
 			// 確認なし
 			return;
 		}
 		// 履歴一覧取得
-		List<RouteApplicationDtoInterface> list = routeApplicationReference.getRouteApplicationHistory(dto
-			.getRouteApplicationCode());
+		List<RouteApplicationDtoInterface> list = routeApplicationReference
+			.getRouteApplicationHistory(dto.getRouteApplicationCode());
 		// 確認期間開始日取得
 		Date startDate = dto.getActivateDate();
 		Date endDate = getEffectiveLastDate(dto.getActivateDate(), list);
@@ -294,6 +296,20 @@ public class RouteApplicationRegistBean extends PlatformBean implements RouteApp
 	}
 	
 	/**
+	 * 個人IDの重複を削除する。<br>
+	 * @param dto 対象設定適用情報
+	 */
+	protected void revisionPersonalIds(RouteApplicationDtoInterface dto) {
+		// マスタ組み合わせの場合
+		if (dto.getRouteApplicationType() == Integer.parseInt(PlatformConst.APPLICATION_TYPE_MASTER)) {
+			// 処理なし
+			return;
+		}
+		// 個人ID再設定
+		dto.setPersonalIds(overlapValue(dto.getPersonalIds(), SEPARATOR_DATA));
+	}
+	
+	/**
 	 * 削除時の確認処理を行う。<br>
 	 * 削除対象ユニット情報を設定している設定適用管理情報がないかの確認を行う。<br>
 	 * @param dto 対象DTO
@@ -304,6 +320,8 @@ public class RouteApplicationRegistBean extends PlatformBean implements RouteApp
 		checkExclusive(dao, dto.getPfmRouteApplicationId());
 		// 削除時のマスタ整合性確認
 		checkMasterDelete(dto);
+		// 設定の重複を確認
+		checkSettingDuplicate(dto, true);
 		// 削除元データの無効フラグ確認
 		// 画面上の無効フラグは変更可能であるため確認しない。
 		if (isDtoActivate(dao.findForKey(dto.getPfmRouteApplicationId(), true)) == false) {
@@ -317,9 +335,6 @@ public class RouteApplicationRegistBean extends PlatformBean implements RouteApp
 			// 無効期間は発生しない
 			return;
 		}
-		// 設定の重複を確認
-		checkSettingDuplicate(dto, true);
-		
 	}
 	
 	/**
@@ -331,16 +346,16 @@ public class RouteApplicationRegistBean extends PlatformBean implements RouteApp
 	 */
 	private void checkMasterDelete(RouteApplicationDtoInterface dto) throws MospException {
 		// 一つ前の履歴取得
-		RouteApplicationDtoInterface beforeDto = routeApplicationReference.getRouteApplicationInfo(
-				dto.getRouteApplicationCode(), DateUtility.addDay(dto.getActivateDate(), -1));
+		RouteApplicationDtoInterface beforeDto = routeApplicationReference
+			.getRouteApplicationInfo(dto.getRouteApplicationCode(), DateUtility.addDay(dto.getActivateDate(), -1));
 		// 一つ前の履歴が存在しないか無効である場合
 		if (beforeDto == null || beforeDto.getInactivateFlag() == MospConst.INACTIVATE_FLAG_ON) {
 			// 確認不要
 			return;
 		}
 		// 対象コードの履歴を取得
-		List<RouteApplicationDtoInterface> list = routeApplicationReference.getRouteApplicationHistory(dto
-			.getRouteApplicationCode());
+		List<RouteApplicationDtoInterface> list = routeApplicationReference
+			.getRouteApplicationHistory(dto.getRouteApplicationCode());
 		// 情報が影響を及ぼす期間を取得
 		Date startDate = beforeDto.getActivateDate();
 		Date endDate = getEffectiveLastDate(dto.getActivateDate(), list);
@@ -386,7 +401,6 @@ public class RouteApplicationRegistBean extends PlatformBean implements RouteApp
 			// 更新元データが更新前から無効であれば無効期間は発生しない
 			return;
 		}
-		
 	}
 	
 	/**
@@ -530,8 +544,8 @@ public class RouteApplicationRegistBean extends PlatformBean implements RouteApp
 		// 社員コード取得
 		String employeeCode = human.getEmployeeCode(personalId, activateDate);
 		// メッセージ設定
-		mospParams
-			.addErrorMessage(PlatformMessageConst.MSG_APPLICATION_PERSON_DUPLICATE, employeeCode, applicationCode);
+		mospParams.addErrorMessage(PlatformMessageConst.MSG_APPLICATION_PERSON_DUPLICATE, employeeCode,
+				applicationCode);
 	}
 	
 	/**

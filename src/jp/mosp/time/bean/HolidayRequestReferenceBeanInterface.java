@@ -17,15 +17,18 @@
  */
 package jp.mosp.time.bean;
 
+import java.util.AbstractMap.SimpleEntry;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
 import jp.mosp.framework.base.MospException;
 import jp.mosp.time.dto.settings.HolidayRequestDtoInterface;
+import jp.mosp.time.entity.HolidayRequestEntityInterface;
 
 /**
- * 休暇申請参照インターフェース。
+ * 休暇申請参照処理インターフェース。<br>
  */
 public interface HolidayRequestReferenceBeanInterface {
 	
@@ -82,10 +85,6 @@ public interface HolidayRequestReferenceBeanInterface {
 	 */
 	HolidayRequestDtoInterface findForEndTimeKeyOnWorkflow(String personalId, Date requestStartDate, int holidayType1,
 			String holidayType2, int holidayRange, Date endTime) throws MospException;
-	
-	/**
-	 * 時間休申請リストを取得する。
-	 */
 	
 	/**
 	 * 休暇申請からレコードを取得する。<br>
@@ -147,6 +146,18 @@ public interface HolidayRequestReferenceBeanInterface {
 			String holidayType2, Date requestStartDate, Date requestEndDate) throws MospException;
 	
 	/**
+	 * 承認済有給休暇申請数を取得する。<br>
+	 * @param personalId 個人ID
+	 * @param acquisitionDate 取得日
+	 * @param requestStartDate 申請開始日
+	 * @param requestEndDate 申請終了日
+	 * @return 承認済有給休暇申請数
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	Map<String, Object> getApprovedPaidHolidayReqeust(String personalId, Date acquisitionDate, Date requestStartDate,
+			Date requestEndDate) throws MospException;
+	
+	/**
 	 * 個人IDと取得日から有給休暇時間承認状態別休数回数をマップで取得する。<br>
 	 * @param personalId 個人ID
 	 * @param acquisitionDate 取得日
@@ -173,11 +184,54 @@ public interface HolidayRequestReferenceBeanInterface {
 			String holidayType2, Date requestStartDate, Date requestEndDate) throws MospException;
 	
 	/**
+	 * 休暇の利用日数及び利用時間数を取得する。<br>
+	 * 取下以外の休暇申請(下書を含む)を対象とする。<br>
+	 * <br>
+	 * @param personalId       個人ID
+	 * @param firstDate        期間初日
+	 * @param lastDate         期間最終日
+	 * @param holidayType1     休暇種別1
+	 * @param holidayType2     休暇種別2
+	 * @param acquisitionDates 休暇取得日群
+	 * @return 休暇の利用日数(キー)及び利用時間数(値)
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	SimpleEntry<Double, Integer> getHolidayUses(String personalId, Date firstDate, Date lastDate, int holidayType1,
+			String holidayType2, Collection<Date> acquisitionDates) throws MospException;
+	
+	/**
+	 * 有給休暇申請理由必須設定を確認する。<br>
+	 * @return 確認結果(true:必須、false:任意)
+	 */
+	boolean isPaidHolidayReasonRequired();
+	
+	/**
 	 * 基本情報チェック。
 	 * @param personalId 個人ID
 	 * @param targetDate 対象日
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
 	void chkBasicInfo(String personalId, Date targetDate) throws MospException;
+	
+	/**
+	 * 差戻・下書・取下以外の対象有給情報で作成している休暇申請一覧を取得する。<br>
+	 * @param personalId 個人ID
+	 * @param acquisitionDate 有給休暇取得日
+	 * @return 差戻・下書・取下以外の対象有給情報で作成している休暇申請一覧
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	List<HolidayRequestDtoInterface> getUsePaidHolidayDataList(String personalId, Date acquisitionDate)
+			throws MospException;
+	
+	/**
+	 * 休暇申請エンティティを取得する。<br>
+	 * @param personalId 個人ID
+	 * @param firstDate  対象期間初日
+	 * @param lastDate   対象期間最終日
+	 * @return 休暇申請エンティティ
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	HolidayRequestEntityInterface getHolidayRequestEntity(String personalId, Date firstDate, Date lastDate)
+			throws MospException;
 	
 }

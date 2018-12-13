@@ -33,7 +33,7 @@ public interface WorkflowCommentDaoInterface extends BaseDaoInterface {
 	/**
 	 * ワークフロー番号からワークフローコメント情報群を取得する。<br>
 	 * 条件と合致する情報が存在しない場合は、空のマップを返す。<br>
-	 * @param set ワークフロー番号のセット
+	 * @param workflowSet ワークフロー番号のセット
 	 * @return ワークフローコメント情報群
 	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
 	 */

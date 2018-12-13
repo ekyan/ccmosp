@@ -52,6 +52,17 @@ public interface WorkTypeChangeRequestDaoInterface extends BaseDaoInterface {
 	
 	/**
 	 * 個人IDと対象期間から勤務形態変更承認情報リストを取得する。<br>
+	 * @param personalId 個人ID
+	 * @param firstDate  対象期間初日
+	 * @param lastDate   対象期間末日
+	 * @return 勤務形態変更申請リスト
+	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
+	 */
+	List<WorkTypeChangeRequestDtoInterface> findForTerm(String personalId, Date firstDate, Date lastDate)
+			throws MospException;
+	
+	/**
+	 * 個人IDと対象期間から勤務形態変更承認情報リストを取得する。<br>
 	 * ワークフローの状態が取下げであるものは除く。<br>
 	 * @param personalId 個人ID
 	 * @param firstDate 対象期間初日

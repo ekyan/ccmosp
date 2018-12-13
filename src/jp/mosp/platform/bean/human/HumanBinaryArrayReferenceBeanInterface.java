@@ -59,4 +59,13 @@ public interface HumanBinaryArrayReferenceBeanInterface {
 	 * @return 行ID配列
 	 */
 	String[] getArrayActiveDate(LinkedHashMap<String, Map<String, String>> rowIdArrayMapInfo);
+	
+	/**
+	 * 人事汎用一覧情報を取得
+	 * @param id レコード識別ID
+	 * @param isUpdate FORUPDATE 使用有無
+	 * @return 人事汎用一覧情報
+	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
+	 */
+	HumanBinaryArrayDtoInterface findForKey(Long id, boolean isUpdate) throws MospException;
 }

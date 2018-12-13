@@ -34,12 +34,13 @@ import jp.mosp.time.dto.settings.TotalTimeCorrectionDtoInterface;
 /**
  * 勤怠集計修正情報参照クラス。
  */
-public class TotalTimeCorrectionReferenceBean extends PlatformBean implements TotalTimeCorrectionReferenceBeanInterface {
+public class TotalTimeCorrectionReferenceBean extends PlatformBean
+		implements TotalTimeCorrectionReferenceBeanInterface {
 	
 	/**
 	 * 勤怠データ修正情報DAOクラス。<br>
 	 */
-	TotalTimeCorrectionDaoInterface	dao;
+	TotalTimeCorrectionDaoInterface dao;
 	
 	
 	/**
@@ -124,7 +125,7 @@ public class TotalTimeCorrectionReferenceBean extends PlatformBean implements To
 		return
 		// 勤務時間
 		TimeConst.CODE_TOTALTIME_ITEM_NAME_WORKTIME.equals(type)
-		// 所定勤務時間
+				// 所定勤務時間
 				|| TimeConst.CODE_TOTALTIME_ITEM_NAME_SPECIFICWORKTIME.equals(type)
 				//休憩時間
 				|| TimeConst.CODE_TOTALTIME_ITEM_NAME_RESTTIME.equals(type)
@@ -186,7 +187,7 @@ public class TotalTimeCorrectionReferenceBean extends PlatformBean implements To
 		return
 		// 出勤日数
 		TimeConst.CODE_TOTALTIME_ITEM_NAME_TIMESWORKDATE.equals(type)
-		// 出勤回数
+				// 出勤回数
 				|| TimeConst.CODE_TOTALTIME_ITEM_NAME_TIMESWORK.equals(type)
 				// 法定休日出勤日数
 				|| TimeConst.CODE_TOTALTIME_ITEM_NAME_LEGALWORKONHOLIDAY.equals(type)

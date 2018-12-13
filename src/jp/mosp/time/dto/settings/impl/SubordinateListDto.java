@@ -31,6 +31,17 @@ public class SubordinateListDto extends BaseDto implements SubordinateListDtoInt
 	 * 個人ID。
 	 */
 	private String				personalId;
+	
+	/**
+	 * 対象年。<br>
+	 */
+	private int					targetYear;
+	
+	/**
+	 * 対象月。<br>
+	 */
+	private int					targetMonth;
+	
 	/**
 	 * 社員コード。
 	 */
@@ -174,9 +185,14 @@ public class SubordinateListDto extends BaseDto implements SubordinateListDtoInt
 	private int					cutoffState;
 	
 	/**
-	 * 承認状態。
+	 * 未承認フラグ(true：未承認有、false：未承認無)。<br>
 	 */
-	private int					approvalState;
+	private boolean				isApprovableExist;
+	
+	/**
+	 * 未申請フラグ(true：勤怠未申請有、false：勤怠未申請無)。<br>
+	 */
+	private boolean				isAppliableExist;
 	
 	/**
 	 * 締状態表示クラス。
@@ -540,6 +556,26 @@ public class SubordinateListDto extends BaseDto implements SubordinateListDtoInt
 	}
 	
 	@Override
+	public int getTargetYear() {
+		return targetYear;
+	}
+	
+	@Override
+	public void setTargetYear(int targetYear) {
+		this.targetYear = targetYear;
+	}
+	
+	@Override
+	public int getTargetMonth() {
+		return targetMonth;
+	}
+	
+	@Override
+	public void setTargetMonth(int targetMonth) {
+		this.targetMonth = targetMonth;
+	}
+	
+	@Override
 	public int getCutoffState() {
 		return cutoffState;
 	}
@@ -551,13 +587,23 @@ public class SubordinateListDto extends BaseDto implements SubordinateListDtoInt
 	}
 	
 	@Override
-	public void setApprovalState(int approvalState) {
-		this.approvalState = approvalState;
+	public boolean isApprovableExist() {
+		return isApprovableExist;
 	}
 	
 	@Override
-	public int getApprovalState() {
-		return approvalState;
+	public void setApprovableExist(boolean isApprovableExist) {
+		this.isApprovableExist = isApprovableExist;
+	}
+	
+	@Override
+	public boolean isAppliableExist() {
+		return isAppliableExist;
+	}
+	
+	@Override
+	public void setAppliableExist(boolean isAppliableExist) {
+		this.isAppliableExist = isAppliableExist;
 	}
 	
 	@Override

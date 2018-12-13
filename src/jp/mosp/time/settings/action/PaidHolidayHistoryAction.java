@@ -36,9 +36,14 @@ import jp.mosp.platform.dto.human.HumanDtoInterface;
 import jp.mosp.platform.utils.MonthUtility;
 import jp.mosp.time.base.TimeAction;
 import jp.mosp.time.bean.ApplicationReferenceBeanInterface;
+import jp.mosp.time.bean.CutoffReferenceBeanInterface;
 import jp.mosp.time.bean.CutoffUtilBeanInterface;
+import jp.mosp.time.bean.PaidHolidayDataGrantBeanInterface;
+import jp.mosp.time.bean.PaidHolidayEntranceDateReferenceBeanInterface;
+import jp.mosp.time.bean.PaidHolidayFirstYearReferenceBeanInterface;
 import jp.mosp.time.bean.PaidHolidayHistorySearchBeanInterface;
 import jp.mosp.time.bean.PaidHolidayTransactionRegistBeanInterface;
+import jp.mosp.time.bean.StockHolidayDataReferenceBeanInterface;
 import jp.mosp.time.bean.TimeSettingReferenceBeanInterface;
 import jp.mosp.time.constant.TimeConst;
 import jp.mosp.time.constant.TimeMessageConst;
@@ -537,8 +542,8 @@ public class PaidHolidayHistoryAction extends TimeSettingAction {
 				return;
 			}
 			// 有給休暇マスタ情報取得
-			PaidHolidayDtoInterface paidDto = timeReference().paidHoliday().getPaidHolidayInfo(
-					appDto.getPaidHolidayCode(), activateDate);
+			PaidHolidayDtoInterface paidDto = timeReference().paidHoliday()
+				.getPaidHolidayInfo(appDto.getPaidHolidayCode(), activateDate);
 			if (paidDto == null) {
 				addNoItemErrorMessage(mospParams.getName("PaidVacation"), null);
 				return;
@@ -699,8 +704,8 @@ public class PaidHolidayHistoryAction extends TimeSettingAction {
 			return;
 		}
 		// 有給休暇データ取得
-		PaidHolidayDataDtoInterface paidHolidayDataDto = timeReference().paidHolidayData().getPaidHolidayDataInfo(
-				dto.getPersonalId(), dto.getActivateDate(), dto.getAcquisitionDate());
+		PaidHolidayDataDtoInterface paidHolidayDataDto = timeReference().paidHolidayData()
+			.getPaidHolidayDataInfo(dto.getPersonalId(), dto.getActivateDate(), dto.getAcquisitionDate());
 		// 有給休暇情報が存在しない場合は、新規登録
 		if (paidHolidayDataDto == null) {
 			time().paidHolidayDataRegist().insert(dataDto);
@@ -709,8 +714,8 @@ public class PaidHolidayHistoryAction extends TimeSettingAction {
 		// ==================================== 前年度設定 ==================================== //
 		
 		// 前年度設定
-		PaidHolidayDataDtoInterface formerDataDto = getPaidHolidayDataDto(DateUtility
-			.addYear(getEditActivateDate(), -1));
+		PaidHolidayDataDtoInterface formerDataDto = getPaidHolidayDataDto(
+				DateUtility.addYear(getEditActivateDate(), -1));
 		// 前年度設定情報が取得できない場合は、日数ゼロのときのみ登録処理を行う
 		if (formerDataDto == null) {
 			// 付与・破棄する場合
@@ -853,8 +858,8 @@ public class PaidHolidayHistoryAction extends TimeSettingAction {
 		// DTOの準備
 		PaidHolidayTransactionDtoInterface dto = null;
 		// 有給休暇トランザクションリスト取得
-		List<PaidHolidayTransactionDtoInterface> list = timeReference().paidHolidayTransaction().findForList(
-				vo.getPersonalId(), getEditActivateDate());
+		List<PaidHolidayTransactionDtoInterface> list = timeReference().paidHolidayTransaction()
+			.findForList(vo.getPersonalId(), getEditActivateDate());
 		// 有給休暇トランザクションリスト毎に処理
 		for (PaidHolidayTransactionDtoInterface paidHolidayTransactionDto : list) {
 			// 取得日が同じ場合
@@ -878,8 +883,8 @@ public class PaidHolidayHistoryAction extends TimeSettingAction {
 		if (Double.parseDouble(vo.getTxtEditFormerGivingDay()) > 0
 				|| Integer.parseInt(vo.getTxtEditFormerGivingTime()) > 0) {
 			// 前年度設定
-			PaidHolidayDataDtoInterface formerDataDto = getPaidHolidayDataDto(DateUtility.addYear(
-					getEditActivateDate(), -1));
+			PaidHolidayDataDtoInterface formerDataDto = getPaidHolidayDataDto(
+					DateUtility.addYear(getEditActivateDate(), -1));
 			if (formerDataDto == null) {
 				// 社員コード決定モード設定
 				vo.setJsModeEmployeeCode(PlatformConst.MODE_ACTIVATE_DATE_CHANGING);
@@ -927,8 +932,8 @@ public class PaidHolidayHistoryAction extends TimeSettingAction {
 				return;
 			}
 			// DTOの準備
-			StockHolidayTransactionDtoInterface dtoStock = timeReference().stockHolidayTransaction().findForKey(
-					vo.getPersonalId(), getEditActivateDate(), stockDataDto.getAcquisitionDate());
+			StockHolidayTransactionDtoInterface dtoStock = timeReference().stockHolidayTransaction()
+				.findForKey(vo.getPersonalId(), getEditActivateDate(), stockDataDto.getAcquisitionDate());
 			// DTOに値を設定
 			setDtoFieldsStock(dtoStock, stockDataDto.getAcquisitionDate());
 			// 履歴編集処理
@@ -1339,8 +1344,8 @@ public class PaidHolidayHistoryAction extends TimeSettingAction {
 		// 初期化(ストック）
 		setDefaltValuesStock();
 		// 履歴編集対象取得
-		List<PaidHolidayTransactionDtoInterface> list = timeReference().paidHolidayTransaction().findForInfoList(
-				personalId, activateDate, String.valueOf(MospConst.INACTIVATE_FLAG_OFF));
+		List<PaidHolidayTransactionDtoInterface> list = timeReference().paidHolidayTransaction()
+			.findForInfoList(personalId, activateDate, String.valueOf(MospConst.INACTIVATE_FLAG_OFF));
 		PaidHolidayTransactionDtoInterface dto = null;
 		// 検索結果がないならエラーとする
 		if (list.isEmpty()) {
@@ -1489,8 +1494,8 @@ public class PaidHolidayHistoryAction extends TimeSettingAction {
 		// 勤怠設定管理参照準備
 		TimeSettingReferenceBeanInterface timeSettingReference = timeReference().timeSetting();
 		// 勤怠設定コードと対象日から勤怠マスタを取得
-		TimeSettingDtoInterface timeSettingDto = timeSettingReference.getTimeSettingInfo(
-				applicationDto.getWorkSettingCode(), date);
+		TimeSettingDtoInterface timeSettingDto = timeSettingReference
+			.getTimeSettingInfo(applicationDto.getWorkSettingCode(), date);
 		// 勤怠マスタの存在チェック
 		timeSettingReference.chkExistTimeSetting(timeSettingDto, date);
 		if (mospParams.hasErrorMessage()) {
@@ -1531,16 +1536,16 @@ public class PaidHolidayHistoryAction extends TimeSettingAction {
 			return;
 		}
 		// 有給休暇コードと対象日から有給休暇マスタを取得
-		PaidHolidayDtoInterface paidHolidayDto = timeReference().paidHoliday().getPaidHolidayInfo(
-				applicationDto.getPaidHolidayCode(), getEditActivateDate());
+		PaidHolidayDtoInterface paidHolidayDto = timeReference().paidHoliday()
+			.getPaidHolidayInfo(applicationDto.getPaidHolidayCode(), getEditActivateDate());
 		// 有給休暇マスタの存在チェック
 		timeReference().paidHoliday().chkExistPaidHoliday(paidHolidayDto, getEditActivateDate());
 		if (mospParams.hasErrorMessage()) {
 			return;
 		}
 		// ストック休暇マスタ取得
-		StockHolidayDtoInterface stockHolidayDto = timeReference().stockHoliday().getStockHolidayInfo(
-				paidHolidayDto.getPaidHolidayCode(), paidHolidayDto.getActivateDate());
+		StockHolidayDtoInterface stockHolidayDto = timeReference().stockHoliday()
+			.getStockHolidayInfo(paidHolidayDto.getPaidHolidayCode(), paidHolidayDto.getActivateDate());
 		if (stockHolidayDto == null) {
 			addNotStockVacationGrantErrorMessage();
 			return;
@@ -1554,8 +1559,8 @@ public class PaidHolidayHistoryAction extends TimeSettingAction {
 			acquisitionDate = DateUtility.addYear(acquisitionDate, -1);
 		}
 		dto.setAcquisitionDate(acquisitionDate);
-		dto.setLimitDate(DateUtility.addDay(
-				DateUtility.addMonth(dto.getAcquisitionDate(), stockHolidayDto.getStockLimitDate()), -1));
+		dto.setLimitDate(DateUtility
+			.addDay(DateUtility.addMonth(dto.getAcquisitionDate(), stockHolidayDto.getStockLimitDate()), -1));
 	}
 	
 	/**
@@ -1568,6 +1573,7 @@ public class PaidHolidayHistoryAction extends TimeSettingAction {
 		// TODO Beanに移す
 		// VO準備
 		PaidHolidayHistoryVo vo = (PaidHolidayHistoryVo)mospParams.getVo();
+		PaidHolidayDataGrantBeanInterface paidHolidayDataGrant = time().paidHolidayDataGrant();
 		// 個人ID
 		String personalId = vo.getPersonalId();
 		// 入社日取得
@@ -1584,27 +1590,29 @@ public class PaidHolidayHistoryAction extends TimeSettingAction {
 			return null;
 		}
 		// 有給休暇マスタ取得
-		PaidHolidayDtoInterface paidHolidayDto = timeReference().paidHoliday().getPaidHolidayInfo(
-				applicationDto.getPaidHolidayCode(), getEditActivateDate());
+		PaidHolidayDtoInterface paidHolidayDto = timeReference().paidHoliday()
+			.getPaidHolidayInfo(applicationDto.getPaidHolidayCode(), getEditActivateDate());
 		timeReference().paidHoliday().chkExistPaidHoliday(paidHolidayDto, getEditActivateDate());
 		if (mospParams.hasErrorMessage()) {
 			return null;
 		}
-		
 		// 付与区分
 		int paidHolidayType = paidHolidayDto.getPaidHolidayType();
-		if (paidHolidayType == 0) {
+		if (paidHolidayType == TimeConst.CODE_PAID_HOLIDAY_TYPE_STANDARDSDAY) {
 			// 基準日
 			return getPaidHolidayDataDtoForPoint(paidHolidayDto, entranceDate, activateDate);
-		} else if (paidHolidayType == 1) {
+		} else if (paidHolidayType == TimeConst.CODE_PAID_HOLIDAY_TYPE_ENTRANCEMONTH) {
 			// 入社月
 			return getPaidHolidayDataDtoForEntranceMonth(paidHolidayDto, entranceDate, activateDate);
-		} else if (paidHolidayType == 2) {
+		} else if (paidHolidayType == TimeConst.CODE_PAID_HOLIDAY_TYPE_ENTRANCEDAY) {
 			// 入社日
 			return getPaidHolidayDataDtoForEntranceDate(paidHolidayDto, entranceDate, activateDate);
-		} else if (paidHolidayType == 3) {
+		} else if (paidHolidayType == TimeConst.CODE_PAID_HOLIDAY_TYPE_NOT) {
 			// 対象外
 			return null;
+		} else if (paidHolidayType == TimeConst.CODE_PAID_HOLIDAY_TYPE_PROPORTIONALLY) {
+			// 比例
+			return paidHolidayDataGrant.create(vo.getPersonalId(), activateDate, false);
 		}
 		return null;
 	}
@@ -1642,11 +1650,11 @@ public class PaidHolidayHistoryAction extends TimeSettingAction {
 		if (paidHolidayFirstYearDto != null) {
 			// 初年度付与マスタが存在する場合
 			// 初年度付与日取得(入社月の基準日から付与月を加算)
-			firstYearAcquisitionDate = DateUtility.addDay(
-					DateUtility.addMonth(
-							MonthUtility.getYearMonthTermFirstDate(DateUtility.getYear(entranceDate),
-									DateUtility.getMonth(entranceDate), mospParams),
-							paidHolidayFirstYearDto.getGivingMonth()), pointDay - 1);
+			firstYearAcquisitionDate = DateUtility
+				.addDay(DateUtility.addMonth(
+						MonthUtility.getYearMonthTermFirstDate(DateUtility.getYear(entranceDate),
+								DateUtility.getMonth(entranceDate), mospParams),
+						paidHolidayFirstYearDto.getGivingMonth()), pointDay - 1);
 			if (paidHolidayFirstYearDto.getGivingAmount() > 0) {
 				// 初年度付与マスタの付与日数が0より大きい場合
 				Date acquisitionDate = firstYearAcquisitionDate;
@@ -1723,8 +1731,8 @@ public class PaidHolidayHistoryAction extends TimeSettingAction {
 		if (applicationDto == null) {
 			return null;
 		}
-		TimeSettingDtoInterface timeSettingDto = timeReference().timeSetting().getTimeSettingInfo(
-				applicationDto.getWorkSettingCode(), getEditActivateDate());
+		TimeSettingDtoInterface timeSettingDto = timeReference().timeSetting()
+			.getTimeSettingInfo(applicationDto.getWorkSettingCode(), getEditActivateDate());
 		if (timeSettingDto == null) {
 			return null;
 		}
@@ -1739,16 +1747,16 @@ public class PaidHolidayHistoryAction extends TimeSettingAction {
 		dto.setPersonalId(vo.getPersonalId());
 		dto.setTemporaryFlag(1);
 		
-		Date pointDate = DateUtility.addDay(
-				MonthUtility.getYearMonthTermLastDate(entranceYear, entranceMonth, mospParams), 1);
+		Date pointDate = DateUtility
+			.addDay(MonthUtility.getYearMonthTermLastDate(entranceYear, entranceMonth, mospParams), 1);
 		int cutoffDate = cutoffDto.getCutoffDate();
 		if (cutoffDate != 0) {
 			// 締日が末日でない場合
 			pointDate = DateUtility.addDay(DateUtility.getDate(entranceYear, entranceMonth, cutoffDate), 1);
 		}
 		
-		List<PaidHolidayEntranceDateDtoInterface> list = timeReference().paidHolidayEntranceDate().findForList(
-				paidHolidayDto.getPaidHolidayCode(), paidHolidayDto.getActivateDate());
+		List<PaidHolidayEntranceDateDtoInterface> list = timeReference().paidHolidayEntranceDate()
+			.findForList(paidHolidayDto.getPaidHolidayCode(), paidHolidayDto.getActivateDate());
 		Date nextAcquisitionDate = null;
 		// 有給休暇初年度付与情報取得
 		PaidHolidayFirstYearDtoInterface paidHolidayFirstYearDto = timeReference().paidHolidayFirstYear().findForKey(
@@ -1758,8 +1766,8 @@ public class PaidHolidayHistoryAction extends TimeSettingAction {
 			// 初年度付与マスタが存在し且つ付与日数が0より大きい場合
 			// 初年度付与日取得(入社月の締日の翌日から付与月を加算)
 			Date acquisitionDate = DateUtility.addMonth(pointDate, paidHolidayFirstYearDto.getGivingMonth());
-			Date limitDate = DateUtility.addDay(
-					DateUtility.addMonth(acquisitionDate, paidHolidayFirstYearDto.getGivingLimit()), -1);
+			Date limitDate = DateUtility
+				.addDay(DateUtility.addMonth(acquisitionDate, paidHolidayFirstYearDto.getGivingLimit()), -1);
 			Date maxDate = pointDate;
 			for (PaidHolidayEntranceDateDtoInterface paidHolidayEntranceDateDto : list) {
 				Date workDate = DateUtility.addMonth(entranceDate, paidHolidayEntranceDateDto.getWorkMonth());
@@ -1853,8 +1861,8 @@ public class PaidHolidayHistoryAction extends TimeSettingAction {
 		dto.setPersonalId(vo.getPersonalId());
 		dto.setTemporaryFlag(1);
 		
-		List<PaidHolidayEntranceDateDtoInterface> list = timeReference().paidHolidayEntranceDate().findForList(
-				paidHolidayDto.getPaidHolidayCode(), paidHolidayDto.getActivateDate());
+		List<PaidHolidayEntranceDateDtoInterface> list = timeReference().paidHolidayEntranceDate()
+			.findForList(paidHolidayDto.getPaidHolidayCode(), paidHolidayDto.getActivateDate());
 		Date nextAcquisitionDate = null;
 		// 有給休暇初年度付与情報取得
 		PaidHolidayFirstYearDtoInterface paidHolidayFirstYearDto = timeReference().paidHolidayFirstYear().findForKey(
@@ -1864,8 +1872,8 @@ public class PaidHolidayHistoryAction extends TimeSettingAction {
 			// 初年度付与マスタが存在し且つ付与日数が0より大きい場合
 			// 初年度付与日取得(入社日から付与月を加算)
 			Date acquisitionDate = DateUtility.addMonth(entranceDate, paidHolidayFirstYearDto.getGivingMonth());
-			Date limitDate = DateUtility.addDay(
-					DateUtility.addMonth(acquisitionDate, paidHolidayFirstYearDto.getGivingLimit()), -1);
+			Date limitDate = DateUtility
+				.addDay(DateUtility.addMonth(acquisitionDate, paidHolidayFirstYearDto.getGivingLimit()), -1);
 			Date maxDate = entranceDate;
 			for (PaidHolidayEntranceDateDtoInterface paidHolidayEntranceDateDto : list) {
 				Date workDate = DateUtility.addMonth(entranceDate, paidHolidayEntranceDateDto.getWorkMonth());
@@ -1970,33 +1978,36 @@ public class PaidHolidayHistoryAction extends TimeSettingAction {
 			return null;
 		}
 		// 有給休暇情報DTO取得
-		PaidHolidayDtoInterface paidHolidayDto = timeReference().paidHoliday().getPaidHolidayInfo(
-				applicationDto.getPaidHolidayCode(), getEditActivateDate());
+		PaidHolidayDtoInterface paidHolidayDto = timeReference().paidHoliday()
+			.getPaidHolidayInfo(applicationDto.getPaidHolidayCode(), getEditActivateDate());
 		timeReference().paidHoliday().chkExistPaidHoliday(paidHolidayDto, getEditActivateDate());
 		if (mospParams.hasErrorMessage()) {
 			return null;
 		}
 		// ストック休暇DTO取得
-		StockHolidayDtoInterface stockHolidayDto = timeReference().stockHoliday().getStockHolidayInfo(
-				paidHolidayDto.getPaidHolidayCode(), paidHolidayDto.getActivateDate());
+		StockHolidayDtoInterface stockHolidayDto = timeReference().stockHoliday()
+			.getStockHolidayInfo(paidHolidayDto.getPaidHolidayCode(), paidHolidayDto.getActivateDate());
 		if (stockHolidayDto == null) {
 			addNotStockVacationGrantErrorMessage();
 			return null;
 		}
 		// 付与区分取得
 		int paidHolidayType = paidHolidayDto.getPaidHolidayType();
-		if (paidHolidayType == 0) {
+		if (paidHolidayType == TimeConst.CODE_PAID_HOLIDAY_TYPE_STANDARDSDAY) {
 			// 基準日
 			return getStockHolidayDataDtoForPoint(entranceDto.getEntranceDate(), paidHolidayDto, stockHolidayDto,
 					activateDate, editAcquisitionDate);
-		} else if (paidHolidayType == 1) {
+		} else if (paidHolidayType == TimeConst.CODE_PAID_HOLIDAY_TYPE_ENTRANCEMONTH) {
 			// 入社月
 			return getStockHolidayDataDtoForEntranceMonth(entranceDto.getEntranceDate(), paidHolidayDto,
 					stockHolidayDto, activateDate, editAcquisitionDate);
-		} else if (paidHolidayType == 2) {
+		} else if (paidHolidayType == TimeConst.CODE_PAID_HOLIDAY_TYPE_ENTRANCEDAY) {
 			// 入社日
-			return getStockHolidayDataDtoForEntranceDate(entranceDto.getEntranceDate(), paidHolidayDto,
-					stockHolidayDto, activateDate, editAcquisitionDate);
+			return getStockHolidayDataDtoForEntranceDate(entranceDto.getEntranceDate(), paidHolidayDto, stockHolidayDto,
+					activateDate, editAcquisitionDate);
+		} else if (paidHolidayType == TimeConst.CODE_PAID_HOLIDAY_TYPE_PROPORTIONALLY) {
+			// 比例
+			return getStockHolidayDataDtoForProportionally(stockHolidayDto, activateDate);
 		}
 		return null;
 	}
@@ -2016,6 +2027,12 @@ public class PaidHolidayHistoryAction extends TimeSettingAction {
 			Date editAcquisitionDate) throws MospException {
 		// VO準備
 		PaidHolidayHistoryVo vo = (PaidHolidayHistoryVo)mospParams.getVo();
+		// クラス準備
+		PaidHolidayFirstYearReferenceBeanInterface firstYearRefer = timeReference().paidHolidayFirstYear();
+		StockHolidayDataReferenceBeanInterface stockHolidayDataRefer = timeReference().stockHolidayData();
+		// 有給休暇設定：有効日、コード取得
+		String paidHolidayCode = paidHolidayDto.getPaidHolidayCode();
+		Date paidHolidayActivateDate = paidHolidayDto.getActivateDate();
 		// 基準日日付取得
 		int pointDay = paidHolidayDto.getPointDateDay();
 		// 基準日作成
@@ -2026,59 +2043,71 @@ public class PaidHolidayHistoryAction extends TimeSettingAction {
 			// 基準日に1年を加算する
 			pointDate = DateUtility.addYear(pointDate, 1);
 		}
+		// 有給休暇期限日準備
 		Date paidHolidayLimitDate = null;
 		// 有給休暇初年度付与情報取得
-		PaidHolidayFirstYearDtoInterface paidHolidayFirstYearDto = timeReference().paidHolidayFirstYear().findForKey(
-				paidHolidayDto.getPaidHolidayCode(), paidHolidayDto.getActivateDate(),
-				DateUtility.getMonth(entranceDate));
+		PaidHolidayFirstYearDtoInterface paidHolidayFirstYearDto = firstYearRefer.findForKey(paidHolidayCode,
+				paidHolidayActivateDate, DateUtility.getMonth(entranceDate));
+		// 初年度付与期限日準備
 		Date firstYearAcquisitionDate = null;
+		// 初年度付与マスタが存在する場合
 		if (paidHolidayFirstYearDto != null) {
-			// 初年度付与マスタが存在する場合
 			// 初年度付与日取得(入社月の基準日から付与月を加算)
-			firstYearAcquisitionDate = DateUtility.addDay(
-					DateUtility.addMonth(
-							MonthUtility.getYearMonthTermFirstDate(DateUtility.getYear(entranceDate),
-									DateUtility.getMonth(entranceDate), mospParams),
-							paidHolidayFirstYearDto.getGivingMonth()), pointDay - 1);
+			firstYearAcquisitionDate = DateUtility
+				.addDay(DateUtility.addMonth(
+						MonthUtility.getYearMonthTermFirstDate(DateUtility.getYear(entranceDate),
+								DateUtility.getMonth(entranceDate), mospParams),
+						paidHolidayFirstYearDto.getGivingMonth()), pointDay - 1);
+			// 初年度付与マスタの付与日数が0より大きい場合
 			if (paidHolidayFirstYearDto.getGivingAmount() > 0) {
-				// 初年度付与マスタの付与日数が0より大きい場合
+				// 付与日設定
 				Date acquisitionDate = firstYearAcquisitionDate;
+				// 有給期限日を設定
 				paidHolidayLimitDate = DateUtility.addDay(
 						DateUtility.addMonth(firstYearAcquisitionDate, paidHolidayFirstYearDto.getGivingLimit()), -1);
+				// 
 				if (paidHolidayLimitDate.before(firstYearAcquisitionDate)) {
 					paidHolidayLimitDate = firstYearAcquisitionDate;
 				}
+				// 基準日が初年度付与日より後でない場合
 				if (!pointDate.after(acquisitionDate)) {
-					// 基準日が初年度付与日より後でない場合は基準日に1年を加算する
+					// 基準日に1年を加算する
 					pointDate = DateUtility.addYear(pointDate, 1);
 				}
+				// 有効日が初年度期限日より後でない場合
 				if (!activateDate.after(paidHolidayLimitDate)) {
-					// 有効日が初年度期限日より後でない場合
 					StockHolidayDataDtoInterface stockDataDto = null;
 					// 取得日(履歴編集のみ)が存在する場合
 					if (editAcquisitionDate != null) {
-						stockDataDto = timeReference().stockHolidayData().findForKey(vo.getPersonalId(),
-								getEditActivateDate(), editAcquisitionDate);
+						// ストック休暇データ取得
+						stockDataDto = stockHolidayDataRefer.findForKey(vo.getPersonalId(), getEditActivateDate(),
+								editAcquisitionDate);
 					}
 					return stockDataDto;
 				}
 			}
 		}
+		// 
 		Date paidHolidayAfterLimitDate = null;
+		// 値を返すまで処理
 		while (true) {
+			// 有休繰越取得
 			int maxCarryOverYear = paidHolidayDto.getMaxCarryOverYear();
+			// 有休繰越が有効（期限2年）の場合
 			if (maxCarryOverYear == MospConst.DELETE_FLAG_OFF) {
-				// 有休繰越が有効の場合は期限は2年
+				// 2年後の前日に設定
 				paidHolidayAfterLimitDate = DateUtility.addDay(DateUtility.addYear(pointDate, 2), -1);
 			} else if (maxCarryOverYear == MospConst.DELETE_FLAG_ON) {
-				// 有休繰越が無効の場合は期限は1年
+				// 有休繰越が無効（期限1年）の場合
+				// 1年後の前日に設定
 				paidHolidayAfterLimitDate = DateUtility.addDay(DateUtility.addYear(pointDate, 1), -1);
 			} else {
 				StockHolidayDataDtoInterface stockDataDto = null;
 				// 取得日(履歴編集のみ)が存在する場合
 				if (editAcquisitionDate != null) {
-					stockDataDto = timeReference().stockHolidayData().findForKey(vo.getPersonalId(),
-							getEditActivateDate(), editAcquisitionDate);
+					// ストック休暇データ取得
+					stockDataDto = stockHolidayDataRefer.findForKey(vo.getPersonalId(), getEditActivateDate(),
+							editAcquisitionDate);
 				}
 				return stockDataDto;
 			}
@@ -2086,19 +2115,23 @@ public class PaidHolidayHistoryAction extends TimeSettingAction {
 				StockHolidayDataDtoInterface stockDataDto = null;
 				// 取得日(履歴編集のみ)が存在する場合
 				if (editAcquisitionDate != null) {
-					stockDataDto = timeReference().stockHolidayData().findForKey(vo.getPersonalId(),
-							getEditActivateDate(), editAcquisitionDate);
+					// ストック休暇データ取得
+					stockDataDto = stockHolidayDataRefer.findForKey(vo.getPersonalId(), getEditActivateDate(),
+							editAcquisitionDate);
 				}
 				return stockDataDto;
 			}
+			// 期限日があり、有給休暇期限日より有効日が後であり、
 			if (paidHolidayLimitDate != null && activateDate.after(paidHolidayLimitDate)
 					&& !activateDate.after(paidHolidayAfterLimitDate)) {
+				// ストック休暇データ準備
 				StockHolidayDataDtoInterface dto = time().stockHolidayDataRegist().getInitDto();
+				// ストック休暇データ設定
 				dto.setPersonalId(vo.getPersonalId());
 				dto.setAcquisitionDate(DateUtility.addDay(paidHolidayLimitDate, 1));
 				dto.setActivateDate(dto.getAcquisitionDate());
-				dto.setLimitDate(DateUtility.addDay(
-						DateUtility.addMonth(dto.getAcquisitionDate(), stockHolidayDto.getStockLimitDate()), -1));
+				dto.setLimitDate(DateUtility
+					.addDay(DateUtility.addMonth(dto.getAcquisitionDate(), stockHolidayDto.getStockLimitDate()), -1));
 				return dto;
 			}
 			// 1年を加算
@@ -2125,44 +2158,53 @@ public class PaidHolidayHistoryAction extends TimeSettingAction {
 		int entranceMonth = DateUtility.getMonth(entranceDate);
 		// VO準備
 		PaidHolidayHistoryVo vo = (PaidHolidayHistoryVo)mospParams.getVo();
-		ApplicationDtoInterface applicationDto = timeReference().application().findForPerson(vo.getPersonalId(),
-				getEditActivateDate());
+		// クラス準備
+		ApplicationReferenceBeanInterface applicationRefer = timeReference().application();
+		TimeSettingReferenceBeanInterface timeSettingRefer = timeReference().timeSetting();
+		CutoffReferenceBeanInterface cutOffRefer = timeReference().cutoff();
+		PaidHolidayEntranceDateReferenceBeanInterface paidHolidayEntranceDate = timeReference()
+			.paidHolidayEntranceDate();
+		StockHolidayDataReferenceBeanInterface stockHolidayData = timeReference().stockHolidayData();
+		// 個人ID取得
+		String personalId = vo.getPersonalId();
+		// 有給休暇設定：有効日、コード取得
+		String paidHolidayCode = paidHolidayDto.getPaidHolidayCode();
+		Date paidHolidayActivateDate = paidHolidayDto.getActivateDate();
+		ApplicationDtoInterface applicationDto = applicationRefer.findForPerson(personalId, getEditActivateDate());
 		if (applicationDto == null) {
 			return null;
 		}
-		TimeSettingDtoInterface timeSettingDto = timeReference().timeSetting().getTimeSettingInfo(
-				applicationDto.getWorkSettingCode(), getEditActivateDate());
+		TimeSettingDtoInterface timeSettingDto = timeSettingRefer
+			.getTimeSettingInfo(applicationDto.getWorkSettingCode(), getEditActivateDate());
 		if (timeSettingDto == null) {
 			return null;
 		}
-		CutoffDtoInterface cutoffDto = timeReference().cutoff().getCutoffInfo(timeSettingDto.getCutoffCode(),
-				getEditActivateDate());
+		CutoffDtoInterface cutoffDto = cutOffRefer.getCutoffInfo(timeSettingDto.getCutoffCode(), getEditActivateDate());
 		if (cutoffDto == null) {
 			return null;
 		}
 		
-		Date pointDate = DateUtility.addDay(
-				MonthUtility.getYearMonthTermLastDate(entranceYear, entranceMonth, mospParams), 1);
+		Date pointDate = DateUtility
+			.addDay(MonthUtility.getYearMonthTermLastDate(entranceYear, entranceMonth, mospParams), 1);
 		int cutoffDate = cutoffDto.getCutoffDate();
 		if (cutoffDate != 0) {
 			// 締日が末日でない場合
 			pointDate = DateUtility.addDay(DateUtility.getDate(entranceYear, entranceMonth, cutoffDate), 1);
 		}
 		
-		List<PaidHolidayEntranceDateDtoInterface> list = timeReference().paidHolidayEntranceDate().findForList(
-				paidHolidayDto.getPaidHolidayCode(), paidHolidayDto.getActivateDate());
+		List<PaidHolidayEntranceDateDtoInterface> list = paidHolidayEntranceDate.findForList(paidHolidayCode,
+				paidHolidayActivateDate);
 		Date nextAcquisitionDate = null;
 		Date paidHolidayLimitDate = null;
 		// 有給休暇初年度付与情報取得
-		PaidHolidayFirstYearDtoInterface paidHolidayFirstYearDto = timeReference().paidHolidayFirstYear().findForKey(
-				paidHolidayDto.getPaidHolidayCode(), paidHolidayDto.getActivateDate(),
-				DateUtility.getMonth(entranceDate));
+		PaidHolidayFirstYearDtoInterface paidHolidayFirstYearDto = timeReference().paidHolidayFirstYear()
+			.findForKey(paidHolidayCode, paidHolidayActivateDate, DateUtility.getMonth(entranceDate));
 		if (paidHolidayFirstYearDto != null && paidHolidayFirstYearDto.getGivingAmount() > 0) {
 			// 初年度付与マスタが存在し且つ付与日数が0より大きい場合
 			// 初年度付与日取得(入社月の基準日から付与月を加算)
 			Date acquisitionDate = DateUtility.addMonth(pointDate, paidHolidayFirstYearDto.getGivingMonth());
-			paidHolidayLimitDate = DateUtility.addDay(
-					DateUtility.addMonth(acquisitionDate, paidHolidayFirstYearDto.getGivingLimit()), -1);
+			paidHolidayLimitDate = DateUtility
+				.addDay(DateUtility.addMonth(acquisitionDate, paidHolidayFirstYearDto.getGivingLimit()), -1);
 			Date maxDate = entranceDate;
 			for (PaidHolidayEntranceDateDtoInterface paidHolidayEntranceDateDto : list) {
 				Date workDate = DateUtility.addMonth(entranceDate, paidHolidayEntranceDateDto.getWorkMonth());
@@ -2188,8 +2230,7 @@ public class PaidHolidayHistoryAction extends TimeSettingAction {
 				StockHolidayDataDtoInterface stockDataDto = null;
 				// 取得日(履歴編集のみ)が存在する場合
 				if (editAcquisitionDate != null) {
-					stockDataDto = timeReference().stockHolidayData().findForKey(vo.getPersonalId(),
-							getEditActivateDate(), editAcquisitionDate);
+					stockDataDto = stockHolidayData.findForKey(personalId, getEditActivateDate(), editAcquisitionDate);
 				}
 				return stockDataDto;
 			}
@@ -2204,13 +2245,11 @@ public class PaidHolidayHistoryAction extends TimeSettingAction {
 			if (maxDate.before(workDate)) {
 				maxDate = workDate;
 			}
-			Date limitDate = null;
+			// 有休繰越が無効の場合は期限は1年
+			Date limitDate = DateUtility.addDay(DateUtility.addYear(workDate, 1), -1);
+			// 有休繰越が有効の場合は期限は2年
 			if (maxCarryOverYear == MospConst.DELETE_FLAG_OFF) {
-				// 有休繰越が有効の場合は期限は2年
 				limitDate = DateUtility.addDay(DateUtility.addYear(workDate, 2), -1);
-			} else if (maxCarryOverYear == MospConst.DELETE_FLAG_ON) {
-				// 有休繰越が無効の場合は期限は1年
-				limitDate = DateUtility.addDay(DateUtility.addYear(workDate, 1), -1);
 			}
 			if (!limitDate.after(activateDate) && (maxLimitDate == null || maxLimitDate.before(limitDate))) {
 				maxLimitDate = limitDate;
@@ -2240,11 +2279,11 @@ public class PaidHolidayHistoryAction extends TimeSettingAction {
 			}
 		}
 		StockHolidayDataDtoInterface dto = time().stockHolidayDataRegist().getInitDto();
-		dto.setPersonalId(vo.getPersonalId());
+		dto.setPersonalId(personalId);
 		dto.setAcquisitionDate(DateUtility.addDay(paidHolidayLimitDate, 1));
 		dto.setActivateDate(dto.getAcquisitionDate());
-		dto.setLimitDate(DateUtility.addDay(
-				DateUtility.addMonth(dto.getAcquisitionDate(), stockHolidayDto.getStockLimitDate()), -1));
+		dto.setLimitDate(DateUtility
+			.addDay(DateUtility.addMonth(dto.getAcquisitionDate(), stockHolidayDto.getStockLimitDate()), -1));
 		return dto;
 	}
 	
@@ -2264,8 +2303,8 @@ public class PaidHolidayHistoryAction extends TimeSettingAction {
 		// VO準備
 		PaidHolidayHistoryVo vo = (PaidHolidayHistoryVo)mospParams.getVo();
 		
-		List<PaidHolidayEntranceDateDtoInterface> list = timeReference().paidHolidayEntranceDate().findForList(
-				paidHolidayDto.getPaidHolidayCode(), paidHolidayDto.getActivateDate());
+		List<PaidHolidayEntranceDateDtoInterface> list = timeReference().paidHolidayEntranceDate()
+			.findForList(paidHolidayDto.getPaidHolidayCode(), paidHolidayDto.getActivateDate());
 		Date nextAcquisitionDate = null;
 		Date paidHolidayLimitDate = null;
 		// 有給休暇初年度付与情報取得
@@ -2276,8 +2315,8 @@ public class PaidHolidayHistoryAction extends TimeSettingAction {
 			// 初年度付与マスタが存在し且つ付与日数が0より大きい場合
 			// 初年度付与日取得(入社日から付与月を加算)
 			Date acquisitionDate = DateUtility.addMonth(entranceDate, paidHolidayFirstYearDto.getGivingMonth());
-			paidHolidayLimitDate = DateUtility.addDay(
-					DateUtility.addMonth(acquisitionDate, paidHolidayFirstYearDto.getGivingLimit()), -1);
+			paidHolidayLimitDate = DateUtility
+				.addDay(DateUtility.addMonth(acquisitionDate, paidHolidayFirstYearDto.getGivingLimit()), -1);
 			Date maxDate = entranceDate;
 			for (PaidHolidayEntranceDateDtoInterface paidHolidayEntranceDateDto : list) {
 				Date workDate = DateUtility.addMonth(entranceDate, paidHolidayEntranceDateDto.getWorkMonth());
@@ -2327,9 +2366,12 @@ public class PaidHolidayHistoryAction extends TimeSettingAction {
 				// 有休繰越が無効の場合は期限は1年
 				limitDate = DateUtility.addDay(DateUtility.addYear(workDate, 1), -1);
 			}
-			if (!limitDate.after(activateDate) && (maxLimitDate == null || maxLimitDate.before(limitDate))) {
-				maxLimitDate = limitDate;
-				maxWorkDate = workDate;
+			
+			if (limitDate != null) {
+				if (!limitDate.after(activateDate) && (maxLimitDate == null || maxLimitDate.before(limitDate))) {
+					maxLimitDate = limitDate;
+					maxWorkDate = workDate;
+				}
 			}
 		}
 		if (maxWorkDate != null) {
@@ -2344,7 +2386,8 @@ public class PaidHolidayHistoryAction extends TimeSettingAction {
 						// 有休繰越が無効の場合は期限は1年
 						nextLimitDate = DateUtility.addDay(DateUtility.addYear(nextDate, 1), -1);
 					}
-					if (!maxLimitDate.after(activateDate) && nextLimitDate.after(activateDate)) {
+					if (nextLimitDate != null && !maxLimitDate.after(activateDate)
+							&& nextLimitDate.after(activateDate)) {
 						paidHolidayLimitDate = maxLimitDate;
 						break;
 					}
@@ -2358,8 +2401,67 @@ public class PaidHolidayHistoryAction extends TimeSettingAction {
 		dto.setPersonalId(vo.getPersonalId());
 		dto.setAcquisitionDate(DateUtility.addDay(paidHolidayLimitDate, 1));
 		dto.setActivateDate(dto.getAcquisitionDate());
-		dto.setLimitDate(DateUtility.addDay(
-				DateUtility.addMonth(dto.getAcquisitionDate(), stockHolidayDto.getStockLimitDate()), -1));
+		dto.setLimitDate(DateUtility
+			.addDay(DateUtility.addMonth(dto.getAcquisitionDate(), stockHolidayDto.getStockLimitDate()), -1));
+		return dto;
+	}
+	
+	/**
+	 * 比例付与でのストック休暇情報DTOを取得する。<br>
+	 * 有効日、付与日、期限日を取得する。<br>
+	 * ストック情報がない場合、0日で設定する。<br>
+	 * 初年度の有給休暇期限が切れていない場合、nullを返す。<br>
+	 * @param stockHolidayDto ストック休暇情報DTO
+	 * @param activateDate    有効日
+	 * @return ストック休暇情報DTO
+	 * @throws MospException 例外発生時
+	 */
+	protected StockHolidayDataDtoInterface getStockHolidayDataDtoForProportionally(
+			StockHolidayDtoInterface stockHolidayDto, Date activateDate) throws MospException {
+		// VO準備
+		PaidHolidayHistoryVo vo = (PaidHolidayHistoryVo)mospParams.getVo();
+		PaidHolidayDataGrantBeanInterface paidHolidayDataGrant = time().paidHolidayDataGrant();
+		// 個人ID取得
+		String personalId = vo.getPersonalId();
+		// 有給休暇付与回数を取得
+		int grantTimes = paidHolidayDataGrant.getGrantTimes(personalId, activateDate);
+		if (grantTimes == 0) {
+			return null;
+		}
+		// 付与日取得
+		Date grantDate = paidHolidayDataGrant.getGrantDate(personalId, grantTimes);
+		if (grantDate == null) {
+			return null;
+		}
+		// 有給休暇期限日取得
+		Date paidHolidayLimitDate = paidHolidayDataGrant.getExpirationDate(personalId, grantDate, grantTimes);
+		// 有給休暇期限日より有効日が同じ又は後になるまで処理
+		while (activateDate.compareTo(paidHolidayLimitDate) <= 0) {
+			// 付与回数-1
+			grantTimes = grantTimes - 1;
+			if (grantTimes == 0) {
+				return null;
+			}
+			// 付与日再取得
+			grantDate = paidHolidayDataGrant.getGrantDate(personalId, grantTimes);
+			// 有給休暇期限日再取得
+			paidHolidayLimitDate = paidHolidayDataGrant.getExpirationDate(personalId, grantDate, grantTimes);
+		}
+		// ストック付与日取得
+		Date stockHolidayAcquisitionDate = DateUtility.addDay(paidHolidayLimitDate, 1);
+		// ストック休暇データ取得
+		StockHolidayDataDtoInterface dto = timeReference().stockHolidayData().findForKey(personalId, activateDate,
+				stockHolidayAcquisitionDate);
+		if (dto == null) {
+			// ストック休暇データ準備
+			dto = time().stockHolidayDataRegist().getInitDto();
+			// ストック休暇データ設定
+			dto.setPersonalId(vo.getPersonalId());
+			dto.setAcquisitionDate(stockHolidayAcquisitionDate);
+			dto.setActivateDate(dto.getAcquisitionDate());
+			dto.setLimitDate(DateUtility
+				.addDay(DateUtility.addMonth(dto.getAcquisitionDate(), stockHolidayDto.getStockLimitDate()), -1));
+		}
 		return dto;
 	}
 	

@@ -24,12 +24,15 @@ import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.property.MospProperties;
 import jp.mosp.framework.utils.BinaryUtility;
 import jp.mosp.framework.utils.DateUtility;
+import jp.mosp.framework.utils.RoleUtility;
 import jp.mosp.framework.utils.TopicPathUtility;
 import jp.mosp.platform.base.PlatformAction;
 import jp.mosp.platform.bean.human.HumanBinaryHistoryReferenceBeanInterface;
 import jp.mosp.platform.bean.human.HumanBinaryHistoryRegistBeanInterface;
 import jp.mosp.platform.constant.PlatformConst;
+import jp.mosp.platform.constant.PlatformMessageConst;
 import jp.mosp.platform.dto.human.HumanBinaryHistoryDtoInterface;
+import jp.mosp.platform.dto.human.HumanDtoInterface;
 import jp.mosp.platform.human.base.PlatformHumanAction;
 import jp.mosp.platform.human.constant.PlatformHumanConst;
 import jp.mosp.platform.human.utils.HumanUtility;
@@ -164,6 +167,8 @@ public class HumanBinaryHistoryCardAction extends PlatformHumanAction {
 		} else {
 			throwInvalidCommandException();
 		}
+		// 当該画面共通情報設定
+		setCardCommonInfo();
 	}
 	
 	/**
@@ -171,10 +176,27 @@ public class HumanBinaryHistoryCardAction extends PlatformHumanAction {
 	 * @throws MospException プルダウンの取得に失敗した場合
 	 */
 	protected void setActivationDate() throws MospException {
+		
 		// VO取得
 		HumanBinaryHistoryCardVo vo = (HumanBinaryHistoryCardVo)mospParams.getVo();
+		// 個人ID・有効日を取得
+		String personalId = vo.getPersonalId();
+		Date activateDate = getDate(vo.getTxtActivateYear(), vo.getTxtActivateMonth(), vo.getTxtActivateDay());
 		// 現在の有効日モードを確認
 		if (vo.getModeActivateDate().equals(PlatformConst.MODE_ACTIVATE_DATE_CHANGING)) {
+			// 人事マスタ取得
+			HumanDtoInterface humanDto = reference().human().getHumanInfo(personalId, activateDate);
+			// 人事マスタがある場合
+			if (humanDto == null) {
+				addNotHumanErrorMessage();
+				return;
+			}
+			// 有効日存在確認
+			if (!reference().humanBinaryHistory().findForActivateDate(personalId, activateDate).isEmpty()) {
+				// 対象情報が存在する場合
+				mospParams.addErrorMessage(PlatformMessageConst.MSG_HIST_ALREADY_EXISTED);
+				return;
+			}
 			// 有効日モード設定
 			vo.setModeActivateDate(PlatformConst.MODE_ACTIVATE_DATE_FIXED);
 		} else if (vo.getModeActivateDate().equals(PlatformConst.MODE_ACTIVATE_DATE_FIXED)) {
@@ -183,6 +205,7 @@ public class HumanBinaryHistoryCardAction extends PlatformHumanAction {
 		}
 		// プルダウン設定
 		setPulldown();
+		
 	}
 	
 	@Override
@@ -236,8 +259,8 @@ public class HumanBinaryHistoryCardAction extends PlatformHumanAction {
 		// 人事汎用管理区分設定
 		vo.setDivision(getTransferredType());
 		// パンくず名設定
-		TopicPathUtility.setTopicPathName(mospParams, vo.getClassName(), mospParams.getName(vo.getDivision())
-				+ mospParams.getName("Information", "Insert"));
+		TopicPathUtility.setTopicPathName(mospParams, vo.getClassName(),
+				mospParams.getName(vo.getDivision()) + mospParams.getName("Information", "Insert"));
 		// 人事管理共通情報利用設定
 		setPlatformHumanSettings(CMD_SEARCH, PlatformHumanConst.MODE_HUMAN_NO_ACTIVATE_DATE);
 		// 人事管理共通情報設定
@@ -330,8 +353,6 @@ public class HumanBinaryHistoryCardAction extends PlatformHumanAction {
 	protected void update() throws MospException {
 		// VO取得
 		HumanBinaryHistoryCardVo vo = (HumanBinaryHistoryCardVo)mospParams.getVo();
-		// 入力値チェック
-		validate();
 		if (mospParams.hasErrorMessage()) {
 			// 登録失敗メッセージ設定
 			addInsertFailedMessage();
@@ -342,8 +363,7 @@ public class HumanBinaryHistoryCardAction extends PlatformHumanAction {
 		// 有効日取得
 		Date activeDate = getDate(vo.getTxtActivateYear(), vo.getTxtActivateMonth(), vo.getTxtActivateDay());
 		// 登録情報取得
-		HumanBinaryHistoryDtoInterface oldDto = reference().humanBinaryHistory().findForKey(vo.getPersonalId(),
-				vo.getDivision(), activeDate);
+		HumanBinaryHistoryDtoInterface oldDto = reference().humanBinaryHistory().findForKey(vo.getHidRecordId(), false);
 		// DTOに設定
 		oldDto.setFileName(vo.getFileBinaryHistory());
 		oldDto.setFileRemark(vo.getTxtFileRemark());
@@ -410,6 +430,7 @@ public class HumanBinaryHistoryCardAction extends PlatformHumanAction {
 		vo.setModeActivateDate(PlatformConst.MODE_ACTIVATE_DATE_CHANGING);
 		// 編集モード設定
 		vo.setModeCardEdit(PlatformConst.MODE_CARD_EDIT_ADD);
+		
 		// プルダウン設定
 		setPulldown();
 	}
@@ -424,11 +445,13 @@ public class HumanBinaryHistoryCardAction extends PlatformHumanAction {
 		if (dto == null) {
 			// 初期値設定
 			setDefaultValues();
+			return;
 		}
 		// バイナリデータ表示
 		// VO取得
 		HumanBinaryHistoryCardVo vo = (HumanBinaryHistoryCardVo)mospParams.getVo();
 		// VOに設定
+		vo.setHidRecordId(dto.getPfaHumanBinaryHistoryId());
 		vo.setTxtActivateYear(DateUtility.getStringYear(dto.getActivateDate()));
 		vo.setTxtActivateMonth(DateUtility.getStringMonth(dto.getActivateDate()));
 		vo.setTxtActivateDay(DateUtility.getStringDay(dto.getActivateDate()));
@@ -471,9 +494,21 @@ public class HumanBinaryHistoryCardAction extends PlatformHumanAction {
 	}
 	
 	/**
-	 * 妥当性確認を行う。
+	 * 対象社員の個人基本情報がない時のエラーメッセージ。
 	 */
-	protected void validate() {
-		// TODO 妥当性確認
+	public void addNotHumanErrorMessage() {
+		String key = mospParams.getName("Personal", "Basis", "Information");
+		mospParams.addErrorMessage(PlatformMessageConst.MSG_WORKFORM_EXISTENCE, key);
 	}
+	
+	/**
+	 * 当該画面の共通情報を設定する
+	 */
+	public void setCardCommonInfo() {
+		// VO取得
+		HumanBinaryHistoryCardVo vo = (HumanBinaryHistoryCardVo)mospParams.getVo();
+		// 人事汎用管理区分参照権限設定
+		vo.setJsIsReferenceDivision(RoleUtility.getReferenceDivisionsList(mospParams).contains(getTransferredType()));
+	}
+	
 }

@@ -17,17 +17,10 @@
  */
 package jp.mosp.platform.portal.action;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import jp.mosp.framework.base.BaseVo;
 import jp.mosp.framework.base.MospException;
-import jp.mosp.framework.utils.SeUtility;
 import jp.mosp.platform.base.PlatformAction;
 import jp.mosp.platform.bean.portal.PasswordCheckBeanInterface;
-import jp.mosp.platform.bean.system.UserPasswordRegistBeanInterface;
-import jp.mosp.platform.constant.PlatformMessageConst;
-import jp.mosp.platform.dto.system.UserPasswordDtoInterface;
 import jp.mosp.platform.portal.vo.PasswordChangeVo;
 
 /**
@@ -45,30 +38,20 @@ import jp.mosp.platform.portal.vo.PasswordChangeVo;
 public class PasswordChangeAction extends PlatformAction {
 	
 	/**
-	 * MosPアプリケーション設定キー(パスワード最低文字数)。
-	 */
-	protected static final String	APP_MIN_PASSWORD	= "MinPassword";
-	
-	/**
-	 * MosPアプリケーション設定キー(パスワード文字種)。
-	 */
-	protected static final String	APP_CHAR_PASSWORD	= "CharPassword";
-	
-	/**
 	 * 自動表示コマンド。<br>
 	 * <br>
 	 * ログイン時にユーザＩＤとログインパスワードが同一のものである初回ログイン時、
 	 * またはログインパスワードの有効期限が切れていると判断された際に自動で画面遷移する。<br>
 	 * ログインしようとしたユーザの個人ＩＤを元に該当ユーザのパスワード変更画面を表示する。<br>
 	 */
-	public static final String		CMD_SHOW			= "PF9110";
+	public static final String	CMD_SHOW	= "PF9110";
 	
 	/**
 	 * 選択表示コマンド。<br>
 	 * <br>
 	 * 現在ログイン中の個人IDを基にパスワード変更画面を表示する。<br>
 	 */
-	public static final String		CMD_SELECT			= "PF9116";
+	public static final String	CMD_SELECT	= "PF9116";
 	
 	/**
 	 * 更新コマンド。<br>
@@ -80,7 +63,7 @@ public class PasswordChangeAction extends PlatformAction {
 	 * 入力内容が異なっている場合も同様にエラーメッセージにて通知。<br>
 	 * 更新コマンド実行後はメニューバー、パンくずリストを通常通り表示する。<br>
 	 */
-	public static final String		CMD_UPDATE			= "PF9118";
+	public static final String	CMD_UPDATE	= "PF9118";
 	
 	
 	@Override
@@ -117,12 +100,8 @@ public class PasswordChangeAction extends PlatformAction {
 		vo.setForced(true);
 		// メニューバー及びパンくずリスト表示設定
 		setNaviUrl();
-		// パスワード最低文字数設定
-		vo.setJsMinPassword(getMinPassword());
-		// パスワード文字種設定
-		vo.setJsCharPassword(getCharPassword());
-		// 注意書きリスト設定
-		setAttentionList();
+		// パスワード確認条件をVOに設定
+		setCheckConditions();
 	}
 	
 	/**
@@ -134,12 +113,8 @@ public class PasswordChangeAction extends PlatformAction {
 		PasswordChangeVo vo = (PasswordChangeVo)mospParams.getVo();
 		// 強制変更フラグ設定
 		vo.setForced(false);
-		// パスワード最低文字数設定
-		vo.setJsMinPassword(getMinPassword());
-		// パスワード文字種設定
-		vo.setJsCharPassword(getCharPassword());
-		// 注意書きリスト設定
-		setAttentionList();
+		// パスワード確認条件をVOに設定
+		setCheckConditions();
 	}
 	
 	/**
@@ -149,41 +124,30 @@ public class PasswordChangeAction extends PlatformAction {
 	protected void update() throws MospException {
 		// VO取得
 		PasswordChangeVo vo = (PasswordChangeVo)mospParams.getVo();
-		// パスワード暗号化
-		String newPass = SeUtility.encrypt(vo.getHdnNewPassword());
-		String oldPass = SeUtility.encrypt(vo.getHdnOldPassword());
-		String confirmPass = SeUtility.encrypt(vo.getHdnConfirmPassword());
-		// パスワード検証クラス取得
+		// ログインユーザIDを取得
+		String userId = mospParams.getUser().getUserId();
+		// パスワード確認処理を取得
 		PasswordCheckBeanInterface check = platform().passwordCheck();
+		// パスワードを暗号化
+		String newPass = check.encrypt(vo.getHdnNewPassword());
+		String oldPass = check.encrypt(vo.getHdnOldPassword());
+		String confirmPass = check.encrypt(vo.getHdnConfirmPassword());
 		// パスワード変更検証
-		check.checkPasswordChange(mospParams.getUser().getUserId(), oldPass, newPass, confirmPass);
-		if (mospParams.hasErrorMessage()) {
-			// 更新失敗メッセージ設定
-			addUpdateFailedMessage();
-			// メニューバー及びパンくずリスト表示設定
-			setNaviUrl();
-			return;
-		}
-		// 登録クラス取得
-		UserPasswordRegistBeanInterface regist = platform().userPasswordRegist();
-		// DTOの準備
-		UserPasswordDtoInterface dto = regist.getInitDto();
-		// DTOに値を設定
-		dto.setUserId(mospParams.getUser().getUserId());
-		dto.setPassword(newPass);
-		dto.setChangeDate(getSystemDate());
-		// 更新処理
-		regist.regist(dto);
-		// 更新結果確認
-		if (mospParams.hasErrorMessage()) {
-			// 更新失敗メッセージ設定
-			addUpdateFailedMessage();
-			// メニューバー及びパンくずリスト表示設定
-			setNaviUrl();
-			return;
-		}
+		check.checkPasswordChange(newPass, confirmPass);
+		check.checkPasswordChange(userId, oldPass, newPass);
 		// パスワード堅牢性確認
-		check.checkPasswordStrength(dto.getUserId());
+		check.checkPasswordStrength(userId, newPass);
+		// 処理結果確認
+		if (mospParams.hasErrorMessage()) {
+			// 更新失敗メッセージ設定
+			addUpdateFailedMessage();
+			// メニューバー及びパンくずリスト表示設定
+			setNaviUrl();
+			return;
+		}
+		// ユーザパスワード情報を更新
+		regist(userId, newPass);
+		// 更新結果確認
 		if (mospParams.hasErrorMessage()) {
 			// 更新失敗メッセージ設定
 			addUpdateFailedMessage();
@@ -203,6 +167,34 @@ public class PasswordChangeAction extends PlatformAction {
 	}
 	
 	/**
+	 * ユーザパスワード情報を更新する。<br>
+	 * @param userId   ユーザID
+	 * @param password パスワード(暗号化済)
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	protected void regist(String userId, String password) throws MospException {
+		// ユーザパスワード情報を更新
+		platform().userAccountRegist().updatePassword(userId, password);
+	}
+	
+	/**
+	 * パスワード確認条件をVOに設定する。<br>
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	protected void setCheckConditions() throws MospException {
+		// VOを準備
+		PasswordChangeVo vo = (PasswordChangeVo)mospParams.getVo();
+		// パスワード確認処理を取得
+		PasswordCheckBeanInterface check = platform().passwordCheck();
+		// パスワード最低文字数設定
+		vo.setMinPassword(check.getMinPassword());
+		// パスワード文字種設定
+		vo.setCharPassword(check.getCharPassword());
+		// 注意書きリスト設定
+		vo.setAttentionList(check.getAttentionList());
+	}
+	
+	/**
 	 * メニューバー及びパンくずリスト表示設定を行う。
 	 */
 	protected void setNaviUrl() {
@@ -213,54 +205,6 @@ public class PasswordChangeAction extends PlatformAction {
 			// メニューバー及びパンくずリスト非表示
 			mospParams.setNaviUrl(null);
 		}
-	}
-	
-	/**
-	 * 注意書きリストを設定する。<br>
-	 * @throws MospException 初期パスワード可否の取得に失敗した場合
-	 */
-	protected void setAttentionList() throws MospException {
-		// VO取得
-		PasswordChangeVo vo = (PasswordChangeVo)mospParams.getVo();
-		// 注意書きリスト準備
-		List<String> attentionList = new ArrayList<String>();
-		vo.setAttentionList(attentionList);
-		// 初期パスワード可否確認
-		if (platform().passwordCheck().isInitinalPasswordValid() == false) {
-			// 注意書き設定
-			attentionList.add(mospParams.getProperties().getMessage(PlatformMessageConst.MSG_INIT_PASSWORD_INVALID,
-					null));
-		}
-		// パスワード最低文字数取得
-		String minPassword = getMinPassword();
-		// パスワード最低文字数確認
-		if (minPassword != null && minPassword.isEmpty() == false) {
-			// 注意書き設定
-			String[] rep = { mospParams.getName("Password"), minPassword };
-			attentionList.add(mospParams.getProperties().getMessage(PlatformMessageConst.MSG_MIN_LENGTH_ERR, rep));
-		}
-		// パスワード最低文字種取得
-		String charPassword = getCharPassword();
-		if (charPassword != null && charPassword.isEmpty() == false) {
-			// 注意書き設定
-			attentionList.add(mospParams.getProperties().getMessage(PlatformMessageConst.MSG_CHAR_PASSWORD_ERR, null));
-		}
-	}
-	
-	/**
-	 * パスワード最低文字数を取得する。<br>
-	 * @return パスワード最低文字数
-	 */
-	protected String getMinPassword() {
-		return mospParams.getApplicationProperty(APP_MIN_PASSWORD);
-	}
-	
-	/**
-	 * パスワード文字種を取得する。<br>
-	 * @return パスワード文字種
-	 */
-	protected String getCharPassword() {
-		return mospParams.getApplicationProperty(APP_CHAR_PASSWORD);
 	}
 	
 }

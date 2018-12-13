@@ -18,9 +18,12 @@
 package jp.mosp.time.settings.action;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import jp.mosp.framework.base.BaseVo;
 import jp.mosp.framework.base.MospException;
@@ -43,6 +46,7 @@ import jp.mosp.time.dto.settings.WorkTypeItemDtoInterface;
 import jp.mosp.time.dto.settings.impl.TmmScheduleDateDto;
 import jp.mosp.time.settings.base.TimeSettingAction;
 import jp.mosp.time.settings.vo.ScheduleCardVo;
+import jp.mosp.time.utils.HolidayUtility;
 import jp.mosp.time.utils.TimeUtility;
 
 /**
@@ -92,26 +96,41 @@ public class ScheduleCardAction extends TimeSettingAction {
 	public static final String	CMD_SELECT_SHOW			= "TM5421";
 	
 	/**
-	 * 入力内容反映コマンド。<br>
+	 * 入力内容月反映コマンド。<br>
 	 * <br>
-	 * ラジオボタンで選択した範囲指定方法に基づき選択した勤務形態がその範囲内で適用されるよう繰り返し処理を行う。<br>
-	 * また、祝祭日の適用ボタンがクリックされた際には予め登録されている日付の勤務形態が所定休日となるよう一括で登録を行う。<br>
+	 * ラジオボタンで選択した範囲指定方法に基づき選択した勤務形態が
+	 * その範囲内で適用されるよう繰り返し処理を行う。<br>
+	 * また、祝祭日の適用ボタンがクリックされた際には
+	 * 予め登録されている日付の勤務形態が所定休日となるよう月一括で表示を行う。<br>
 	 */
 	public static final String	CMD_REFLECTION			= "TM5424";
+	
+	/**
+	 * 入力内容年度反映コマンド。<br>
+	 * <br>
+	 * ラジオボタンで選択した範囲指定方法に基づき選択した勤務形態が
+	 * その範囲内で適用されるよう繰り返し処理を行う。<br>
+	 * また、祝祭日の適用ボタンがクリックされた際には
+	 * 予め登録されている日付の勤務形態が所定休日となるよう年度一括で登録を行う。<br>
+	 */
+	public static final String	CMD_ALL_REFLECTION		= "TM5436";
 	
 	/**
 	 * 登録コマンド。<br>
 	 * <br>
 	 * 各種入力欄に入力されている情報を元に勤怠設定情報テーブルに登録する。<br>
-	 * 入力チェック時に入力必須項目が入力されていない、またはカレンダコードが登録済みのレコードのものと同一であった場合、エラーメッセージを表示する。<br>
+	 * 入力チェック時に入力必須項目が入力されていない、
+	 * またはカレンダコードが登録済みのレコードのものと同一であった場合、エラーメッセージを表示する。<br>
 	 */
 	public static final String	CMD_REGIST				= "TM5425";
 	
 	/**
 	 * 複製実行コマンド。<br>
 	 * <br>
-	 * カレンダコード入力欄に入力されている内容を確認して複製モード切替え時に表示していたレコードの内容を新たなレコードとして新規登録を行う。<br>
-	 * 入力必須項目が未入力またはカレンダコードが登録済みのレコードのものと同一であった場合、エラーメッセージにて通知し、複製処理を中断する。<br>
+	 * カレンダコード入力欄に入力されている内容を確認して複製モード切替え時に
+	 * 表示していたレコードの内容を新たなレコードとして新規登録を行う。<br>
+	 * 入力必須項目が未入力またはカレンダコードが登録済みのレコードのものと同一であった場合、
+	 * エラーメッセージにて通知し、複製処理を中断する。<br>
 	 * 複製処理完了後、画面表示はそのまま複製を行ったレコードの履歴編集モードに切り替わる。<br>
 	 */
 	public static final String	CMD_SET_COPY			= "TM5426";
@@ -127,14 +146,16 @@ public class ScheduleCardAction extends TimeSettingAction {
 	 * 表示月切替コマンド。<br>
 	 * <br>
 	 * 月毎に用意されたボタンをクリックした際に選択した月の情報を取得し、日毎の状況を一覧で表示させる。<br>
-	 * この時、勤務形態マスタよりその月に有効な勤務形態の情報を取得し勤務形態指定欄と日付表示欄の各プルダウンに入れて選択可能な状態にする。<br>
+	 * この時、勤務形態マスタよりその月に有効な勤務形態の情報を取得し
+	 * 勤務形態指定欄と日付表示欄の各プルダウンに入れて選択可能な状態にする。<br>
 	 */
 	public static final String	CMD_MONTH_SWITCH		= "TM5429";
 	
 	/**
 	 * 有効日決定コマンド。<br>
 	 * <br>
-	 * 有効日入力欄に入力した有効日を基にその年度の4月に有効な勤務形態パターンの情報をプルダウンに入れて選択可能な状態とする。<br>
+	 * 有効日入力欄に入力した有効日を基に
+	 * その年度の4月に有効な勤務形態パターンの情報をプルダウンに入れて選択可能な状態とする。<br>
 	 */
 	public static final String	CMD_SET_ACTIVATION_DATE	= "TM5470";
 	
@@ -168,8 +189,10 @@ public class ScheduleCardAction extends TimeSettingAction {
 	/**
 	 * パターン決定コマンド。<br>
 	 * <br>
-	 * 有効日を基に何年度のカレンダを作成しようとしているのかを判断し、その年度の日付・曜日情報を日付表示欄に出力する。<br>
-	 * パターン決定直後は表示すべき年度の4月の日付の出力とその年度の4月に有効な勤務形態の情報を各プルダウンに入れて選択可能な状態とする。<br>
+	 * 有効日を基に何年度のカレンダを作成しようとしているのかを判断し、
+	 * その年度の日付・曜日情報を日付表示欄に出力する。<br>
+	 * パターン決定直後は表示すべき年度の4月の日付の出力と
+	 * その年度の4月に有効な勤務形態の情報を各プルダウンに入れて選択可能な状態とする。<br>
 	 */
 	public static final String	CMD_SET_PATTERN			= "TM5478";
 	
@@ -198,9 +221,13 @@ public class ScheduleCardAction extends TimeSettingAction {
 			prepareVo();
 			editMode();
 		} else if (mospParams.getCommand().equals(CMD_REFLECTION)) {
-			// 入力内容反映
+			// 入力内容月反映
 			prepareVo();
 			reflection();
+		} else if (mospParams.getCommand().equals(CMD_ALL_REFLECTION)) {
+			// 入力内容年度反映
+			prepareVo();
+			allReflection();
 		} else if (mospParams.getCommand().equals(CMD_REGIST)) {
 			// 登録
 			prepareVo();
@@ -268,7 +295,7 @@ public class ScheduleCardAction extends TimeSettingAction {
 		Date firstDate = MonthUtility.getYearMonthTermFirstDate(year, month, mospParams);
 		Date lastDate = MonthUtility.getYearMonthTermLastDate(year, month, mospParams);
 		// 祝日マップ取得
-		Map<Date, String> holidayMap = reference().holiday().getHolidayMap(firstDate);
+		Map<Date, String> holidayMap = HolidayUtility.getHolidayMap(getInt(vo.getPltFiscalYear()), mospParams);
 		// 対象日のリストを取得
 		List<Date> dateList = TimeUtility.getDateList(firstDate, lastDate);
 		// ラジオ選択判定
@@ -411,6 +438,274 @@ public class ScheduleCardAction extends TimeSettingAction {
 	}
 	
 	/**
+	 * 入力内容を年度反映する。<br>
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	protected void allReflection() throws MospException {
+		// VO取得
+		ScheduleCardVo vo = (ScheduleCardVo)mospParams.getVo();
+		// クラス準備
+		ScheduleReferenceBeanInterface refer = timeReference().schedule();
+		ScheduleDateReferenceBeanInterface dateRefer = timeReference().scheduleDate();
+		// 登録クラス取得
+		ScheduleRegistBeanInterface regist = time().scheduleRegist();
+		// カレンダコード・有効日取得
+		String scheduleCode = vo.getTxtScheduleCode();
+		Date activateDate = getActivateYearDate();
+		// カレンダ情報取得
+		ScheduleDtoInterface scheduleDto = refer.findForKey(scheduleCode, activateDate);
+		if (scheduleDto == null) {
+			// DTOの準備
+			scheduleDto = regist.getInitDto();
+			// DTOに値を設定
+			setDtoFields(scheduleDto);
+			// 登録処理
+			if (vo.getModeCardEdit().equals(PlatformConst.MODE_CARD_EDIT_ADD)) {
+				// 履歴追加
+				regist.add(scheduleDto);
+			} else {
+				// 新規登録
+				regist.insert(scheduleDto);
+			}
+		} else {
+			// DTOに値を設定
+			scheduleDto.setPatternCode(vo.getPltPattern());
+			scheduleDto.setScheduleName(vo.getTxtScheduleName());
+			scheduleDto.setScheduleAbbr(vo.getTxtScheduleAbbr());
+			// 更新処理
+			regist.update(scheduleDto);
+		}
+		// 登録結果確認
+		if (mospParams.hasErrorMessage()) {
+			// 登録失敗メッセージ設定
+			addInsertFailedMessage();
+			return;
+		}
+		// 対象年取得
+		int targetYear = getInt(vo.getPltFiscalYear());
+		// 年度の初日、最終日取得
+		Date firstDate = MonthUtility.getFiscalYearFirstDate(targetYear, mospParams);
+		Date lastDate = MonthUtility.getFiscalYearLastDate(targetYear, mospParams);
+		// 対象日取得
+		Date targetDate = firstDate;
+		// 祝日マップ取得
+		Map<Date, String> holidayMap = HolidayUtility.getHolidayMap(targetYear, mospParams);
+		// 登録カレンダ日々リスト準備
+		List<ScheduleDateDtoInterface> workList = new ArrayList<ScheduleDateDtoInterface>();
+		// ラジオ選択判定
+		if (vo.getRadioSelect().equals(TimeConst.CODE_RADIO_WEEK)) {
+			// 曜日指定
+			if (vo.getCkbMonday().equals(MospConst.CHECKBOX_OFF) && vo.getCkbTuesday().equals(MospConst.CHECKBOX_OFF)
+					&& vo.getCkbWednesday().equals(MospConst.CHECKBOX_OFF)
+					&& vo.getCkbThursday().equals(MospConst.CHECKBOX_OFF)
+					&& vo.getCkbFriday().equals(MospConst.CHECKBOX_OFF)
+					&& vo.getCkbSatureday().equals(MospConst.CHECKBOX_OFF)
+					&& vo.getCkbSunday().equals(MospConst.CHECKBOX_OFF)
+					&& vo.getCkbNationalHoliday().equals(MospConst.CHECKBOX_OFF)) {
+				// 日付チェックが選択されていない
+				String[] aryMeassage = { mospParams.getName("DayOfTheWeek") };
+				mospParams.addMessage(TimeMessageConst.MSG_SCHEDULE_CHECK, aryMeassage);
+				return;
+			}
+			// 対象期間最終日まで処理
+			while (targetDate.after(lastDate) == false) {
+				// カレンダ日情報取得
+				ScheduleDateDtoInterface dateDto = dateRefer.findForKey(scheduleCode, targetDate);
+				if (dateDto == null) {
+					// カレンダ日情報取得、設定
+					dateDto = new TmmScheduleDateDto();
+					dateDto.setScheduleCode(vo.getTxtScheduleCode());
+					dateDto.setActivateDate(getActivateYearDate());
+					dateDto.setScheduleDate(targetDate);
+					dateDto.setWorks(TimeBean.TIMES_WORK_DEFAULT);
+					dateDto.setWorkTypeCode("");
+					// 備考取得
+					String remark = holidayMap.get(targetDate);
+					if (remark == null) {
+						remark = "";
+					}
+					// 備考設定
+					dateDto.setRemark(remark);
+					dateDto.setInactivateFlag(getInt(vo.getPltEditInactivate()));
+				}
+				// ラジオ選択判定
+				if (vo.getRadioSelect().equals(TimeConst.CODE_RADIO_WEEK)) {
+					// 曜日指定
+					if (vo.getCkbMonday().equals(MospConst.CHECKBOX_OFF)
+							&& vo.getCkbTuesday().equals(MospConst.CHECKBOX_OFF)
+							&& vo.getCkbWednesday().equals(MospConst.CHECKBOX_OFF)
+							&& vo.getCkbThursday().equals(MospConst.CHECKBOX_OFF)
+							&& vo.getCkbFriday().equals(MospConst.CHECKBOX_OFF)
+							&& vo.getCkbSatureday().equals(MospConst.CHECKBOX_OFF)
+							&& vo.getCkbSunday().equals(MospConst.CHECKBOX_OFF)
+							&& vo.getCkbNationalHoliday().equals(MospConst.CHECKBOX_OFF)) {
+						// 日付チェックが選択されていない
+						String[] aryMeassage = { mospParams.getName("DayOfTheWeek") };
+						mospParams.addMessage(TimeMessageConst.MSG_SCHEDULE_CHECK, aryMeassage);
+						return;
+					}
+					// 月曜日
+					if (!vo.getCkbMonday().equals(MospConst.CHECKBOX_OFF) && DateUtility.isMonday(targetDate)) {
+						dateDto.setWorkTypeCode(vo.getPltWorkType());
+					}
+					// 火曜日
+					if (!vo.getCkbTuesday().equals(MospConst.CHECKBOX_OFF) && DateUtility.isTuesday(targetDate)) {
+						dateDto.setWorkTypeCode(vo.getPltWorkType());
+					}
+					// 水曜日
+					if (!vo.getCkbWednesday().equals(MospConst.CHECKBOX_OFF) && DateUtility.isWednesday(targetDate)) {
+						dateDto.setWorkTypeCode(vo.getPltWorkType());
+					}
+					// 木曜日
+					if (!vo.getCkbThursday().equals(MospConst.CHECKBOX_OFF) && DateUtility.isThursday(targetDate)) {
+						dateDto.setWorkTypeCode(vo.getPltWorkType());
+					}
+					// 金曜日
+					if (!vo.getCkbFriday().equals(MospConst.CHECKBOX_OFF) && DateUtility.isFriday(targetDate)) {
+						dateDto.setWorkTypeCode(vo.getPltWorkType());
+					}
+					// 土曜日
+					if (!vo.getCkbSatureday().equals(MospConst.CHECKBOX_OFF) && DateUtility.isSaturday(targetDate)) {
+						dateDto.setWorkTypeCode(vo.getPltWorkType());
+					}
+					// 日曜日
+					if (!vo.getCkbSunday().equals(MospConst.CHECKBOX_OFF) && DateUtility.isSunday(targetDate)) {
+						dateDto.setWorkTypeCode(vo.getPltWorkType());
+					}
+					// 祝日
+					if (!vo.getCkbNationalHoliday().equals(MospConst.CHECKBOX_OFF)) {
+						// 祝日取得
+						String strHoliday = holidayMap.get(targetDate);
+						if (strHoliday != null && !strHoliday.isEmpty()) {
+							dateDto.setWorkTypeCode(vo.getPltWorkType());
+						}
+					}
+					// 対象日加算
+					targetDate = DateUtility.addDay(targetDate, 1);
+					// リスト追加
+					workList.add(dateDto);
+				}
+			}
+			
+		} else if (vo.getRadioSelect().equals(TimeConst.CODE_RADIO_PERIOD)) {
+			// 期間指定
+			// 開始日取得
+			int scheduleStartDay = getInt(vo.getPltScheduleStartDay());
+			// 終了日取得
+			int scheduleEndDay = getInt(vo.getPltScheduleEndDay());
+			// 対象期間最終日まで処理
+			while (targetDate.after(lastDate) == false) {
+				// 日取得
+				int targetDay = DateUtility.getDay(targetDate);
+				// カレンダ日情報取得
+				ScheduleDateDtoInterface dateDto = dateRefer.findForKey(scheduleCode, targetDate);
+				if (dateDto == null) {
+					// カレンダ日情報取得、設定
+					dateDto = new TmmScheduleDateDto();
+					dateDto.setScheduleCode(vo.getTxtScheduleCode());
+					dateDto.setActivateDate(getActivateYearDate());
+					dateDto.setScheduleDate(targetDate);
+					dateDto.setWorks(TimeBean.TIMES_WORK_DEFAULT);
+					dateDto.setWorkTypeCode("");
+					// 備考取得
+					String remark = holidayMap.get(targetDate);
+					if (remark == null) {
+						remark = "";
+					}
+					// 備考設定
+					dateDto.setRemark(remark);
+					dateDto.setInactivateFlag(getInt(vo.getPltEditInactivate()));
+				}
+				// 日が範囲内の場合
+				if (targetDay >= scheduleStartDay && targetDay <= scheduleEndDay) {
+					// 勤務形態設定
+					dateDto.setWorkTypeCode(vo.getPltWorkType());
+				}
+				// 対象日加算
+				targetDate = DateUtility.addDay(targetDate, 1);
+				// リスト追加
+				workList.add(dateDto);
+			}
+		} else if (vo.getRadioSelect().equals(TimeConst.CODE_RADIO_CHECK)) {
+			// チェック日付指定
+			// チェック日付配列取得
+			long[] idArray = getIdArray(vo.getCkbSelect());
+			if (idArray.length == 0) {
+				// 日付チェックが選択されていない
+				String[] aryMeassage = { mospParams.getName("Date") };
+				mospParams.addMessage(TimeMessageConst.MSG_SCHEDULE_CHECK, aryMeassage);
+				return;
+			}
+			// 日にちセット準備
+			Set<Integer> daySet = new HashSet<Integer>();
+			// 日にちセットに変換
+			for (long id : idArray) {
+				daySet.add(getInt(String.valueOf(id)));
+			}
+			// 対象期間最終日まで処理
+			while (targetDate.after(lastDate) == false) {
+				// 日取得
+				int targetDay = DateUtility.getDay(targetDate);
+				// カレンダ日情報取得
+				ScheduleDateDtoInterface dateDto = dateRefer.findForKey(scheduleCode, targetDate);
+				if (dateDto == null) {
+					
+					// カレンダ日情報取得、設定
+					dateDto = new TmmScheduleDateDto();
+					dateDto.setScheduleCode(vo.getTxtScheduleCode());
+					dateDto.setActivateDate(getActivateYearDate());
+					dateDto.setScheduleDate(targetDate);
+					dateDto.setWorks(TimeBean.TIMES_WORK_DEFAULT);
+					dateDto.setWorkTypeCode("");
+					// 備考取得
+					String remark = holidayMap.get(targetDate);
+					if (remark == null) {
+						remark = "";
+					}
+					// 備考設定
+					dateDto.setRemark(remark);
+					dateDto.setInactivateFlag(getInt(vo.getPltEditInactivate()));
+				}
+				// 日が含まれている場合
+				if (daySet.contains(targetDay)) {
+					// 勤務形態設定
+					dateDto.setWorkTypeCode(vo.getPltWorkType());
+				}
+				// 対象日加算
+				targetDate = DateUtility.addDay(targetDate, 1);
+				// リスト追加
+				workList.add(dateDto);
+			}
+		} else {
+			// ラジオが選択されていない
+			mospParams.addMessage(TimeMessageConst.MSG_RADIO_CHECK);
+			return;
+		}
+		// カレンダ日登録
+		allYearRegist(workList);
+		// 登録結果確認
+		if (mospParams.hasErrorMessage()) {
+			// 登録失敗メッセージ設定
+			addInsertFailedMessage();
+			return;
+		}
+		// 登録後の情報をVOに設定(レコード識別ID更新)
+		setVoFields(scheduleDto);
+		// カレンダ日情報リストを取得
+		List<ScheduleDateDtoInterface> list = getScheduleDateList(vo.getTxtScheduleCode(), vo.getTargetMonth());
+		// DTOの値をVO(編集項目)に設定
+		setVoFieldsDate(list);
+		for (int i = 0; i < list.size(); i++) {
+			// DTOの値をVO(編集項目)に設定
+			setVoFieldsWork(list.get(i), i);
+		}
+		// 履歴編集モード設定
+		setEditUpdateMode(scheduleDto.getScheduleCode(), scheduleDto.getActivateDate());
+		// ボタン背景色設定
+		setButtonColor(scheduleDto.getScheduleCode());
+	}
+	
+	/**
 	 * 登録処理を行う。<br>
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
@@ -436,8 +731,63 @@ public class ScheduleCardAction extends TimeSettingAction {
 	}
 	
 	/**
+	 * 年度登録の登録処理を行う。<br>
+	 * @param list カレンダ日リスト
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	protected void allYearRegist(List<ScheduleDateDtoInterface> list) throws MospException {
+		// VO取得
+		ScheduleCardVo vo = (ScheduleCardVo)mospParams.getVo();
+		// カレンダ日登録クラス準備
+		ScheduleDateRegistBeanInterface regist = time().scheduleDateRegist();
+		// 編集モード確認
+		if (vo.getModeCardEdit().equals(PlatformConst.MODE_CARD_EDIT_INSERT)) {
+			if (!vo.getJsCopyModeEdit().equals(CMD_REPLICATION_MODE)) {
+				// 新規登録
+				regist.allReflectionRegist(list);
+				// 登録結果確認
+				if (mospParams.hasErrorMessage()) {
+					// 登録失敗メッセージ設定
+					addInsertFailedMessage();
+					return;
+				}
+				// コミット
+				commit();
+				// 登録成功メッセージ設定
+				addInsertNewMessage();
+			}
+		} else if (vo.getModeCardEdit().equals(PlatformConst.MODE_CARD_EDIT_ADD)) {
+			// 履歴追加
+			regist.add(list);
+			// 更新結果確認
+			if (mospParams.hasErrorMessage()) {
+				// 更新失敗メッセージ設定
+				addUpdateFailedMessage();
+				return;
+			}
+			// コミット
+			commit();
+			// 更新成功メッセージ設定
+			addInsertHistoryMessage();
+		} else if (vo.getModeCardEdit().equals(PlatformConst.MODE_CARD_EDIT_EDIT)) {
+			// 履歴更新
+			regist.allReflectionRegist(list);
+			// 更新結果確認
+			if (mospParams.hasErrorMessage()) {
+				// 更新失敗メッセージ設定
+				addUpdateFailedMessage();
+				return;
+			}
+			// コミット
+			commit();
+			// 更新成功メッセージ設定
+			addUpdateHistoryMessage();
+		}
+	}
+	
+	/**
 	 * 削除処理を行う。<br>
-	 * @throws MospException  インスタンスの取得或いはSQL実行に失敗した場合
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
 	protected void delete() throws MospException {
 		// DTOの準備
@@ -479,7 +829,10 @@ public class ScheduleCardAction extends TimeSettingAction {
 	protected void setActivationDate() throws MospException {
 		// VO取得
 		ScheduleCardVo vo = (ScheduleCardVo)mospParams.getVo();
+		ScheduleReferenceBeanInterface schedule = timeReference().schedule();
+		// 有効日決定時の場合
 		if (vo.getModeActivateDate().equals(PlatformConst.MODE_ACTIVATE_DATE_CHANGING)) {
+			// 履歴追加の場合
 			if (vo.getModeCardEdit().equals(PlatformConst.MODE_CARD_EDIT_ADD)) {
 				// 重複するデータがないかチェックする
 				ScheduleDtoInterface dto = timeReference().schedule().findForKey(vo.getTxtScheduleCode(),
@@ -498,6 +851,14 @@ public class ScheduleCardAction extends TimeSettingAction {
 		}
 		// パターンプルダウン設定
 		setPatternPulldown();
+		// カレンダマスタ取得
+		ScheduleDtoInterface scheduleDto = schedule.getScheduleInfo(vo.getTxtScheduleCode(),
+				getActivateYearDate()/*(vo.getPltFiscalYear())*/);
+		if (scheduleDto == null) {
+			return;
+		}
+		// パターンコード設定
+		vo.setPltPattern(scheduleDto.getPatternCode());
 	}
 	
 	/**
@@ -527,7 +888,7 @@ public class ScheduleCardAction extends TimeSettingAction {
 		Date firstDate = MonthUtility.getYearMonthTermFirstDate(year, month, mospParams);
 		Date lastDate = MonthUtility.getYearMonthTermLastDate(year, month, mospParams);
 		// 祝日マップ取得
-		Map<Date, String> holidayMap = reference().holiday().getHolidayMap(firstDate);
+		Map<Date, String> holidayMap = HolidayUtility.getHolidayMap(fiscalYear, mospParams);
 		setPulldown();
 		// 有効な勤務形態が存在しなければ何も処理を行わない
 		String[][] workType = vo.getAryPltWorkType();
@@ -562,8 +923,7 @@ public class ScheduleCardAction extends TimeSettingAction {
 		int i = 0;
 		// 対象日毎に処理
 		for (Date targetDate : dateList) {
-			ScheduleDateDtoInterface dto = scheduleDate.getScheduleDateInfo(vo.getTxtScheduleCode(), targetDate,
-					targetDate);
+			ScheduleDateDtoInterface dto = scheduleDate.getScheduleDateInfo(vo.getTxtScheduleCode(), targetDate);
 			aryCkbRecordId[i] = i + 1;
 			// 日付
 			aryLblMonth[i] = DateUtility.getStringMonthAndDay(targetDate);
@@ -704,6 +1064,7 @@ public class ScheduleCardAction extends TimeSettingAction {
 		ScheduleCardVo vo = (ScheduleCardVo)mospParams.getVo();
 		// 複製モード設定
 		setEditReplicationMode();
+		vo.setModePattern(PlatformConst.MODE_ACTIVATE_DATE_CHANGING);
 		vo.setJsCopyModeEdit(CMD_REPLICATION_MODE);
 		vo.setCopyFiscalYear(vo.getPltFiscalYear());
 		vo.setCopyScheduleCode(vo.getTxtScheduleCode());
@@ -766,7 +1127,7 @@ public class ScheduleCardAction extends TimeSettingAction {
 		// 履歴編集モード設定
 		setEditUpdateMode(dto.getScheduleCode(), dto.getActivateDate());
 		// ボタン背景色設定
-		setButtonColor(dto.getScheduleCode(), dto.getActivateDate());
+		setButtonColor(dto.getScheduleCode());
 	}
 	
 	/**
@@ -787,9 +1148,8 @@ public class ScheduleCardAction extends TimeSettingAction {
 		regist.add(dto);
 		// カレンダコード及び有効日を取得
 		String scheduleCode = vo.getTxtScheduleCode();
-		Date activateDate = getActivateYearDate();
 		// カレンダ日マスタ情報リスト取得
-		List<ScheduleDateDtoInterface> list = getScheduleDateList(scheduleCode, activateDate, vo.getTargetMonth());
+		List<ScheduleDateDtoInterface> list = getScheduleDateList(scheduleCode, vo.getTargetMonth());
 		// DTOに値を設定
 		List<ScheduleDateDtoInterface> workList = setDtoFieldsDate(list);
 		// 履歴追加処理
@@ -805,7 +1165,7 @@ public class ScheduleCardAction extends TimeSettingAction {
 				continue;
 			}
 			// カレンダ日マスタ情報リスト取得
-			List<ScheduleDateDtoInterface> allMonthList = getScheduleDateList(scheduleCode, activateDate, targetMonth);
+			List<ScheduleDateDtoInterface> allMonthList = getScheduleDateList(scheduleCode, targetMonth);
 			if (!allMonthList.isEmpty()) {
 				List<ScheduleDateDtoInterface> workAllMonthList = new ArrayList<ScheduleDateDtoInterface>();
 				for (int j = 0; j < allMonthList.size(); j++) {
@@ -837,7 +1197,7 @@ public class ScheduleCardAction extends TimeSettingAction {
 		// 履歴編集モード設定
 		setEditUpdateMode(dto.getScheduleCode(), dto.getActivateDate());
 		// ボタン背景色設定
-		setButtonColor(dto.getScheduleCode(), dto.getActivateDate());
+		setButtonColor(dto.getScheduleCode());
 	}
 	
 	/**
@@ -858,9 +1218,8 @@ public class ScheduleCardAction extends TimeSettingAction {
 		regist.update(dto);
 		// カレンダコード及び有効日を取得
 		String scheduleCode = vo.getTxtScheduleCode();
-		Date activateDate = getActivateYearDate();
 		// カレンダ日マスタ情報リスト取得
-		List<ScheduleDateDtoInterface> list = getScheduleDateList(scheduleCode, activateDate, vo.getTargetMonth());
+		List<ScheduleDateDtoInterface> list = getScheduleDateList(scheduleCode, vo.getTargetMonth());
 		// DTOに値を設定
 		List<ScheduleDateDtoInterface> workList = setDtoFieldsDate(list);
 		// 更新処理
@@ -875,7 +1234,7 @@ public class ScheduleCardAction extends TimeSettingAction {
 		// 12か月分データ更新
 		for (int i = 0; i < TimeConst.CODE_DEFINITION_YEAR; i++) {
 			// カレンダ日マスタ情報リスト取得
-			List<ScheduleDateDtoInterface> allMonthList = getScheduleDateList(scheduleCode, activateDate, targetMonth);
+			List<ScheduleDateDtoInterface> allMonthList = getScheduleDateList(scheduleCode, targetMonth);
 			// 情報が有る場合
 			if (!allMonthList.isEmpty()) {
 				// リスト準備
@@ -914,7 +1273,7 @@ public class ScheduleCardAction extends TimeSettingAction {
 		// 履歴編集モード設定
 		setEditUpdateMode(dto.getScheduleCode(), dto.getActivateDate());
 		// ボタン背景色設定
-		setButtonColor(dto.getScheduleCode(), dto.getActivateDate());
+		setButtonColor(dto.getScheduleCode());
 	}
 	
 	/**
@@ -933,33 +1292,37 @@ public class ScheduleCardAction extends TimeSettingAction {
 		setDtoFields(dto);
 		// 登録処理
 		regist.insert(dto);
-		List<ScheduleDateDtoInterface> listWork = new ArrayList<ScheduleDateDtoInterface>();
-		// DTOに値を設定
-		List<ScheduleDateDtoInterface> list = setDtoFieldsDate(listWork);
-		// 登録処理
-		regist2.insert(list);
 		// 対象年月(年度開始月(年度開始月の初日))を準備
 		Date targetMonth = MonthUtility.getFiscalStartMonth(getInt(vo.getPltFiscalYear()), mospParams);
 		// 表示された月以外の複製元データを全てコピーする
 		for (int i = 0; i < TimeConst.CODE_DEFINITION_YEAR; i++) {
-			// 表示された月の場合
-			if (vo.getTargetMonth().equals(targetMonth)) {
-				// 対象年月加算
-				targetMonth = DateUtility.addMonth(targetMonth, 1);
-				continue;
-			}
+			// 勤務形態プルダウン用配列取得
+			String[][] workTypeArray = getWorkTypeArray(targetMonth);
+			// 休日プルダウン用配列取得
+			String[][] dayOffArray = mospParams.getProperties().getCodeArray(TimeConst.CODE_PRESCRIBED_LEGAL_HOLIDAY,
+					true);
 			// カレンダ日マスタ情報リスト取得
-			List<ScheduleDateDtoInterface> allMonthList = getScheduleDateList(vo.getCopyScheduleCode(),
-					getActivateYearDate(), targetMonth);
+			List<ScheduleDateDtoInterface> allMonthList = getScheduleDateList(vo.getCopyScheduleCode(), targetMonth);
 			if (!allMonthList.isEmpty()) {
+				// 年度リスト準備
 				List<ScheduleDateDtoInterface> workAllMonthList = new ArrayList<ScheduleDateDtoInterface>();
+				// カレンダ日マスタ情報リスト毎に処理
 				for (int j = 0; j < allMonthList.size(); j++) {
+					// カレンダ日情報取得
 					ScheduleDateDtoInterface scheduleDto = allMonthList.get(j);
+					// 値設定
 					scheduleDto.setActivateDate(dto.getActivateDate());
 					scheduleDto.setScheduleCode(dto.getScheduleCode());
+					// 勤務形態がない場合
+					if (!contains(scheduleDto.getWorkTypeCode(), workTypeArray)
+							&& !contains(scheduleDto.getWorkTypeCode(), dayOffArray)) {
+						scheduleDto.setWorkTypeCode("");
+					}
 					scheduleDto.setInactivateFlag(getInt(vo.getPltEditInactivate()));
+					// 年度リスト追加
 					workAllMonthList.add(scheduleDto);
 				}
+				// 年度リスト登録
 				regist2.insert(workAllMonthList);
 			}
 			// 対象年月加算
@@ -977,14 +1340,18 @@ public class ScheduleCardAction extends TimeSettingAction {
 		addInsertNewMessage();
 		// 登録後の情報をVOに設定(レコード識別ID更新)
 		setVoFields(dto);
+		// カレンダ日情報リストを取得
+		List<ScheduleDateDtoInterface> list = getScheduleDateList(vo.getTxtScheduleCode(), vo.getTargetMonth());
+		// DTOの値をVO(編集項目)に設定
 		setVoFieldsDate(list);
 		for (int i = 0; i < list.size(); i++) {
+			// DTOの値をVO(編集項目)に設定
 			setVoFieldsWork(list.get(i), i);
 		}
 		// 履歴編集モード設定
 		setEditUpdateMode(dto.getScheduleCode(), dto.getActivateDate());
 		// ボタン背景色設定
-		setButtonColor(dto.getScheduleCode(), dto.getActivateDate());
+		setButtonColor(dto.getScheduleCode());
 		// コピー設定初期化
 		vo.setJsCopyModeEdit("off");
 	}
@@ -1008,7 +1375,7 @@ public class ScheduleCardAction extends TimeSettingAction {
 		// 編集モード設定
 		setEditUpdateMode(schedule.getScheduleHistory(scheduleCode));
 		// ボタン背景色設定
-		setButtonColor(scheduleCode, activateDate);
+		setButtonColor(scheduleCode);
 	}
 	
 	/**
@@ -1066,10 +1433,8 @@ public class ScheduleCardAction extends TimeSettingAction {
 		ScheduleCardVo vo = (ScheduleCardVo)mospParams.getVo();
 		// システム日付取得
 		Date date = getSystemDate();
-		// プルダウンの設定
+		// 所定休日・法定休日勤務形態配列を取得
 		String[][] aryDataType = mospParams.getProperties().getCodeArray(TimeConst.CODE_PRESCRIBED_LEGAL_HOLIDAY, true);
-		String[][] pltWorkType = null;
-		String[][] pltWorkTypeMonth = null;
 		// 年度の設定
 		vo.setAryPltFiscalYear(getYearArray(MonthUtility.getFiscalYear(date, mospParams)));
 		if (vo.getPltFiscalYear().isEmpty()) {
@@ -1092,36 +1457,20 @@ public class ScheduleCardAction extends TimeSettingAction {
 		// 年月指定時の期間の最終日を取得
 		Date yearMonthTermLastDate = MonthUtility.getYearMonthTermLastDate(year, month, mospParams);
 		// 範囲指定欄の勤務形態プルダウン作成
-		pltWorkType = getWorkTypeArray(targetMonth, true);
+		String[][] pltWorkType = getWorkTypeArray(targetMonth, true);
 		// 期間指定の日付プルダウン設定
 		vo.setAryPltScheduleDay(getDayArray(DateUtility.getDay(yearMonthTermLastDate), false));
 		// 日々の勤務形態プルダウン作成
-		pltWorkTypeMonth = getWorkTypeArray(targetMonth, false);
-		// 範囲指定欄の勤務形態プルダウン確認
-		if (pltWorkType[0][0].isEmpty() == false) {
-			// 勤務形態のデータがなければ以下の処理は行わない
-			String[][] workType = new String[pltWorkType.length + aryDataType.length][2];
-			String[][] workTypeMonth = new String[pltWorkTypeMonth.length + aryDataType.length][2];
-			// 勤務形態プルダウンに所定/法定休日を追加する
-			for (int i = 0; i < workType.length; i++) {
-				if (i < aryDataType.length) {
-					workType[i][0] = aryDataType[i][0];
-					workType[i][1] = aryDataType[i][1];
-					workTypeMonth[i][0] = aryDataType[i][0];
-					workTypeMonth[i][1] = aryDataType[i][1];
-				} else {
-					workType[i][0] = pltWorkType[i - aryDataType.length][0];
-					workType[i][1] = pltWorkType[i - aryDataType.length][1];
-					workTypeMonth[i][0] = pltWorkTypeMonth[i - aryDataType.length][0];
-					workTypeMonth[i][1] = pltWorkTypeMonth[i - aryDataType.length][1];
-				}
-			}
-			vo.setAryPltWorkType(workType);
-			vo.setAryPltWorkTypeMonth(workTypeMonth);
-		} else {
-			vo.setAryPltWorkType(pltWorkType);
-			vo.setAryPltWorkTypeMonth(pltWorkTypeMonth);
-		}
+		String[][] pltWorkTypeMonth = getWorkTypeArray(targetMonth, false);
+		// 所定休日・法定休日勤務形態配列をリストに変換
+		List<String[]> workTypeList = new ArrayList<String[]>(Arrays.asList(aryDataType));
+		List<String[]> workTypeMonthList = new ArrayList<String[]>(Arrays.asList(aryDataType));
+		// 勤務形態配列をリストに追加
+		workTypeList.addAll(Arrays.asList(pltWorkType));
+		workTypeMonthList.addAll(Arrays.asList(pltWorkTypeMonth));
+		// 勤務形態配列リストを配列に変換しVOに設定
+		vo.setAryPltWorkType(workTypeList.toArray(new String[workTypeList.size()][]));
+		vo.setAryPltWorkTypeMonth(workTypeMonthList.toArray(new String[workTypeMonthList.size()][]));
 	}
 	
 	/**
@@ -1198,7 +1547,8 @@ public class ScheduleCardAction extends TimeSettingAction {
 	 * @return 日にちごとのカレンダデータ
 	 * @throws MospException 例外発生時
 	 */
-	protected List<ScheduleDateDtoInterface> setDtoFieldsDate(List<ScheduleDateDtoInterface> list) throws MospException {
+	protected List<ScheduleDateDtoInterface> setDtoFieldsDate(List<ScheduleDateDtoInterface> list)
+			throws MospException {
 		// VO取得
 		ScheduleCardVo vo = (ScheduleCardVo)mospParams.getVo();
 		// 対象年及び月を取得
@@ -1241,17 +1591,21 @@ public class ScheduleCardAction extends TimeSettingAction {
 	/**
 	 * DTOの値をVO(編集項目)に設定する。<br>
 	 * @param list 対象DTO
+	 * @throws MospException 例外発生時
 	 */
-	protected void setVoFieldsDate(List<ScheduleDateDtoInterface> list) {
+	protected void setVoFieldsDate(List<ScheduleDateDtoInterface> list) throws MospException {
 		// VO取得
 		ScheduleCardVo vo = (ScheduleCardVo)mospParams.getVo();
 		// DTOの値をVOに設定
 		String[] aryPltWorkTypeMonth = new String[vo.getPltWorkTypeMonth().length];
 		String[] aryTxtRemarkMonth = new String[vo.getTxtRemarkMonth().length];
-		for (int i = 0; i < vo.getTxtRemarkMonth().length; i++) {
-			ScheduleDateDtoInterface dto = list.get(i);
+		// 備考月毎に処理
+		int i = 0;
+		for (ScheduleDateDtoInterface dto : list) {
+			// 設定
 			aryPltWorkTypeMonth[i] = dto.getWorkTypeCode();
 			aryTxtRemarkMonth[i] = dto.getRemark();
+			i++;
 		}
 		vo.setPltWorkTypeMonth(aryPltWorkTypeMonth);
 		vo.setTxtRemarkMonth(aryTxtRemarkMonth);
@@ -1269,7 +1623,6 @@ public class ScheduleCardAction extends TimeSettingAction {
 		if (vo.getPltWorkTypeMonth().length > 0) {
 			// DTOの値をVOに設定
 			vo.setTxtScheduleCode(dto.getScheduleCode());
-			vo.setPltWorkType(dto.getWorkTypeCode());
 			WorkTypeItemDtoInterface dtoWork = null;
 			String[] aryLblStartTime = vo.getAryLblStartMonth();
 			// 勤務形態項目取得
@@ -1361,10 +1714,9 @@ public class ScheduleCardAction extends TimeSettingAction {
 	/**
 	 * 該当年度の月データがあればボタン背景色の設定を行う。<br>
 	 * @param scheduleCode カレンダコード
-	 * @param activateDate 有効日
 	 * @throws MospException 例外発生時
 	 */
-	protected void setButtonColor(String scheduleCode, Date activateDate) throws MospException {
+	protected void setButtonColor(String scheduleCode) throws MospException {
 		// VO取得
 		ScheduleCardVo vo = (ScheduleCardVo)mospParams.getVo();
 		// 月ボタン背景色の初期化
@@ -1385,7 +1737,7 @@ public class ScheduleCardAction extends TimeSettingAction {
 		// 表示された月以外の複製元データを全てコピーする
 		for (int i = 0; i < TimeConst.CODE_DEFINITION_YEAR; i++) {
 			// カレンダ日マスタ情報リスト取得
-			List<ScheduleDateDtoInterface> list = getScheduleDateList(scheduleCode, activateDate, targetMonth);
+			List<ScheduleDateDtoInterface> list = getScheduleDateList(scheduleCode, targetMonth);
 			// 月ボタン背景色の設定
 			if (!list.isEmpty()) {
 				// 対象月を取得
@@ -1425,13 +1777,12 @@ public class ScheduleCardAction extends TimeSettingAction {
 	/**
 	 * カレンダ日情報リストを取得する。<br>
 	 * @param scheduleCode カレンダコード
-	 * @param activateDate 有効日
 	 * @param targetMonth  対象年月
 	 * @return カレンダ日情報リスト
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
-	protected List<ScheduleDateDtoInterface> getScheduleDateList(String scheduleCode, Date activateDate,
-			Date targetMonth) throws MospException {
+	protected List<ScheduleDateDtoInterface> getScheduleDateList(String scheduleCode, Date targetMonth)
+			throws MospException {
 		// 対象年及び月を取得
 		int year = DateUtility.getYear(targetMonth);
 		int month = DateUtility.getMonth(targetMonth);
@@ -1439,7 +1790,7 @@ public class ScheduleCardAction extends TimeSettingAction {
 		Date startDate = MonthUtility.getYearMonthTermFirstDate(year, month, mospParams);
 		Date endDate = MonthUtility.getYearMonthTermLastDate(year, month, mospParams);
 		// カレンダ日マスタ情報リスト取得
-		return timeReference().scheduleDate().findForList(scheduleCode, activateDate, startDate, endDate);
+		return timeReference().scheduleDate().findForList(scheduleCode, startDate, endDate);
 	}
 	
 	/**
@@ -1452,6 +1803,16 @@ public class ScheduleCardAction extends TimeSettingAction {
 		vo.setRadioCheck(TimeConst.CODE_RADIO_CHECK);
 		vo.setRadioPeriod(TimeConst.CODE_RADIO_PERIOD);
 		vo.setRadioWeek(TimeConst.CODE_RADIO_WEEK);
+	}
+	
+	/**
+	 * 勤務形態プルダウン用配列を取得する。<br>
+	 * @param targetDate 対象年月日
+	 * @return 勤務形態プルダウン用配列
+	 * @throws MospException 例外発生時
+	 */
+	protected String[][] getWorkTypeArray(Date targetDate) throws MospException {
+		return getWorkTypeArray(targetDate, true);
 	}
 	
 	/**
@@ -1494,6 +1855,21 @@ public class ScheduleCardAction extends TimeSettingAction {
 		int fiscalYear = getInt(vo.getPltFiscalYear());
 		// 年度と月を指定して実際の年月(年月の初日)を取得
 		return MonthUtility.getFiscalYearMonth(fiscalYear, getInt(month), mospParams);
+	}
+	
+	/**
+	 * プルダウン用配列にコードがあるかどうか確認する。
+	 * @param code コード
+	 * @param array プルダウン用配列
+	 * @return 確認結果(true：有り、false：無し)
+	 */
+	protected boolean contains(String code, String[][] array) {
+		for (String[] strings : array) {
+			if (code.equals(strings[0])) {
+				return true;
+			}
+		}
+		return false;
 	}
 	
 }

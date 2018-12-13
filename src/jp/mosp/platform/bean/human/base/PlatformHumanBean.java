@@ -43,6 +43,7 @@ import jp.mosp.platform.dto.system.NamingDtoInterface;
 import jp.mosp.platform.dto.system.PositionDtoInterface;
 import jp.mosp.platform.dto.system.SectionDtoInterface;
 import jp.mosp.platform.dto.system.WorkPlaceDtoInterface;
+import jp.mosp.platform.utils.PlatformNamingUtility;
 
 /**
  * MosPプラットフォーム人事管理におけるBeanの基本機能を提供する。<br>
@@ -52,7 +53,7 @@ public abstract class PlatformHumanBean extends PlatformFileBean {
 	/**
 	 * 所属・雇用契約・職位・勤務地・名称区分マスタに関連する整合性確認インターフェース。
 	 */
-	protected PlatformMasterCheckBeanInterface	masterCheck;
+	protected PlatformMasterCheckBeanInterface masterCheck;
 	
 	
 	/**
@@ -130,7 +131,8 @@ public abstract class PlatformHumanBean extends PlatformFileBean {
 	 * @param row 行インデックス
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
-	protected void checkWorkPlace(String workPlaceCode, Date startDate, Date endDate, Integer row) throws MospException {
+	protected void checkWorkPlace(String workPlaceCode, Date startDate, Date endDate, Integer row)
+			throws MospException {
 		// 勤務地確認
 		if (workPlaceCode.isEmpty()) {
 			return;
@@ -239,7 +241,7 @@ public abstract class PlatformHumanBean extends PlatformFileBean {
 	
 	/**
 	 * 名称区分存在確認を行う。<br>
-	 * @param namingType 名称区分 
+	 * @param namingType 名称区分
 	 * @param namingItemCode 名称項目コード
 	 * @param startDate 期間開始日
 	 * @param endDate 期間終了日
@@ -323,13 +325,6 @@ public abstract class PlatformHumanBean extends PlatformFileBean {
 	}
 	
 	/**
-	 * 社員が入社していない場合のメッセージを設定する。<br>
-	 */
-	protected void addEmployeeNotEnteredMessage() {
-		mospParams.addErrorMessage(PlatformMessageConst.MSG_EMPLOYEE_IS_NOT, getNameEntrance());
-	}
-	
-	/**
 	 * 社員の履歴が存在しない場合のメッセージを設定する。<br>
 	 * @param employeeCode 社員コード
 	 * @param targetDate   対象日
@@ -348,19 +343,11 @@ public abstract class PlatformHumanBean extends PlatformFileBean {
 	}
 	
 	/**
-	 * 入社名称を取得する。<br>
-	 * @return 入社名称
-	 */
-	protected String getNameEntrance() {
-		return mospParams.getName("Joined");
-	}
-	
-	/**
 	 * 入社日名称を取得する。<br>
 	 * @return 入社日名称
 	 */
 	protected String getNameEntranceDate() {
-		return getNameEntrance() + mospParams.getName("Day");
+		return PlatformNamingUtility.join(mospParams) + PlatformNamingUtility.day(mospParams);
 	}
 	
 	/**
@@ -368,7 +355,7 @@ public abstract class PlatformHumanBean extends PlatformFileBean {
 	 * @return 退職日名称
 	 */
 	protected String getNameRetirementDate() {
-		return mospParams.getName("RetirementOn") + mospParams.getName("Day");
+		return mospParams.getName("RetirementOn") + PlatformNamingUtility.day(mospParams);
 	}
 	
 	/**

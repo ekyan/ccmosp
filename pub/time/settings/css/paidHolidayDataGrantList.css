@@ -40,10 +40,10 @@
 }
 
 /**
- * 社員名ヘッダ幅。
+ * 社員名ヘッダ幅(テスト補助機能)。
  */
-.UnderTable #thEmployeeName {
-	width: 338px;
+.UnderTable #thEmployeeName2 {
+	width: 80px;
 }
 
 /**
@@ -51,6 +51,13 @@
  */
 .UnderTable #thAttendanceRate {
 	width: 60px;
+}
+
+/**
+ * 出勤率ヘッダ幅(テスト補助機能)。
+ */
+.UnderTable #thAttendanceRate2 {
+	width: 100px;
 }
 
 /**
@@ -72,6 +79,13 @@
  */
 .UnderTable #thGrantDate {
 	width: 100px;
+}
+
+/**
+ * 付与日付ヘッダ幅(テスト補助機能)。
+ */
+.UnderTable #thGrantDate2 {
+	width: 318px;
 }
 
 /**

@@ -37,7 +37,7 @@ public class ImportFieldRegistBean extends PlatformBean implements ImportFieldRe
 	/**
 	 * インポートフィールドマスタDAOクラス。<br>
 	 */
-	ImportFieldDaoInterface	dao;
+	ImportFieldDaoInterface dao;
 	
 	
 	/**
@@ -201,8 +201,8 @@ public class ImportFieldRegistBean extends PlatformBean implements ImportFieldRe
 	 * @param fieldName フィールド名称
 	 * @param i フィールド順序
 	 */
-	protected void setDtoFields(ImportFieldDtoInterface dto, String importCode, String inactivateFlag,
-			String fieldName, int i) {
+	protected void setDtoFields(ImportFieldDtoInterface dto, String importCode, String inactivateFlag, String fieldName,
+			int i) {
 		dto.setImportCode(importCode);
 		dto.setFieldName(fieldName);
 		dto.setFieldOrder(i);

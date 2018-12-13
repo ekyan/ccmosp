@@ -1,5 +1,19 @@
-/**
+/*
+ * MosP - Mind Open Source Project    http://www.mosp.jp/
+ * Copyright (C) MIND Co., Ltd.       http://www.e-mind.co.jp/
  * 
+ * This program is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU Affero General Public License
+ * as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package jp.mosp.setup.constant;
 
@@ -101,5 +115,25 @@ public final class SetUpConst {
 	 * Applicationキー:InitUserRoleCode
 	 */
 	public static final String	APP_INIT_USER_ROLE_CODE		= "InitUserRoleCode";
+	
+	/**
+	 * アプリケーション設定キー(postgresDB名)。
+	 */
+	public static final String	APP_POSTGRES_DATA_BASE		= "PostgresDataBase";
+	
+	/**
+	 * アプリケーション設定キー(スーパーユーザ名)。
+	 */
+	public static final String	APP_SUPER_USER_NAME			= "SuperUserName";
+	
+	/**
+	 * アプリケーション設定キー(スーパーユーザPW)。
+	 */
+	public static final String	APP_SUPER_USER_PASS			= "SuperUserPassword";
+	
+	/**
+	 * アプリケーション設定キー(初期DBユーザ)。
+	 */
+	public static final String	APP_DEFAULT_DB_USER			= "DefaultDbUser";
 	
 }

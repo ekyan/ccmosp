@@ -19,20 +19,21 @@ package jp.mosp.platform.bean.portal.impl;
 
 import java.sql.Connection;
 import java.util.Date;
+import java.util.List;
+import java.util.Set;
 
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.base.MospParams;
 import jp.mosp.framework.constant.MospConst;
 import jp.mosp.platform.base.PlatformBean;
-import jp.mosp.platform.bean.human.EntranceReferenceBeanInterface;
 import jp.mosp.platform.bean.human.HumanReferenceBeanInterface;
 import jp.mosp.platform.bean.human.RetirementReferenceBeanInterface;
 import jp.mosp.platform.bean.human.SuspensionReferenceBeanInterface;
 import jp.mosp.platform.bean.portal.UserCheckBeanInterface;
 import jp.mosp.platform.bean.system.RoleReferenceBeanInterface;
-import jp.mosp.platform.constant.PlatformMessageConst;
 import jp.mosp.platform.dao.system.UserMasterDaoInterface;
 import jp.mosp.platform.dto.system.UserMasterDtoInterface;
+import jp.mosp.platform.utils.PlatformMessageUtility;
 
 /**
  * ユーザ確認クラス。<br>
@@ -44,27 +45,32 @@ public class UserCheckBean extends PlatformBean implements UserCheckBeanInterfac
 	/**
 	 * MosPアプリケーション設定キー(認証時ユーザ確認)。
 	 */
-	protected static final String	APP_CHECK_USER			= "CheckUser";
+	protected static final String			APP_CHECK_USER			= "CheckUser";
 	
 	/**
 	 * 認証時ユーザ確認設定(入社確認)。
 	 */
-	protected static final String	USER_CHECK_ENTRANCE		= "Entrance";
+	protected static final String			USER_CHECK_ENTRANCE		= "Entrance";
 	
 	/**
 	 * 認証時ユーザ確認設定(退職確認)。
 	 */
-	protected static final String	USER_CHECK_RETIREMENT	= "Retirement";
+	protected static final String			USER_CHECK_RETIREMENT	= "Retirement";
 	
 	/**
 	 * 認証時ユーザ確認設定(休職確認)。
 	 */
-	protected static final String	USER_CHECK_SUSPENSION	= "Suspension";
+	protected static final String			USER_CHECK_SUSPENSION	= "Suspension";
 	
 	/**
 	 * ユーザマスタDAO。
 	 */
-	private UserMasterDaoInterface	userMasterDao;
+	private UserMasterDaoInterface			userMasterDao;
+	
+	/**
+	 * ロール参照処理。<br>
+	 */
+	protected RoleReferenceBeanInterface	roleRefer;
 	
 	
 	/**
@@ -87,16 +93,48 @@ public class UserCheckBean extends PlatformBean implements UserCheckBeanInterfac
 	public void initBean() throws MospException {
 		// DAO準備
 		userMasterDao = (UserMasterDaoInterface)createDao(UserMasterDaoInterface.class);
+		// Beanを準備
+		roleRefer = (RoleReferenceBeanInterface)createBean(RoleReferenceBeanInterface.class);
+	}
+	
+	@Override
+	public void checkUserExist(String userId, Integer row) throws MospException {
+		// ユーザ履歴一覧を取得し件数を確認
+		if (userMasterDao.findForHistory(userId).isEmpty()) {
+			// エラーメッセージ追加
+			PlatformMessageUtility.addErrorSelectedUserIdNotExist(mospParams, userId, row);
+		}
+	}
+	
+	@Override
+	public void checkUserExist(String userId, Date activateDate, Integer row) throws MospException {
+		// ユーザ履歴一覧を取得し件数を確認
+		if (userMasterDao.findForKey(userId, activateDate) == null) {
+			// エラーメッセージ追加
+			PlatformMessageUtility.addErrorUserHistoryNotExist(mospParams, activateDate, row);
+		}
+	}
+	
+	@Override
+	public UserMasterDtoInterface checkUserExist(String userId, Date targetDate) throws MospException {
+		// 対象日におけるユーザ情報を取得
+		UserMasterDtoInterface dto = userMasterDao.findForInfo(userId, targetDate);
+		// ユーザ存在確認
+		if (dto == null || dto.getInactivateFlag() == MospConst.INACTIVATE_FLAG_ON) {
+			// メッセージを設定
+			PlatformMessageUtility.addErrorNoUser(mospParams);
+		}
+		// 対象日におけるユーザ情報を取得
+		return dto;
 	}
 	
 	@Override
 	public void checkUserEmployeeForUserId(String userId, Date targetDate) throws MospException {
-		// ユーザ情報取得
-		UserMasterDtoInterface dto = userMasterDao.findForInfo(userId, targetDate);
-		// ユーザ存在確認
-		if (dto == null || dto.getInactivateFlag() == MospConst.INACTIVATE_FLAG_ON) {
-			// ユーザが存在しない場合のメッセージを設定
-			addUserNotExistMessage();
+		// ユーザ存在確認(対象日におけるユーザ情報を取得)
+		UserMasterDtoInterface dto = checkUserExist(userId, targetDate);
+		// 対象日における有効なユーザが存在しない場合
+		if (mospParams.hasErrorMessage()) {
+			// 処理終了
 			return;
 		}
 		// ユーザ社員妥当性確認
@@ -122,12 +160,11 @@ public class UserCheckBean extends PlatformBean implements UserCheckBeanInterfac
 	
 	@Override
 	public void checkUserRole(String userId, Date targetDate) throws MospException {
-		// ユーザ情報取得
-		UserMasterDtoInterface dto = userMasterDao.findForInfo(userId, targetDate);
-		// ユーザ存在確認
-		if (dto == null || dto.getInactivateFlag() == MospConst.INACTIVATE_FLAG_ON) {
-			// ユーザが存在しない場合のメッセージを設定
-			addUserNotExistMessage();
+		// ユーザ存在確認(対象日におけるユーザ情報を取得)
+		UserMasterDtoInterface dto = checkUserExist(userId, targetDate);
+		// 対象日における有効なユーザが存在しない場合
+		if (mospParams.hasErrorMessage()) {
+			// 処理終了
 			return;
 		}
 		// ロール存在確認
@@ -135,19 +172,42 @@ public class UserCheckBean extends PlatformBean implements UserCheckBeanInterfac
 	}
 	
 	@Override
-	public void checkRoleExist(String roleCode, Date targetDate) throws MospException {
-		// ロール参照
-		RoleReferenceBeanInterface roleRefer = (RoleReferenceBeanInterface)createBean(RoleReferenceBeanInterface.class);
-		// ロール取得
-		String[][] roleArray = roleRefer.getSelectArray(targetDate, false);
-		// ロール確認
-		for (String[] role : roleArray) {
-			if (role[0].equals(roleCode)) {
-				return;
-			}
+	public void checkRoleExist(String roleCode, Date targetDate, Integer row) throws MospException {
+		// 利用可能ロールコード群を取得
+		Set<String> availableRoleCodes = roleRefer.getAvailabeRoleCodes(targetDate);
+		// 利用可能ロールコード群にロールコードが含まれない場合
+		if (availableRoleCodes.contains(roleCode) == false) {
+			// メッセージを設定
+			PlatformMessageUtility.addErrorNoRole(mospParams, row);
 		}
-		// ロールが存在しない場合のメッセージを設定
-		addRoleNotExistMessage();
+	}
+	
+	@Override
+	public void checkRoleExist(String roleCode, Date targetDate) throws MospException {
+		// ユーザロールの存在確認
+		checkRoleExist(roleCode, targetDate, null);
+	}
+	
+	@Override
+	public void checkRoleExist(String roleType, String roleCode, Date targetDate, Integer row) throws MospException {
+		// 利用可能ロールコード群を取得
+		Set<String> availableRoleCodes = roleRefer.getAvailabeRoleCodes(targetDate, roleType);
+		// 利用可能ロールコード群にロールコードが含まれない場合
+		if (availableRoleCodes.contains(roleCode) == false) {
+			// メッセージを設定
+			PlatformMessageUtility.addErrorNoRole(mospParams, row);
+		}
+	}
+	
+	@Override
+	public void checkRoleTypeExist(String roleType, Date targetDate, Integer row) throws MospException {
+		// 利用可能ロール区分リストを取得
+		List<String> list = roleRefer.getAvailableRoleTypes(targetDate);
+		// 利用可能ロール区分に対象ロール区分が含まれない場合
+		if (list.contains(roleType) == false) {
+			// メッセージを設定
+			PlatformMessageUtility.addErrorNoRoleType(mospParams, row);
+		}
 	}
 	
 	/**
@@ -157,14 +217,15 @@ public class UserCheckBean extends PlatformBean implements UserCheckBeanInterfac
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
 	protected void checkEntrance(String personalId, Date targetDate) throws MospException {
-		// 人事入社情報参照クラス取得
-		EntranceReferenceBeanInterface reference;
-		reference = (EntranceReferenceBeanInterface)createBean(EntranceReferenceBeanInterface.class);
 		// 入社情報確認
-		if (reference.isEntered(personalId, targetDate) == false) {
-			HumanReferenceBeanInterface humanReference = (HumanReferenceBeanInterface)createBean(HumanReferenceBeanInterface.class);
-			// 社員が入社していない場合のメッセージを設定
-			addEmployeeNotEnteredMessage(humanReference.getEmployeeCode(personalId, targetDate));
+		if (isEntered(personalId, targetDate) == false) {
+			// 人事マスタ参照処理を準備
+			HumanReferenceBeanInterface humanRefer = (HumanReferenceBeanInterface)createBean(
+					HumanReferenceBeanInterface.class);
+			// 社員コードを取得
+			String employeeCode = humanRefer.getEmployeeCode(personalId, targetDate);
+			// メッセージを設定
+			PlatformMessageUtility.addErrorEmployeeNotJoinForAccount(mospParams, employeeCode);
 		}
 	}
 	
@@ -200,28 +261,6 @@ public class UserCheckBean extends PlatformBean implements UserCheckBeanInterfac
 			// 社員が休職している場合のメッセージを設定
 			addEmployeeSuspendedMessage();
 		}
-	}
-	
-	/**
-	 * ユーザが存在しない場合のメッセージを設定する。<br>
-	 */
-	protected void addUserNotExistMessage() {
-		mospParams.addErrorMessage(PlatformMessageConst.MSG_NO_ITEM, mospParams.getName("User"));
-	}
-	
-	/**
-	 * ロールが存在しない場合のメッセージを設定する。<br>
-	 */
-	protected void addRoleNotExistMessage() {
-		mospParams.addErrorMessage(PlatformMessageConst.MSG_NO_ITEM, mospParams.getName("Role"));
-	}
-	
-	/**
-	 * 社員が入社していない場合のメッセージを設定する。<br>
-	 * @param employeeCode 社員コード
-	 */
-	protected void addEmployeeNotEnteredMessage(String employeeCode) {
-		mospParams.addErrorMessage(PlatformMessageConst.MSG_NOT_ENTERED_FOR_ACCOUNT, employeeCode);
 	}
 	
 }

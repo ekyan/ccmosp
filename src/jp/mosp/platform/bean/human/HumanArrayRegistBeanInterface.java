@@ -18,6 +18,7 @@
 package jp.mosp.platform.bean.human;
 
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.Set;
 
 import jp.mosp.framework.base.MospException;
@@ -44,9 +45,11 @@ public interface HumanArrayRegistBeanInterface {
 	 * @param personalId 個人ID
 	 * @param activeDate 有効日
 	 * @param rowId 行ID
+	 * @param linkedHashMap レコード識別ID
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
-	void regist(String division, String viewKey, String personalId, Date activeDate, int rowId) throws MospException;
+	void regist(String division, String viewKey, String personalId, Date activeDate, int rowId,
+			LinkedHashMap<String, Long> linkedHashMap) throws MospException;
 	
 	/**
 	 * 登録処理を行う。<br>
@@ -87,4 +90,15 @@ public interface HumanArrayRegistBeanInterface {
 	 * @throws MospException  インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
 	int getRowId() throws MospException;
+	
+	/**
+	 * 論理削除を行う。（レコード識別ID使用）<br>
+	 * @param division 人事汎用管理区分
+	 * @param viewKey 人事汎用管理表示区分
+	 * @param recordsMap レコード識別IDマップ
+	 * @param rowId 行ID
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 */
+	void delete(String division, String viewKey, int rowId, LinkedHashMap<String, Long> recordsMap)
+			throws MospException;
 }

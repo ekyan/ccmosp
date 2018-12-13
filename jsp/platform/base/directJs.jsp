@@ -23,17 +23,16 @@ autoFlush    = "true"
 errorPage    = "/jsp/common/error.jsp"
 %><%@ page
 import = "java.lang.reflect.Field"
+import = "jp.mosp.framework.base.BaseVo"
 import = "jp.mosp.framework.base.MospParams"
 import = "jp.mosp.framework.constant.MospConst"
 import = "jp.mosp.framework.js.DirectJs"
-import = "jp.mosp.framework.utils.HtmlUtility"
 import = "jp.mosp.framework.utils.MenuJsUtility"
-import = "jp.mosp.platform.base.PlatformVo"
 import = "jp.mosp.platform.constant.PlatformConst"
 import = "net.arnx.jsonic.JSON"
 %><%
 MospParams params = (MospParams)request.getAttribute(MospConst.ATT_MOSP_PARAMS);
-PlatformVo vo = (PlatformVo)params.getVo();
+BaseVo vo = params.getVo();
 %>
 <script type="text/javascript">
 var procSeq = "<%= params.getProcSeq() %>";
@@ -116,7 +115,7 @@ String toModeCardEdit(String name) {
 	if (name == null) {
 		return "";
 	}
-	if (name.contains("modeCardEdit") == false){
+	if (name.contains("modeCardEdit") == false) {
 		return "";
 	}
 	StringBuffer sb = new StringBuffer();
@@ -151,13 +150,7 @@ String convert(String name, Object value) {
 	}
 	StringBuffer sb = new StringBuffer();
 	sb.append("var " + name + " = ");
-	if (value instanceof String){
-		sb.append("'");
-		sb.append(value);
-		sb.append("'");
-	} else {
-		sb.append(JSON.escapeScript(value));
-	}
+	sb.append(JSON.escapeScript(value));
 	sb.append(";");
 	return sb.toString();
 }

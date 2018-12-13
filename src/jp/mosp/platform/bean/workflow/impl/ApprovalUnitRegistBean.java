@@ -26,6 +26,7 @@ import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.base.MospParams;
 import jp.mosp.framework.constant.MospConst;
 import jp.mosp.framework.utils.DateUtility;
+import jp.mosp.framework.utils.MospUtility;
 import jp.mosp.platform.base.PlatformBean;
 import jp.mosp.platform.base.PlatformDtoInterface;
 import jp.mosp.platform.bean.human.base.PlatformHumanBean;
@@ -38,6 +39,7 @@ import jp.mosp.platform.dao.workflow.ApprovalUnitDaoInterface;
 import jp.mosp.platform.dto.workflow.ApprovalRouteUnitDtoInterface;
 import jp.mosp.platform.dto.workflow.ApprovalUnitDtoInterface;
 import jp.mosp.platform.dto.workflow.impl.PfmApprovalUnitDto;
+import jp.mosp.platform.utils.PlatformNamingUtility;
 
 /**
  * 承認ユニットマスタ登録クラス。
@@ -260,10 +262,17 @@ public class ApprovalUnitRegistBean extends PlatformHumanBean implements Approva
 		checkLength(dto.getApproverSectionCode(), LEN_CODE, getNameApproverPositionCode(), row);
 		// 桁数確認(承認者職位コード)
 		checkLength(dto.getApproverPositionCode(), LEN_CODE, getNameApproverSectionCode(), row);
+		// 桁数確認(承認者職位等級範囲)
+		checkLength(dto.getApproverPositionGrade(), LEN_CODE, PlatformNamingUtility.approverPositionGrade(mospParams),
+				row);
 		// 型確認(ユニットコード)
 		checkTypeCode(dto.getUnitCode(), getNameUnitCode(), row);
 		// 型確認(無効フラグ)
 		checkInactivateFlag(dto.getInactivateFlag(), row);
+		// 利用可能文字列確認(承認者職位等級範囲)
+		checkAvailableChars(dto.getApproverPositionGrade(),
+				MospUtility.getCodeList(mospParams, PlatformConst.CODE_KEY_UNIT_POSITION_GRADE_RANGE, true),
+				PlatformNamingUtility.approverPositionGrade(mospParams), row);
 		// 無効フラグ確認
 		if (isDtoActivate(dto) == false) {
 			// 妥当性確認終了
@@ -512,8 +521,8 @@ public class ApprovalUnitRegistBean extends PlatformHumanBean implements Approva
 		// 削除対象の有効日以前で最新の承認ルートユニットマスタ情報を取得
 		List<ApprovalRouteUnitDtoInterface> routeUnitList = routeUnitDao.findForActivateDate(dto.getActivateDate());
 		// 無効期間で承認ルートユニットマスタ履歴情報を取得(対象DTOの有効日～次の履歴の有効日)
-		routeUnitList.addAll(routeUnitDao.findForTerm(dto.getActivateDate(),
-				getNextActivateDate(dto.getActivateDate(), list)));
+		routeUnitList
+			.addAll(routeUnitDao.findForTerm(dto.getActivateDate(), getNextActivateDate(dto.getActivateDate(), list)));
 		return routeUnitList;
 	}
 	
@@ -572,7 +581,7 @@ public class ApprovalUnitRegistBean extends PlatformHumanBean implements Approva
 	 * @return 承認者社員コード名称
 	 */
 	protected String getNameApproverEmployeeCode() {
-		return mospParams.getName("Approver", "Employee", "Code");
+		return mospParams.getName("Approver") + PlatformNamingUtility.employeeCode(mospParams);
 	}
 	
 }

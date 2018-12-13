@@ -17,9 +17,19 @@
  */
 package jp.mosp.platform.bean.file;
 
+import jp.mosp.framework.base.MospException;
+
 /**
  * 人事マスタインポートインターフェース。
  */
 public interface HumanImportBeanInterface extends ImportBeanInterface {
-	// 処理無し
+	
+	/**
+	 * フィールド名称（前方一致）存在確認
+	 * @param importCode インポートコード
+	 * @param aryFieldName フィールド名称配列
+	 * @return データ存在確認（true:データ有り、false:データ無し）
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 */
+	boolean isExistLikeFieldName(String importCode, String[] aryFieldName) throws MospException;
 }

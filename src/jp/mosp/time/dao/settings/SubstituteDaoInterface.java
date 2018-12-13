@@ -48,14 +48,14 @@ public interface SubstituteDaoInterface extends BaseDaoInterface {
 			Date workDate, int timesWork) throws MospException;
 	
 	/**
-	 * 個人IDと出勤日と勤務回数から振替休日データリストを取得する。<br>
+	 * 個人IDと出勤日と勤務回数から振替休日データを取得する。<br>
+	 * 取下状態も存在する。<br>
 	 * @param personalId 個人ID
 	 * @param workDate 出勤日
-	 * @param timesWork 勤務回数
 	 * @return 振替休日データリスト
 	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
 	 */
-	List<SubstituteDtoInterface> findForList(String personalId, Date workDate, int timesWork) throws MospException;
+	List<SubstituteDtoInterface> findForWorkDate(String personalId, Date workDate) throws MospException;
 	
 	/**
 	 * 個人IDと振替日から振替休日データリストを取得する。<br>
@@ -93,4 +93,12 @@ public interface SubstituteDaoInterface extends BaseDaoInterface {
 	 */
 	List<SubstituteDtoInterface> findForTerm(String personalId, Date firstDate, Date lastDate) throws MospException;
 	
+	/**
+	 * 個人IDと振替日から振替休日データリストを取得する。<br>
+	 * @param personalId 個人ID
+	 * @param substituteDate 振替日
+	 * @return 振替休日データリスト
+	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
+	 */
+	SubstituteDtoInterface findForDate(String personalId, Date substituteDate) throws MospException;
 }

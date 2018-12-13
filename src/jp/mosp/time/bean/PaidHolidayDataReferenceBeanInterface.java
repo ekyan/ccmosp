@@ -64,17 +64,17 @@ public interface PaidHolidayDataReferenceBeanInterface {
 			throws MospException;
 	
 	/**
-	 * 有給休暇データリスト取得。
-	 * <p>
-	 * 個人ID、対象年月日から有給休暇データリストを取得。
-	 * </p>
+	 * 有給休暇データリストを取得する。<br>
+	 * 個人IDと対象日から全ての有給休暇データリストを取得する。<br>
+	 * <br>
+	 * 但し、期限日が対象日より前の情報は、取得対象外とする。<br>
+	 * <br>
 	 * @param personalId 個人ID
-	 * @param firstDate 対象年月日
-	 * @param lastDate 対象年月日
+	 * @param targetDate 対象年月日
 	 * @return 有給休暇データリスト
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
-	List<PaidHolidayDataDtoInterface> getPaidHolidayDataInfoList(String personalId, Date firstDate, Date lastDate)
+	List<PaidHolidayDataDtoInterface> getPaidHolidayDataInfoAllList(String personalId, Date targetDate)
 			throws MospException;
 	
 	/**
@@ -88,6 +88,16 @@ public interface PaidHolidayDataReferenceBeanInterface {
 	 */
 	PaidHolidayDataDtoInterface findForKey(String personalId, Date activateDate, Date acquisitionDate)
 			throws MospException;
+	
+	/**
+	 * 有給休暇データリスト取得。<br>
+	 * 次年度以降の有給休暇データリストを取得する。<br>
+	 * @param personalId 個人ID
+	 * @param targetDate 対象日
+	 * @return 有給休暇データリスト
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	List<PaidHolidayDataDtoInterface> findForNextInfoList(String personalId, Date targetDate) throws MospException;
 	
 	/**
 	 * 有給休暇データ取得。
@@ -106,6 +116,18 @@ public interface PaidHolidayDataReferenceBeanInterface {
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
 	List<PaidHolidayDataDtoInterface> findForExpirationDateList(String personalId, Date expirationDate)
+			throws MospException;
+	
+	/**
+	 * 有給休暇データリスト取得。
+	 * 期間開始日～期間終了日に付与された有給休暇情報リストを取得する。
+	 * @param personalId 個人ID
+	 * @param startDate 期間開始日
+	 * @param endDate 期間終了日
+	 * @return 有給休暇データリスト
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	List<PaidHolidayDataDtoInterface> findForAcquisitionList(String personalId, Date startDate, Date endDate)
 			throws MospException;
 	
 }

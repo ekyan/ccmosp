@@ -23,8 +23,11 @@ import java.util.List;
 
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.base.MospParams;
+import jp.mosp.framework.utils.MospUtility;
 import jp.mosp.platform.base.PlatformBean;
+import jp.mosp.platform.utils.InputCheckUtility;
 import jp.mosp.time.bean.StockHolidayDataRegistBeanInterface;
+import jp.mosp.time.constant.TimeFileConst;
 import jp.mosp.time.dao.settings.StockHolidayDataDaoInterface;
 import jp.mosp.time.dto.settings.StockHolidayDataDtoInterface;
 import jp.mosp.time.dto.settings.impl.TmdStockHolidayDto;
@@ -37,7 +40,7 @@ public class StockHolidayDataRegistBean extends PlatformBean implements StockHol
 	/**
 	 * ストック休暇データDAOクラス。<br>
 	 */
-	StockHolidayDataDaoInterface	dao;
+	StockHolidayDataDaoInterface dao;
 	
 	
 	/**
@@ -192,7 +195,24 @@ public class StockHolidayDataRegistBean extends PlatformBean implements StockHol
 	 * @param dto 対象DTO
 	 */
 	protected void validate(StockHolidayDataDtoInterface dto) {
-		// TODO 妥当性確認
+		// 名称取得
+		String employeeCode = MospUtility.getCodeName("employee_code",
+				mospParams.getProperties().getCodeArray(TimeFileConst.CODE_IMPORT_TYPE_TMD_STOCK_HOLIDAY, false));
+		// 有効日
+		String activateDate = MospUtility.getCodeName("activate_date",
+				mospParams.getProperties().getCodeArray(TimeFileConst.CODE_IMPORT_TYPE_TMD_STOCK_HOLIDAY, false));
+		// 取得日
+		String acquisitionDate = MospUtility.getCodeName("acquisition_date",
+				mospParams.getProperties().getCodeArray(TimeFileConst.CODE_IMPORT_TYPE_TMD_STOCK_HOLIDAY, false));
+		// 期限日
+		String limitDate = MospUtility.getCodeName("limit_date",
+				mospParams.getProperties().getCodeArray(TimeFileConst.CODE_IMPORT_TYPE_TMD_STOCK_HOLIDAY, false));
+		
+		// 必須入力チェック
+		InputCheckUtility.checkRequired(mospParams, dto.getPersonalId(), employeeCode);
+		InputCheckUtility.checkRequired(mospParams, getStringDate(dto.getActivateDate()), activateDate);
+		InputCheckUtility.checkRequired(mospParams, getStringDate(dto.getAcquisitionDate()), acquisitionDate);
+		InputCheckUtility.checkRequired(mospParams, getStringDate(dto.getAcquisitionDate()), limitDate);
 	}
 	
 }

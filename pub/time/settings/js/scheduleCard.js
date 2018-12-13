@@ -32,7 +32,7 @@ function onLoadExtra() {
 	// 年度編集可
 	setReadOnly("pltFiscalYear", false);
 	// 決定ボタン押下可
-	setDisabled("btnActivateDateSet", false);
+	setReadOnly("btnActivateDateSet", false);
 	// 新規登録
 	if (modeCardEdit == MODE_CARD_EDIT_INSERT) {
 		// 無効フラグ編集不可
@@ -48,62 +48,65 @@ function onLoadExtra() {
 		// 年度編集不可
 		setReadOnly("pltFiscalYear", true);
 		// 決定ボタン押下不可
-		setDisabled("btnActivateDateSet", true);
-		setDisabled("btnPatternSet", true);
+		setReadOnly("btnActivateDateSet", true);
+		setReadOnly("btnPatternSet", true);
 	}
 	// 有効日(編集)モード確認
 	if (modeActivateDate == MODE_ACTIVATE_DATE_FIXED) {
 		// 年度編集不可
 		setReadOnly("pltFiscalYear", true);
 		// 登録ボタン利用可
-		setDisabled("btnRegist", false);
+		setReadOnly("btnRegist", false);
 		// 月ボタン利用可
-		setDisabled("btnApril", false);
-		setDisabled("btnMay", false);
-		setDisabled("btnJune", false);
-		setDisabled("btnJuly", false);
-		setDisabled("btnAugust", false);
-		setDisabled("btnSeptember", false);
-		setDisabled("btnOctorber", false);
-		setDisabled("btnNovember", false);
-		setDisabled("btnDecember", false);
-		setDisabled("btnJanuary", false);
-		setDisabled("btnFebruary", false);
-		setDisabled("btnMarch", false);
+		setReadOnly("btnApril", false);
+		setReadOnly("btnMay", false);
+		setReadOnly("btnJune", false);
+		setReadOnly("btnJuly", false);
+		setReadOnly("btnAugust", false);
+		setReadOnly("btnSeptember", false);
+		setReadOnly("btnOctorber", false);
+		setReadOnly("btnNovember", false);
+		setReadOnly("btnDecember", false);
+		setReadOnly("btnJanuary", false);
+		setReadOnly("btnFebruary", false);
+		setReadOnly("btnMarch", false);
 	} else {
 		// 年度編集可
 		setReadOnly("pltFiscalYear", false);
 		// パターン決定ボタン利用不可
-		setDisabled("btnPatternSet", true);
+		setReadOnly("btnPatternSet", true);
 		// 登録ボタン利用不可
-		setDisabled("btnRegist", true);
+		setReadOnly("btnRegist", true);
 		// 月ボタン利用可
-		setDisabled("btnApril", true);
-		setDisabled("btnMay", true);
-		setDisabled("btnJune", true);
-		setDisabled("btnJuly", true);
-		setDisabled("btnAugust", true);
-		setDisabled("btnSeptember", true);
-		setDisabled("btnOctorber", true);
-		setDisabled("btnNovember", true);
-		setDisabled("btnDecember", true);
-		setDisabled("btnJanuary", true);
-		setDisabled("btnFebruary", true);
-		setDisabled("btnMarch", true);
+		setReadOnly("btnApril", true);
+		setReadOnly("btnMay", true);
+		setReadOnly("btnJune", true);
+		setReadOnly("btnJuly", true);
+		setReadOnly("btnAugust", true);
+		setReadOnly("btnSeptember", true);
+		setReadOnly("btnOctorber", true);
+		setReadOnly("btnNovember", true);
+		setReadOnly("btnDecember", true);
+		setReadOnly("btnJanuary", true);
+		setReadOnly("btnFebruary", true);
+		setReadOnly("btnMarch", true);
 	}
 	// パターンモード確認
 	if (modePattern == MODE_ACTIVATE_DATE_FIXED) {
 		// 編集不可
 		// 有効日決定ボタン利用不可
-		setDisabled("btnActivateDateSet", true);
+		setReadOnly("btnActivateDateSet", true);
 		// パターン編集不可
 		setReadOnly("pltPattern", true);
+	} else {
+		// 複製ボタン利用不可
+		setReadOnly("btnCopySet", true);
 	}
 	// コピーモード確認
 	if (jsCopyModeEdit == "TM5474") {
 		// 決定ボタン押下不可
-		setDisabled("btnActivateDateSet", true);
-		setDisabled("btnPatternSet", true);
+		setReadOnly("btnActivateDateSet", true);
+//		setReadOnly("btnPatternSet", true);
 	}
 	// 勤務形態指定ラジオボタンイベント設定
 	setOnClickHandler("radioWeek", onClickRadioSelect);
@@ -184,3 +187,4 @@ function doAllChecked(name, flg) {
 		objTarget.disabled = flg;
 	}
 }
+

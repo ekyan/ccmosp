@@ -26,7 +26,6 @@ import jp.mosp.framework.base.MospParams;
 import jp.mosp.framework.constant.MospConst;
 import jp.mosp.framework.utils.DateUtility;
 import jp.mosp.platform.base.PlatformBean;
-import jp.mosp.platform.bean.human.HumanReferenceBeanInterface;
 import jp.mosp.platform.bean.system.EmploymentContractReferenceBeanInterface;
 import jp.mosp.platform.bean.system.NamingReferenceBeanInterface;
 import jp.mosp.platform.bean.system.PlatformMasterCheckBeanInterface;
@@ -46,11 +45,29 @@ import jp.mosp.platform.dto.system.WorkPlaceDtoInterface;
  */
 public class PlatformMasterCheckBean extends PlatformBean implements PlatformMasterCheckBeanInterface {
 	
+	/**
+	 * 所属マスタ参照クラス。<br>
+	 */
 	SectionReferenceBeanInterface				sectionReference;
+	
+	/**
+	 * 職位マスタ参照クラス。<br>
+	 */
 	PositionReferenceBeanInterface				positionReference;
+	
+	/**
+	 * 雇用契約マスタ参照クラス。<br>
+	 */
 	EmploymentContractReferenceBeanInterface	employmentContractReference;
-	HumanReferenceBeanInterface					humanReference;
+	
+	/**
+	 * 勤務地マスタ参照クラス。<br>
+	 */
 	WorkPlaceReferenceBeanInterface				workPlaceReference;
+	
+	/**
+	 * 名称区分マスタ参照クラス。<br>
+	 */
 	NamingReferenceBeanInterface				namingReference;
 	
 	
@@ -74,8 +91,8 @@ public class PlatformMasterCheckBean extends PlatformBean implements PlatformMas
 	public void initBean() throws MospException {
 		sectionReference = (SectionReferenceBeanInterface)createBean(SectionReferenceBeanInterface.class);
 		positionReference = (PositionReferenceBeanInterface)createBean(PositionReferenceBeanInterface.class);
-		employmentContractReference = (EmploymentContractReferenceBeanInterface)createBean(EmploymentContractReferenceBeanInterface.class);
-		humanReference = (HumanReferenceBeanInterface)createBean(HumanReferenceBeanInterface.class);
+		employmentContractReference = (EmploymentContractReferenceBeanInterface)createBean(
+				EmploymentContractReferenceBeanInterface.class);
 		workPlaceReference = (WorkPlaceReferenceBeanInterface)createBean(WorkPlaceReferenceBeanInterface.class);
 		namingReference = (NamingReferenceBeanInterface)createBean(NamingReferenceBeanInterface.class);
 	}
@@ -92,7 +109,8 @@ public class PlatformMasterCheckBean extends PlatformBean implements PlatformMas
 	}
 	
 	@Override
-	public boolean isCheckPosition(String positionCode, Date startDate, Date endDate, Integer row) throws MospException {
+	public boolean isCheckPosition(String positionCode, Date startDate, Date endDate, Integer row)
+			throws MospException {
 		// 期間内に無効がある場合
 		if (isTermPosition(positionCode, startDate, endDate) == false) {
 			return false;
@@ -366,7 +384,8 @@ public class PlatformMasterCheckBean extends PlatformBean implements PlatformMas
 	 * @param row          行インデックス
 	 * @param inactivateDate 無効になる日付
 	 */
-	protected void addEmploymentContractInactiveMessage(String employmentContractCode, Integer row, Date inactivateDate) {
+	protected void addEmploymentContractInactiveMessage(String employmentContractCode, Integer row,
+			Date inactivateDate) {
 		String targetDate = DateUtility.getStringDate(inactivateDate);
 		String[] aryRep = { getRowedFieldName(mospParams.getName("EmploymentContract"), row), employmentContractCode,
 			targetDate };
@@ -380,7 +399,8 @@ public class PlatformMasterCheckBean extends PlatformBean implements PlatformMas
 	 * @param row          行インデックス
 	 * @param inactivateDate 無効になる日付
 	 */
-	protected void addNamingInactiveMessage(String namingType, String namingItemCode, Integer row, Date inactivateDate) {
+	protected void addNamingInactiveMessage(String namingType, String namingItemCode, Integer row,
+			Date inactivateDate) {
 		String targetDate = DateUtility.getStringDate(inactivateDate);
 		// 名称区分の名称を取得する
 		String namingTypeItemName = mospParams.getProperties().getCodeItemName(PlatformConst.CODE_KEY_NAMING_TYPE,

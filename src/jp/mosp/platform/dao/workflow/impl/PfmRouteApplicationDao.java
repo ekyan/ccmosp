@@ -186,7 +186,7 @@ public class PfmRouteApplicationDao extends PlatformDao implements RouteApplicat
 			}
 			prepareStatement(sb.toString());
 			setParam(index++, activateDate);
-			setParam(index++, Integer.valueOf(PlatformConst.APPLICATION_TYPE_MASTER));
+			setParam(index++, Integer.parseInt(PlatformConst.APPLICATION_TYPE_MASTER));
 			setParam(index++, workflowType);
 			if (!workPlaceCode.equals("")) {
 				setParam(index++, workPlaceCode);
@@ -263,7 +263,8 @@ public class PfmRouteApplicationDao extends PlatformDao implements RouteApplicat
 	}
 	
 	@Override
-	public RouteApplicationDtoInterface findForKey(String routeApplicationCode, Date activateDate) throws MospException {
+	public RouteApplicationDtoInterface findForKey(String routeApplicationCode, Date activateDate)
+			throws MospException {
 		try {
 			index = 1;
 			StringBuffer sb = getSelectQuery(getClass());
@@ -309,7 +310,7 @@ public class PfmRouteApplicationDao extends PlatformDao implements RouteApplicat
 			sb.append(like(COL_PERSONAL_IDS));
 			prepareStatement(sb.toString());
 			setParam(index++, activateDate);
-			setParam(index++, Integer.valueOf(PlatformConst.APPLICATION_TYPE_PERSON));
+			setParam(index++, Integer.parseInt(PlatformConst.APPLICATION_TYPE_PERSON));
 			setParam(index++, workflowType);
 			setParam(index++, containsParam(personalId));
 			executeQuery();
@@ -613,6 +614,8 @@ public class PfmRouteApplicationDao extends PlatformDao implements RouteApplicat
 			sb.append(equal(COL_ROUTE_APPLICATION_CODE));
 			sb.append(and());
 			sb.append(less(COL_ACTIVATE_DATE));
+			sb.append(getOrderByColumn(COL_ACTIVATE_DATE));
+			sb.append(getDesc());
 			prepareStatement(sb.toString());
 			setParam(index++, applicationCode);
 			setParam(index++, activateDate);
@@ -641,6 +644,7 @@ public class PfmRouteApplicationDao extends PlatformDao implements RouteApplicat
 			sb.append(equal(COL_ROUTE_APPLICATION_CODE));
 			sb.append(and());
 			sb.append(greater(COL_ACTIVATE_DATE));
+			sb.append(getOrderByColumn(COL_ACTIVATE_DATE));
 			prepareStatement(sb.toString());
 			setParam(index++, applicationCode);
 			setParam(index++, activateDate);

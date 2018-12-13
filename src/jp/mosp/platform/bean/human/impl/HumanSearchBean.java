@@ -21,9 +21,11 @@ import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import jp.mosp.framework.base.MospException;
@@ -35,12 +37,10 @@ import jp.mosp.framework.utils.DateUtility;
 import jp.mosp.framework.utils.MospUtility;
 import jp.mosp.platform.base.PlatformBean;
 import jp.mosp.platform.bean.human.ConcurrentReferenceBeanInterface;
-import jp.mosp.platform.bean.human.EntranceReferenceBeanInterface;
 import jp.mosp.platform.bean.human.HumanArrayReferenceBeanInterface;
 import jp.mosp.platform.bean.human.HumanBinaryArrayReferenceBeanInterface;
 import jp.mosp.platform.bean.human.HumanBinaryHistoryReferenceBeanInterface;
 import jp.mosp.platform.bean.human.HumanBinaryNormalReferenceBeanInterface;
-import jp.mosp.platform.bean.human.HumanGeneralBeanInterface;
 import jp.mosp.platform.bean.human.HumanHistoryReferenceBeanInterface;
 import jp.mosp.platform.bean.human.HumanNormalReferenceBeanInterface;
 import jp.mosp.platform.bean.human.HumanSearchBeanInterface;
@@ -53,8 +53,12 @@ import jp.mosp.platform.bean.system.PositionReferenceBeanInterface;
 import jp.mosp.platform.bean.system.SectionReferenceBeanInterface;
 import jp.mosp.platform.bean.system.WorkPlaceReferenceBeanInterface;
 import jp.mosp.platform.constant.PlatformConst;
+import jp.mosp.platform.dao.human.EntranceDaoInterface;
 import jp.mosp.platform.dao.human.HumanSearchDaoInterface;
+import jp.mosp.platform.dao.human.RetirementDaoInterface;
+import jp.mosp.platform.dao.human.SuspensionDaoInterface;
 import jp.mosp.platform.dto.human.ConcurrentDtoInterface;
+import jp.mosp.platform.dto.human.EntranceDtoInterface;
 import jp.mosp.platform.dto.human.HumanBinaryArrayDtoInterface;
 import jp.mosp.platform.dto.human.HumanBinaryHistoryDtoInterface;
 import jp.mosp.platform.dto.human.HumanBinaryNormalDtoInterface;
@@ -78,237 +82,247 @@ public class HumanSearchBean extends PlatformHumanBean implements HumanSearchBea
 	/**
 	 * フリーワード区切文字。
 	 */
-	public static final String					FREE_WORD_SEPARATOR		= " ";
+	public static final String							FREE_WORD_SEPARATOR		= " ";
 	
 	/**
 	 * 人事情報検索DAO。
 	 */
-	HumanSearchDaoInterface						dao;
+	protected HumanSearchDaoInterface					dao;
 	
 	/**
 	 * 名称区分情報参照クラス。
 	 */
-	NamingReferenceBeanInterface				namingReference;
+	protected NamingReferenceBeanInterface				namingReference;
 	
 	/**
 	 * 人事兼務情報参照クラス。
 	 */
-	ConcurrentReferenceBeanInterface			concurrentReference;
-	
-	/**
-	 * 人事入社情報参照クラス。
-	 */
-	EntranceReferenceBeanInterface				entranceReference;
+	protected ConcurrentReferenceBeanInterface			concurrentReference;
 	
 	/**
 	 * 人事退社情報参照クラス。
 	 */
-	RetirementReferenceBeanInterface			retirementReference;
+	protected RetirementReferenceBeanInterface			retirementReference;
 	
 	/**
 	 * 人事休職情報参照クラス。
 	 */
-	SuspensionReferenceBeanInterface			suspensionReference;
+	protected SuspensionReferenceBeanInterface			suspensionReference;
 	
 	/**
 	 * 人事汎用通常情報参照クラス。
 	 */
-	HumanNormalReferenceBeanInterface			humanNormalReference;
+	protected HumanNormalReferenceBeanInterface			humanNormalReference;
 	
 	/**
 	 * 人事汎用履歴参照クラス。
 	 */
-	HumanHistoryReferenceBeanInterface			humanHistoryReference;
+	protected HumanHistoryReferenceBeanInterface		humanHistoryReference;
 	
 	/**
 	 * 人事汎用一覧情報参照クラス。
 	 */
-	HumanArrayReferenceBeanInterface			humanArrayReference;
-	
-	/**
-	 * 人事汎用管理機能クラス。
-	 */
-	HumanGeneralBeanInterface					humanGeneral;
+	protected HumanArrayReferenceBeanInterface			humanArrayReference;
 	
 	/**
 	 * 人事汎用バイナリ通常情報参照クラス。
 	 */
-	HumanBinaryNormalReferenceBeanInterface		humanBinaryNormal;
+	protected HumanBinaryNormalReferenceBeanInterface	humanBinaryNormal;
 	
 	/**
 	 * 人事汎用バイナリ履歴情報参照クラス。
 	 */
-	HumanBinaryHistoryReferenceBeanInterface	humanBinaryHistory;
+	protected HumanBinaryHistoryReferenceBeanInterface	humanBinaryHistory;
 	
 	/**
 	 * 人事汎用バイナリ一覧情報参照クラス。
 	 */
-	HumanBinaryArrayReferenceBeanInterface		humanBinaryArray;
+	protected HumanBinaryArrayReferenceBeanInterface	humanBinaryArray;
 	
 	/**
 	 * 職位マスタ参照。
 	 */
-	PositionReferenceBeanInterface				position;
+	protected PositionReferenceBeanInterface			position;
 	
 	/**
 	 * 雇用契約マスタ参照。
 	 */
-	EmploymentContractReferenceBeanInterface	employmentContract;
+	protected EmploymentContractReferenceBeanInterface	employmentContract;
 	
 	/**
 	 * 勤務地マスタ参照。
 	 */
-	WorkPlaceReferenceBeanInterface				workPlace;
+	protected WorkPlaceReferenceBeanInterface			workPlace;
 	
 	/**
 	 * 勤務地マスタ参照。
 	 */
-	SectionReferenceBeanInterface				section;
+	protected SectionReferenceBeanInterface				section;
+	
+	/**
+	 * 入社情報DAOクラス。
+	 */
+	protected EntranceDaoInterface						entranceDao;
+	
+	/**
+	 * 休職情報DAOクラス。
+	 */
+	protected SuspensionDaoInterface					suspensionDao;
+	
+	/**
+	 * 退職情報DAOクラス。
+	 */
+	protected RetirementDaoInterface					retirementDao;
 	
 	/**
 	 * 対象日。
 	 */
-	protected Date								targetDate;
+	protected Date										targetDate;
 	
 	/**
 	 * 社員コード。
 	 */
-	protected String							employeeCode;
+	protected String									employeeCode;
 	
 	/**
 	 * 社員コード(from)。
 	 */
-	protected String							fromEmployeeCode;
+	protected String									fromEmployeeCode;
 	
 	/**
 	 * 社員コード(to)。
 	 */
-	protected String							toEmployeeCode;
+	protected String									toEmployeeCode;
 	
 	/**
 	 * 社員名。
 	 */
-	protected String							employeeName;
+	protected String									employeeName;
 	
 	/**
 	 * 姓。
 	 */
-	protected String							lastName;
+	protected String									lastName;
 	
 	/**
 	 * 名。
 	 */
-	protected String							firstName;
+	protected String									firstName;
 	
 	/**
 	 * 姓（カナ）。
 	 */
-	protected String							lastKana;
+	protected String									lastKana;
 	
 	/**
 	 * 名（カナ）。
 	 */
-	protected String							firstKana;
+	protected String									firstKana;
 	
 	/**
 	 * 勤務地コード。
 	 */
-	protected String							workPlaceCode;
+	protected String									workPlaceCode;
 	
 	/**
 	 * 雇用契約コード。
 	 */
-	protected String							employmentContractCode;
+	protected String									employmentContractCode;
 	
 	/**
 	 * 所属コード。
 	 */
-	protected String							sectionCode;
+	protected String									sectionCode;
 	
 	/**
 	 * 下位所属要否。
 	 */
-	protected Boolean							needLowerSection;
+	protected Boolean									needLowerSection;
 	
 	/**
 	 * 職位コード。
 	 */
-	protected String							positionCode;
+	protected String									positionCode;
+	
+	/**
+	 * 職位等級範囲。
+	 */
+	protected String									positionGradeRange;
 	
 	/**
 	 * 兼務要否。
 	 */
-	protected Boolean							needConcurrent;
+	protected Boolean									needConcurrent;
 	
 	/**
 	 * 情報区分。
 	 */
-	protected String							informationType;
+	protected String									informationType;
 	
 	/**
 	 * 検索ワード。
 	 */
-	protected String							searchWord;
+	protected String									searchWord;
 	
 	/**
 	 * 休退職区分。
 	 */
-	protected String							stateType;
+	protected String									stateType;
 	
 	/**
 	 * 条件区分（社員コード）。
 	 */
-	protected String							employeeCodeType;
+	protected String									employeeCodeType;
 	
 	/**
 	 * 条件区分（姓）。
 	 */
-	protected String							lastNameType;
+	protected String									lastNameType;
 	
 	/**
 	 * 条件区分（名）。
 	 */
-	protected String							firstNameType;
+	protected String									firstNameType;
 	
 	/**
 	 * 条件区分（姓（カナ））。
 	 */
-	protected String							lastKanaType;
+	protected String									lastKanaType;
 	
 	/**
 	 * 条件区分（名（カナ））。
 	 */
-	protected String							firstKanaType;
+	protected String									firstKanaType;
 	
 	/**
 	 * 不要個人ID。
 	 */
-	protected String							unnecessaryPersonalId;
+	protected String									unnecessaryPersonalId;
 	
 	/**
 	 * 承認ロール要否。
 	 */
-	protected Boolean							needApproverRole;
+	protected Boolean									needApproverRole;
 	
 	/**
 	 * 操作区分。
 	 */
-	protected String							operationType;
+	protected String									operationType;
 	
 	/**
 	 * 期間開始日。
 	 */
-	protected Date								startDate;
+	protected Date										startDate;
 	
 	/**
 	 * 期間終了日。
 	 */
-	protected Date								endDate;
+	protected Date										endDate;
 	
 	/**
 	 * 人事汎用管理表示区分(社員検索)。<br>
 	 */
-	public static final String					KEY_VIEW_HUMAN_SEARCH	= "HumanSearch";
+	public static final String							KEY_VIEW_HUMAN_SEARCH	= "HumanSearch";
 	
 	
 	/**
@@ -333,21 +347,27 @@ public class HumanSearchBean extends PlatformHumanBean implements HumanSearchBea
 		// 人事情報検索DAO取得
 		dao = (HumanSearchDaoInterface)createDao(HumanSearchDaoInterface.class);
 		concurrentReference = (ConcurrentReferenceBeanInterface)createBean(ConcurrentReferenceBeanInterface.class);
-		entranceReference = (EntranceReferenceBeanInterface)createBean(EntranceReferenceBeanInterface.class);
 		retirementReference = (RetirementReferenceBeanInterface)createBean(RetirementReferenceBeanInterface.class);
 		suspensionReference = (SuspensionReferenceBeanInterface)createBean(SuspensionReferenceBeanInterface.class);
 		humanNormalReference = (HumanNormalReferenceBeanInterface)createBean(HumanNormalReferenceBeanInterface.class);
-		humanHistoryReference = (HumanHistoryReferenceBeanInterface)createBean(HumanHistoryReferenceBeanInterface.class);
+		humanHistoryReference = (HumanHistoryReferenceBeanInterface)createBean(
+				HumanHistoryReferenceBeanInterface.class);
 		humanArrayReference = (HumanArrayReferenceBeanInterface)createBean(HumanArrayReferenceBeanInterface.class);
-		humanGeneral = (HumanGeneralBeanInterface)createBean(HumanGeneralBeanInterface.class);
-		humanBinaryNormal = (HumanBinaryNormalReferenceBeanInterface)createBean(HumanBinaryNormalReferenceBeanInterface.class);
-		humanBinaryHistory = (HumanBinaryHistoryReferenceBeanInterface)createBean(HumanBinaryHistoryReferenceBeanInterface.class);
-		humanBinaryArray = (HumanBinaryArrayReferenceBeanInterface)createBean(HumanBinaryArrayReferenceBeanInterface.class);
+		humanBinaryNormal = (HumanBinaryNormalReferenceBeanInterface)createBean(
+				HumanBinaryNormalReferenceBeanInterface.class);
+		humanBinaryHistory = (HumanBinaryHistoryReferenceBeanInterface)createBean(
+				HumanBinaryHistoryReferenceBeanInterface.class);
+		humanBinaryArray = (HumanBinaryArrayReferenceBeanInterface)createBean(
+				HumanBinaryArrayReferenceBeanInterface.class);
 		position = (PositionReferenceBeanInterface)createBean(PositionReferenceBeanInterface.class);
 		section = (SectionReferenceBeanInterface)createBean(SectionReferenceBeanInterface.class);
-		employmentContract = (EmploymentContractReferenceBeanInterface)createBean(EmploymentContractReferenceBeanInterface.class);
+		employmentContract = (EmploymentContractReferenceBeanInterface)createBean(
+				EmploymentContractReferenceBeanInterface.class);
 		workPlace = (WorkPlaceReferenceBeanInterface)createBean(WorkPlaceReferenceBeanInterface.class);
 		namingReference = (NamingReferenceBeanInterface)createBean(NamingReferenceBeanInterface.class);
+		entranceDao = (EntranceDaoInterface)createDao(EntranceDaoInterface.class);
+		suspensionDao = (SuspensionDaoInterface)createDao(SuspensionDaoInterface.class);
+		retirementDao = (RetirementDaoInterface)createDao(RetirementDaoInterface.class);
 	}
 	
 	@Override
@@ -366,6 +386,7 @@ public class HumanSearchBean extends PlatformHumanBean implements HumanSearchBea
 		param.put(HumanSearchDaoInterface.SEARCH_SECTION_CODE, sectionCode);
 		param.put(HumanSearchDaoInterface.SEARCH_NEED_LOWER_SECTION, needLowerSection);
 		param.put(HumanSearchDaoInterface.SEARCH_POSITION_CODE, positionCode);
+		param.put(HumanSearchDaoInterface.SEARCH_POSITION_GRADE_RANGE, positionGradeRange);
 		param.put(HumanSearchDaoInterface.SEARCH_NEED_CONCURRENT, needConcurrent);
 		param.put("employmentContractCode", employmentContractCode);
 		param.put("firstName", firstName);
@@ -391,10 +412,168 @@ public class HumanSearchBean extends PlatformHumanBean implements HumanSearchBea
 		// 期間設定
 		param.put(HumanSearchDaoInterface.SEARCH_START_DATE, startDate);
 		param.put(HumanSearchDaoInterface.SEARCH_END_DATE, endDate);
-		// 検索
-		List<HumanDtoInterface> humanList = dao.findForSearch(param);
+		// 在職・退職・休職検索
+		List<HumanDtoInterface> humanList = searchForState(dao.findForSearch(param));
 		// フリーワード検索
 		return searchForFreeWord(humanList);
+	}
+	
+	/**
+	 * 休退職区分を人事検索する。
+	 * @param list 人事情報リスト
+	 * @return 休退職区分検索結果人事情報リスト
+	 * @throws MospException インスタンスの取得、SQLの作成及び実行に失敗した場合
+	 * 
+	 */
+	protected List<HumanDtoInterface> searchForState(List<HumanDtoInterface> list) throws MospException {
+		// 休退職区分がない場合
+		if (stateType == null || stateType.isEmpty()) {
+			return list;
+		}
+		// 検索結果リスト準備
+		List<HumanDtoInterface> resultList = new ArrayList<HumanDtoInterface>();
+		// 在職の場合
+		if (stateType.equals(PlatformConst.EMPLOYEE_STATE_PRESENCE)) {
+			// 入社個人IDセット取得
+			Set<String> enreancedSet = entranceDao.findForEntrancedPersonalIdSet(targetDate, startDate, endDate);
+			// 休職個人IDセット取得
+			Set<String> suspendedSet = getSuspendedPersonalIdSet();
+			// 退職個人IDセット取得
+			Set<String> retirementedSet = getRetiredPersonalIdSet();
+			// 人事情報毎に処理
+			for (HumanDtoInterface dto : list) {
+				// 入社個人IDセットにふくまれていない場合
+				if (!enreancedSet.contains(dto.getPersonalId())) {
+					continue;
+				}
+				// 全期間休職個人IDセットに含まれている場合
+				if (suspendedSet.contains(dto.getPersonalId())) {
+					continue;
+				}
+				// 退職者個人IDセットに含まれている場合
+				if (retirementedSet.contains(dto.getPersonalId())) {
+					continue;
+				}
+				// 検索結果リスト追加
+				resultList.add(dto);
+			}
+		}
+		// 休職の場合
+		if (stateType.equals(PlatformConst.EMPLOYEE_STATE_SUSPEND)) {
+			// 休職個人IDセット取得
+			Set<String> suspendedSet = getSuspendedPersonalIdSet();
+			// 人事情報リスト毎に処理
+			for (HumanDtoInterface dto : list) {
+				// 休職個人IDセットに含まれている場合
+				if (suspendedSet.contains(dto.getPersonalId())) {
+					// 検索結果リスト追加
+					resultList.add(dto);
+				}
+			}
+		}
+		// 退職の場合
+		if (stateType.equals(PlatformConst.EMPLOYEE_STATE_RETIRE)) {
+			// 退職個人IDセット取得
+			Set<String> retirementedSet = getRetiredPersonalIdSet();
+			// 人事情報リスト毎に処理
+			for (HumanDtoInterface dto : list) {
+				// 退職者個人IDセットに含まれている場合
+				if (retirementedSet.contains(dto.getPersonalId())) {
+					// 検索結果リスト追加
+					resultList.add(dto);
+				}
+			}
+		}
+		return resultList;
+	}
+	
+	/**
+	 * 対象期間の休職している個人IDセットを取得する。<br>
+	 * 期間の定めがない場合、少しでも休職している個人IDセットを取得する。<br>
+	 * 期間の定めがある場合、期間内全て休職している個人IDセットを取得する。<br>
+	 * @return 休職者の個人IDセット
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	protected Set<String> getSuspendedPersonalIdSet() throws MospException {
+		// 全期間休職者個人IDセット準備
+		Set<String> termSet = new HashSet<String>();
+		// 個人休職情報リストマップ取得
+		Map<String, List<SuspensionDtoInterface>> suspensionMap = getSuspentionMap();
+		// 期間の定めがない場合
+		if (startDate == null || endDate == null) {
+			return suspensionMap.keySet();
+		}
+		// 期間の定めがある場合
+		for (Entry<String, List<SuspensionDtoInterface>> entry : suspensionMap.entrySet()) {
+			// 個人IDを取得
+			String personalId = entry.getKey();
+			// 個人休職情報リスト取得
+			List<SuspensionDtoInterface> personalList = entry.getValue();
+			// 休職情報開始日が期間開始日の後の場合
+			if (personalList.get(0).getStartDate().compareTo(startDate) > 0) {
+				continue;
+			}
+			// 休職終了日準備
+			Date suspensionEndDate = null;
+			// 個人休職情報リスト毎に処理
+			for (SuspensionDtoInterface dto : personalList) {
+				// 休職終了日がある場合
+				if (suspensionEndDate != null) {
+					// 休職開始が休職終了日次の日でない場合
+					if (dto.getStartDate().compareTo(DateUtility.addDay(suspensionEndDate, 1)) != 0) {
+						break;
+					}
+				}
+				// 休職期間最終日取得
+				suspensionEndDate = dto.getEndDate();
+				if (suspensionEndDate == null) {
+					suspensionEndDate = dto.getScheduleEndDate();
+				}
+			}
+			// 休職終了日が期間終了日より後、又は同じ場合
+			if (suspensionEndDate.compareTo(endDate) >= 0) {
+				termSet.add(personalId);
+			}
+		}
+		return termSet;
+	}
+	
+	/**
+	 * 個人休職情報リストマップを取得する。<br>
+	 * @return 個人休職情報リストマップ
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	protected Map<String, List<SuspensionDtoInterface>> getSuspentionMap() throws MospException {
+		// 対象期間に休職期間が含まれる休職情報リストを取得
+		List<SuspensionDtoInterface> list = suspensionDao.findForList(targetDate, startDate, endDate);
+		// 個人休職情報リストマップ準備
+		Map<String, List<SuspensionDtoInterface>> map = new HashMap<String, List<SuspensionDtoInterface>>();
+		// 休職情報リスト毎に処理
+		for (SuspensionDtoInterface dto : list) {
+			// マップ内休職情報リスト取得
+			List<SuspensionDtoInterface> personalList = map.get(dto.getPersonalId());
+			// 休職情報リストがない場合
+			if (personalList == null) {
+				// 新規で作成しつめる
+				personalList = new ArrayList<SuspensionDtoInterface>();
+				map.put(dto.getPersonalId(), personalList);
+			}
+			// マップ内休職情報リスト追加
+			personalList.add(dto);
+		}
+		return map;
+		
+	}
+	
+	/**
+	 * 対象期間終了日までに退職している個人IDセットを取得する。
+	 * @return 退職者の個人IDセット
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 * 
+	 */
+	protected Set<String> getRetiredPersonalIdSet() throws MospException {
+		// 個人IDセット準備
+		return retirementDao.findForRetiredPersonalIdSet(targetDate, startDate, endDate);
 	}
 	
 	/**
@@ -438,10 +617,11 @@ public class HumanSearchBean extends PlatformHumanBean implements HumanSearchBea
 			return new String[0][][];
 		}
 		// 人事兼務情報参照クラス取得
-		ConcurrentReferenceBeanInterface concurrentRefer = (ConcurrentReferenceBeanInterface)createBean(ConcurrentReferenceBeanInterface.class);
+		ConcurrentReferenceBeanInterface concurrentRefer = (ConcurrentReferenceBeanInterface)createBean(
+				ConcurrentReferenceBeanInterface.class);
 		// 対象日時点で終了していない人事兼務情報のリストを取得
-		List<ConcurrentDtoInterface> concurrentList = concurrentRefer.getConcurrentList(mospParams.getUser()
-			.getPersonalId(), targetDate);
+		List<ConcurrentDtoInterface> concurrentList = concurrentRefer
+			.getConcurrentList(mospParams.getUser().getPersonalId(), targetDate);
 		// 操作範囲(兼務)の準備
 		String[][][] rangeConcurrent = new String[concurrentList.size()][][];
 		// 操作範囲(兼務)の作成
@@ -486,14 +666,16 @@ public class HumanSearchBean extends PlatformHumanBean implements HumanSearchBea
 		} else if (informationType.equals(PlatformConst.FREE_WORD_CONCUR)) {
 			// 兼務情報でフリーワード検索
 			return searchForFreeWordConcurrentInfo(humanList, arySearchWord);
-		} else if (viewConfig != null && viewConfig.getType().equals(PlatformHumanConst.PRM_HUMAN_DIVISION_TYPE_NORMAL)) {
+		} else if (viewConfig != null
+				&& viewConfig.getType().equals(PlatformHumanConst.PRM_HUMAN_DIVISION_TYPE_NORMAL)) {
 			// 人事汎用通常情報でフリーワード検索
 			return searchForFreeWordHumanNormalInfo(informationType, humanList, arySearchWord);
 		} else if (viewConfig != null
 				&& viewConfig.getType().equals(PlatformHumanConst.PRM_HUMAN_DIVISION_TYPE_HISTORY)) {
 			// 人事汎用履歴情報でフリーワード検索
 			return searchForFreeWordHumanHistoryInfo(informationType, humanList, arySearchWord);
-		} else if (viewConfig != null && viewConfig.getType().equals(PlatformHumanConst.PRM_HUMAN_DIVISION_TYPE_ARRAY)) {
+		} else if (viewConfig != null
+				&& viewConfig.getType().equals(PlatformHumanConst.PRM_HUMAN_DIVISION_TYPE_ARRAY)) {
 			// 人事汎用一覧情報でフリーワード検索
 			return searchForFreeWordHumanArrayInfo(informationType, humanList, arySearchWord, targetDate);
 		} else if (viewConfig != null
@@ -578,8 +760,8 @@ public class HumanSearchBean extends PlatformHumanBean implements HumanSearchBea
 				// 雇用契約が登録されている場合
 				if (resultEmployementCode.isEmpty() == false) {
 					// 雇用契約情報取得
-					EmploymentContractDtoInterface resultEmploymentDto = employmentContract.getContractInfo(
-							resultEmployementCode, targetDate);
+					EmploymentContractDtoInterface resultEmploymentDto = employmentContract
+						.getContractInfo(resultEmployementCode, targetDate);
 					// 雇用契約名で検索結果がある場合
 					if (isBroadMatch(searchWord, resultEmploymentDto.getEmploymentContractName())) {
 						resultList.add(humanDto);
@@ -640,8 +822,8 @@ public class HumanSearchBean extends PlatformHumanBean implements HumanSearchBea
 		// 対象人事リスト毎に処理
 		for (HumanDtoInterface humanDto : humanList) {
 			// 休職情報履歴一覧所得
-			List<SuspensionDtoInterface> suspensionList = suspensionReference.getSuspentionList(humanDto
-				.getPersonalId());
+			List<SuspensionDtoInterface> suspensionList = suspensionReference
+				.getSuspentionList(humanDto.getPersonalId());
 			// 休職情報がない場合
 			if (suspensionList.isEmpty()) {
 				continue;
@@ -752,8 +934,8 @@ public class HumanSearchBean extends PlatformHumanBean implements HumanSearchBea
 		// 対象人事リスト毎に処理
 		for (HumanDtoInterface humanDto : humanList) {
 			// 兼務情報履歴一覧所得
-			List<ConcurrentDtoInterface> concurrentList = concurrentReference.getConcurrentList(
-					humanDto.getPersonalId(), targetDate);
+			List<ConcurrentDtoInterface> concurrentList = concurrentReference
+				.getConcurrentList(humanDto.getPersonalId(), targetDate);
 			// 兼務情報リストがない場合
 			if (concurrentList.isEmpty()) {
 				continue;
@@ -852,8 +1034,8 @@ public class HumanSearchBean extends PlatformHumanBean implements HumanSearchBea
 		for (HumanDtoInterface humanDto : humanList) {
 			// 個人ID取得
 			String personalId = humanDto.getPersonalId();
-			LinkedHashMap<String, Map<String, String>> historyMap = humanHistoryReference.getHumanHistoryMapInfo(
-					division, KEY_VIEW_HUMAN_SEARCH, personalId, targetDate, targetDate);
+			LinkedHashMap<String, Map<String, String>> historyMap = humanHistoryReference
+				.getHumanHistoryMapInfo(division, KEY_VIEW_HUMAN_SEARCH, personalId, targetDate, targetDate);
 			// 人事汎用通常情報がない場合
 			if (historyMap.isEmpty()) {
 				continue;
@@ -1157,8 +1339,27 @@ public class HumanSearchBean extends PlatformHumanBean implements HumanSearchBea
 		String[][] aryPosition = position.getSelectArray(targetDate, true, null);
 		// 人事情報リスト準備
 		List<HumanListDtoInterface> humanList = new ArrayList<HumanListDtoInterface>();
+		// 検索結果のリスト数カウント
+		int count = 0;
+		// 退職情報マップの取得
+		Map<String, RetirementDtoInterface> retirementMap = null;
+		// 休職情報マップの取得
+		Map<String, SuspensionDtoInterface> suspensionMap = null;
+		// 入社情報マップの取得
+		Map<String, EntranceDtoInterface> enreanceMap = null;
+		
 		// 検索結果から人事情報リストを作成
 		for (HumanDtoInterface dto : list) {
+			if (count % getPersonalIdsMaxIndex() == 0) {
+				// 人事情報リストから特定件数分の個人ID一覧を取得
+				String[] personalIds = getPersonalIds(list, count);
+				// 退職情報マップの取得
+				retirementMap = retirementDao.findForPersonalIds(personalIds);
+				// 休職情報マップの取得
+				suspensionMap = suspensionDao.findForPersonalIds(personalIds, targetDate);
+				// 情報マップの取得
+				enreanceMap = entranceDao.findForPersonalIds(personalIds);
+			}
 			// 初期化
 			HumanListDtoInterface humanListDto = new PfaHumanListDto();
 			// 人事基本情報設定
@@ -1187,21 +1388,22 @@ public class HumanSearchBean extends PlatformHumanBean implements HumanSearchBea
 			// 雇用契約情報設定
 			humanListDto.setEmploymentContractCode(dto.getEmploymentContractCode());
 			if (dto.getEmploymentContractCode().isEmpty() == false) {
-				humanListDto.setEmploymentContractAbbr(getCodeName(dto.getEmploymentContractCode(),
-						aryEmploymentContract));
+				humanListDto
+					.setEmploymentContractAbbr(getCodeName(dto.getEmploymentContractCode(), aryEmploymentContract));
 			}
 			// 休退職情報設定
-			if (retirementReference.isRetired(dto.getPersonalId(), targetDate)) {
+			if (isRetired(retirementMap.get(dto.getPersonalId()), targetDate)) {
 				humanListDto.setRetireState(mospParams.getProperties().getName("RetirementOn"));
-			} else if (suspensionReference.isSuspended(dto.getPersonalId(), targetDate)) {
+			} else if (isSuspended(suspensionMap.get(dto.getPersonalId()))) {
 				humanListDto.setRetireState(mospParams.getProperties().getName("RetirementLeave"));
-			} else if (entranceReference.isEntered(dto.getPersonalId(), targetDate) == false) {
+			} else if (isEntered(enreanceMap.get(dto.getPersonalId()), targetDate) == false) {
 				humanListDto.setRetireState("");
 			} else {
 				humanListDto.setRetireState(mospParams.getProperties().getName("RetirementOff"));
 			}
 			// 人事情報リストに追加
 			humanList.add(humanListDto);
+			count++;
 		}
 		return humanList;
 	}
@@ -1349,6 +1551,11 @@ public class HumanSearchBean extends PlatformHumanBean implements HumanSearchBea
 	}
 	
 	@Override
+	public void setPositionGradeRange(String positionGradeRange) {
+		this.positionGradeRange = positionGradeRange;
+	}
+	
+	@Override
 	public void setNeedConcurrent(boolean needConcurrent) {
 		this.needConcurrent = Boolean.valueOf(needConcurrent);
 	}
@@ -1428,4 +1635,72 @@ public class HumanSearchBean extends PlatformHumanBean implements HumanSearchBea
 		this.endDate = getDateClone(endDate);
 	}
 	
+	/**
+	 * パーソナルID配列の取得
+	 * @param humanList 人事基本情報リスト
+	 * @param index 人事一覧のインデックス
+	 * @return パーソナルID配列
+	 */
+	protected String[] getPersonalIds(List<HumanDtoInterface> humanList, int index) {
+		int indexCount = getPersonalIdsMaxIndex();
+		int lastIndex = index + indexCount;
+		if (lastIndex > humanList.size()) {
+			lastIndex = humanList.size();
+		}
+		String[] personalIds = new String[lastIndex - index];
+		for (int i = index; i < personalIds.length; i++) {
+			personalIds[i] = humanList.get(index++).getPersonalId();
+		}
+		return personalIds;
+	}
+	
+	/**
+	 * 退職判断。
+	 * <p>
+	 * 人事退職情報と対象日から退職を判断する。
+	 * </p>
+	 * @param dto 人事退職情報
+	 * @param targetDate 対象日
+	 * @return 対象日に退職している場合true、そうでない場合false。
+	 * @throws MospException インスタンスの取得、SQLの作成及び実行に失敗した場合
+	 */
+	protected boolean isRetired(RetirementDtoInterface dto, Date targetDate) throws MospException {
+		if (dto != null) {
+			return targetDate.compareTo(dto.getRetirementDate()) > 0;
+		}
+		return false;
+	}
+	
+	/**
+	 * 休職判断。
+	 * <p>
+	 * 人事休職情報から休職判断をする。
+	 * </p>
+	 * @param dto 人事休職情報
+	 * @return 対象日に休職している場合true、そうでない場合false。
+	 * @throws MospException インスタンスの取得、SQLの作成及び実行に失敗した場合
+	 */
+	protected boolean isSuspended(SuspensionDtoInterface dto) throws MospException {
+		if (dto != null) {
+			return true;
+		}
+		return false;
+	}
+	
+	/**
+	 * 入社判断。
+	 * <p>
+	 * 人事入社情報と対象年月日から入社判断をする。
+	 * </p>
+	 * @param dto 人事入社情報
+	 * @param targetDate 対象年月日
+	 * @return 入社の場合true、そうでない場合false。
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	public boolean isEntered(EntranceDtoInterface dto, Date targetDate) throws MospException {
+		if (dto != null) {
+			return targetDate.compareTo(dto.getEntranceDate()) >= 0;
+		}
+		return false;
+	}
 }

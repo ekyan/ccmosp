@@ -17,6 +17,7 @@
  */
 package jp.mosp.time.base;
 
+import jp.mosp.framework.base.BaseDtoInterface;
 import jp.mosp.time.settings.base.TimeSettingVo;
 
 /**
@@ -63,9 +64,19 @@ public class AttendanceListBaseVo extends TimeSettingVo {
 	private String[]			aryLblStartTime;
 	
 	/**
+	 * 始業時間スタイル。
+	 */
+	private String[]			aryStartTimeStyle;
+	
+	/**
 	 * 終業時間。
 	 */
 	private String[]			aryLblEndTime;
+	
+	/**
+	 * 終業時間スタイル。
+	 */
+	private String[]			aryEndTimeStyle;
 	
 	/**
 	 * 勤務時間。
@@ -108,6 +119,11 @@ public class AttendanceListBaseVo extends TimeSettingVo {
 	private String				lblTimesLegalHoliday;
 	
 	/**
+	 * 合計休日日数。
+	 */
+	private String				lblTimesHoliday;
+	
+	/**
 	 * プルダウン用配列(表示年月(年))。
 	 */
 	private String[][]			aryPltSelectYear;
@@ -146,6 +162,31 @@ public class AttendanceListBaseVo extends TimeSettingVo {
 	 * 先月ボタンの月。<br>
 	 */
 	private int					prevMonthMonth;
+	
+	/**
+	 * 前社員コード。<br>
+	 */
+	private String				lblPrevEmployeeCode;
+	
+	/**
+	 * 次社員コード。<br>
+	 */
+	private String				lblNextEmployeeCode;
+	
+	/**
+	 * 前個人ID。
+	 */
+	private String				prevPersonalId;
+	
+	/**
+	 * 次個人ID。
+	 */
+	private String				nextPersonalId;
+	
+	/**
+	 * 遷移DTO配列。<br>
+	 */
+	private BaseDtoInterface[]	rollArray;
 	
 	/**
 	 * 表示コマンド。<br>
@@ -212,6 +253,21 @@ public class AttendanceListBaseVo extends TimeSettingVo {
 	 */
 	public String getAryLblStartTime(int idx) {
 		return aryLblStartTime[idx];
+	}
+	
+	/**
+	 * @param idx インデックス 
+	 * @return aryStartTimeStyle
+	 */
+	public String getAryStartTimeStyle(int idx) {
+		return aryStartTimeStyle[idx];
+	}
+	
+	/**
+	 * @param aryStartTimeStyle セットする aryStartTimeStyle
+	 */
+	public void setAryStartTimeStyle(String[] aryStartTimeStyle) {
+		this.aryStartTimeStyle = getStringArrayClone(aryStartTimeStyle);
 	}
 	
 	/**
@@ -286,6 +342,20 @@ public class AttendanceListBaseVo extends TimeSettingVo {
 	 */
 	public String getLblTimesPrescribedHoliday() {
 		return lblTimesPrescribedHoliday;
+	}
+	
+	/**
+	 * @return lblTimesHoliday
+	 */
+	public String getLblTimesHoliday() {
+		return lblTimesHoliday;
+	}
+	
+	/**
+	 * @param lblTimesHoliday セットする lblTimesHoliday。
+	 */
+	public void setLblTimesHoliday(String lblTimesHoliday) {
+		this.lblTimesHoliday = lblTimesHoliday;
 	}
 	
 	/**
@@ -364,6 +434,21 @@ public class AttendanceListBaseVo extends TimeSettingVo {
 	 */
 	public void setAryLblEndTime(String[] aryLblEndTime) {
 		this.aryLblEndTime = getStringArrayClone(aryLblEndTime);
+	}
+	
+	/**
+	 * @param idx インデックス
+	 * @return aryEndTimeStyle
+	 */
+	public String getAryEndTimeStyle(int idx) {
+		return aryEndTimeStyle[idx];
+	}
+	
+	/**
+	 * @param aryEndTimeStyle セットする aryEndTimeStyle
+	 */
+	public void setAryEndTimeStyle(String[] aryEndTimeStyle) {
+		this.aryEndTimeStyle = getStringArrayClone(aryEndTimeStyle);
 	}
 	
 	/**
@@ -518,6 +603,76 @@ public class AttendanceListBaseVo extends TimeSettingVo {
 	 */
 	public void setPrevMonthMonth(int prevMonthMonth) {
 		this.prevMonthMonth = prevMonthMonth;
+	}
+	
+	/**
+	 * @return lblPrevEmployeeCode
+	 */
+	public String getLblPrevEmployeeCode() {
+		return lblPrevEmployeeCode;
+	}
+	
+	/**
+	 * @param lblPrevEmployeeCode セットする lblPrevEmployeeCode
+	 */
+	public void setLblPrevEmployeeCode(String lblPrevEmployeeCode) {
+		this.lblPrevEmployeeCode = lblPrevEmployeeCode;
+	}
+	
+	/**
+	 * @return lblNextEmployeeCode
+	 */
+	public String getLblNextEmployeeCode() {
+		return lblNextEmployeeCode;
+	}
+	
+	/**
+	 * @param lblNextEmployeeCode セットする lblNextEmployeeCode
+	 */
+	public void setLblNextEmployeeCode(String lblNextEmployeeCode) {
+		this.lblNextEmployeeCode = lblNextEmployeeCode;
+	}
+	
+	/**
+	 * @return prevPersonalId
+	 */
+	public String getPrevPersonalId() {
+		return prevPersonalId;
+	}
+	
+	/**
+	 * @param prevPersonalId セットする prevPersonalId
+	 */
+	public void setPrevPersonalId(String prevPersonalId) {
+		this.prevPersonalId = prevPersonalId;
+	}
+	
+	/**
+	 * @return nextPersonalId
+	 */
+	public String getNextPersonalId() {
+		return nextPersonalId;
+	}
+	
+	/**
+	 * @param nextPersonalId セットする nextPersonalId
+	 */
+	public void setNextPersonalId(String nextPersonalId) {
+		this.nextPersonalId = nextPersonalId;
+	}
+	
+	/**
+	 * @return rollArray
+	 */
+	public BaseDtoInterface[] getRollArray() {
+		return getDtoArrayClone(rollArray);
+	}
+	
+	/**
+	 * @param rollArray セットする rollArray
+	 */
+	public void setRollArray(BaseDtoInterface[] rollArray) {
+		this.rollArray = getDtoArrayClone(rollArray);
 	}
 	
 	/**

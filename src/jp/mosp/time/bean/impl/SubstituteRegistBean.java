@@ -18,6 +18,7 @@
 package jp.mosp.time.bean.impl;
 
 import java.sql.Connection;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -27,15 +28,25 @@ import jp.mosp.framework.utils.DateUtility;
 import jp.mosp.platform.base.PlatformBean;
 import jp.mosp.platform.bean.human.RetirementReferenceBeanInterface;
 import jp.mosp.platform.bean.human.SuspensionReferenceBeanInterface;
-import jp.mosp.platform.constant.PlatformConst;
+import jp.mosp.platform.bean.workflow.WorkflowIntegrateBeanInterface;
+import jp.mosp.platform.bean.workflow.WorkflowReferenceBeanInterface;
 import jp.mosp.platform.constant.PlatformMessageConst;
 import jp.mosp.platform.dao.workflow.WorkflowDaoInterface;
 import jp.mosp.platform.dto.workflow.WorkflowDtoInterface;
+import jp.mosp.platform.utils.PlatformMessageUtility;
+import jp.mosp.platform.utils.WorkflowUtility;
+import jp.mosp.time.base.TimeBean;
 import jp.mosp.time.bean.ApplicationReferenceBeanInterface;
+import jp.mosp.time.bean.CutoffUtilBeanInterface;
 import jp.mosp.time.bean.RequestUtilBeanInterface;
+import jp.mosp.time.bean.ScheduleUtilBeanInterface;
 import jp.mosp.time.bean.SubstituteReferenceBeanInterface;
 import jp.mosp.time.bean.SubstituteRegistBeanInterface;
 import jp.mosp.time.bean.TimeSettingReferenceBeanInterface;
+import jp.mosp.time.bean.WorkOnHolidayRequestReferenceBeanInterface;
+import jp.mosp.time.bean.WorkTypeChangeRequestReferenceBeanInterface;
+import jp.mosp.time.bean.WorkTypeItemReferenceBeanInterface;
+import jp.mosp.time.bean.WorkTypeReferenceBeanInterface;
 import jp.mosp.time.constant.TimeConst;
 import jp.mosp.time.constant.TimeMessageConst;
 import jp.mosp.time.dao.settings.AttendanceDaoInterface;
@@ -58,85 +69,128 @@ import jp.mosp.time.dto.settings.SubHolidayRequestDtoInterface;
 import jp.mosp.time.dto.settings.SubstituteDtoInterface;
 import jp.mosp.time.dto.settings.TimeSettingDtoInterface;
 import jp.mosp.time.dto.settings.WorkOnHolidayRequestDtoInterface;
+import jp.mosp.time.dto.settings.WorkTypeChangeRequestDtoInterface;
+import jp.mosp.time.dto.settings.WorkTypeDtoInterface;
+import jp.mosp.time.dto.settings.WorkTypeItemDtoInterface;
 import jp.mosp.time.dto.settings.impl.TmdSubstituteDto;
+import jp.mosp.time.entity.RequestEntity;
+import jp.mosp.time.utils.TimeNamingUtility;
 
 /**
  * 振替休日データ登録クラス。
  */
-public class SubstituteRegistBean extends PlatformBean implements SubstituteRegistBeanInterface {
+public class SubstituteRegistBean extends TimeBean implements SubstituteRegistBeanInterface {
 	
 	/**
 	 * 振替休日データDAOクラス。<br>
 	 */
-	protected SubstituteDaoInterface			dao;
+	protected SubstituteDaoInterface						dao;
 	/**
 	 * 振替休日データ参照インターフェース。<br>
 	 */
-	protected SubstituteReferenceBeanInterface	substituteReference;
+	protected SubstituteReferenceBeanInterface				substituteReference;
 	/**
 	 * 休出申請データDAOクラス。<br>
 	 */
-	protected WorkOnHolidayRequestDaoInterface	workOnHolidayRequestDao;
-	
+	protected WorkOnHolidayRequestDaoInterface				workOnHolidayRequestDao;
+	/**
+	 * 休出申請参照クラス。<br>
+	 */
+	protected WorkOnHolidayRequestReferenceBeanInterface	workOnHolidayRefer;
 	/**
 	 * 休暇申請データDAOクラス。<br>
 	 */
-	protected HolidayRequestDaoInterface		holidayRequestDao;
+	protected HolidayRequestDaoInterface					holidayRequestDao;
 	
 	/**
 	 * 代休申請データDAOクラス。<br>
 	 */
-	protected SubHolidayRequestDaoInterface		subHolidayRequestDao;
+	protected SubHolidayRequestDaoInterface					subHolidayRequestDao;
 	
 	/**
 	 * 残業申請データDAOクラス。<br>
 	 */
-	protected OvertimeRequestDaoInterface		overtimeRequestDao;
+	protected OvertimeRequestDaoInterface					overtimeRequestDao;
 	
 	/**
 	 * 時差出勤申請データDAOクラス。<br>
 	 */
-	protected DifferenceRequestDaoInterface		differenceRequestDao;
+	protected DifferenceRequestDaoInterface					differenceRequestDao;
 	
 	/**
 	 * 勤怠データDAOクラス。<br>
 	 */
-	protected AttendanceDaoInterface			attendanceDao;
+	protected AttendanceDaoInterface						attendanceDao;
 	
 	/**
 	 * ワークフローDAOクラス。<br>
 	 */
-	protected WorkflowDaoInterface				workflowDao;
+	protected WorkflowDaoInterface							workflowDao;
 	
 	/**
 	 * カレンダマスタDAOクラス。<br>
 	 */
-	protected ScheduleDaoInterface				scheduleDao;
+	protected ScheduleDaoInterface							scheduleDao;
 	
 	/**
 	 * カレンダ日マスタDAOクラス。<br>
 	 */
-	protected ScheduleDateDaoInterface			scheduleDateDao;
+	protected ScheduleDateDaoInterface						scheduleDateDao;
 	
 	/**
 	 * 設定適用管理参照クラス。<br>
 	 */
-	protected ApplicationReferenceBeanInterface	application;
+	protected ApplicationReferenceBeanInterface				application;
 	
 	/**
 	 * 勤怠設定参照クラス。<br>
 	 */
-	protected TimeSettingReferenceBeanInterface	timeSettingReference;
+	protected TimeSettingReferenceBeanInterface				timeSettingReference;
 	
 	/**
-	 * 人事求職情報参照クラス。
+	 * ワークフロー統括クラス。<br>
 	 */
-	protected SuspensionReferenceBeanInterface	suspensionReference;
+	protected WorkflowIntegrateBeanInterface				workflowIntegrate;
+	
+	/**
+	 * 人事休職情報参照クラス。
+	 */
+	protected SuspensionReferenceBeanInterface				suspensionReference;
 	
 	/**
 	 * 人事退職情報参照クラス。
 	 */
-	protected RetirementReferenceBeanInterface	retirementReference;
+	protected RetirementReferenceBeanInterface				retirementReference;
+	
+	/**
+	 * 締日ユーティリティ。
+	 */
+	protected CutoffUtilBeanInterface						cutoffUtil;
+	
+	/**
+	 * カレンダユーティリティ。
+	 */
+	protected ScheduleUtilBeanInterface						scheduleUtil;
+	
+	/**
+	 * 勤務形態情報参照クラス。
+	 */
+	protected WorkTypeReferenceBeanInterface				workTypeRefer;
+	
+	/**
+	 * 勤務形態項目情報参照クラス。
+	 */
+	protected WorkTypeItemReferenceBeanInterface			workTypeItemRefer;
+	
+	/**
+	 * ワークフロー情報参照クラス。<br>
+	 */
+	protected WorkflowReferenceBeanInterface				workflowReference;
+	
+	/**
+	 * ワークフロー情報参照クラス。<br>
+	 */
+	protected WorkTypeChangeRequestReferenceBeanInterface	workTypeChangeReference;
 	
 	
 	/**
@@ -171,8 +225,18 @@ public class SubstituteRegistBean extends PlatformBean implements SubstituteRegi
 		scheduleDateDao = (ScheduleDateDaoInterface)createDao(ScheduleDateDaoInterface.class);
 		application = (ApplicationReferenceBeanInterface)createBean(ApplicationReferenceBeanInterface.class);
 		timeSettingReference = (TimeSettingReferenceBeanInterface)createBean(TimeSettingReferenceBeanInterface.class);
+		workflowIntegrate = (WorkflowIntegrateBeanInterface)createBean(WorkflowIntegrateBeanInterface.class);
 		suspensionReference = (SuspensionReferenceBeanInterface)createBean(SuspensionReferenceBeanInterface.class);
 		retirementReference = (RetirementReferenceBeanInterface)createBean(RetirementReferenceBeanInterface.class);
+		cutoffUtil = (CutoffUtilBeanInterface)createBean(CutoffUtilBeanInterface.class);
+		scheduleUtil = (ScheduleUtilBeanInterface)createBean(ScheduleUtilBeanInterface.class);
+		workTypeRefer = (WorkTypeReferenceBeanInterface)createBean(WorkTypeReferenceBeanInterface.class);
+		workTypeItemRefer = (WorkTypeItemReferenceBeanInterface)createBean(WorkTypeItemReferenceBeanInterface.class);
+		workOnHolidayRefer = (WorkOnHolidayRequestReferenceBeanInterface)createBean(
+				WorkOnHolidayRequestReferenceBeanInterface.class);
+		workflowReference = (WorkflowReferenceBeanInterface)createBean(WorkflowReferenceBeanInterface.class);
+		workTypeChangeReference = (WorkTypeChangeRequestReferenceBeanInterface)createBean(
+				WorkTypeChangeRequestReferenceBeanInterface.class);
 	}
 	
 	@Override
@@ -246,36 +310,347 @@ public class SubstituteRegistBean extends PlatformBean implements SubstituteRegi
 	}
 	
 	@Override
-	public void checkRegist(SubstituteDtoInterface dto1, SubstituteDtoInterface dto2) throws MospException {
-		// 振替日1の休職チェック
-		checkSuspension(dto1);
-		// 振替日2の休職チェック
-		checkSuspension(dto2);
-		// 振替日1の退職チェック
-		checkRetirement(dto1);
-		// 振替日2の退職チェック
-		checkRetirement(dto2);
-		// 振替日1の妥当性チェック
-		checkTargetTransferDate(dto1);
-		// 振替日2の妥当性チェック
-		checkTargetTransferDate(dto2);
-		// 振替日1の休日チェック
-		checkHolidayDate(dto1);
-		// 振替日2の休日チェック
-		checkHolidayDate(dto2);
+	public void checkValidate(SubstituteDtoInterface dto) {
+		// 必須確認(振替日)
+		checkRequired(dto.getSubstituteDate(), mospParams.getName("Transfer", "Day"), null);
+		return;
+	}
+	
+	@Override
+	public void checkRegist(SubstituteDtoInterface dto) throws MospException {
+		// 振替日の休職チェック
+		checkSuspension(dto);
+		if (mospParams.hasErrorMessage()) {
+			return;
+		}
+		
+		// 振替日の退職チェック
+		checkRetirement(dto);
+		if (mospParams.hasErrorMessage()) {
+			return;
+		}
+		// 振替日の妥当性チェック
+		checkTargetTransferDate(dto);
+		if (mospParams.hasErrorMessage()) {
+			return;
+		}
+		// 振替日の休日チェック
+		checkHolidayDate(dto);
+		if (mospParams.hasErrorMessage()) {
+			return;
+		}
 		// TODO 期間チェック
-		// 振替日1の範囲チェック
-		checkTransferDateRange(dto1);
-		// 振替日2の範囲チェック
-		checkTransferDateRange(dto2);
-		// 振替日1の他の申請チェック
-		checkRequest(dto1);
-		// 振替日2の他の申請チェック
-		checkRequest(dto2);
-		// 振替日1の勤怠の申請チェック
-		checkAttendance(dto1);
-		// 振替日2の勤怠の申請チェック
-		checkAttendance(dto2);
+		// 振替日の範囲チェック
+		checkTransferDateRange(dto);
+		if (mospParams.hasErrorMessage()) {
+			return;
+		}
+		// 振替日の他の申請チェック
+		checkRequest(dto);
+		if (mospParams.hasErrorMessage()) {
+			return;
+		}
+		// 振替日の勤怠の申請チェック
+		checkAttendance(dto);
+		if (mospParams.hasErrorMessage()) {
+			return;
+		}
+		// 振替日の仮締チェック
+		checkTighten(dto);
+		if (mospParams.hasErrorMessage()) {
+			return;
+		}
+		// 振替日の残業申請チェック
+		checkOverTime(dto);
+		if (mospParams.hasErrorMessage()) {
+			return;
+		}
+		// 振替日の勤務形態変更申請チェック
+		checkWorkTypeChange(dto);
+		if (mospParams.hasErrorMessage()) {
+			return;
+		}
+		// 半振替の申請チェック
+		checkHalfRequest(dto);
+		if (mospParams.hasErrorMessage()) {
+			return;
+		}
+	}
+	
+	@Override
+	public void checkImport(SubstituteDtoInterface dto) throws MospException {
+		// 入力チェック
+		checkValidate(dto);
+		if (mospParams.hasErrorMessage()) {
+			return;
+		}
+		// 入社チェック
+		checkEntered(dto);
+		if (mospParams.hasErrorMessage()) {
+			return;
+		}
+		// 退職チェック
+		checkRetirement(dto);
+		if (mospParams.hasErrorMessage()) {
+			return;
+		}
+		// 休職チェック
+		checkSuspension(dto);
+		if (mospParams.hasErrorMessage()) {
+			return;
+		}
+		// 仮締チェック
+		checkTighten(dto);
+		if (mospParams.hasErrorMessage()) {
+			return;
+		}
+		// 休日労働チェック
+		checkWorkOnDaysOff(dto);
+		if (mospParams.hasErrorMessage()) {
+			return;
+		}
+		// TODO 期間チェック
+		// 範囲チェック
+		checkTransferDateRange(dto);
+		// 申請ユーティリティ
+		RequestUtilBeanInterface requestUtil = (RequestUtilBeanInterface)createBean(RequestUtilBeanInterface.class);
+		requestUtil.setRequests(dto.getPersonalId(), dto.getSubstituteDate());
+		// 勤務形態チェック
+		checkWorkType(dto, requestUtil);
+		if (mospParams.hasErrorMessage()) {
+			return;
+		}
+		// 振替休日・休暇申請・代休申請等の重複チェック
+		checkDuplicate(dto, requestUtil);
+		if (mospParams.hasErrorMessage()) {
+			return;
+		}
+		// 他の申請チェック
+		checkRequest(requestUtil);
+	}
+	
+	/**
+	 * 勤務形態チェック。
+	 * 半振替の場合、勤務形態に午前休が設定されていないとエラーにする。<br>
+	 * @param dto 対象DTO
+	 * @param requestUtil 申請ユーティリティ
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 */
+	protected void checkWorkType(SubstituteDtoInterface dto, RequestUtilBeanInterface requestUtil)
+			throws MospException {
+		// 個人ID・対象日取得
+		String personalId = dto.getPersonalId();
+		Date targetDate = dto.getSubstituteDate();
+		// 勤務形態コード取得
+		String workTypeCode = scheduleUtil.getScheduledWorkTypeCode(personalId, targetDate, requestUtil);
+		
+		if (workTypeCode == null || workTypeCode.isEmpty()) {
+			// カレンダが設定されていない場合
+			addSubstituteDateErrorMessage(dto.getSubstituteDate());
+			return;
+		} else if (isLegalDayOff(workTypeCode) || isPrescribedDayOff(workTypeCode)) {
+			// 法定休日・所定休日の場合
+			addSubstituteDateErrorMessage(dto.getSubstituteDate());
+			return;
+		} else if (TimeConst.CODE_WORK_ON_LEGAL_HOLIDAY.equals(workTypeCode)
+				|| TimeConst.CODE_WORK_ON_PRESCRIBED_HOLIDAY.equals(workTypeCode)) {
+			// 法定休日労働・所定休日労働の場合
+			addOthersRequestErrorMessage(dto.getSubstituteDate(), mospParams.getName("WorkingHoliday"));
+		}
+	}
+	
+	/**
+	 * 振替休日・休暇申請・代休申請等の重複チェック。
+	 * @param dto 対象DTO
+	 * @param requestUtil 申請ユーティリティ
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 */
+	protected void checkDuplicate(SubstituteDtoInterface dto, RequestUtilBeanInterface requestUtil)
+			throws MospException {
+		boolean substituteRangeAm = false;
+		boolean substituteRangePm = false;
+		boolean holidayRangeAm = false;
+		boolean holidayRangePm = false;
+		boolean holidayRangeTime = false;
+		boolean subHolidayRangeAm = false;
+		boolean subHolidayRangePm = false;
+		// 個人IDと振替日から振替休日データリストを取得
+		List<SubstituteDtoInterface> substituteList = dao.findForList(dto.getPersonalId(), dto.getSubstituteDate());
+		// 振替休日データリスト毎に処理
+		for (SubstituteDtoInterface substituteDto : substituteList) {
+			long workflow = substituteDto.getWorkflow();
+			if (workflowIntegrate.isWithDrawn(workflow)) {
+				// 取下の場合
+				continue;
+			}
+			if (dto.getWorkflow() == workflow) {
+				// ワークフロー番号が同じ場合
+				continue;
+			}
+			if (isLegalDayOff(substituteDto.getSubstituteType())
+					|| isPrescribedDayOff(substituteDto.getSubstituteType())) {
+				// 法定休日・所定休日の場合
+				int range = substituteDto.getSubstituteRange();
+				if (range == TimeConst.CODE_HOLIDAY_RANGE_ALL) {
+					// 全休の場合
+					addSubstituteDateErrorMessage(dto.getSubstituteDate());
+					return;
+				} else if (range == TimeConst.CODE_HOLIDAY_RANGE_AM) {
+					// 前半休の場合
+					substituteRangeAm = true;
+				} else if (range == TimeConst.CODE_HOLIDAY_RANGE_PM) {
+					// 後半休の場合
+					substituteRangePm = true;
+				}
+			}
+		}
+		if (substituteRangeAm && substituteRangePm) {
+			// 前半休及び後半休の場合
+			addSubstituteDateErrorMessage(dto.getSubstituteDate());
+			return;
+		}
+		int substituteRange = dto.getSubstituteRange();
+		if (substituteRange == TimeConst.CODE_HOLIDAY_RANGE_ALL) {
+			// 全休の場合
+			if (substituteRangeAm || substituteRangePm) {
+				// 前半休及び後半休の場合
+				addSubstituteDateErrorMessage(dto.getSubstituteDate());
+				return;
+			}
+		} else if (substituteRange == TimeConst.CODE_HOLIDAY_RANGE_AM) {
+			// 前半休の場合
+			if (subHolidayRangeAm) {
+				// 前半休と重複している場合
+				addSubstituteDateErrorMessage(dto.getSubstituteDate());
+				return;
+			}
+		} else if (substituteRange == TimeConst.CODE_HOLIDAY_RANGE_PM) {
+			// 後半休の場合
+			if (substituteRangePm) {
+				// 後半休と重複している場合
+				addSubstituteDateErrorMessage(dto.getSubstituteDate());
+				return;
+			}
+		}
+		// 休暇申請のチェック
+		int holidayRange = requestUtil.checkHolidayRangeHoliday(requestUtil.getHolidayList(false));
+		if (holidayRange == TimeConst.CODE_HOLIDAY_RANGE_ALL
+				|| holidayRange == TimeConst.CODE_HOLIDAY_RANGE_AM + TimeConst.CODE_HOLIDAY_RANGE_PM) {
+			// 全休・前半休及び後半休の場合
+			addOthersRequestErrorMessage(dto.getSubstituteDate(), mospParams.getName("Vacation"));
+			return;
+		} else if (holidayRange == TimeConst.CODE_HOLIDAY_RANGE_AM) {
+			// 前半休の場合
+			holidayRangeAm = true;
+		} else if (holidayRange == TimeConst.CODE_HOLIDAY_RANGE_PM) {
+			// 後半休の場合
+			holidayRangePm = true;
+		} else if (holidayRange == TimeConst.CODE_HOLIDAY_RANGE_TIME) {
+			// 時間休の場合
+			holidayRangeTime = true;
+		}
+		// 代休申請のチェック
+		int subHolidayRange = requestUtil.checkHolidayRangeSubHoliday(requestUtil.getSubHolidayList(false));
+		if (subHolidayRange == TimeConst.CODE_HOLIDAY_RANGE_ALL
+				|| subHolidayRange == TimeConst.CODE_HOLIDAY_RANGE_AM + TimeConst.CODE_HOLIDAY_RANGE_PM) {
+			// 全休・前半休及び後半休の場合
+			addOthersRequestErrorMessage(dto.getSubstituteDate(), mospParams.getName("CompensatoryHoliday"));
+			return;
+		} else if (subHolidayRange == TimeConst.CODE_HOLIDAY_RANGE_AM) {
+			// 前半休の場合
+			subHolidayRangeAm = true;
+		} else if (subHolidayRange == TimeConst.CODE_HOLIDAY_RANGE_PM) {
+			// 後半休の場合
+			subHolidayRangePm = true;
+		}
+		if ((substituteRangeAm || holidayRangeAm || subHolidayRangeAm)
+				&& (substituteRangePm || holidayRangePm || subHolidayRangePm)) {
+			// 前半休及び後半休を組み合わせて全休となる場合
+			addSubstituteDateErrorMessage(dto.getSubstituteDate());
+			return;
+		}
+		if (substituteRange == TimeConst.CODE_HOLIDAY_RANGE_ALL) {
+			// 全休の場合
+			if (holidayRangeAm || holidayRangePm) {
+				// 前半休・後半休と重複している場合
+				addOthersRequestErrorMessage(dto.getSubstituteDate(), mospParams.getName("Vacation"));
+				return;
+			} else if (holidayRangeTime) {
+				// 時間休と重複している場合
+				addOthersRequestErrorMessage(dto.getSubstituteDate(), mospParams.getName("HolidayTime"));
+				return;
+			}
+		} else if (substituteRange == TimeConst.CODE_HOLIDAY_RANGE_AM) {
+			// 前半休の場合
+			if (holidayRangeAm) {
+				// 前半休と重複している場合
+				addOthersRequestErrorMessage(dto.getSubstituteDate(), mospParams.getName("Vacation"));
+				return;
+			} else if (holidayRangeTime) {
+				// 時間休と重複している場合
+				addOthersRequestErrorMessage(dto.getSubstituteDate(), mospParams.getName("HolidayTime"));
+				return;
+			}
+		} else if (substituteRange == TimeConst.CODE_HOLIDAY_RANGE_PM) {
+			// 後半休の場合
+			if (holidayRangePm) {
+				// 後半休と重複している場合
+				addOthersRequestErrorMessage(dto.getSubstituteDate(), mospParams.getName("Vacation"));
+				return;
+			} else if (holidayRangeTime) {
+				// 時間休と重複している場合
+				addOthersRequestErrorMessage(dto.getSubstituteDate(), mospParams.getName("HolidayTime"));
+				return;
+			}
+		}
+		if (substituteRange == TimeConst.CODE_HOLIDAY_RANGE_ALL) {
+			// 全休の場合
+			if (subHolidayRangeAm || subHolidayRangePm) {
+				// 前半休・後半休と重複している場合
+				addOthersRequestErrorMessage(dto.getSubstituteDate(), mospParams.getName("CompensatoryHoliday"));
+				return;
+			}
+		} else if (substituteRange == TimeConst.CODE_HOLIDAY_RANGE_AM) {
+			// 前半休の場合
+			if (subHolidayRangeAm) {
+				// 前半休と重複している場合
+				addOthersRequestErrorMessage(dto.getSubstituteDate(), mospParams.getName("CompensatoryHoliday"));
+				return;
+			}
+		} else if (substituteRange == TimeConst.CODE_HOLIDAY_RANGE_PM) {
+			// 後半休の場合
+			if (subHolidayRangePm) {
+				// 後半休と重複している場合
+				addOthersRequestErrorMessage(dto.getSubstituteDate(), mospParams.getName("CompensatoryHoliday"));
+				return;
+			}
+		}
+		int range = dto.getSubstituteRange();
+		if (substituteRange == TimeConst.CODE_HOLIDAY_RANGE_AM) {
+			// 前半休の場合
+			if (substituteRangePm || holidayRangePm || subHolidayRangePm) {
+				// 後半休と重複している場合
+				range = TimeConst.CODE_HOLIDAY_RANGE_ALL;
+			}
+		} else if (substituteRange == TimeConst.CODE_HOLIDAY_RANGE_PM) {
+			// 後半休の場合
+			if (substituteRangeAm || holidayRangeAm || subHolidayRangeAm) {
+				// 前半休と重複している場合
+				range = TimeConst.CODE_HOLIDAY_RANGE_ALL;
+			}
+		}
+		// 残業申請チェック
+		checkOvertimeWorkRequest(dto, requestUtil, range);
+		if (mospParams.hasErrorMessage()) {
+			return;
+		}
+		// 勤務形態変更申請チェック
+		checkWorkTypeChangeRequest(requestUtil, range);
+		if (mospParams.hasErrorMessage()) {
+			return;
+		}
+		// 時差出勤申請チェック
+		checkDifferenceRequest(requestUtil, range);
 	}
 	
 	@Override
@@ -300,17 +675,17 @@ public class SubstituteRegistBean extends PlatformBean implements SubstituteRegi
 			if (workflowDto == null) {
 				continue;
 			}
-			if (!PlatformConst.CODE_STATUS_DRAFT.equals(workflowDto.getWorkflowStatus())
-					&& !PlatformConst.CODE_STATUS_WITHDRAWN.equals(workflowDto.getWorkflowStatus())) {
-				// 下書でなく且つ取下でない場合
+			// 下書でなく且つ取下でない場合
+			if (!WorkflowUtility.isDraft(workflowDto) && !WorkflowUtility.isWithDrawn(workflowDto)) {
+				// 振替フラグ準備
 				substituteFlag = true;
+				// 法定休日か所定休日の場合
 				if (TimeConst.CODE_HOLIDAY_LEGAL_HOLIDAY.equals(substituteDto.getSubstituteType())
 						|| TimeConst.CODE_HOLIDAY_PRESCRIBED_HOLIDAY.equals(substituteDto.getSubstituteType())) {
-					// 法定休日か所定休日の場合
 					if (substituteDto.getSubstituteRange() == TimeConst.CODE_HOLIDAY_RANGE_ALL
 							|| substituteRange == substituteDto.getSubstituteRange()) {
-						String[] aryRep = { DateUtility.getStringDate(dto.getSubstituteDate()),
-							mospParams.getName("GoingWork", "Day"), mospParams.getName("Transfer", "Day") };
+						String[] aryRep = { DateUtility.getStringDate(dto.getSubstituteDate()), getNameGoingWorkDay(),
+							getNameSubstituteDay() };
 						mospParams.addErrorMessage(TimeMessageConst.MSG_REQUEST_CHECK_3, aryRep);
 						return;
 					}
@@ -322,31 +697,30 @@ public class SubstituteRegistBean extends PlatformBean implements SubstituteRegi
 			// 適用されている設定を取得
 			ApplicationDtoInterface applicationDto = application.findForPerson(personalId, substituteDate);
 			if (applicationDto == null) {
-				mospParams.addErrorMessage(PlatformMessageConst.MSG_NO_ITEM,
-						mospParams.getName("Set") + mospParams.getName("Apply"), null);
+				mospParams.addErrorMessage(PlatformMessageConst.MSG_NO_ITEM, mospParams.getName("Set", "Apply"), null);
 				return;
 			}
 			// カレンダマスタ取得
-			ScheduleDtoInterface scheduleDto = scheduleDao
-				.findForInfo(applicationDto.getScheduleCode(), substituteDate);
+			ScheduleDtoInterface scheduleDto = scheduleDao.findForInfo(applicationDto.getScheduleCode(),
+					substituteDate);
 			if (scheduleDto == null) {
 				mospParams.addErrorMessage(PlatformMessageConst.MSG_NO_ITEM, mospParams.getName("Calendar"), null);
 				return;
 			}
 			// カレンダコードと有効日と日からカレンダ日情報を取得
 			ScheduleDateDtoInterface scheduleDateDto = scheduleDateDao.findForKey(scheduleDto.getScheduleCode(),
-					scheduleDto.getActivateDate(), substituteDate);
+					substituteDate);
 			if (scheduleDateDto == null) {
-				mospParams.addErrorMessage(PlatformMessageConst.MSG_NO_ITEM, mospParams.getName("Calendar")
-						+ mospParams.getName("Data"), null);
+				mospParams.addErrorMessage(PlatformMessageConst.MSG_NO_ITEM, mospParams.getName("Calendar", "Data"),
+						null);
 				return;
 			}
 			if (scheduleDateDto.getWorkTypeCode() == null || scheduleDateDto.getWorkTypeCode().isEmpty()
-					|| TimeConst.CODE_HOLIDAY_LEGAL_HOLIDAY.equals(scheduleDateDto.getWorkTypeCode())
-					|| TimeConst.CODE_HOLIDAY_PRESCRIBED_HOLIDAY.equals(scheduleDateDto.getWorkTypeCode())) {
+					|| isLegalDayOff(scheduleDateDto.getWorkTypeCode())
+					|| isPrescribedDayOff(scheduleDateDto.getWorkTypeCode())) {
 				// 法定休日、所定休日又は勤務形態が登録されていない場合
-				String[] aryRep = { DateUtility.getStringDate(dto.getSubstituteDate()),
-					mospParams.getName("GoingWork", "Day"), mospParams.getName("Transfer", "Day") };
+				String[] aryRep = { DateUtility.getStringDate(dto.getSubstituteDate()), getNameGoingWorkDay(),
+					getNameSubstituteDay() };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_REQUEST_CHECK_3, aryRep);
 				return;
 			}
@@ -361,26 +735,23 @@ public class SubstituteRegistBean extends PlatformBean implements SubstituteRegi
 			if (workflowDto == null) {
 				continue;
 			}
-			if (PlatformConst.CODE_STATUS_DRAFT.equals(workflowDto.getWorkflowStatus())
-					|| PlatformConst.CODE_STATUS_WITHDRAWN.equals(workflowDto.getWorkflowStatus())) {
-				// 下書又は取下の場合
+			// 下書又は取下の場合
+			if (WorkflowUtility.isDraft(workflowDto) || WorkflowUtility.isWithDrawn(workflowDto)) {
 				continue;
 			}
 			// 振替範囲取得
 			int range = substituteDto.getSubstituteRange();
 			if (substituteRange == TimeConst.CODE_HOLIDAY_RANGE_ALL || range == TimeConst.CODE_HOLIDAY_RANGE_ALL) {
 				// 全休の場合
-				mospParams.addErrorMessage(
-						TimeMessageConst.MSG_REQUEST_CHECK_9,
-						new String[]{ DateUtility.getStringDate(dto.getSubstituteDate()),
-							mospParams.getName("Transfer", "Day") });
+				mospParams.addErrorMessage(TimeMessageConst.MSG_REQUEST_CHECK_9,
+						new String[]{ DateUtility.getStringDate(dto.getSubstituteDate()), getNameSubstituteDay() });
 				return;
 			} else if (range == TimeConst.CODE_HOLIDAY_RANGE_AM || range == TimeConst.CODE_HOLIDAY_RANGE_PM) {
 				// 午前休又は午後休の場合
 				if (range == substituteRange) {
 					// 範囲が同じ場合
-					String[] aryRep = { DateUtility.getStringDate(dto.getSubstituteDate()),
-						mospParams.getName("GoingWork", "Day"), mospParams.getName("Transfer", "Day") };
+					String[] aryRep = { DateUtility.getStringDate(dto.getSubstituteDate()), getNameGoingWorkDay(),
+						getNameSubstituteDay() };
 					mospParams.addErrorMessage(TimeMessageConst.MSG_REQUEST_CHECK_3, aryRep);
 					return;
 				}
@@ -393,36 +764,33 @@ public class SubstituteRegistBean extends PlatformBean implements SubstituteRegi
 		for (HolidayRequestDtoInterface holidayRequestDto : holidayRequestList) {
 			// ワークフロー番号からワークフロー情報を取得
 			WorkflowDtoInterface workflowDto = workflowDao.findForKey(holidayRequestDto.getWorkflow());
-			if (PlatformConst.CODE_STATUS_DRAFT.equals(workflowDto.getWorkflowStatus())
-					|| PlatformConst.CODE_STATUS_WITHDRAWN.equals(workflowDto.getWorkflowStatus())) {
-				// 下書又は取下の場合
+			// 下書又は取下の場合
+			if (WorkflowUtility.isDraft(workflowDto) || WorkflowUtility.isWithDrawn(workflowDto)) {
 				continue;
 			}
 			// 休暇範囲取得
 			int holidayRange = holidayRequestDto.getHolidayRange();
-			if (substituteRange == TimeConst.CODE_HOLIDAY_RANGE_ALL || holidayRange == TimeConst.CODE_HOLIDAY_RANGE_ALL) {
-				// 休暇範囲が全休の場合
-				mospParams.addErrorMessage(
-						TimeMessageConst.MSG_REQUEST_CHECK_9,
-						new String[]{ DateUtility.getStringDate(dto.getSubstituteDate()),
-							mospParams.getName("Transfer", "Day") });
+			// 休暇範囲が全休の場合
+			if (substituteRange == TimeConst.CODE_HOLIDAY_RANGE_ALL
+					|| holidayRange == TimeConst.CODE_HOLIDAY_RANGE_ALL) {
+				// エラーメッセージ追加
+				mospParams.addErrorMessage(TimeMessageConst.MSG_REQUEST_CHECK_9,
+						new String[]{ DateUtility.getStringDate(dto.getSubstituteDate()), getNameSubstituteDay() });
 				return;
 			} else if (holidayRange == TimeConst.CODE_HOLIDAY_RANGE_AM
 					|| holidayRange == TimeConst.CODE_HOLIDAY_RANGE_PM) {
 				// 午前休又は午後休の場合
 				if (holidayRange == substituteRange) {
 					// 範囲が同じ場合
-					String[] aryRep = { DateUtility.getStringDate(dto.getSubstituteDate()),
-						mospParams.getName("GoingWork", "Day"), mospParams.getName("Transfer", "Day") };
+					String[] aryRep = { DateUtility.getStringDate(dto.getSubstituteDate()), getNameGoingWorkDay(),
+						getNameSubstituteDay() };
 					mospParams.addErrorMessage(TimeMessageConst.MSG_REQUEST_CHECK_3, aryRep);
 					return;
 				}
 			} else if (holidayRange == TimeConst.CODE_HOLIDAY_RANGE_TIME) {
 				// 時休の場合
-				mospParams.addErrorMessage(
-						TimeMessageConst.MSG_REQUEST_CHECK_9,
-						new String[]{ DateUtility.getStringDate(dto.getSubstituteDate()),
-							mospParams.getName("Transfer", "Day") });
+				mospParams.addErrorMessage(TimeMessageConst.MSG_REQUEST_CHECK_9,
+						new String[]{ DateUtility.getStringDate(dto.getSubstituteDate()), getNameSubstituteDay() });
 				return;
 			}
 		}
@@ -430,32 +798,98 @@ public class SubstituteRegistBean extends PlatformBean implements SubstituteRegi
 		List<SubHolidayRequestDtoInterface> subHolidayRequestList = subHolidayRequestDao.findForList(personalId,
 				substituteDate);
 		for (SubHolidayRequestDtoInterface subHolidayRequestDto : subHolidayRequestList) {
+			// ワークフロー情報取得
 			WorkflowDtoInterface workflowDto = workflowDao.findForKey(subHolidayRequestDto.getWorkflow());
-			if (PlatformConst.CODE_STATUS_DRAFT.equals(workflowDto.getWorkflowStatus())
-					|| PlatformConst.CODE_STATUS_WITHDRAWN.equals(workflowDto.getWorkflowStatus())) {
-				// 下書又は取下の場合
+			// 下書又は取下の場合
+			if (WorkflowUtility.isDraft(workflowDto) || WorkflowUtility.isWithDrawn(workflowDto)) {
 				continue;
 			}
+			// 休暇範囲取得
 			int holidayRange = subHolidayRequestDto.getHolidayRange();
-			if (substituteRange == TimeConst.CODE_HOLIDAY_RANGE_ALL || holidayRange == TimeConst.CODE_HOLIDAY_RANGE_ALL) {
+			if (substituteRange == TimeConst.CODE_HOLIDAY_RANGE_ALL
+					|| holidayRange == TimeConst.CODE_HOLIDAY_RANGE_ALL) {
 				// 全休の場合
-				mospParams.addErrorMessage(
-						TimeMessageConst.MSG_REQUEST_CHECK_9,
-						new String[]{ DateUtility.getStringDate(dto.getSubstituteDate()),
-							mospParams.getName("Transfer", "Day") });
+				mospParams.addErrorMessage(TimeMessageConst.MSG_REQUEST_CHECK_9,
+						new String[]{ DateUtility.getStringDate(dto.getSubstituteDate()), getNameSubstituteDay() });
 				return;
 			} else if (holidayRange == TimeConst.CODE_HOLIDAY_RANGE_AM
 					|| holidayRange == TimeConst.CODE_HOLIDAY_RANGE_PM) {
 				// 午前休又は午後休の場合
 				if (holidayRange == substituteRange) {
 					// 範囲が同じ場合
-					String[] aryRep = { DateUtility.getStringDate(dto.getSubstituteDate()),
-						mospParams.getName("GoingWork", "Day"), mospParams.getName("Transfer", "Day") };
+					String[] aryRep = { DateUtility.getStringDate(dto.getSubstituteDate()), getNameGoingWorkDay(),
+						getNameSubstituteDay() };
 					mospParams.addErrorMessage(TimeMessageConst.MSG_REQUEST_CHECK_3, aryRep);
 					return;
 				}
 			}
 		}
+	}
+	
+	/**
+	 * 残業申請チェック。
+	 * @param dto 対象DTO
+	 * @param requestUtil 申請ユーティリティ
+	 * @param range 範囲
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 */
+	protected void checkOvertimeWorkRequest(SubstituteDtoInterface dto, RequestUtilBeanInterface requestUtil, int range)
+			throws MospException {
+		if (range != TimeConst.CODE_HOLIDAY_RANGE_ALL) {
+			// 全休でない場合
+			return;
+		}
+		// 全休である場合
+		if (requestUtil.getOverTimeList(false).isEmpty()) {
+			// 残業申請されていない場合
+			return;
+		}
+		// 残業申請されている場合
+		addOthersRequestErrorMessage(dto.getSubstituteDate(), mospParams.getName("OvertimeWork"));
+	}
+	
+	/**
+	 * 勤務形態変更申請チェック。
+	 * @param requestUtil 申請ユーティリティ
+	 * @param range 範囲
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 */
+	protected void checkWorkTypeChangeRequest(RequestUtilBeanInterface requestUtil, int range) throws MospException {
+		if (range != TimeConst.CODE_HOLIDAY_RANGE_ALL) {
+			// 全休でない場合
+			return;
+		}
+		// 全休である場合
+		WorkTypeChangeRequestDtoInterface workTypeChangeRequestDto = requestUtil.getWorkTypeChangeDto(false);
+		if (workTypeChangeRequestDto == null) {
+			// 勤務形態変更申請されていない場合
+			return;
+		}
+		// 勤務形態変更申請されている場合
+		addOthersRequestErrorMessage(workTypeChangeRequestDto.getRequestDate(),
+				mospParams.getName("Work", "Form", "Change"));
+	}
+	
+	/**
+	 * 時差出勤申請チェック。
+	 * @param requestUtil 申請ユーティリティ
+	 * @param range 範囲
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 */
+	protected void checkDifferenceRequest(RequestUtilBeanInterface requestUtil, int range) throws MospException {
+		if (range != TimeConst.CODE_HOLIDAY_RANGE_ALL && range != TimeConst.CODE_HOLIDAY_RANGE_AM) {
+			// 全休でなく且つ前半休でない場合
+			return;
+		}
+		// 全休又は前半休である場合
+		DifferenceRequestDtoInterface differenceRequestDto = requestUtil.getDifferenceDto(false);
+		if (differenceRequestDto == null) {
+			// 時差出勤申請されていない場合
+			return;
+		}
+		// 時差出勤申請されている場合
+		addOthersRequestErrorMessage(differenceRequestDto.getRequestDate(),
+				mospParams.getName("TimeDifference", "GoingWork"));
 	}
 	
 	@Override
@@ -471,8 +905,8 @@ public class SubstituteRegistBean extends PlatformBean implements SubstituteRegi
 			return;
 		}
 		// 勤怠設定管理DTOの取得
-		TimeSettingDtoInterface timeSettingDto = timeSettingReference.getTimeSettingInfo(
-				applicationDto.getWorkSettingCode(), workDate);
+		TimeSettingDtoInterface timeSettingDto = timeSettingReference
+			.getTimeSettingInfo(applicationDto.getWorkSettingCode(), workDate);
 		timeSettingReference.chkExistTimeSetting(timeSettingDto, workDate);
 		if (mospParams.hasErrorMessage()) {
 			return;
@@ -481,15 +915,29 @@ public class SubstituteRegistBean extends PlatformBean implements SubstituteRegi
 		Date beforeDate = DateUtility.addDay(
 				DateUtility.addMonth(workDate, -timeSettingDto.getTransferAheadLimitMonth()),
 				-timeSettingDto.getTransferAheadLimitDate());
-		Date afterDate = DateUtility.addDay(
-				DateUtility.addMonth(workDate, timeSettingDto.getTransferLaterLimitMonth()),
+		Date afterDate = DateUtility.addDay(DateUtility.addMonth(workDate, timeSettingDto.getTransferLaterLimitMonth()),
 				timeSettingDto.getTransferLaterLimitDate());
 		// 振替日取得
 		Date substituteDate = dto.getSubstituteDate();
 		if (!substituteDate.after(beforeDate) || !substituteDate.before(afterDate)) {
-			mospParams.addErrorMessage(TimeMessageConst.MSG_TRANSFER_DAY_EXCESS,
-					getStringDate(dto.getSubstituteDate()), null);
+			mospParams.addErrorMessage(TimeMessageConst.MSG_TRANSFER_DAY_EXCESS, getStringDate(dto.getSubstituteDate()),
+					null);
 		}
+	}
+	
+	/**
+	 * 他の申請チェック。
+	 * @param requestUtil 申請ユーティリティ
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 */
+	protected void checkRequest(RequestUtilBeanInterface requestUtil) throws MospException {
+		// 振出・休出申請チェック
+		checkWorkOnHolidayRequest(requestUtil);
+		if (mospParams.hasErrorMessage()) {
+			return;
+		}
+		// 勤怠申請チェック
+		checkAttendance(requestUtil);
 	}
 	
 	@Override
@@ -497,26 +945,26 @@ public class SubstituteRegistBean extends PlatformBean implements SubstituteRegi
 		if (dto == null) {
 			return;
 		}
+		// 個人ID・振替日取得
 		String personalId = dto.getPersonalId();
 		Date substituteDate = dto.getSubstituteDate();
 		// 振替日の休出申請取得
-		WorkOnHolidayRequestDtoInterface workOnHolidayRequestDto = workOnHolidayRequestDao.findForKeyOnWorkflow(
-				personalId, substituteDate);
+		WorkOnHolidayRequestDtoInterface workOnHolidayRequestDto = workOnHolidayRequestDao
+			.findForKeyOnWorkflow(personalId, substituteDate);
 		if (workOnHolidayRequestDto != null) {
 			// ワークフローの取得
 			WorkflowDtoInterface workflowDto = workflowDao.findForKey(workOnHolidayRequestDto.getWorkflow());
 			if (workflowDto != null) {
-				if (workflowDto.getWorkflowStage() != 0
-						&& !PlatformConst.CODE_STATUS_DRAFT.equals(workflowDto.getWorkflowStatus())
-						&& !PlatformConst.CODE_STATUS_WITHDRAWN.equals(workflowDto.getWorkflowStatus())) {
-					String[] aryRep = { DateUtility.getStringDate(dto.getSubstituteDate()),
-						mospParams.getName("Transfer", "Day") };
+				if (workflowDto.getWorkflowStage() != 0 && !WorkflowUtility.isDraft(workflowDto)
+						&& !WorkflowUtility.isWithDrawn(workflowDto)) {
+					String[] aryRep = { DateUtility.getStringDate(dto.getSubstituteDate()), getNameSubstituteDay() };
 					mospParams.addErrorMessage(TimeMessageConst.MSG_REQUEST_CHECK_9, aryRep);
 				}
 			}
 		}
+		// 全休の場合
 		if (dto.getSubstituteRange() == TimeConst.CODE_HOLIDAY_RANGE_ALL) {
-			// 全休の場合
+			// クラス準備
 			RequestUtilBeanInterface requestUtil = (RequestUtilBeanInterface)createBean(RequestUtilBeanInterface.class);
 			requestUtil.setRequests(personalId, dto.getSubstituteDate());
 			// 振替日の残業申請取得
@@ -528,20 +976,19 @@ public class SubstituteRegistBean extends PlatformBean implements SubstituteRegi
 				if (workflowDto == null) {
 					continue;
 				}
-				if (!PlatformConst.CODE_STATUS_DRAFT.equals(workflowDto.getWorkflowStatus())
-						&& !PlatformConst.CODE_STATUS_WITHDRAWN.equals(workflowDto.getWorkflowStatus())) {
-					// 下書でなく且つ取下でない場合
-					String[] aryRep = { DateUtility.getStringDate(dto.getSubstituteDate()),
-						mospParams.getName("Transfer", "Day") };
+				// 下書でなく且つ取下でない場合
+				if (!WorkflowUtility.isDraft(workflowDto) && !WorkflowUtility.isWithDrawn(workflowDto)) {
+					// エラーメッセージ追加
+					String[] aryRep = { getStringDate(dto.getSubstituteDate()), getNameSubstituteDay() };
 					mospParams.addErrorMessage(TimeMessageConst.MSG_REQUEST_CHECK_9, aryRep);
 					return;
 				}
 			}
 			// 振替日の勤務形態変更申請
 			if (requestUtil.getWorkTypeChangeDto(false) != null) {
-				// 下書でなく且つ取下でない場合
+				// エラーメッセージ追加
 				mospParams.addErrorMessage(TimeMessageConst.MSG_REQUEST_CHECK_9,
-						DateUtility.getStringDate(dto.getSubstituteDate()), mospParams.getName("Transfer", "Day"));
+						DateUtility.getStringDate(dto.getSubstituteDate()), getNameSubstituteDay());
 			}
 			
 			// 振替日の時差出勤申請取得
@@ -552,17 +999,44 @@ public class SubstituteRegistBean extends PlatformBean implements SubstituteRegi
 			}
 			// ワークフローの取得
 			WorkflowDtoInterface workflowDto = workflowDao.findForKey(differenceRequestDto.getWorkflow());
-			if (workflowDto == null) {
-				return;
-			}
-			if (!PlatformConst.CODE_STATUS_DRAFT.equals(workflowDto.getWorkflowStatus())
-					&& !PlatformConst.CODE_STATUS_WITHDRAWN.equals(workflowDto.getWorkflowStatus())) {
-				// 下書でなく且つ取下でない場合
-				String[] aryRep = { DateUtility.getStringDate(dto.getSubstituteDate()),
-					mospParams.getName("Transfer", "Day") };
+			// 下書でなく且つ取下でない場合
+			if (!WorkflowUtility.isDraft(workflowDto) && !WorkflowUtility.isWithDrawn(workflowDto)) {
+				// エラーメッセージ追加
+				String[] aryRep = { getStringDate(dto.getSubstituteDate()), getNameSubstituteDay() };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_REQUEST_CHECK_9, aryRep);
 			}
 		}
+	}
+	
+	/**
+	 * 振出・休出申請チェック
+	 * @param requestUtil 申請ユーティリティ
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 */
+	protected void checkWorkOnHolidayRequest(RequestUtilBeanInterface requestUtil) throws MospException {
+		WorkOnHolidayRequestDtoInterface workOnHolidayRequestDto = requestUtil.getWorkOnHolidayDto(true);
+		if (workOnHolidayRequestDto == null) {
+			return;
+		}
+		addSubstituteDateErrorMessage(workOnHolidayRequestDto.getRequestDate());
+	}
+	
+	/**
+	 * 勤怠チェック。
+	 * @param requestUtil 申請ユーティリティ
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 */
+	protected void checkAttendance(RequestUtilBeanInterface requestUtil) throws MospException {
+		// 勤怠申請情報(取下、下書、1次戻以外)を取得
+		AttendanceDtoInterface attendanceDto = requestUtil.getApplicatedAttendance();
+		if (attendanceDto == null) {
+			// 勤怠申請情報(1次戻)設定
+			attendanceDto = requestUtil.getFirstRevertedAttendance();
+		}
+		if (attendanceDto == null) {
+			return;
+		}
+		addOthersRequestErrorMessage(attendanceDto.getWorkDate(), mospParams.getName("WorkManage"));
 	}
 	
 	@Override
@@ -571,34 +1045,192 @@ public class SubstituteRegistBean extends PlatformBean implements SubstituteRegi
 			return;
 		}
 		// 個人IDと勤務日と勤務回数から勤怠情報を取得
-		AttendanceDtoInterface attendanceDto = attendanceDao
-			.findForKey(dto.getPersonalId(), dto.getSubstituteDate(), 1);
+		AttendanceDtoInterface attendanceDto = attendanceDao.findForKey(dto.getPersonalId(), dto.getSubstituteDate(),
+				1);
 		if (attendanceDto == null) {
 			return;
 		}
 		// ワークフロー番号からワークフロー情報を取得
 		WorkflowDtoInterface workflowDto = workflowDao.findForKey(attendanceDto.getWorkflow());
-		if (workflowDto == null) {
-			return;
-		}
-		if (PlatformConst.CODE_STATUS_DRAFT.equals(workflowDto.getWorkflowStatus())
-				|| PlatformConst.CODE_STATUS_WITHDRAWN.equals(workflowDto.getWorkflowStatus())) {
-			// 下書又は取下の場合
-			return;
-		}
-		if (workflowDto.getWorkflowStage() == 0
-				&& PlatformConst.CODE_STATUS_REVERT.equals(workflowDto.getWorkflowStatus())) {
-			// 1次戻の場合
+		// 下書又は取下又は1次戻の場合
+		if (WorkflowUtility.isDraft(workflowDto) || WorkflowUtility.isWithDrawn(workflowDto)
+				|| WorkflowUtility.isFirstReverted(workflowDto)) {
 			return;
 		}
 		// 申請時のエラーメッセージ
 		String[] aryRep = { getStringDate(dto.getSubstituteDate()), mospParams.getName("WorkManage"),
-			mospParams.getName("Transfer", "Day") };
+			getNameSubstituteDay() };
 		mospParams.addErrorMessage(TimeMessageConst.MSG_REQUEST_CHECK_1, aryRep);
 	}
 	
+	/**
+	 * 半日振替時の申請チェックを行う。<br>
+	 * ・勤務形態：午前休・午後休設定<br>
+	 * ・振替の振替時は同じ勤務形態<br>
+	 * @param dto 振替休日データ
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 */
+	protected void checkHalfRequest(SubstituteDtoInterface dto) throws MospException {
+		// 半日振替でない場合
+		if (!workOnHolidayRefer.useHalfSubstitute()) {
+			return;
+		}
+		// 個人ID・対象日・振替日取得
+		String personalId = dto.getPersonalId();
+		Date workDate = dto.getWorkDate();
+		Date substituteDate = dto.getSubstituteDate();
+		// 申請ユーティリティクラス準備
+		RequestUtilBeanInterface requestUtil = (RequestUtilBeanInterface)createBean(RequestUtilBeanInterface.class);
+		requestUtil.setRequests(personalId, workDate);
+		// 勤務日が振替休日の振替申請情報承認済リストを取得
+		List<SubstituteDtoInterface> beforeList = requestUtil.getSubstituteList(true);
+		// 振替の振替であり、午前休または振替の振替であり、午後休の場合
+		if (!beforeList.isEmpty() && dto.getHolidayRange() == TimeConst.CODE_HOLIDAY_RANGE_AM
+				|| !beforeList.isEmpty() && dto.getHolidayRange() == TimeConst.CODE_HOLIDAY_RANGE_PM) {
+			// 申請ユーティリティ取得
+			RequestUtilBeanInterface requestUtil2 = (RequestUtilBeanInterface)createBean(
+					RequestUtilBeanInterface.class);
+			// 対象日準備
+			Date targetDate = substituteDate;
+			// 申請が2つ(半振休/半振休)の場合
+			if (beforeList.size() == 2) {
+				// 勤務日が振替休日の振替申請情報承認済リスト毎に処理
+				for (SubstituteDtoInterface beforeDto : beforeList) {
+					// 休暇範囲が違う場合
+					if (beforeDto.getHolidayRange() != dto.getHolidayRange()) {
+						continue;
+					}
+					// 対象日設定
+					targetDate = beforeDto.getWorkDate();
+					// 申請ユーティリティ設定
+					requestUtil2.setRequests(personalId, targetDate);
+				}
+			} else {
+				// 申請ユーティリティ設定
+				requestUtil2.setRequests(personalId, targetDate);
+			}
+			// 申請エンティティを取得
+			RequestEntity entity1 = requestUtil.getRequestEntity(personalId, workDate);
+			RequestEntity entity2 = requestUtil2.getRequestEntity(personalId, targetDate);
+			// 勤務形態コード取得
+			String workTypeCode1 = entity1.getWorkType(false);
+			String workTypeCode2 = entity2.getWorkType(false);
+			// 勤務形態変更申請の取得
+			WorkTypeChangeRequestDtoInterface workTypeChangeDto1 = requestUtil.getWorkTypeChangeDto(false);
+			WorkTypeChangeRequestDtoInterface workTypeChangeDto2 = requestUtil2.getWorkTypeChangeDto(false);
+			// 勤務形態変更申請のワークフロー情報取得
+			WorkflowDtoInterface workflowDto1 = null;
+			WorkflowDtoInterface workflowDto2 = null;
+			if (workTypeChangeDto1 != null) {
+				// 勤務形態変更申請が存在する場合
+				workflowDto1 = workflowReference.getLatestWorkflowInfo(workTypeChangeDto1.getWorkflow());
+			}
+			if (workTypeChangeDto2 != null) {
+				// 勤務形態変更申請が存在する場合
+				workflowDto2 = workflowReference.getLatestWorkflowInfo(workTypeChangeDto2.getWorkflow());
+			}
+			// 勤務形態変更申請の承認状況確認
+			String requestName = mospParams.getName("Work", "Form", "Change", "Application");
+			if (workflowDto1 != null && WorkflowUtility.isNotApproved(workflowDto1)) {
+				// [出勤日]は勤務形態変更申請が完了していません。下書を行うか承認がされてから申請を行ってください。
+				mospParams.addErrorMessage(TimeMessageConst.MSG_NOT_REQUEST_STATE_COMPLETE, getStringDate(workDate),
+						requestName);
+			}
+			if (workflowDto2 != null && WorkflowUtility.isNotApproved(workflowDto2)) {
+				// // [振替日]は勤務形態変更申請が完了していません。下書を行うか承認がされてから申請を行ってください。
+				mospParams.addErrorMessage(TimeMessageConst.MSG_NOT_REQUEST_STATE_COMPLETE,
+						getStringDate(substituteDate), requestName);
+			}
+			if (mospParams.hasErrorMessage()) {
+				return;
+			}
+			// 同じ勤務形態でない場合
+			if (!workTypeCode1.equals(workTypeCode2)) {
+				// [振替日]は勤務形態が異なるため申請できません。勤怠詳細ではなく、勤務形態変更申請より出勤日と振替日の勤務形態を同一にしてください。
+				mospParams.addErrorMessage(TimeMessageConst.MSG_HALF_HOLIDAY_WORK_TYPE_ERROR,
+						getStringDate(substituteDate));
+				return;
+			}
+		}
+		// 勤務形態チェック
+		checkWorkTypeInfo(dto);
+		if (mospParams.hasErrorMessage()) {
+			return;
+		}
+	}
+	
+	/**
+	 * 振替日の勤務形態を確認する。<br>
+	 * 半振替の場合、午前休・午後休が設定していないとエラー。<br>
+	 * @param dto 振替休日情報
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 */
+	private void checkWorkTypeInfo(SubstituteDtoInterface dto) throws MospException {
+		// 個人ID・対象日取得
+		String personalId = dto.getPersonalId();
+		Date targetDate = dto.getSubstituteDate();
+		// クラス準備
+		RequestUtilBeanInterface requestUtil = (RequestUtilBeanInterface)createBean(RequestUtilBeanInterface.class);
+		// 取得
+		requestUtil.setRequests(personalId, targetDate);
+		// 勤怠エンティティ取得
+		RequestEntity entity = requestUtil.getRequestEntity(personalId, targetDate);
+		// 勤務形態コード取得
+		String workTypeCode = entity.getWorkType(false);
+		// 午前又は午後の場合
+		if (dto.getSubstituteRange() == TimeConst.CODE_HOLIDAY_RANGE_AM
+				|| dto.getSubstituteRange() == TimeConst.CODE_HOLIDAY_RANGE_PM) {
+			// 勤務形態情報取得
+			WorkTypeDtoInterface workTypeDto = workTypeRefer.findForInfo(workTypeCode, targetDate);
+			if (workTypeDto != null) {
+				// 午前休時刻取得
+				WorkTypeItemDtoInterface frontStart = workTypeItemRefer.getWorkTypeItemInfo(workTypeCode, targetDate,
+						TimeConst.CODE_FRONTSTART);
+				WorkTypeItemDtoInterface frontEnd = workTypeItemRefer.getWorkTypeItemInfo(workTypeCode, targetDate,
+						TimeConst.CODE_FRONTEND);
+				// 午後休時刻取得
+				WorkTypeItemDtoInterface backStart = workTypeItemRefer.getWorkTypeItemInfo(workTypeCode, targetDate,
+						TimeConst.CODE_BACKSTART);
+				WorkTypeItemDtoInterface backEnd = workTypeItemRefer.getWorkTypeItemInfo(workTypeCode, targetDate,
+						TimeConst.CODE_BACKEND);
+				// エラーメッセージ文字列
+				String[] rep = { mospParams.getName("Code", "SingleColon") + workTypeCode,
+					mospParams.getName("AmRest", "Or", "PmRest"), mospParams.getName("HalfDay", "Transfer") };
+				// 開始時刻・終業時刻がない場合
+				if (frontStart == null || frontEnd == null || backStart == null || backEnd == null) {
+					// エラーメッセージ追加
+					mospParams.addErrorMessage(TimeMessageConst.MSG_NOT_WORK_TYPE_INFO, rep);
+					return;
+				}
+				// 午前休がない場合
+				if (DateUtility.getDefaultTime().compareTo(frontStart.getWorkTypeItemValue()) == 0
+						&& DateUtility.getDefaultTime().compareTo(frontEnd.getWorkTypeItemValue()) == 0) {
+					// エラーメッセージ追加
+					mospParams.addErrorMessage(TimeMessageConst.MSG_NOT_WORK_TYPE_INFO, rep);
+					return;
+				}
+				// 午後休がない場合
+				if (DateUtility.getDefaultTime().compareTo(backStart.getWorkTypeItemValue()) == 0
+						&& DateUtility.getDefaultTime().compareTo(backEnd.getWorkTypeItemValue()) == 0) {
+					// エラーメッセージ追加
+					mospParams.addErrorMessage(TimeMessageConst.MSG_NOT_WORK_TYPE_INFO, rep);
+					return;
+				}
+			}
+		}
+	}
+	
+	/**
+	 * 休日労働チェック。
+	 * @param dto 対象DTO
+	 * @throws MospException
+	 */
+	protected void checkWorkOnDaysOff(SubstituteDtoInterface dto) throws MospException {
+		checkHolidayDate(dto);
+	}
+	
 	@Override
-	public void checkHolidayDate(SubstituteDtoInterface dto) {
+	public void checkHolidayDate(SubstituteDtoInterface dto) throws MospException {
 		if (dto == null) {
 			return;
 		}
@@ -606,19 +1238,33 @@ public class SubstituteRegistBean extends PlatformBean implements SubstituteRegi
 		if (!TimeConst.CODE_HOLIDAY_LEGAL_HOLIDAY.equals(dto.getSubstituteType())
 				&& !TimeConst.CODE_HOLIDAY_PRESCRIBED_HOLIDAY.equals(dto.getSubstituteType())) {
 			// 申請時のエラーメッセージ
-			String[] aryRep = { DateUtility.getStringDate(dto.getSubstituteDate()), mospParams.getName("Holiday"),
-				mospParams.getName("GoingWork", "Day") };
+			String[] aryRep = { mospParams.getName("GoingWork", "Day"), mospParams.getName("Holiday"),
+				getNameGoingWorkDay() };
 			mospParams.addErrorMessage(TimeMessageConst.MSG_REQUEST_CHECK_3, aryRep);
 		}
+		// 全休の場合
 		if (dto.getSubstituteRange() == TimeConst.CODE_HOLIDAY_RANGE_ALL) {
-			// 全休の場合
 			return;
 		}
 		if (TimeConst.CODE_HOLIDAY_LEGAL_HOLIDAY.equals(dto.getSubstituteType())) {
 			// 法定休日の場合
-			mospParams.addErrorMessage(TimeMessageConst.MSG_REQUEST_CHECK_6, mospParams.getName("Legal", "Holiday"),
-					mospParams.getName("HalfDay", "Transfer"), mospParams.getName("Transfer", "Day"));
+			mospParams.addErrorMessage(TimeMessageConst.MSG_REQUEST_CHECK_6, TimeNamingUtility.legalHoliday(mospParams),
+					mospParams.getName("HalfDay", "Transfer"), getNameSubstituteDay());
 		}
+	}
+	
+	/**
+	 * 入社チェック。<br>
+	 * @param dto 対象DTO
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 */
+	protected void checkEntered(SubstituteDtoInterface dto) throws MospException {
+		if (isEntered(dto.getPersonalId(), dto.getSubstituteDate())) {
+			// 入社している場合
+			return;
+		}
+		// 入社していない場合
+		PlatformMessageUtility.addErrorEmployeeNotJoin(mospParams);
 	}
 	
 	@Override
@@ -641,6 +1287,180 @@ public class SubstituteRegistBean extends PlatformBean implements SubstituteRegi
 		if (retirementReference.isRetired(dto.getPersonalId(), dto.getSubstituteDate())) {
 			addEmployeeRetiredMessage();
 		}
+	}
+	
+	/**
+	 * 残業申請の確認を行う。
+	 * @param dto 振替休日申請DTO
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 */
+	public void checkOverTime(SubstituteDtoInterface dto) throws MospException {
+		// 個人ID・対象日取得
+		String personalId = dto.getPersonalId();
+		Date substituteDate = dto.getSubstituteDate();
+		// 振替日が半休か判定する
+		float holidayTimes = 0F;
+		holidayTimes = checkHolidayRange(dto, holidayTimes, personalId, substituteDate);
+		if (Float.compare(holidayTimes, TimeConst.HOLIDAY_TIMES_HALF) == 0) {
+			// 振替日に半休がされている場合
+			// 判定用リスト
+			List<OvertimeRequestDtoInterface> overTimeList = new ArrayList<OvertimeRequestDtoInterface>();
+			// 残業申請の有無を確認する
+			List<OvertimeRequestDtoInterface> overTimeRequestList = overtimeRequestDao.findForList(personalId,
+					substituteDate);
+			// 残業申請情報毎に処理
+			for (OvertimeRequestDtoInterface overTimeDto : overTimeRequestList) {
+				// ワークフロー情報取得
+				WorkflowDtoInterface workflowDto = workflowReference.getLatestWorkflowInfo(overTimeDto.getWorkflow());
+				if (workflowDto != null
+						&& (!WorkflowUtility.isDraft(workflowDto) && !WorkflowUtility.isWithDrawn(workflowDto))) {
+					// 状態が下書き、取下以外の場合
+					overTimeList.add(overTimeDto);
+				}
+			}
+			if (!overTimeList.isEmpty()) {
+				// 残業申請されている場合
+				addOthersRequestErrorMessage(substituteDate, mospParams.getName("OvertimeWork"));
+			}
+		}
+	}
+	
+	/**
+	 * 振替日に半休申請が行われているか確認する。
+	 * @param dto 振替休日申請DTO
+	 * @param holidayTimes 休暇回数
+	 * @param personalId 個人ID
+	 * @param substituteDate 振替休日日
+	 * @return 休暇回数(半休)
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 */
+	public float checkHolidayRange(SubstituteDtoInterface dto, float holidayTimes, String personalId,
+			Date substituteDate) throws MospException {
+		// 申請ユーティリティクラス準備
+		RequestUtilBeanInterface requestUtil = (RequestUtilBeanInterface)createBean(RequestUtilBeanInterface.class);
+		requestUtil.setRequests(personalId, substituteDate);
+		// 振替日の休暇範囲確認
+		int holidayRange = requestUtil.checkHolidayRangeHoliday(requestUtil.getHolidayList(false));
+		if (holidayRange == TimeConst.CODE_HOLIDAY_RANGE_AM || holidayRange == TimeConst.CODE_HOLIDAY_RANGE_PM) {
+			// 休暇範囲が午前休か午後休の場合、半休判定
+			return holidayTimes + TimeConst.HOLIDAY_TIMES_HALF;
+		}
+		// 振替日の代休範囲確認
+		int subHolidayRange = requestUtil.checkHolidayRangeSubHoliday(requestUtil.getSubHolidayList(false));
+		if (subHolidayRange == TimeConst.CODE_HOLIDAY_RANGE_AM || subHolidayRange == TimeConst.CODE_HOLIDAY_RANGE_PM) {
+			// 休暇範囲が午前休か午後休の場合、半休判定
+			return holidayTimes + TimeConst.HOLIDAY_TIMES_HALF;
+		}
+		// 振替休日申請リスト取得
+		List<SubstituteDtoInterface> substituteDtoList = requestUtil.getSubstituteList(false);
+		// 休暇範囲確認用リストを用意
+		List<SubstituteDtoInterface> substituteList = new ArrayList<SubstituteDtoInterface>();
+		// 振替休日申請情報ごとに処理
+		for (SubstituteDtoInterface substituteDto : substituteDtoList) {
+			if (dto.getWorkflow() != substituteDto.getWorkflow()) {
+				// 申請対象と異なるワークフローの振替休日申請情報を休暇範囲確認用リストに追加
+				substituteList.add(substituteDto);
+			}
+		}
+		// 振替日の振替休日範囲確認
+		int substituteRange = requestUtil.checkHolidayRangeSubstitute(substituteList);
+		if (substituteRange == TimeConst.CODE_HOLIDAY_RANGE_AM || substituteRange == TimeConst.CODE_HOLIDAY_RANGE_PM) {
+			// 休暇範囲が午前休か午後休の場合、半休判定
+			return holidayTimes + TimeConst.HOLIDAY_TIMES_HALF;
+		}
+		return holidayRange;
+	}
+	
+	/**
+	 * 勤務形態変更申請の確認を行う。
+	 * @param dto 振替休日申請DTO
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 */
+	public void checkWorkTypeChange(SubstituteDtoInterface dto) throws MospException {
+		// 個人ID・対象日取得
+		String personalId = dto.getPersonalId();
+		Date substituteDate = dto.getSubstituteDate();
+		// 振替日が半休か判定する
+		float holidayTimes = 0F;
+		holidayTimes = checkHolidayRange(dto, holidayTimes, personalId, substituteDate);
+		if (Float.compare(holidayTimes, TimeConst.HOLIDAY_TIMES_HALF) == 0) {
+			// 勤務形態変更申請の有無の確認
+			WorkTypeChangeRequestDtoInterface workTypeChangeDto = workTypeChangeReference
+				.findForKeyOnWorkflow(personalId, substituteDate);
+			if (workTypeChangeDto != null) {
+				// 勤務形態変更申請がある場合
+				WorkflowDtoInterface workflowDto = workflowReference
+					.getLatestWorkflowInfo(workTypeChangeDto.getWorkflow());
+				if (workflowDto != null
+						&& (!WorkflowUtility.isDraft(workflowDto) && !WorkflowUtility.isWithDrawn(workflowDto))) {
+					// 勤務形態変更申請されている場合
+					addOthersRequestErrorMessage(substituteDate, mospParams.getName("Work", "Form", "Change"));
+				}
+			}
+		}
+	}
+	
+	/**
+	 * 仮締チェック。
+	 * @param dto 対象DTO
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 */
+	protected void checkTighten(SubstituteDtoInterface dto) throws MospException {
+		cutoffUtil.checkTighten(dto.getPersonalId(), dto.getSubstituteDate(), getNameSubstituteDay());
+	}
+	
+	/**
+	 * 法定休日かどうか確認する。
+	 * @param workTypeCode 勤務形態コード
+	 * @return 確認結果(true：法定休日、false：法定休日でない)
+	 */
+	protected boolean isLegalDayOff(String workTypeCode) {
+		return TimeConst.CODE_HOLIDAY_LEGAL_HOLIDAY.equals(workTypeCode);
+	}
+	
+	/**
+	 * 所定休日かどうか確認する。
+	 * @param workTypeCode 勤務形態コード
+	 * @return 確認結果(true：所定休日、false：所定休日でない)
+	 */
+	protected boolean isPrescribedDayOff(String workTypeCode) {
+		return TimeConst.CODE_HOLIDAY_PRESCRIBED_HOLIDAY.equals(workTypeCode);
+	}
+	
+	/**
+	 * 振替日エラーメッセージを追加する。
+	 * @param date 対象日
+	 */
+	protected void addSubstituteDateErrorMessage(Date date) {
+		mospParams.addErrorMessage(TimeMessageConst.MSG_REQUEST_CHECK_3,
+				new String[]{ DateUtility.getStringDate(date), getNameGoingWorkDay(), getNameSubstituteDay() });
+	}
+	
+	/**
+	 * 振替日に既に別の申請が行われている場合、エラーメッセージを追加する。<br>
+	 * @param date 対象日
+	 * @param requestTitle 対象申請名称
+	 */
+	@Override
+	protected void addOthersRequestErrorMessage(Date date, String requestTitle) {
+		mospParams.addErrorMessage(TimeMessageConst.MSG_REQUEST_CHECK_12,
+				new String[]{ getStringDate(date), requestTitle });
+	}
+	
+	/**
+	 * 出勤日名称を取得する。
+	 * @return 出勤日名称
+	 */
+	protected String getNameGoingWorkDay() {
+		return mospParams.getName("GoingWork", "Day");
+	}
+	
+	/**
+	 * 振替日名称を取得する。
+	 * @return 振替日名称
+	 */
+	protected String getNameSubstituteDay() {
+		return mospParams.getName("Transfer", "Day");
 	}
 	
 }

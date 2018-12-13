@@ -312,6 +312,8 @@ public class SectionMasterAction extends PlatformSystemAction {
 	protected void setActivationDate() throws MospException {
 		// VO取得
 		SectionMasterVo vo = (SectionMasterVo)mospParams.getVo();
+		SectionReferenceBeanInterface reference = reference().section();
+		
 		// 現在の有効日モードを確認
 		if (vo.getModeActivateDate().equals(PlatformConst.MODE_ACTIVATE_DATE_CHANGING)) {
 			// 有効日モード設定
@@ -322,6 +324,14 @@ public class SectionMasterAction extends PlatformSystemAction {
 		}
 		// 上位所属のプルダウン取得
 		setEditPulldown();
+		
+		SectionDtoInterface scheduleDto = reference.getSectionInfo(vo.getTxtEditSectionCode(), getEditActivateDate());
+		if (scheduleDto == null) {
+			return;
+		}
+		
+		vo.setPltEditClassRoute(scheduleDto.getClassRoute());
+		
 	}
 	
 	/**

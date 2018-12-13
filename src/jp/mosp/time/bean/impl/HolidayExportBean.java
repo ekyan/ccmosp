@@ -160,6 +160,11 @@ public class HolidayExportBean extends PlatformBean implements HolidayExportBean
 	 */
 	protected List<HumanDtoInterface>				humanList;
 	
+	/**
+	 * 下位所属含むチェックボックス。
+	 */
+	private int										ckbNeedLowerSection	= 0;
+	
 	
 	/**
 	 * {@link PlatformBean#PlatformBean()}を実行する。<br>
@@ -190,7 +195,8 @@ public class HolidayExportBean extends PlatformBean implements HolidayExportBean
 		workflowIntegrate = (WorkflowIntegrateBeanInterface)createBean(WorkflowIntegrateBeanInterface.class);
 		applicationReference = (ApplicationReferenceBeanInterface)createBean(ApplicationReferenceBeanInterface.class);
 		scheduleReference = (ScheduleReferenceBeanInterface)createBean(ScheduleReferenceBeanInterface.class);
-		scheduleDateReference = (ScheduleDateReferenceBeanInterface)createBean(ScheduleDateReferenceBeanInterface.class);
+		scheduleDateReference = (ScheduleDateReferenceBeanInterface)createBean(
+				ScheduleDateReferenceBeanInterface.class);
 		workTypeReference = (WorkTypeReferenceBeanInterface)createBean(WorkTypeReferenceBeanInterface.class);
 		timeSettingReference = (TimeSettingReferenceBeanInterface)createBean(TimeSettingReferenceBeanInterface.class);
 		cutoffUtil = (CutoffUtilBeanInterface)createBean(CutoffUtilBeanInterface.class);
@@ -200,8 +206,10 @@ public class HolidayExportBean extends PlatformBean implements HolidayExportBean
 	
 	@Override
 	public void export(String exportCode, int startYear, int startMonth, int endYear, int endMonth, String cutoffCode,
-			String workPlaceCode, String employmentContractCode, String sectionCode, String positionCode)
-			throws MospException {
+			String workPlaceCode, String employmentContractCode, String sectionCode, int ckbNeedLowerSection,
+			String positionCode) throws MospException {
+		// 下位所属含むチェックボックスの設定
+		this.ckbNeedLowerSection = ckbNeedLowerSection;
 		ExportDtoInterface dto = exportDao.findForKey(exportCode);
 		if (dto == null) {
 			// 該当するエクスポート情報が存在しない場合
@@ -217,8 +225,8 @@ public class HolidayExportBean extends PlatformBean implements HolidayExportBean
 		Date startDate = TimeUtility.getCutoffFirstDate(cutoffDto.getCutoffDate(), startYear, startMonth);
 		Date endDate = TimeUtility.getCutoffLastDate(cutoffDto.getCutoffDate(), endYear, endMonth);
 		// CSVデータリストを作成
-		List<String[]> list = getCsvDataList(dto, startDate, endDate, cutoffCode, workPlaceCode,
-				employmentContractCode, sectionCode, positionCode);
+		List<String[]> list = getCsvDataList(dto, startDate, endDate, cutoffCode, workPlaceCode, employmentContractCode,
+				sectionCode, positionCode);
 		// CSVデータリスト確認
 		if (list.isEmpty()) {
 			// 該当するエクスポート情報が存在しない場合
@@ -306,7 +314,7 @@ public class HolidayExportBean extends PlatformBean implements HolidayExportBean
 	protected void addHumanData(List<String[]> csvDataList, List<ExportFieldDtoInterface> fieldList, Date startDate,
 			Date endDate, String cutoffCode, String workPlaceCode, String employmentContractCode, String sectionCode,
 			String positionCode) throws MospException {
-		// 人事情報検索条件設定
+		// 人事情報検索条件設定(在職)
 		humanSearch.setStartDate(startDate);
 		humanSearch.setEndDate(endDate);
 		humanSearch.setTargetDate(endDate);
@@ -316,14 +324,30 @@ public class HolidayExportBean extends PlatformBean implements HolidayExportBean
 		humanSearch.setPositionCode(positionCode);
 		// 検索条件設定(状態)
 		humanSearch.setStateType(PlatformConst.EMPLOYEE_STATE_PRESENCE);
-		// 検索条件設定(下位所属要否)
-		humanSearch.setNeedLowerSection(true);
+		// 検索条件設定(下位所属要否) 下位所属含むチェックボックスで判定
+		if (ckbNeedLowerSection == 1) {
+			humanSearch.setNeedLowerSection(true);
+		} else {
+			humanSearch.setNeedLowerSection(false);
+		}
 		// 検索条件設定(兼務要否)
 		humanSearch.setNeedConcurrent(true);
 		// 検索条件設定(操作区分)
 		humanSearch.setOperationType(MospConst.OPERATION_TYPE_REFER);
-		// 人事情報検索
-		List<HumanDtoInterface> allHumanList = humanSearch.search();
+		// 人事情報検索(在職)
+		List<HumanDtoInterface> presenceHumanList = humanSearch.search();
+		
+		// 人事情報検索条件設定(休職)
+		// 検索条件設定(状態)
+		humanSearch.setStateType(PlatformConst.EMPLOYEE_STATE_SUSPEND);
+		// 人事情報検索(休職)
+		List<HumanDtoInterface> suspendHumanList = humanSearch.search();
+		
+		// 人事情報検索(在職+休職)
+		List<HumanDtoInterface> allHumanList = new ArrayList<HumanDtoInterface>();
+		allHumanList.addAll(presenceHumanList);
+		allHumanList.addAll(suspendHumanList);
+		
 		humanList = new ArrayList<HumanDtoInterface>();
 		if (cutoffCode.isEmpty()) {
 			humanList = allHumanList;
@@ -334,8 +358,8 @@ public class HolidayExportBean extends PlatformBean implements HolidayExportBean
 				if (applicationDto == null) {
 					continue;
 				}
-				TimeSettingDtoInterface timeSettingDto = timeSettingReference.getTimeSettingInfo(
-						applicationDto.getWorkSettingCode(), endDate);
+				TimeSettingDtoInterface timeSettingDto = timeSettingReference
+					.getTimeSettingInfo(applicationDto.getWorkSettingCode(), endDate);
 				if (timeSettingDto == null) {
 					continue;
 				}
@@ -523,8 +547,8 @@ public class HolidayExportBean extends PlatformBean implements HolidayExportBean
 		for (int i = 0; i < humanList.size(); i++) {
 			int subHolidayAll = 0;
 			int subHolidayHalf = 0;
-			List<SubHolidayRequestDtoInterface> list = subHolidayRequestDao.findForTerm(humanList.get(i)
-				.getPersonalId(), startDate, endDate);
+			List<SubHolidayRequestDtoInterface> list = subHolidayRequestDao
+				.findForTerm(humanList.get(i).getPersonalId(), startDate, endDate);
 			for (SubHolidayRequestDtoInterface dto : list) {
 				if (!workflowIntegrate.isCompleted(dto.getWorkflow())) {
 					continue;
@@ -597,9 +621,7 @@ public class HolidayExportBean extends PlatformBean implements HolidayExportBean
 			// CSVデータ取得
 			String[] csvData = csvDataList.get(i);
 			// 振替休日情報設定
-			if (substituteHolidayAllIndex != null) {
-				csvData[substituteHolidayAllIndex.intValue()] = Integer.toString(substituteHolidayAll);
-			}
+			csvData[substituteHolidayAllIndex.intValue()] = Integer.toString(substituteHolidayAll);
 		}
 	}
 	
@@ -637,40 +659,53 @@ public class HolidayExportBean extends PlatformBean implements HolidayExportBean
 		if (holidayIndexMap.isEmpty()) {
 			return;
 		}
+		
 		// CSVデータリスト毎に情報を付加
 		for (int i = 0; i < humanList.size(); i++) {
 			for (Entry<String, Integer> entry : holidayIndexMap.entrySet()) {
 				int count = 0;
 				String[] array = entry.getKey().split(comma);
+				// 休暇申請情報リストを取得
 				List<HolidayRequestDtoInterface> list = holidayRequestDao.findForTerm(humanList.get(i).getPersonalId(),
-						startDate, endDate, Integer.parseInt(array[0]), array[1]);
+						startDate, endDate, getInteger(array[0]), array[1]);
+				// 休暇申請毎に処理
 				for (HolidayRequestDtoInterface dto : list) {
+					// 承認済みでない場合
 					if (!workflowIntegrate.isCompleted(dto.getWorkflow())) {
+						// 処理なし
 						continue;
 					}
 					int range = dto.getHolidayRange();
-					if (
-					// フィールドが全休で且つ申請の範囲が全休の場合
-					(TimeFileConst.FIELD_ALL.equals(array[2]) && range == TimeConst.CODE_HOLIDAY_RANGE_ALL)
-					// 又はフィールドが半休で且つ申請の範囲が午前休・午後休の場合
-							|| (TimeFileConst.FIELD_HALF.equals(array[2]) && (range == TimeConst.CODE_HOLIDAY_RANGE_AM || range == TimeConst.CODE_HOLIDAY_RANGE_PM))) {
+					// フィールドが全休で且つ申請の範囲が全休の場合又はフィールドが半休で且つ申請の範囲が午前休・午後休の場合
+					if ((TimeFileConst.FIELD_ALL.equals(array[2]) && range == TimeConst.CODE_HOLIDAY_RANGE_ALL)
+							|| (TimeFileConst.FIELD_HALF.equals(array[2]) && (range == TimeConst.CODE_HOLIDAY_RANGE_AM
+									|| range == TimeConst.CODE_HOLIDAY_RANGE_PM))) {
+						// 申請開始日取得
 						Date targetDate = dto.getRequestStartDate();
+						// 申請開始日が開始日より前の場合
 						if (dto.getRequestStartDate().before(startDate)) {
-							// 申請開始日が開始日より前の場合は開始日とする
+							// 開始日に設定
 							targetDate = startDate;
 						}
+						// 申請終了日取得
 						Date targetEndDate = dto.getRequestEndDate();
+						// 申請終了日が終了日より後の場合
 						if (dto.getRequestEndDate().after(endDate)) {
-							// 申請終了日が終了日より後の場合は終了日とする
+							// 終了日に設定
 							targetEndDate = endDate;
 						}
 						while (!targetDate.after(targetEndDate)) {
+							// 休暇申請可能の場合
 							if (canHolidayRequest(dto.getPersonalId(), targetDate)) {
 								count++;
 							}
 							// 1日加算
 							targetDate = addDay(targetDate, 1);
 						}
+					} else if (TimeFileConst.FIELD_HOUR.equals(array[2])
+							&& range == TimeConst.CODE_HOLIDAY_RANGE_TIME) {
+						// 時間休の場合
+						count++;
 					}
 				}
 				// CSVデータ取得
@@ -730,7 +765,8 @@ public class HolidayExportBean extends PlatformBean implements HolidayExportBean
 		}
 		StringBuffer sb = new StringBuffer();
 		sb.append(holidayDto.getHolidayName());
-		if (TimeFileConst.FIELD_ALL.equals(array[2]) || TimeFileConst.FIELD_HALF.equals(array[2])) {
+		if (TimeFileConst.FIELD_ALL.equals(array[2]) || TimeFileConst.FIELD_HALF.equals(array[2])
+				|| TimeFileConst.FIELD_HOUR.equals(array[2])) {
 			// 全休又は半休の場合
 			sb.append(frontParentheses);
 			if (TimeFileConst.FIELD_ALL.equals(array[2])) {
@@ -739,6 +775,9 @@ public class HolidayExportBean extends PlatformBean implements HolidayExportBean
 			} else if (TimeFileConst.FIELD_HALF.equals(array[2])) {
 				// 半休の場合
 				sb.append(mospParams.getName("HalfTime"));
+			} else if (TimeFileConst.FIELD_HOUR.equals(array[2])) {
+				// 時間休の場合
+				sb.append(mospParams.getName("HourTime"));
 			}
 			sb.append(backParentheses);
 		}
@@ -801,8 +840,8 @@ public class HolidayExportBean extends PlatformBean implements HolidayExportBean
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
 	protected boolean canHolidayRequest(String personalId, Date targetDate) throws MospException {
-		WorkOnHolidayRequestDtoInterface workOnHolidayRequestDto = workOnHolidayRequestDao.findForKeyOnWorkflow(
-				personalId, targetDate);
+		WorkOnHolidayRequestDtoInterface workOnHolidayRequestDto = workOnHolidayRequestDao
+			.findForKeyOnWorkflow(personalId, targetDate);
 		if (workOnHolidayRequestDto != null) {
 			if (workflowIntegrate.isCompleted(workOnHolidayRequestDto.getWorkflow())) {
 				int substitute = workOnHolidayRequestDto.getSubstitute();
@@ -815,28 +854,39 @@ public class HolidayExportBean extends PlatformBean implements HolidayExportBean
 				}
 			}
 		}
+		// 振替休日の場合
+		SubstituteDtoInterface substituteDto = substituteDao.findForDate(personalId, targetDate);
+		if (substituteDto != null) {
+			if (targetDate.compareTo(substituteDto.getSubstituteDate()) == 0) {
+				return false;
+			}
+		}
+		// 設定適用情報取得
 		ApplicationDtoInterface applicationDto = applicationReference.findForPerson(personalId, targetDate);
 		applicationReference.chkExistApplication(applicationDto, targetDate);
 		if (mospParams.hasErrorMessage()) {
 			return false;
 		}
+		// カレンダ情報取得
 		ScheduleDtoInterface scheduleDto = scheduleReference.getScheduleInfo(applicationDto.getScheduleCode(),
 				targetDate);
 		scheduleReference.chkExistSchedule(scheduleDto, targetDate);
 		if (mospParams.hasErrorMessage()) {
 			return false;
 		}
-		ScheduleDateDtoInterface scheduleDateDto = scheduleDateReference.getScheduleDateInfo(
-				scheduleDto.getScheduleCode(), scheduleDto.getActivateDate(), targetDate);
+		// カレンダ日情報取得
+		ScheduleDateDtoInterface scheduleDateDto = scheduleDateReference
+			.getScheduleDateInfo(scheduleDto.getScheduleCode(), targetDate);
 		scheduleDateReference.chkExistScheduleDate(scheduleDateDto, targetDate);
 		if (mospParams.hasErrorMessage()) {
 			return false;
 		}
+		// 法定休日又は所定休日の場合
 		if (TimeConst.CODE_HOLIDAY_LEGAL_HOLIDAY.equals(scheduleDateDto.getWorkTypeCode())
 				|| TimeConst.CODE_HOLIDAY_PRESCRIBED_HOLIDAY.equals(scheduleDateDto.getWorkTypeCode())) {
-			// 法定休日又は所定休日の場合
 			return false;
 		}
+		// 勤務形態情報取得
 		if (workTypeReference.findForInfo(scheduleDateDto.getWorkTypeCode(), targetDate) == null) {
 			return false;
 		}

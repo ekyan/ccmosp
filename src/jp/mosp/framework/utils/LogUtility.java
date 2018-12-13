@@ -17,12 +17,16 @@
  */
 package jp.mosp.framework.utils;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.base.MospParams;
 import jp.mosp.framework.constant.MospConst;
 import jp.mosp.framework.instance.InstanceFactory;
 import jp.mosp.framework.log.LoggerInterface;
 import jp.mosp.framework.log.MospLogger;
+import net.arnx.jsonic.JSON;
 
 /**
  * ログ出力に有用なメソッドを提供する。<br>
@@ -47,6 +51,11 @@ public class LogUtility {
 	 * MosPアプリケーション設定キー(ログタイプ：アクセス)。
 	 */
 	protected static final String	APP_LOG_TYPE_ACCESS				= "LogTypeAccess";
+	
+	/**
+	 * MosPアプリケーション設定キー(ログタイプ：パラメータ)。
+	 */
+	protected static final String	APP_LOG_TYPE_PARAMETER			= "LogTypeParameter";
 	
 	/**
 	 * MosPアプリケーション設定キー(ログタイプ：アクション開始)。
@@ -109,6 +118,11 @@ public class LogUtility {
 	protected static final String	APP_LOG_LEVEL_ACCESS			= "LogLevelAccess";
 	
 	/**
+	 * MosPアプリケーション設定キー(ログ出力レベル：パラメータ)。
+	 */
+	protected static final String	APP_LOG_LEVEL_PARAMETER			= "LogLevelParameter";
+	
+	/**
 	 * MosPアプリケーション設定キー(ログ出力レベル：アクション開始)。
 	 */
 	protected static final String	APP_LOG_LEVEL_ACTION_START		= "LogLevelActionStart";
@@ -152,6 +166,12 @@ public class LogUtility {
 	 * MosPアプリケーション設定キー(ログ出力レベル：デバッグ)。
 	 */
 	protected static final String	APP_LOG_LEVEL_DEBUG				= "LogLevelDebug";
+	
+	/**
+	 * MosPアプリケーション設定キー(ログ出力対象外パラメータ)。<br>
+	 * パラメータログを出力時に用いられる。<br>
+	 */
+	protected static final String	APP_LOG_EXCLUDE_PARAMS			= "LogExcludeParams";
 	
 	
 	/**
@@ -224,12 +244,17 @@ public class LogUtility {
 	 * @param message    ログメッセージ
 	 */
 	public static void controllerInit(MospParams mospParams, String message) {
+		// ログレベル取得
+		int level = mospParams.getApplicationProperty(APP_LOG_LEVEL_CONTROLLER_INIT, 0);
+		// ログレベルが0の場合
+		if (level == 0) {
+			// ログ出力無し
+			return;
+		}
 		// ログメッセージ作成
 		String msg = getLogMessage(mospParams, APP_LOG_TYPE_CONTROLLER_INIT, message);
 		// ログ出力クラス毎にログを出力
 		for (String loggerName : mospParams.getApplicationProperties(APP_LOG_TYPE_CONTROLLER_INIT)) {
-			// ログレベル取得
-			int level = mospParams.getApplicationProperty(APP_LOG_LEVEL_CONTROLLER_INIT, 0);
 			// ログ出力
 			loadLogger(loggerName, mospParams).log(level, msg);
 		}
@@ -240,6 +265,13 @@ public class LogUtility {
 	 * @param mospParams MosP処理情報
 	 */
 	public static void access(MospParams mospParams) {
+		// ログレベル取得
+		int level = mospParams.getApplicationProperty(APP_LOG_LEVEL_ACCESS, 0);
+		// ログレベルが0の場合
+		if (level == 0) {
+			// ログ出力無し
+			return;
+		}
 		// アクセス情報作成
 		StringBuffer sb = new StringBuffer();
 		sb.append(mospParams.getGeneralParam(MospConst.ATT_REMOTE_ADDR));
@@ -249,11 +281,57 @@ public class LogUtility {
 		String msg = getLogMessage(mospParams, APP_LOG_TYPE_ACCESS, sb.toString());
 		// ログ出力クラス毎にログを出力
 		for (String loggerName : mospParams.getApplicationProperties(APP_LOG_TYPE_ACCESS)) {
-			// ログレベル取得
-			int level = mospParams.getApplicationProperty(APP_LOG_LEVEL_ACCESS, 0);
 			// ログ出力
 			loadLogger(loggerName, mospParams).log(level, msg);
 		}
+	}
+	
+	/**
+	 * パラメータログを出力する。<br>
+	 * <br>
+	 * ログ出力対象外パラメータに設定されているパラメータが含まれる場合、<br>
+	 * 
+	 * <br>
+	 * バイナリはファイル名のみが出力される。<br>
+	 * <br>
+	 * @param mospParams MosP処理情報
+	 */
+	public static void parameter(MospParams mospParams) {
+		// ログレベル取得
+		int level = mospParams.getApplicationProperty(APP_LOG_LEVEL_PARAMETER, 0);
+		// ログレベルが0の場合
+		if (level == 0) {
+			// ログ出力無し
+			return;
+		}
+		// ログメッセージ作成
+		String msg = getLogMessage(mospParams, APP_LOG_TYPE_PARAMETER, getParameterLog(mospParams));
+		// ログ出力クラス毎にログを出力
+		for (String loggerName : mospParams.getApplicationProperties(APP_LOG_TYPE_PARAMETER)) {
+			// ログ出力
+			loadLogger(loggerName, mospParams).log(level, msg);
+		}
+	}
+	
+	/**
+	 * ログ用パラメータ情報を取得する。<br>
+	 * @param mospParams MosP処理情報
+	 * @return パラメータ情報
+	 */
+	protected static String getParameterLog(MospParams mospParams) {
+		// ログ用パラメータ情報作成
+		StringBuffer sb = new StringBuffer();
+		// パラメータ情報の複製を作成
+		Map<String, String[]> map = new HashMap<String, String[]>(mospParams.getRequestParamsMap());
+		// ログ出力対象外パラメータ毎に処理
+		for (String exclude : mospParams.getApplicationProperties(APP_LOG_EXCLUDE_PARAMS)) {
+			// ログ出力対象外パラメータを除去
+			map.remove(exclude);
+		}
+		// ログ用パラメータ情報を作成
+		sb.append(JSON.encode(map));
+		// ログ用パラメータ情報を取得
+		return sb.toString();
 	}
 	
 	/**
@@ -262,12 +340,17 @@ public class LogUtility {
 	 * @param message    ログメッセージ
 	 */
 	public static void actionStart(MospParams mospParams, String message) {
+		// ログレベル取得
+		int level = mospParams.getApplicationProperty(APP_LOG_LEVEL_ACTION_START, 0);
+		// ログレベルが0の場合
+		if (level == 0) {
+			// ログ出力無し
+			return;
+		}
 		// ログメッセージ作成
 		String msg = getLogMessage(mospParams, APP_LOG_TYPE_ACTION_START, message);
 		// ログ出力クラス毎にログを出力
 		for (String loggerName : mospParams.getApplicationProperties(APP_LOG_TYPE_ACTION_START)) {
-			// ログレベル取得
-			int level = mospParams.getApplicationProperty(APP_LOG_LEVEL_ACTION_START, 0);
 			// ログ出力
 			loadLogger(loggerName, mospParams).log(level, msg);
 		}
@@ -279,12 +362,17 @@ public class LogUtility {
 	 * @param message    ログメッセージ
 	 */
 	public static void actionEnd(MospParams mospParams, String message) {
+		// ログレベル取得
+		int level = mospParams.getApplicationProperty(APP_LOG_LEVEL_ACTION_END, 0);
+		// ログレベルが0の場合
+		if (level == 0) {
+			// ログ出力無し
+			return;
+		}
 		// ログメッセージ作成
 		String msg = getLogMessage(mospParams, APP_LOG_TYPE_ACTION_END, message);
 		// ログ出力クラス毎にログを出力
 		for (String loggerName : mospParams.getApplicationProperties(APP_LOG_TYPE_ACTION_END)) {
-			// ログレベル取得
-			int level = mospParams.getApplicationProperty(APP_LOG_LEVEL_ACTION_END, 0);
 			// ログ出力
 			loadLogger(loggerName, mospParams).log(level, msg);
 		}
@@ -296,12 +384,17 @@ public class LogUtility {
 	 * @param message    ログメッセージ
 	 */
 	public static void dbConnect(MospParams mospParams, String message) {
+		// ログレベル取得
+		int level = mospParams.getApplicationProperty(APP_LOG_LEVEL_DB_CONNECT, 0);
+		// ログレベルが0の場合
+		if (level == 0) {
+			// ログ出力無し
+			return;
+		}
 		// ログメッセージ作成
 		String msg = getLogMessage(mospParams, APP_LOG_TYPE_DB_CONNECT, message);
 		// ログ出力クラス毎にログを出力
 		for (String loggerName : mospParams.getApplicationProperties(APP_LOG_TYPE_DB_CONNECT)) {
-			// ログレベル取得
-			int level = mospParams.getApplicationProperty(APP_LOG_LEVEL_DB_CONNECT, 0);
 			// ログ出力
 			loadLogger(loggerName, mospParams).log(level, msg);
 		}
@@ -313,12 +406,17 @@ public class LogUtility {
 	 * @param message    ログメッセージ
 	 */
 	public static void sqlSelect(MospParams mospParams, String message) {
+		// ログレベル取得
+		int level = mospParams.getApplicationProperty(APP_LOG_LEVEL_SQL_SELECT, 0);
+		// ログレベルが0の場合
+		if (level == 0) {
+			// ログ出力無し
+			return;
+		}
 		// ログメッセージ作成
 		String msg = getLogMessage(mospParams, APP_LOG_TYPE_SQL_SELECT, message);
 		// ログ出力クラス毎にログを出力
 		for (String loggerName : mospParams.getApplicationProperties(APP_LOG_TYPE_SQL_SELECT)) {
-			// ログレベル取得
-			int level = mospParams.getApplicationProperty(APP_LOG_LEVEL_SQL_SELECT, 0);
 			// ログ出力
 			loadLogger(loggerName, mospParams).log(level, msg);
 		}
@@ -330,12 +428,17 @@ public class LogUtility {
 	 * @param message    ログメッセージ
 	 */
 	public static void sqlRegist(MospParams mospParams, String message) {
+		// ログレベル取得
+		int level = mospParams.getApplicationProperty(APP_LOG_LEVEL_SQL_REGIST, 0);
+		// ログレベルが0の場合
+		if (level == 0) {
+			// ログ出力無し
+			return;
+		}
 		// ログメッセージ作成
 		String msg = getLogMessage(mospParams, APP_LOG_TYPE_SQL_REGIST, message);
 		// ログ出力クラス毎にログを出力
 		for (String loggerName : mospParams.getApplicationProperties(APP_LOG_TYPE_SQL_REGIST)) {
-			// ログレベル取得
-			int level = mospParams.getApplicationProperty(APP_LOG_LEVEL_SQL_REGIST, 0);
 			// ログ出力
 			loadLogger(loggerName, mospParams).log(level, msg);
 		}
@@ -347,12 +450,17 @@ public class LogUtility {
 	 * @param message    ログメッセージ
 	 */
 	public static void internalControl(MospParams mospParams, String message) {
+		// ログレベル取得
+		int level = mospParams.getApplicationProperty(APP_LOG_LEVEL_INTERNAL_CONTROL, 0);
+		// ログレベルが0の場合
+		if (level == 0) {
+			// ログ出力無し
+			return;
+		}
 		// ログメッセージ作成
 		String msg = getLogMessage(mospParams, APP_LOG_TYPE_INTERNAL_CONTROL, message);
 		// ログ出力クラス毎にログを出力
 		for (String loggerName : mospParams.getApplicationProperties(APP_LOG_TYPE_INTERNAL_CONTROL)) {
-			// ログレベル取得
-			int level = mospParams.getApplicationProperty(APP_LOG_LEVEL_INTERNAL_CONTROL, 0);
 			// ログ出力
 			loadLogger(loggerName, mospParams).log(level, msg);
 		}
@@ -364,14 +472,19 @@ public class LogUtility {
 	 * @param thrown     スローされたオブジェクト
 	 */
 	public static void error(MospParams mospParams, Throwable thrown) {
+		// ログレベル取得
+		int level = mospParams.getApplicationProperty(APP_LOG_LEVEL_ERROR, 0);
+		// ログレベルが0の場合
+		if (level == 0) {
+			// ログ出力無し
+			return;
+		}
 		// スタックトレースを取得
 		String message = MospUtility.getStackTrace(thrown);
 		// エラーログメッセージ作成
 		message = getLogMessage(mospParams, APP_LOG_TYPE_ERROR, message);
 		// ログ出力クラス毎にログを出力
 		for (String loggerName : mospParams.getApplicationProperties(APP_LOG_TYPE_ERROR)) {
-			// ログレベル取得
-			int level = mospParams.getApplicationProperty(APP_LOG_LEVEL_ERROR, 0);
 			// ログ出力
 			loadLogger(loggerName, mospParams).log(level, message);
 		}
@@ -383,12 +496,17 @@ public class LogUtility {
 	 * @param message    ログメッセージ
 	 */
 	public static void application(MospParams mospParams, String message) {
+		// ログレベル取得
+		int level = mospParams.getApplicationProperty(APP_LOG_LEVEL_APPLICATION, 0);
+		// ログレベルが0の場合
+		if (level == 0) {
+			// ログ出力無し
+			return;
+		}
 		// ログメッセージ作成
 		String msg = getLogMessage(mospParams, APP_LOG_TYPE_APPLICATION, message);
 		// ログ出力クラス毎にログを出力
 		for (String loggerName : mospParams.getApplicationProperties(APP_LOG_TYPE_APPLICATION)) {
-			// ログレベル取得
-			int level = mospParams.getApplicationProperty(APP_LOG_LEVEL_APPLICATION, 0);
 			// ログ出力
 			loadLogger(loggerName, mospParams).log(level, msg);
 		}
@@ -400,12 +518,17 @@ public class LogUtility {
 	 * @param message    ログメッセージ
 	 */
 	public static void debug(MospParams mospParams, String message) {
+		// ログレベル取得
+		int level = mospParams.getApplicationProperty(APP_LOG_LEVEL_DEBUG, 0);
+		// ログレベルが0の場合
+		if (level == 0) {
+			// ログ出力無し
+			return;
+		}
 		// ログメッセージ作成
 		String msg = getLogMessage(mospParams, APP_LOG_TYPE_DEBUG, message);
 		// ログ出力クラス毎にログを出力
 		for (String loggerName : mospParams.getApplicationProperties(APP_LOG_TYPE_DEBUG)) {
-			// ログレベル取得
-			int level = mospParams.getApplicationProperty(APP_LOG_LEVEL_DEBUG, 0);
 			// ログ出力
 			loadLogger(loggerName, mospParams).log(level, msg);
 		}
@@ -418,6 +541,11 @@ public class LogUtility {
 	 * @param message    ログメッセージ
 	 */
 	public static void log(MospParams mospParams, int level, String message) {
+		// ログレベルが0の場合
+		if (level == 0) {
+			// ログ出力無し
+			return;
+		}
 		// ログメッセージ作成
 		String msg = getLogMessage(mospParams, APP_LOG_TYPE_GENERAL, message);
 		// ログ出力クラス毎にログを出力

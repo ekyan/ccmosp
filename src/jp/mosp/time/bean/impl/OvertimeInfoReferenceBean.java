@@ -31,14 +31,15 @@ import jp.mosp.platform.base.PlatformBean;
 import jp.mosp.platform.constant.PlatformConst;
 import jp.mosp.platform.dao.workflow.WorkflowDaoInterface;
 import jp.mosp.platform.dto.workflow.WorkflowDtoInterface;
+import jp.mosp.platform.utils.PlatformNamingUtility;
 import jp.mosp.time.base.TimeApplicationBean;
 import jp.mosp.time.bean.OvertimeInfoReferenceBeanInterface;
 import jp.mosp.time.dao.settings.AttendanceDaoInterface;
-import jp.mosp.time.dao.settings.LimitStandardDaoInterface;
 import jp.mosp.time.dao.settings.OvertimeRequestDaoInterface;
 import jp.mosp.time.dto.settings.AttendanceDtoInterface;
-import jp.mosp.time.dto.settings.LimitStandardDtoInterface;
+import jp.mosp.time.dto.settings.CutoffDtoInterface;
 import jp.mosp.time.dto.settings.OvertimeRequestDtoInterface;
+import jp.mosp.time.entity.TimeSettingEntityInterface;
 import jp.mosp.time.utils.TimeUtility;
 
 /**
@@ -50,11 +51,6 @@ public class OvertimeInfoReferenceBean extends TimeApplicationBean implements Ov
 	 * 週の計算の比較基準日数。<br>
 	 */
 	public static final int					WEEK_CALCULATE_DAY	= -7;
-	
-	/**
-	 * 限度基準マスタDAO。
-	 */
-	protected LimitStandardDaoInterface		limitStandardDao;
 	
 	/**
 	 * 勤怠データDAO。
@@ -92,33 +88,74 @@ public class OvertimeInfoReferenceBean extends TimeApplicationBean implements Ov
 	public void initBean() throws MospException {
 		// 継承元のメソッド実施
 		super.initBean();
-		limitStandardDao = (LimitStandardDaoInterface)createDao(LimitStandardDaoInterface.class);
 		attendanceDao = (AttendanceDaoInterface)createDao(AttendanceDaoInterface.class);
 		overtimeRequestDao = (OvertimeRequestDaoInterface)createDao(OvertimeRequestDaoInterface.class);
 		workflowDao = (WorkflowDaoInterface)createDao(WorkflowDaoInterface.class);
 	}
 	
 	@Override
-	public int getPossibleTime1Week(String personalId) throws MospException {
-		// システム日付取得
-		Date targrtDate = DateUtility.getSystemDate();
+	public String getStringPossibleTime1Week(String personalId) throws MospException {
+		// 対象日(システム日付)を準備
+		Date targetDate = getSystemDate();
 		// 対象個人ID及び対象日付で勤怠設定情報群を取得し設定
-		setCutoffSettings(personalId, targrtDate);
+		setCutoffSettings(personalId, targetDate);
 		// 処理結果確認
 		if (mospParams.hasErrorMessage()) {
-			return 0;
+			// 限度設定無し文字列(-)を取得
+			return getNoLimitString();
 		}
-		// 残業限度基準
-		LimitStandardDtoInterface limitStandardDto = limitStandardDao.findForKey(timeSettingDto.getWorkSettingCode(),
-				timeSettingDto.getActivateDate(), "week1");
-		if (limitStandardDto == null) {
-			addSettingApplicationDefectLimitStandardErrorMessage(timeSettingDto.getActivateDate());
-			return 0;
+		// 勤怠設定エンティティを取得
+		TimeSettingEntityInterface entity = timeSettingRefer.getEntity(timeSettingDto);
+		// 1週間(week1)限度基準情報が存在しない場合
+		if (entity.isOneWeekExist() == false) {
+			// 限度設定無し文字列(-)を取得
+			return getNoLimitString();
 		}
+		// 残業申請可能時間(1週間)を取得
+		int time = getPossibleTime1Week(personalId, targetDate, entity);
+		// 残業申請可能時間(1週間：文字列)を取得
+		return TimeUtility.getStringJpTime(mospParams, time);
+	}
+	
+	@Override
+	public String getStringPossibleTime1Month(String personalId) throws MospException {
+		// 対象日(システム日付)を準備
+		Date targetDate = getSystemDate();
+		// 対象個人ID及び対象日付で勤怠設定情報群を取得し設定
+		setCutoffSettings(personalId, targetDate);
+		// 処理結果確認
+		if (mospParams.hasErrorMessage()) {
+			// 限度設定無し文字列(-)を取得
+			return getNoLimitString();
+		}
+		// 勤怠設定エンティティを取得
+		TimeSettingEntityInterface entity = timeSettingRefer.getEntity(timeSettingDto);
+		// 1ヶ月(month1)限度基準情報が存在しない場合
+		if (entity.isOneMonthExist() == false) {
+			// 限度設定無し文字列(-)を取得
+			return getNoLimitString();
+		}
+		// 残業申請可能時間(1ヶ月)を取得
+		int time = getPossibleTime1Month(personalId, targetDate, cutoffDto, entity);
+		// 残業申請可能時間(1ヶ月：文字列)を取得
+		return TimeUtility.getStringJpTime(mospParams, time);
+	}
+	
+	/**
+	 * 残業申請可能時間(1週間)を取得する。<br>
+	 * <br>
+	 * @param personalId 個人ID
+	 * @param targetDate 対象日
+	 * @param entity     勤怠設定エンティティ
+	 * @return 残業申請可能時間(1ヶ月)
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	protected int getPossibleTime1Week(String personalId, Date targetDate, TimeSettingEntityInterface entity)
+			throws MospException {
 		// 起算曜日準備
-		Date startDate = getDateClone(targrtDate);
+		Date startDate = getDateClone(targetDate);
 		// 曜日取得-週の起算曜日
-		int difference = DateUtility.getDayOfWeek(startDate) - timeSettingDto.getStartWeek();
+		int difference = DateUtility.getDayOfWeek(startDate) - entity.getStartWeek();
 		if (difference >= 0) {
 			while (difference != 0) {
 				startDate = DateUtility.addDay(startDate, -1);
@@ -136,10 +173,10 @@ public class OvertimeInfoReferenceBean extends TimeApplicationBean implements Ov
 		boolean requestFlag = true;
 		int overTimeOut = 0;
 		int requestTime = 0;
-		Date targetDate = startDate;
-		while (!targetDate.after(endDate)) {
+		Date indexDate = startDate;
+		while (!indexDate.after(endDate)) {
 			for (AttendanceDtoInterface attendanceDto : attendanceList) {
-				if (targetDate.equals(attendanceDto.getWorkDate())) {
+				if (indexDate.equals(attendanceDto.getWorkDate())) {
 					WorkflowDtoInterface workflowDto = workflowDao.findForKey(attendanceDto.getWorkflow());
 					if (workflowDto == null) {
 						continue;
@@ -154,7 +191,7 @@ public class OvertimeInfoReferenceBean extends TimeApplicationBean implements Ov
 				}
 			}
 			if (requestFlag) {
-				List<OvertimeRequestDtoInterface> list = overtimeRequestDao.findForList(personalId, targetDate);
+				List<OvertimeRequestDtoInterface> list = overtimeRequestDao.findForList(personalId, indexDate);
 				for (OvertimeRequestDtoInterface requestDto : list) {
 					WorkflowDtoInterface workflowDto = workflowDao.findForKey(requestDto.getWorkflow());
 					if (workflowDto == null) {
@@ -172,30 +209,25 @@ public class OvertimeInfoReferenceBean extends TimeApplicationBean implements Ov
 				}
 			}
 			requestFlag = true;
-			targetDate = DateUtility.addDay(targetDate, 1);
+			indexDate = DateUtility.addDay(indexDate, 1);
 		}
-		return limitStandardDto.getLimitTime() - overTimeOut - requestTime;
+		return entity.getOneWeekLimit() - overTimeOut - requestTime;
 	}
 	
-	@Override
-	public int getPossibleTime1Month(String personalId) throws MospException {
-		// システム日付取得
-		Date systemDate = DateUtility.getSystemDate();
-		// 対象個人ID及び対象日付で勤怠設定情報群を取得し設定
-		setCutoffSettings(personalId, systemDate);
-		// 処理結果確認
-		if (mospParams.hasErrorMessage()) {
-			return 0;
-		}
-		// 限度基準
-		LimitStandardDtoInterface limitStandardDto = limitStandardDao.findForKey(timeSettingDto.getWorkSettingCode(),
-				timeSettingDto.getActivateDate(), "month1");
-		if (limitStandardDto == null) {
-			addSettingApplicationDefectLimitStandardErrorMessage(timeSettingDto.getActivateDate());
-			return 0;
-		}
+	/**
+	 * 残業申請可能時間(1ヶ月)を取得する。<br>
+	 * <br>
+	 * @param personalId 個人ID
+	 * @param targetDate 対象日
+	 * @param cutoffDto  締日管理情報
+	 * @param entity     勤怠設定エンティティ
+	 * @return 残業申請可能時間(1ヶ月)
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	protected int getPossibleTime1Month(String personalId, Date targetDate, CutoffDtoInterface cutoffDto,
+			TimeSettingEntityInterface entity) throws MospException {
 		// 対象日付及び締日から対象年月日が含まれる締月を取得
-		Date cutoffMonth = TimeUtility.getCutoffMonth(cutoffDto.getCutoffDate(), systemDate);
+		Date cutoffMonth = TimeUtility.getCutoffMonth(cutoffDto.getCutoffDate(), targetDate);
 		int year = DateUtility.getYear(cutoffMonth);
 		int month = DateUtility.getMonth(cutoffMonth);
 		// 締期間の初日及び最終日取得
@@ -206,10 +238,10 @@ public class OvertimeInfoReferenceBean extends TimeApplicationBean implements Ov
 		boolean requestFlag = true;
 		int overTimeOut = 0;
 		int requestTime = 0;
-		Date targetDate = firstDate;
-		while (!targetDate.after(lastDate)) {
+		Date indexDate = firstDate;
+		while (!indexDate.after(lastDate)) {
 			for (AttendanceDtoInterface attendanceDto : attendanceList) {
-				if (targetDate.equals(attendanceDto.getWorkDate())) {
+				if (indexDate.equals(attendanceDto.getWorkDate())) {
 					WorkflowDtoInterface workflowDto = workflowDao.findForKey(attendanceDto.getWorkflow());
 					if (workflowDto == null) {
 						continue;
@@ -224,7 +256,7 @@ public class OvertimeInfoReferenceBean extends TimeApplicationBean implements Ov
 				}
 			}
 			if (requestFlag) {
-				List<OvertimeRequestDtoInterface> list = overtimeRequestDao.findForList(personalId, targetDate);
+				List<OvertimeRequestDtoInterface> list = overtimeRequestDao.findForList(personalId, indexDate);
 				for (OvertimeRequestDtoInterface requestDto : list) {
 					WorkflowDtoInterface workflowDto = workflowDao.findForKey(requestDto.getWorkflow());
 					if (workflowDto == null) {
@@ -242,9 +274,17 @@ public class OvertimeInfoReferenceBean extends TimeApplicationBean implements Ov
 				}
 			}
 			requestFlag = true;
-			targetDate = DateUtility.addDay(targetDate, 1);
+			indexDate = DateUtility.addDay(indexDate, 1);
 		}
-		return limitStandardDto.getLimitTime() - overTimeOut - requestTime;
+		return entity.getOneMonthLimit() - overTimeOut - requestTime;
+	}
+	
+	/**
+	 * 限度設定無し文字列(-)を取得する。<br>
+	 * @return 限度設定無し文字列(-)
+	 */
+	protected String getNoLimitString() {
+		return PlatformNamingUtility.hyphen(mospParams);
 	}
 	
 }

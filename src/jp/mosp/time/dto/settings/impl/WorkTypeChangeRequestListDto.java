@@ -77,7 +77,7 @@ public class WorkTypeChangeRequestListDto extends BaseDto implements WorkTypeCha
 	
 	@Override
 	public Date getRequestDate() {
-		return requestDate;
+		return getDateClone(requestDate);
 	}
 	
 	@Override
@@ -117,7 +117,7 @@ public class WorkTypeChangeRequestListDto extends BaseDto implements WorkTypeCha
 	
 	@Override
 	public void setRequestDate(Date requestDate) {
-		this.requestDate = requestDate;
+		this.requestDate = getDateClone(requestDate);
 	}
 	
 	@Override

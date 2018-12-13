@@ -41,6 +41,13 @@ public class ItemProperty implements BaseProperty {
 	private String			css;
 	
 	/**
+	 * 空白指定<br>
+	 * 人事汎用項目形式がselect、radioの場合に用いる。<br>
+	 * デフォルトは表示
+	 */
+	private boolean			isNeedSpace;
+	
+	/**
 	 * 固定値。<br>
 	 * 人事汎用項目形式がlabelの場合に用いる。<br>
 	 * 表示したい固定値を格納する。<br>
@@ -84,6 +91,7 @@ public class ItemProperty implements BaseProperty {
 	public ItemProperty(String key, String type) {
 		this.key = key;
 		this.type = type;
+		isNeedSpace = true;
 	}
 	
 	@Override
@@ -126,6 +134,13 @@ public class ItemProperty implements BaseProperty {
 	 */
 	public String getNamingKey() {
 		return namingKey;
+	}
+	
+	/**
+	 * @return isNeedSpace
+	 */
+	public boolean isNeedSpace() {
+		return isNeedSpace;
 	}
 	
 	/**
@@ -182,6 +197,13 @@ public class ItemProperty implements BaseProperty {
 	 */
 	public void setDataType(String dataType) {
 		this.dataType = dataType;
+	}
+	
+	/**
+	 * @param isNeedSpace セットする isNeedSpace
+	 */
+	public void setNeedSpace(boolean isNeedSpace) {
+		this.isNeedSpace = isNeedSpace;
 	}
 	
 }

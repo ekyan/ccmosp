@@ -48,4 +48,11 @@ public interface HolidayDataRegistBeanInterface {
 	 */
 	void update(HolidayDataDtoInterface dto) throws MospException;
 	
+	/**
+	 * 論理削除を行う
+	 * @param dto 対象DTO
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 */
+	void delete(HolidayDataDtoInterface dto) throws MospException;
+	
 }

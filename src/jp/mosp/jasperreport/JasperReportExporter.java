@@ -24,7 +24,6 @@ import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.base.MospExporterInterface;
 import jp.mosp.framework.base.MospParams;
 import jp.mosp.framework.constant.ExceptionConst;
-import jp.mosp.framework.constant.MospConst;
 import net.sf.jasperreports.engine.JRExporter;
 import net.sf.jasperreports.engine.JRExporterParameter;
 import net.sf.jasperreports.engine.JasperPrint;
@@ -54,25 +53,10 @@ public class JasperReportExporter extends BaseExporter implements MospExporterIn
 		setFileContentType(mospParams, response);
 		// ファイル名設定
 		setFileName(mospParams, response);
-		// 出力オブジェクト
-		Object file = mospParams.getFile();
-		if (file instanceof JasperReportIntermediate) {
-			// 中間パラメータの場合
-			JasperReportIntermediate intermediate = (JasperReportIntermediate)file;
-			// ファイル名確認
-			String prefix = intermediate.getFilePrefix();
-			if (mospParams.getFileName() == null && prefix != null) {
-				// file name = prefix + .pdf
-				// コンテンツのファイル名を設定
-				response.addHeader(APP_RESPONSE_DISPOSITION,
-						mospParams.getApplicationProperty(APP_RESPONSE_DISPOSITION) + prefix + ".pdf");
-			}
-			// 生成
-			file = JasperReportUtility.createJasperPrint(mospParams.getApplicationProperty(MospConst.APP_DOCBASE)
-					+ intermediate.getTemplatePath(), intermediate.getList());
-		}
 		// Exporter準備
 		JRExporter exporter = null;
+		// 出力対象取得
+		Object file = mospParams.getFile();
 		// 出力対象確認
 		if (file instanceof JasperPrint) {
 			// PDFとしてExporterを設定(JasperPrintの場合)

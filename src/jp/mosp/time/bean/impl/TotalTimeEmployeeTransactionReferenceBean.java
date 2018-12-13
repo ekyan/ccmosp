@@ -34,13 +34,13 @@ import jp.mosp.time.dto.settings.TotalTimeEmployeeDtoInterface;
 /**
  * 社員勤怠集計管理参照クラス。
  */
-public class TotalTimeEmployeeTransactionReferenceBean extends PlatformBean implements
-		TotalTimeEmployeeTransactionReferenceBeanInterface {
+public class TotalTimeEmployeeTransactionReferenceBean extends PlatformBean
+		implements TotalTimeEmployeeTransactionReferenceBeanInterface {
 	
 	/**
 	 * 社員勤怠集計管理DAO。
 	 */
-	protected TotalTimeEmployeeDaoInterface	dao;
+	protected TotalTimeEmployeeDaoInterface dao;
 	
 	
 	/**

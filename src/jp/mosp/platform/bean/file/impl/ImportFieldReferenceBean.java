@@ -35,7 +35,7 @@ public class ImportFieldReferenceBean extends PlatformBean implements ImportFiel
 	/**
 	 * インポートフィールド情報DAO。
 	 */
-	private ImportFieldDaoInterface	dao;
+	private ImportFieldDaoInterface dao;
 	
 	
 	/**

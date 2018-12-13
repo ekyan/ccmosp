@@ -30,6 +30,7 @@ import jp.mosp.platform.dao.workflow.WorkflowDaoInterface;
 import jp.mosp.platform.dto.workflow.WorkflowDtoInterface;
 import jp.mosp.time.base.TimeBean;
 import jp.mosp.time.bean.WorkOnHolidayRequestReferenceBeanInterface;
+import jp.mosp.time.constant.TimeConst;
 import jp.mosp.time.dao.settings.WorkOnHolidayRequestDaoInterface;
 import jp.mosp.time.dto.settings.WorkOnHolidayRequestDtoInterface;
 
@@ -110,7 +111,8 @@ public class WorkOnHolidayRequestReferenceBean extends TimeBean implements WorkO
 	
 	@Override
 	public void chkBasicInfo(String personalId, Date targetDate) throws MospException {
-		initial(personalId, targetDate);
+		// 勤怠基本情報確認
+		initial(personalId, targetDate, TimeConst.CODE_FUNCTION_WORK_HOLIDAY);
 	}
 	
 	@Override

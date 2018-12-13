@@ -42,52 +42,57 @@ public class PfmSectionDao extends PlatformDao implements SectionDaoInterface {
 	/**
 	 * 所属マスタ。
 	 */
-	public static final String	TABLE				= "pfm_section";
+	public static final String		TABLE							= "pfm_section";
 	
 	/**
 	 * レコード識別ID。
 	 */
-	public static final String	COL_PFM_SECTION_ID	= "pfm_section_id";
+	public static final String		COL_PFM_SECTION_ID				= "pfm_section_id";
 	
 	/**
 	 * 所属コード。
 	 */
-	public static final String	COL_SECTION_CODE	= "section_code";
+	public static final String		COL_SECTION_CODE				= "section_code";
 	
 	/**
 	 * 有効日。
 	 */
-	public static final String	COL_ACTIVATE_DATE	= "activate_date";
+	public static final String		COL_ACTIVATE_DATE				= "activate_date";
 	
 	/**
 	 * 所属名称。
 	 */
-	public static final String	COL_SECTION_NAME	= "section_name";
+	public static final String		COL_SECTION_NAME				= "section_name";
 	
 	/**
 	 * 所属略称。
 	 */
-	public static final String	COL_SECTION_ABBR	= "section_abbr";
+	public static final String		COL_SECTION_ABBR				= "section_abbr";
 	
 	/**
 	 * 所属表示名称。
 	 */
-	public static final String	COL_SECTION_DISPLAY	= "section_display";
+	public static final String		COL_SECTION_DISPLAY				= "section_display";
 	
 	/**
 	 * 階層経路。
 	 */
-	public static final String	COL_CLASS_ROUTE		= "class_route";
+	public static final String		COL_CLASS_ROUTE					= "class_route";
 	
 	/**
 	 * 閉鎖フラグ。
 	 */
-	public static final String	COL_CLOSE_FLAG		= "close_flag";
+	public static final String		COL_CLOSE_FLAG					= "close_flag";
 	
 	/**
 	 * キー。
 	 */
-	public static final String	KEY_1				= COL_PFM_SECTION_ID;
+	public static final String		KEY_1							= COL_PFM_SECTION_ID;
+	
+	/**
+	 * 
+	 */
+	static protected final String	TMP_TALBE_LOWERE_SECTION_RANGE	= "tmp_" + TABLE + "_range";
 	
 	
 	/**
@@ -280,6 +285,57 @@ public class PfmSectionDao extends PlatformDao implements SectionDaoInterface {
 	}
 	
 	@Override
+	public List<SectionDtoInterface> findForCodeRange(String sectionCodeFrom, String sectionCodeTo, Date activateDate)
+			throws MospException {
+		try {
+			index = 1;
+			// SELECT文追加
+			StringBuffer sb = getSelectQuery(getClass());
+			// 有効日における最新の情報を抽出する条件SQLを追加
+			sb.append(getQueryForMaxActivateDate(TABLE, COL_SECTION_CODE, COL_ACTIVATE_DATE));
+			// WHERE句追加
+			sb.append(where());
+			// 削除されていない情報を取得
+			sb.append(deleteFlagOff());
+			sb.append(and());
+			sb.append(deleteFlagOff(COL_CLOSE_FLAG));
+			// 所属コード範囲To
+			if (sectionCodeTo != null && sectionCodeTo.isEmpty() == false) {
+				sb.append(and());
+				sb.append(lessEqual(COL_SECTION_CODE));
+			}
+			// 所属コード範囲From
+			if (sectionCodeFrom != null && sectionCodeFrom.isEmpty() == false) {
+				sb.append(and());
+				sb.append(greaterEqual(COL_SECTION_CODE));
+			}
+			// 所属コード順
+			sb.append(getOrderByColumn(COL_SECTION_CODE));
+			// ステートメント生成
+			prepareStatement(sb.toString());
+			// 有効日における最新の情報を抽出する条件のパラメータを設定
+			index = setParamsForMaxActivateDate(index, activateDate, ps);
+			// 所属コード範囲Toのパラメータを設定
+			if (sectionCodeTo != null && sectionCodeTo.isEmpty() == false) {
+				setParam(index++, sectionCodeTo);
+			}
+			// 所属コード範囲Fromのパラメータを設定
+			if (sectionCodeFrom != null && sectionCodeFrom.isEmpty() == false) {
+				setParam(index++, sectionCodeFrom);
+			}
+			// SQL実行
+			executeQuery();
+			// 検索結果取得
+			return mappingAll();
+		} catch (Throwable e) {
+			throw new MospException(e);
+		} finally {
+			releaseResultSet();
+			releasePreparedStatement();
+		}
+	}
+	
+	@Override
 	public List<SectionDtoInterface> findForSearch(Map<String, Object> param) throws MospException {
 		try {
 			// パラメータ取得
@@ -299,45 +355,33 @@ public class PfmSectionDao extends PlatformDao implements SectionDaoInterface {
 			sb.append(deleteFlagOff());
 			// 有効日における最新の情報を抽出する条件SQLを追加
 			sb.append(and());
-			sb.append("(");
-			if (sectionType.equals(PlatformSystemConst.SEARCH_SECTION_ROUTE)) {
-				sb.append("(");
-			}
+			sb.append(leftParenthesis());
 			sb.append(like(COL_SECTION_CODE));
 			sb.append(and());
 			sb.append(like(COL_SECTION_NAME));
 			sb.append(and());
 			sb.append(like(COL_SECTION_ABBR));
-			sb.append(") ");
 			if (sectionType.equals(PlatformSystemConst.SEARCH_SECTION_ROUTE)) {
-				sb.append(" OR ");
-				sb.append(" EXISTS ");
-				sb.append(" ( ");
+				sb.append(or());
+				sb.append(leftParenthesis());
+				sb.append(exists());
+				sb.append(leftParenthesis());
 				sb.append(getSelectQuery(getClass()));
-				sb.append(" AS ");
-				sb.append(" table1 ");
+				sb.append(asTmpTable(TABLE));
 				sb.append(where());
-				sb.append(" table1.");
-				sb.append(like(COL_SECTION_CODE));
+				sb.append(like(getTmpTableColumn(TABLE, COL_SECTION_CODE)));
 				sb.append(and());
-				sb.append(" table1.");
-				sb.append(like(COL_SECTION_NAME));
+				sb.append(like(getTmpTableColumn(TABLE, COL_SECTION_NAME)));
 				sb.append(and());
-				sb.append(" table1.");
-				sb.append(like(COL_SECTION_ABBR));
+				sb.append(like(getTmpTableColumn(TABLE, COL_SECTION_ABBR)));
 				sb.append(and());
-				sb.append(TABLE);
-				sb.append(".");
-				sb.append(COL_CLASS_ROUTE);
-				sb.append(" LIKE ");
-				sb.append(" '%,' ");
-				sb.append(" || ");
-				sb.append(" table1.");
-				sb.append(COL_SECTION_CODE);
-				sb.append(" || ");
-				sb.append(" ',%' ");
-				sb.append(" )) ");
+				sb.append(getExplicitTableColumn(TABLE, COL_CLASS_ROUTE));
+				sb.append(like());
+				sb.append(concat("'%,'", getTmpTableColumn(TABLE, COL_SECTION_CODE), "',%'"));
+				sb.append(rightParenthesis());
+				sb.append(rightParenthesis());
 			}
+			sb.append(rightParenthesis());
 			if (!closeFlag.isEmpty()) {
 				sb.append(and());
 				sb.append(equal(COL_CLOSE_FLAG));
@@ -348,13 +392,13 @@ public class PfmSectionDao extends PlatformDao implements SectionDaoInterface {
 			// 有効日における最新の情報を抽出する条件のパラメータを設定
 			index = setParamsForMaxActivateDate(index, targetDate, ps);
 			// パラメータ設定
-			setParam(index++, sectionCode + "%");
-			setParam(index++, "%" + sectionName + "%");
-			setParam(index++, "%" + sectionAbbr + "%");
+			setParam(index++, startWithParam(sectionCode));
+			setParam(index++, containsParam(sectionName));
+			setParam(index++, containsParam(sectionAbbr));
 			if (sectionType.equals(PlatformSystemConst.SEARCH_SECTION_ROUTE)) {
-				setParam(index++, sectionCode + "%");
-				setParam(index++, "%" + sectionName + "%");
-				setParam(index++, "%" + sectionAbbr + "%");
+				setParam(index++, startWithParam(sectionCode));
+				setParam(index++, containsParam(sectionName));
+				setParam(index++, containsParam(sectionAbbr));
 			}
 			if (!closeFlag.isEmpty()) {
 				setParam(index++, Integer.parseInt(closeFlag));
@@ -593,6 +637,90 @@ public class PfmSectionDao extends PlatformDao implements SectionDaoInterface {
 	 */
 	protected SectionDtoInterface castDto(BaseDtoInterface baseDto) {
 		return (SectionDtoInterface)baseDto;
+	}
+	
+	@Override
+	public StringBuffer getQueryForLowerSectionRange(String targetColumn, boolean fromExist, boolean toExist) {
+		// SQL作成準備
+		StringBuffer sb = new StringBuffer();
+		sb.append(targetColumn);
+		sb.append(in());
+		sb.append(leftParenthesis());
+		sb.append(select());
+		sb.append(COL_SECTION_CODE);
+		sb.append(from(TABLE));
+		// 有効日における最新の情報を抽出する条件SQLを追加
+		sb.append(getQueryForMaxActivateDate(TABLE, COL_SECTION_CODE, COL_ACTIVATE_DATE));
+		sb.append(where());
+		sb.append(deleteFlagOff());
+		sb.append(and());
+		sb.append(leftParenthesis());
+		// 指定範囲の所属コード検索条件
+		sb.append(leftParenthesis());
+		if (fromExist) {
+			sb.append(greaterEqual(COL_SECTION_CODE));
+			if (toExist) {
+				sb.append(and());
+			}
+		}
+		if (toExist) {
+			sb.append(lessEqual(COL_SECTION_CODE));
+		}
+		sb.append(rightParenthesis());
+		sb.append(or());
+		// 指定範囲の所属コードの下位所属の検索条件
+		sb.append(exists());
+		sb.append(leftParenthesis());
+		sb.append(select());
+		sb.append(" * "); // EXISTS なので、速度を稼ぐために全カラム指定
+		sb.append(from(TABLE));
+		sb.append(as(TMP_TALBE_LOWERE_SECTION_RANGE));
+		sb.append(getQueryForMaxActivateDate(TABLE, COL_SECTION_CODE, COL_ACTIVATE_DATE));
+		sb.append(where());
+		sb.append(deleteFlagOff(getExplicitTableColumn(TMP_TALBE_LOWERE_SECTION_RANGE, colDeleteFlag)));
+		if (fromExist) {
+			sb.append(and());
+			sb.append(greaterEqual(getExplicitTableColumn(TMP_TALBE_LOWERE_SECTION_RANGE, COL_SECTION_CODE)));
+		}
+		if (toExist) {
+			sb.append(and());
+			sb.append(lessEqual(getExplicitTableColumn(TMP_TALBE_LOWERE_SECTION_RANGE, COL_SECTION_CODE)));
+		}
+		sb.append(and());
+		sb.append(equal(getExplicitTableColumn(TABLE, COL_CLOSE_FLAG), MospConst.INACTIVATE_FLAG_OFF));
+		sb.append(and());
+		sb.append(getExplicitTableColumn(TABLE, COL_CLASS_ROUTE));
+		sb.append(like());
+		sb.append(concat("'%,'", getExplicitTableColumn(TMP_TALBE_LOWERE_SECTION_RANGE, COL_SECTION_CODE), "',%'"));
+		sb.append(rightParenthesis());
+		sb.append(rightParenthesis());
+		sb.append(rightParenthesis());
+		
+		return sb;
+	}
+	
+	@Override
+	public int setParamsForLowerSectionRange(int index, String sectionCodeFrom, String sectionCodeTo, Date targetDate,
+			PreparedStatement ps) throws MospException {
+		// パラメータインデックス準備
+		int idx = index;
+		// 下位所属条件パラメータ設定
+		setParam(idx++, targetDate, false, ps);
+		if (!sectionCodeFrom.isEmpty()) {
+			setParam(idx++, sectionCodeFrom, ps);
+		}
+		if (!sectionCodeTo.isEmpty()) {
+			setParam(idx++, sectionCodeTo, ps);
+		}
+		setParam(idx++, targetDate, false, ps);
+		if (!sectionCodeFrom.isEmpty()) {
+			setParam(idx++, sectionCodeFrom, ps);
+		}
+		if (!sectionCodeTo.isEmpty()) {
+			setParam(idx++, sectionCodeTo, ps);
+		}
+		// インデックス返却
+		return idx;
 	}
 	
 }

@@ -64,6 +64,10 @@ public class TmdTotalOtherVacationDao extends PlatformDao implements TotalOtherV
 	 * 特別休暇日数。
 	 */
 	public static final String	COL_TIMES						= "times";
+	/**
+	 * 特別休暇時間数。
+	 */
+	public static final String	COL_HOURS						= "hours";
 	
 	/**
 	 * キー。
@@ -91,6 +95,7 @@ public class TmdTotalOtherVacationDao extends PlatformDao implements TotalOtherV
 		dto.setCalculationMonth(getInt(COL_CALCULATION_MONTH));
 		dto.setHolidayCode(getString(COL_HOLIDAY_CODE));
 		dto.setTimes(getDouble(COL_TIMES));
+		dto.setHours(getInt(COL_HOURS));
 		mappingCommonInfo(dto);
 		return dto;
 	}
@@ -150,6 +155,7 @@ public class TmdTotalOtherVacationDao extends PlatformDao implements TotalOtherV
 		setParam(index++, dto.getCalculationMonth());
 		setParam(index++, dto.getHolidayCode());
 		setParam(index++, dto.getTimes());
+		setParam(index++, dto.getHours());
 		setCommonParams(baseDto, isInsert);
 	}
 	
@@ -194,8 +200,8 @@ public class TmdTotalOtherVacationDao extends PlatformDao implements TotalOtherV
 	}
 	
 	@Override
-	public List<TotalOtherVacationDtoInterface> findForList(String personalId, int calculationYear, int calculationMonth)
-			throws MospException {
+	public List<TotalOtherVacationDtoInterface> findForList(String personalId, int calculationYear,
+			int calculationMonth) throws MospException {
 		try {
 			index = 1;
 			StringBuffer sb = getSelectQuery(getClass());

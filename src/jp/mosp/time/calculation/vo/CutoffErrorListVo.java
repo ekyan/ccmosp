@@ -169,14 +169,14 @@ public class CutoffErrorListVo extends TotalTimeBaseVo {
 	 * @return aryLblPosition
 	 */
 	public String[] getAryLblPosition() {
-		return aryLblPosition;
+		return getStringArrayClone(aryLblPosition);
 	}
 	
 	/**
 	 * @param aryLblPosition セットする aryLblPosition
 	 */
 	public void setAryLblPosition(String[] aryLblPosition) {
-		this.aryLblPosition = aryLblPosition;
+		this.aryLblPosition = getStringArrayClone(aryLblPosition);
 	}
 	
 }

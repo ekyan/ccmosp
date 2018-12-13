@@ -37,7 +37,7 @@ public class SuspensionReferenceBean extends BaseBean implements SuspensionRefer
 	/**
 	 * 人事休職情報DAO
 	 */
-	private SuspensionDaoInterface	suspensionDao;
+	private SuspensionDaoInterface suspensionDao;
 	
 	
 	/**

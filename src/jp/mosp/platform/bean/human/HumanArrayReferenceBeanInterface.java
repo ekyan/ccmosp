@@ -138,4 +138,28 @@ public interface HumanArrayReferenceBeanInterface {
 	 */
 	Map<String, String[][]> getInputActiveDateGeneralPulldown(String division, String viewKey) throws MospException;
 	
+	/**
+	 * 人事汎用一覧情報をマップで取得する。
+	 * 履歴編集画面で表示する。
+	 * プルダウンの値をコードで取得する。
+	 * @param division 人事汎用管理区分
+	 * @param viewKey 人事汎用管理表示区分
+	 * @param personalId 個人ID
+	 * @param rowID 行ID
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	void getHumanArrayDtoMapInfo(String division, String viewKey, String personalId, int rowID) throws MospException;
+	
+	/**
+	 * レコード識別IDマップ取得
+	 * @return マップ（項目ID、レコード識別ID）
+	 */
+	LinkedHashMap<String, Long> getRecordsMap();
+	
+	/**
+	 * 人事一覧情報マップ取得
+	 * @return 人事一覧情報マップ(行ID,項目ID,項目値)
+	 */
+	LinkedHashMap<String, Map<String, String>> getArrayHumanInfoMap();
+	
 }

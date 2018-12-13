@@ -66,35 +66,42 @@ public interface TotalTimeCorrectionRegistBeanInterface {
 			TotalTimeDataDtoInterface newTotalTimeDataDto) throws MospException;
 	
 	/**
-	 * 特別休暇集計データの新規登録を行う。<br>
+	 * 特別休暇日数集計データの新規登録を行う。<br>
 	 * @param dto 対象DTO
 	 * @param oldTotalLeaveDto 変更前特別休暇集計DTO
 	 * @param newTotalLeaveDto 変更予定の特別休暇集計DTO
+	 * @param isDay 確認結果(true：日数を更新、false：日数を更新しない)
+	 * @param isHour 確認結果(true：時間数を更新、false：時間数を更新しない)
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
 	void insertLeave(TotalTimeCorrectionDtoInterface dto, TotalLeaveDtoInterface oldTotalLeaveDto,
-			TotalLeaveDtoInterface newTotalLeaveDto) throws MospException;
+			TotalLeaveDtoInterface newTotalLeaveDto, boolean isDay, boolean isHour) throws MospException;
 	
 	/**
 	 * その他休暇集計データの新規登録を行う。<br>
 	 * @param dto 対象DTO
 	 * @param oldTotalOtherVacationDto 変更前その他休暇集計DTO
 	 * @param newTotalOtherVacationDto 変更予定のその他休暇集計DTO
+	 * @param isDay 確認結果(true：日数を更新、false：日数を更新しない)
+	 * @param isHour 確認結果(true：時間数を更新、false：時間数を更新しない)
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
 	void insertOtherVacation(TotalTimeCorrectionDtoInterface dto,
 			TotalOtherVacationDtoInterface oldTotalOtherVacationDto,
-			TotalOtherVacationDtoInterface newTotalOtherVacationDto) throws MospException;
+			TotalOtherVacationDtoInterface newTotalOtherVacationDto, boolean isDay, boolean isHour)
+			throws MospException;
 	
 	/**
 	 * 欠勤集計データの新規登録を行う。<br>
 	 * @param dto 対象DTO
 	 * @param oldTotalAbsenceDto 変更前欠勤集計DTO
 	 * @param newTotalAbsenceDto 変更予定の欠勤集計DTO
+	 * @param isDay 確認結果(true：日数を更新、false：日数を更新しない)
+	 * @param isHour 確認結果(true：時間数を更新、false：時間数を更新しない)
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
 	void insertAbsence(TotalTimeCorrectionDtoInterface dto, TotalAbsenceDtoInterface oldTotalAbsenceDto,
-			TotalAbsenceDtoInterface newTotalAbsenceDto) throws MospException;
+			TotalAbsenceDtoInterface newTotalAbsenceDto, boolean isDay, boolean isHour) throws MospException;
 	
 	/**
 	 * 手当集計データの新規登録を行う。<br>

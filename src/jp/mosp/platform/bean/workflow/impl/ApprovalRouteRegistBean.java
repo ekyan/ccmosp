@@ -376,8 +376,8 @@ public class ApprovalRouteRegistBean extends PlatformBean implements ApprovalRou
 		// 削除対象の有効日以前で最新の承認ルートユニットマスタ情報を取得
 		List<RouteApplicationDtoInterface> applicationList = routeAppDao.findForActivateDate(dto.getActivateDate());
 		// 無効期間で承認ルートユニットマスタ履歴情報を取得(対象DTOの有効日～次の履歴の有効日)
-		applicationList.addAll(routeAppDao.findForTerm(dto.getActivateDate(),
-				getNextActivateDate(dto.getActivateDate(), list)));
+		applicationList
+			.addAll(routeAppDao.findForTerm(dto.getActivateDate(), getNextActivateDate(dto.getActivateDate(), list)));
 		return applicationList;
 	}
 	

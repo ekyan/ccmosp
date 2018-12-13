@@ -31,7 +31,7 @@ import jp.mosp.time.utils.TimeUtility;
 /**
  * 勤務形態エンティティクラス。<br>
  */
-public class WorkTypeEntity {
+public class WorkTypeEntity implements WorkTypeEntityInterface {
 	
 	/**
 	 * 給与区分(有給)。<br>
@@ -51,20 +51,38 @@ public class WorkTypeEntity {
 	
 	/**
 	 * コンストラクタ。<br>
-	 * @param workTypeDto 勤務形態情報
-	 * @param itemDtoList 勤務形態項目情報リスト
 	 */
-	public WorkTypeEntity(WorkTypeDtoInterface workTypeDto, List<WorkTypeItemDtoInterface> itemDtoList) {
-		// フィールドに設定
+	public WorkTypeEntity() {
+	}
+	
+//	/**
+//	 * コンストラクタ。<br>
+//	 * @param workTypeDto 勤務形態情報
+//	 * @param itemDtoList 勤務形態項目情報リスト
+//	 */
+//	public WorkTypeEntity(WorkTypeDtoInterface workTypeDto, List<WorkTypeItemDtoInterface> itemDtoList) {
+//		// フィールドに設定
+//		this.workTypeDto = workTypeDto;
+//		this.itemDtoList = itemDtoList;
+//	}
+//	
+	@Override
+	public void setWorkTypeDto(WorkTypeDtoInterface workTypeDto) {
 		this.workTypeDto = workTypeDto;
+	}
+	
+	@Override
+	public void setWorkTypeItemList(List<WorkTypeItemDtoInterface> itemDtoList) {
 		this.itemDtoList = itemDtoList;
 	}
+
 	
 	/**
 	 * 勤務形態略称を取得する。<br>
 	 * 勤務形態略称が未設定の場合は、空文字を返す。<br>
 	 * @return 勤務形態略称
 	 */
+	@Override
 	public String getWorkTypeAbbr() {
 		// 勤務形態情報確認
 		if (workTypeDto == null || workTypeDto.getWorkTypeAbbr() == null) {
@@ -76,9 +94,10 @@ public class WorkTypeEntity {
 	
 	/**
 	 * 始業時刻を取得する。<br>
-	 * @return 終業時刻
+	 * @return 始業時刻
 	 * @throws MospException 日付の変換に失敗した場合
 	 */
+	@Override
 	public Date getStartWorkTime() throws MospException {
 		return getItemValue(TimeConst.CODE_WORKSTART);
 	}
@@ -88,6 +107,7 @@ public class WorkTypeEntity {
 	 * @return 終業時刻
 	 * @throws MospException 日付の変換に失敗した場合
 	 */
+	@Override
 	public Date getEndWorkTime() throws MospException {
 		return getItemValue(TimeConst.CODE_WORKEND);
 	}
@@ -97,6 +117,7 @@ public class WorkTypeEntity {
 	 * @return 勤務時間(分)
 	 * @throws MospException 日付の変換に失敗した場合
 	 */
+	@Override
 	public int getWorkTime() throws MospException {
 		return getItemMinutes(TimeConst.CODE_WORKTIME);
 	}
@@ -106,8 +127,29 @@ public class WorkTypeEntity {
 	 * @return 勤務時間(分)
 	 * @throws MospException 日付の変換に失敗した場合
 	 */
+	@Override
 	public int getRestTime() throws MospException {
 		return getItemMinutes(TimeConst.CODE_RESTTIME);
+	}
+	
+	/**
+	 * 休憩1開始時刻を取得する。<br>
+	 * @return 休憩1開始時刻
+	 * @throws MospException 日付の変換に失敗した場合
+	 */
+	@Override
+	public Date getRest1StartTime() throws MospException {
+		return getItemValue(TimeConst.CODE_RESTSTART1);
+	}
+	
+	/**
+	 * 休憩1終了時刻を取得する。<br>
+	 * @return 休憩1終了時刻
+	 * @throws MospException 日付の変換に失敗した場合
+	 */
+	@Override
+	public Date getRest1EndTime() throws MospException {
+		return getItemValue(TimeConst.CODE_RESTEND1);
 	}
 	
 	/**
@@ -118,6 +160,7 @@ public class WorkTypeEntity {
 	 * @return 前半休開始時刻
 	 * @throws MospException 日付の変換に失敗した場合
 	 */
+	@Override
 	public Date getFrontStartTime() throws MospException {
 		return getItemValue(TimeConst.CODE_FRONTSTART);
 	}
@@ -130,6 +173,7 @@ public class WorkTypeEntity {
 	 * @return 前半休終了時刻
 	 * @throws MospException 日付の変換に失敗した場合
 	 */
+	@Override
 	public Date getFrontEndTime() throws MospException {
 		return getItemValue(TimeConst.CODE_FRONTEND);
 	}
@@ -142,6 +186,7 @@ public class WorkTypeEntity {
 	 * @return 後半休開始時刻
 	 * @throws MospException 日付の変換に失敗した場合
 	 */
+	@Override
 	public Date getBackStartTime() throws MospException {
 		return getItemValue(TimeConst.CODE_BACKSTART);
 	}
@@ -154,6 +199,7 @@ public class WorkTypeEntity {
 	 * @return 後半休終了時刻
 	 * @throws MospException 日付の変換に失敗した場合
 	 */
+	@Override
 	public Date getBackEndTime() throws MospException {
 		return getItemValue(TimeConst.CODE_BACKEND);
 	}
@@ -162,6 +208,7 @@ public class WorkTypeEntity {
 	 * 直行かどうかを確認する。<br>
 	 * @return 確認結果(true：直行、false：直行でない)
 	 */
+	@Override
 	public boolean isDirectStart() {
 		// 勤務形態項目値(予備)がチェックされているかを確認
 		return isChecked(TimeConst.CODE_WORK_TYPE_ITEM_DIRECT_START);
@@ -171,6 +218,7 @@ public class WorkTypeEntity {
 	 * 直帰かどうかを確認する。<br>
 	 * @return 確認結果(true：直帰、false：直帰でない)
 	 */
+	@Override
 	public boolean isDirectEnd() {
 		// 勤務形態項目値(予備)がチェックされているかを確認
 		return isChecked(TimeConst.CODE_WORK_TYPE_ITEM_DIRECT_END);
@@ -180,6 +228,7 @@ public class WorkTypeEntity {
 	 * 割増休憩除外が有効であるかを確認する。<br>
 	 * @return 確認結果(true：割増休憩除外が有効である、false：有効でない)
 	 */
+	@Override
 	public boolean isNightRestExclude() {
 		return isPreliminaryTheValue(TimeConst.CODE_WORK_TYPE_ITEM_EXCLUDE_NIGHT_REST,
 				String.valueOf(MospConst.INACTIVATE_FLAG_OFF));
@@ -190,6 +239,7 @@ public class WorkTypeEntity {
 	 * @return 時短時間1開始時刻
 	 * @throws MospException 日付の変換に失敗した場合
 	 */
+	@Override
 	public Date getShort1StartTime() throws MospException {
 		return getItemValue(TimeConst.CODE_WORK_TYPE_ITEM_SHORT1_START);
 	}
@@ -199,6 +249,7 @@ public class WorkTypeEntity {
 	 * @return 時短時間1終了時刻
 	 * @throws MospException 日付の変換に失敗した場合
 	 */
+	@Override
 	public Date getShort1EndTime() throws MospException {
 		return getItemValue(TimeConst.CODE_WORK_TYPE_ITEM_SHORT1_END);
 	}
@@ -206,9 +257,9 @@ public class WorkTypeEntity {
 	/**
 	 * 時短時間1給与区分を確認する。<br>
 	 * @return 確認結果(true：時短時間1給与区分が有給、false：無給)
-	 * @throws MospException 日付の変換に失敗した場合
 	 */
-	public boolean isShort1TypePay() throws MospException {
+	@Override
+	public boolean isShort1TypePay() {
 		return isPreliminaryTheValue(TimeConst.CODE_WORK_TYPE_ITEM_SHORT1_START, CODE_PAY_TYPE_PAY);
 	}
 	
@@ -217,6 +268,7 @@ public class WorkTypeEntity {
 	 * @return 確認結果(true：時短時間1が設定されている、false：されていない)
 	 * @throws MospException 日付の変換に失敗した場合
 	 */
+	@Override
 	public boolean isShort1TimeSet() throws MospException {
 		return isItemValueSet(TimeConst.CODE_WORK_TYPE_ITEM_SHORT1_START, TimeConst.CODE_WORK_TYPE_ITEM_SHORT1_END);
 	}
@@ -226,6 +278,7 @@ public class WorkTypeEntity {
 	 * @return 時短時間2開始時刻
 	 * @throws MospException 日付の変換に失敗した場合
 	 */
+	@Override
 	public Date getShort2StartTime() throws MospException {
 		return getItemValue(TimeConst.CODE_WORK_TYPE_ITEM_SHORT2_START);
 	}
@@ -235,6 +288,7 @@ public class WorkTypeEntity {
 	 * @return 時短時間2終了時刻
 	 * @throws MospException 日付の変換に失敗した場合
 	 */
+	@Override
 	public Date getShort2EndTime() throws MospException {
 		return getItemValue(TimeConst.CODE_WORK_TYPE_ITEM_SHORT2_END);
 	}
@@ -244,6 +298,7 @@ public class WorkTypeEntity {
 	 * @return 確認結果(true：時短時間2給与区分が有給、false：無給)
 	 * @throws MospException 日付の変換に失敗した場合
 	 */
+	@Override
 	public boolean isShort2TypePay() throws MospException {
 		return isPreliminaryTheValue(TimeConst.CODE_WORK_TYPE_ITEM_SHORT2_START, CODE_PAY_TYPE_PAY);
 	}
@@ -253,26 +308,9 @@ public class WorkTypeEntity {
 	 * @return 確認結果(true：時短時間2が設定されている、false：されていない)
 	 * @throws MospException 日付の変換に失敗した場合
 	 */
+	@Override
 	public boolean isShort2TimeSet() throws MospException {
 		return isItemValueSet(TimeConst.CODE_WORK_TYPE_ITEM_SHORT2_START, TimeConst.CODE_WORK_TYPE_ITEM_SHORT2_END);
-	}
-	
-	/**
-	 * 法定休日であるかを確認する。<br>
-	 * @return 確認結果(true：法定休日である、false：そうでない)
-	 */
-	protected boolean isLegalHoliday() {
-		// 勤務形態コード確認
-		return getWorkTypeCode().equals(TimeConst.CODE_HOLIDAY_LEGAL_HOLIDAY);
-	}
-	
-	/**
-	 * 所定休日であるかを確認する。<br>
-	 * @return 確認結果(true：所定休日である、false：そうでない)
-	 */
-	protected boolean isPrescribedHoliday() {
-		// 勤務形態コード確認
-		return getWorkTypeCode().equals(TimeConst.CODE_HOLIDAY_PRESCRIBED_HOLIDAY);
 	}
 	
 	/**
@@ -280,9 +318,10 @@ public class WorkTypeEntity {
 	 * 未設定(休暇等)、所定休日、法定休日の場合は、勤務対象勤務形態でないと判断する。<br>
 	 * @return 確認結果(true：勤務対象勤務形態である、false：そうでない。)
 	 */
+	@Override
 	public boolean isWorkTypeForWork() {
 		// 勤務形態コード確認
-		if (getWorkTypeCode().isEmpty() || isLegalHoliday() || isPrescribedHoliday()) {
+		if (getWorkTypeCode().isEmpty() || TimeUtility.isHoliday(getWorkTypeCode())) {
 			// 未設定(休暇等)、所定休日、法定休日の場合
 			return false;
 		}
@@ -322,6 +361,7 @@ public class WorkTypeEntity {
 	 * @return 始業時刻
 	 * @throws MospException 日付の変換に失敗した場合
 	 */
+	@Override
 	public Date getStartTime(RequestEntity requestEntity) throws MospException {
 		// 承認済フラグ準備(false：申請済申請を考慮)
 		boolean isCompleted = false;
@@ -412,18 +452,13 @@ public class WorkTypeEntity {
 	 * 時間単位有給休暇の開始時刻を返す。<br>
 	 * <br>
 	 * 6.それ以外の場合：<br>
-	 * 勤務形態の開始時刻を返す。<br>
-	 * <br>
-	 * 4.それ以外の場合：<br>
 	 * 勤務形態の終業時刻を返す。<br>
-	 * 但し、時短時間2(無給)が設定されている場合は、時短時間2開始時刻を返す。<br>
-	 * 更に、時間単位有給休暇が終業時刻に続けて取得されていた場合は、
-	 * 時間単位有給休暇の開始時刻を返す。<br>
 	 * <br>
 	 * @param requestEntity  申請エンティティ
 	 * @return 終業時刻
 	 * @throws MospException 日付の変換に失敗した場合
 	 */
+	@Override
 	public Date getEndTime(RequestEntity requestEntity) throws MospException {
 		// 承認済フラグ準備(false：申請済申請を考慮)
 		boolean isCompleted = false;
@@ -457,7 +492,7 @@ public class WorkTypeEntity {
 			// 勤務日時刻に調整(振出・休出申請(休出申請)の出勤予定時刻)
 			return workOnHolidayEndTime;
 		}
-		// 初回連続時間休時刻(開始時刻及び終了時刻)を取得
+		// 最終連続時間休時刻(開始時刻及び終了時刻)を取得
 		List<Date> holidayTimeList = requestEntity.getHourlyHolidayLastSequenceTimes();
 		// 4.時短時間2が設定されている場合
 		if (isShort2TimeSet()) {
@@ -502,13 +537,30 @@ public class WorkTypeEntity {
 	}
 	
 	/**
+	 * 有効日を取得する。<br>
+	 * 勤務形態情報が未設定の場合は、nullを返す。<br>
+	 * <br>
+	 * @return 有効日
+	 */
+	@Override
+	public Date getActivateDate() {
+		// 勤務形態情報確認
+		if (workTypeDto == null) {
+			return null;
+		}
+		// 勤務形態コード取得
+		return workTypeDto.getActivateDate();
+	}
+	
+	/**
 	 * 勤務形態項目値を取得する。<br>
 	 * 勤務形態項目情報が取得できなかった場合は、デフォルト時刻を返す。<br>
 	 * @param workTypeItemCode 勤務形態項目コード
 	 * @return 勤務形態項目値
 	 * @throws MospException 日付の変換に失敗した場合
 	 */
-	protected Date getItemValue(String workTypeItemCode) throws MospException {
+	@Override
+	public Date getItemValue(String workTypeItemCode) throws MospException {
 		// 勤務形態項目情報を取得
 		WorkTypeItemDtoInterface dto = getWorkTypeItem(workTypeItemCode);
 		// 勤務形態項目情報を確認
@@ -573,7 +625,8 @@ public class WorkTypeEntity {
 	 * @param workTypeItemCode 勤務形態項目コード
 	 * @return 勤務形態項目情報
 	 */
-	protected WorkTypeItemDtoInterface getWorkTypeItem(String workTypeItemCode) {
+	@Override
+	public WorkTypeItemDtoInterface getWorkTypeItem(String workTypeItemCode) {
 		// 勤務形態項目情報毎に確認
 		for (WorkTypeItemDtoInterface dto : itemDtoList) {
 			// 勤務形態項目コードが合致する場合

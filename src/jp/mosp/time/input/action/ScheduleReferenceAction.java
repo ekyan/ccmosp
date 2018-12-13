@@ -21,7 +21,6 @@ import java.util.Date;
 
 import jp.mosp.framework.base.BaseVo;
 import jp.mosp.framework.base.MospException;
-import jp.mosp.platform.utils.MonthUtility;
 import jp.mosp.time.base.AttendanceListBaseAction;
 import jp.mosp.time.base.TimeAction;
 import jp.mosp.time.bean.AttendanceListReferenceBeanInterface;
@@ -145,12 +144,8 @@ public class ScheduleReferenceAction extends AttendanceListBaseAction {
 		/// 対象年月取得
 		int year = getTargetYear();
 		int month = getTargetMonth();
-		// 年月指定時の基準日取得
-		Date targetDate = MonthUtility.getYearMonthTargetDate(year, month, mospParams);
 		// 勤怠一覧情報参照クラス取得
 		AttendanceListReferenceBeanInterface attendanceListReference = timeReference().attendanceList();
-		// 基本情報チェック
-		timeReference().attendance().chkBasicInfo(personalId, targetDate);
 		// 対象日で勤怠一覧(予定)情報を取得しVOに設定
 		setVoList(attendanceListReference.getScheduleList(personalId, year, month));
 		// 勤怠一覧情報参照クラスの情報をVOのフィールドに設定
@@ -228,6 +223,9 @@ public class ScheduleReferenceAction extends AttendanceListBaseAction {
 		ScheduleReferenceVo vo = (ScheduleReferenceVo)mospParams.getVo();
 		// VOのカレンダー名称を設定
 		vo.setLblApplicationSchedule(attendanceListReference.getScheduleName());
+		vo.setLblEndRecordTime(false);
+		vo.setLblStartRecordTime(false);
+		vo.setLblTimesCat(false);
 	}
 	
 }

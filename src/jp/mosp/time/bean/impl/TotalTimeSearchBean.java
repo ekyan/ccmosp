@@ -27,7 +27,7 @@ import java.util.Set;
 
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.base.MospParams;
-import jp.mosp.platform.bean.human.impl.HumanSearchBean;
+import jp.mosp.framework.constant.MospConst;
 import jp.mosp.platform.constant.PlatformConst;
 import jp.mosp.platform.dto.human.HumanDtoInterface;
 import jp.mosp.time.bean.CutoffUtilBeanInterface;
@@ -40,7 +40,7 @@ import jp.mosp.time.dto.settings.TotalTimeDataDtoInterface;
 /**
  * 勤怠集計結果検索クラス。
  */
-public class TotalTimeSearchBean extends HumanSearchBean implements TotalTimeSearchBeanInterface {
+public class TotalTimeSearchBean extends SubordinateSearchBean implements TotalTimeSearchBeanInterface {
 	
 	/**
 	 * 勤怠集計データDAO。
@@ -56,30 +56,11 @@ public class TotalTimeSearchBean extends HumanSearchBean implements TotalTimeSea
 	 * 部下一覧検索クラス。
 	 */
 	private SubordinateSearchBeanInterface	subordinateSearch;
-	/**
-	 * 未承認。
-	 */
-	private String							approval;
-	
-	/**
-	 * 未集計。
-	 */
-	private String							calc;
 	
 	/**
 	 * 締日コード。
 	 */
-	private String							cutoffCode;
-	
-	/**
-	 * 対象年。
-	 */
-	protected int							targetYear;
-	
-	/**
-	 * 対象月。
-	 */
-	protected int							targetMonth;
+	protected String						cutoffCode;
 	
 	
 	/**
@@ -123,23 +104,26 @@ public class TotalTimeSearchBean extends HumanSearchBean implements TotalTimeSea
 		// 人事マスタ情報検索条件設定
 		setEmployeeCodeType(PlatformConst.SEARCH_FORWARD_MATCH);
 		setStateType(PlatformConst.EMPLOYEE_STATE_PRESENCE);
+		// 前日までフラグ(承認状態取得用)を取得
+		boolean searchBeforeDay = approvalBeforeDay.equals(MospConst.CHECKBOX_ON);
 		// 人事マスタ情報検索条件から締日の対象となる人事情報のリストを取得
 		List<HumanDtoInterface> humanList = search();
 		// 人事情報毎に処理
 		for (HumanDtoInterface human : humanList) {
+			// 個人IDを取得
+			String personalId = human.getPersonalId();
 			// 締日コードが適用されている個人IDセットに含まれているか確認
-			if (personalIdSet.contains(human.getPersonalId()) == false) {
+			if (personalIdSet.contains(personalId) == false) {
 				continue;
 			}
 			// 勤怠集計情報取得
-			TotalTimeDataDtoInterface totalTimeDataDto = totalTimeDataDao.findForKey(human.getPersonalId(), targetYear,
-					targetMonth);
+			TotalTimeDataDtoInterface totalTimeDto = totalTimeDataDao.findForKey(personalId, targetYear, targetMonth);
 			// 部下一覧情報取得
 			SubordinateListDtoInterface dto = subordinateSearch.getSubordinateListDto(human, targetYear, targetMonth,
-					totalTimeDataDto, approval, calc);
-			// 部下一覧情報確認
-			if (dto != null) {
-				// リストに追加
+					totalTimeDto, searchBeforeDay);
+			// 部下一覧情報が検索条件に合致する場合
+			if (isApprovalConditionMatch(dto) && isCalcConditionMatch(dto)) {
+				// 部下一覧情報リストに追加
 				list.add(dto);
 			}
 		}
@@ -147,28 +131,8 @@ public class TotalTimeSearchBean extends HumanSearchBean implements TotalTimeSea
 	}
 	
 	@Override
-	public void setApproval(String approval) {
-		this.approval = approval;
-	}
-	
-	@Override
-	public void setCalc(String calc) {
-		this.calc = calc;
-	}
-	
-	@Override
 	public void setCutoffCode(String cutoffCode) {
 		this.cutoffCode = cutoffCode;
-	}
-	
-	@Override
-	public void setTargetYear(int targetYear) {
-		this.targetYear = targetYear;
-	}
-	
-	@Override
-	public void setTargetMonth(int targetMonth) {
-		this.targetMonth = targetMonth;
 	}
 	
 }

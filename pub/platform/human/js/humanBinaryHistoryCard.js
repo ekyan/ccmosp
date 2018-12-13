@@ -23,6 +23,20 @@
  * @throws 実行時例外
  */
 function onLoadExtra() {
+	// 人事汎用機能参照権限の場合
+	if (jsIsReferenceDivision) {
+		// 有効日編集不可
+		setReadOnly("btnActivateDate", true);
+		// 可視設定
+		setVisibility("btnRegist", false);
+		// 確認対象要素群取得（INPUT）
+		setReadOnlyForTag(TAG_INPUT,true);
+		// 確認対象要素群取得（SELECT）
+		setReadOnlyForTag(TAG_SELECT,true);
+		// 確認対象要素群取得（TAG_TEXTAREA）
+		setReadOnlyForTag(TAG_TEXTAREA,true);
+		return;
+	}	
 	// 有効日モード確認
 	if (modeActivateDate == MODE_ACTIVATE_DATE_FIXED) {
 		// 有効日編集不可
@@ -37,11 +51,11 @@ function onLoadExtra() {
 		setReadOnly("txtActivateMonth", true);
 		setReadOnly("txtActivateDay", true);
 		// 有効日編集不可
-		setDisabled("btnActivateDate", true);
+		setReadOnly("btnActivateDate", true);
 	}
 	// 登録ボタン利用確認
 	if (modeActivateDate != MODE_ACTIVATE_DATE_FIXED) {
-		setDisabled("btnRegist", true);
+		setReadOnly("btnRegist", true);
 	}
 	// 項目長設定
 	setMaxLength("Name100TextArea", 100);

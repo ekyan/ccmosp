@@ -21,27 +21,21 @@
 package jp.mosp.time.bean;
 
 import java.util.List;
+import java.util.Map;
 
 import jp.mosp.framework.base.MospException;
 import jp.mosp.time.dto.settings.AttendanceDtoInterface;
 import jp.mosp.time.dto.settings.HolidayDataDtoInterface;
 import jp.mosp.time.dto.settings.PaidHolidayDataDtoInterface;
 import jp.mosp.time.dto.settings.StockHolidayDataDtoInterface;
-import jp.mosp.time.dto.settings.TimelyPaidHolidayDtoInterface;
 import jp.mosp.time.dto.settings.TotalTimeDataDtoInterface;
+import jp.mosp.time.dto.settings.WorkTypeDtoInterface;
+import jp.mosp.time.dto.settings.WorkTypeItemDtoInterface;
 
 /**
  * インポートテーブル参照インターフェース。
  */
 public interface ImportTableReferenceBeanInterface {
-	
-	/**
-	 * テンプレートを取得する。
-	 * @param importCode インポートコード
-	 * @return テンプレートリスト
-	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
-	 */
-	List<String[]> getTemplate(String importCode) throws MospException;
 	
 	/**
 	 * インポートされた内容からDTOリストを取得する。
@@ -86,16 +80,16 @@ public interface ImportTableReferenceBeanInterface {
 	 * @return DTOリスト
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
-	List<TimelyPaidHolidayDtoInterface> getTimelyPaidHolidayList(String importCode, List<String[]> list)
-			throws MospException;
+	List<HolidayDataDtoInterface> getHolidayDataList(String importCode, List<String[]> list) throws MospException;
 	
 	/**
 	 * インポートされた内容からDTOリストを取得する。
 	 * @param importCode インポートコード
 	 * @param list 対象リスト
-	 * @return DTOリスト
+	 * @return 勤務形態マップ＜勤務形態データ,＜勤務形態項目コード,勤務形態項目データ＞＞
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
-	List<HolidayDataDtoInterface> getHolidayDataList(String importCode, List<String[]> list) throws MospException;
+	Map<WorkTypeDtoInterface, Map<String, WorkTypeItemDtoInterface>> getWorkType(String importCode, List<String[]> list)
+			throws MospException;
 	
 }

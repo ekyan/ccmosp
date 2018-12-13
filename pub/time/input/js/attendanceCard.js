@@ -91,23 +91,26 @@ function onLoadExtra() {
 	// 申請モード(新規)
 	if (modeCardEdit == MODE_APPLICATION_NEW) {
 		// 申請/下書ボタン押下不可
-		setDisabled("btnRegist", false);
-		setDisabled("btnDraft", false);
-		setDisabled("btnDelete", true);
+		setReadOnly("btnRegist", false);
+		setReadOnly("btnDraft", false);
+		setReadOnly("btnCalc", false);
+		setReadOnly("btnDelete", true);
 	}
 	// 申請モード(下書)
 	if (modeCardEdit == MODE_APPLICATION_DRAFT) {
 		// 申請/下書ボタン押下可
-		setDisabled("btnRegist", false);
-		setDisabled("btnDraft", false);
-		setDisabled("btnDelete", false);
+		setReadOnly("btnRegist", false);
+		setReadOnly("btnDraft", false);
+		setReadOnly("btnCalc", false);
+		setReadOnly("btnDelete", false);
 	}
 	// 申請モード(差戻)
 	if (modeCardEdit == MODE_APPLICATION_REVERT) {
 		// 申請/下書ボタン押下可
-		setDisabled("btnRegist", false);
-		setDisabled("btnDraft", true);
-		setDisabled("btnDelete", false);
+		setReadOnly("btnRegist", false);
+		setReadOnly("btnDraft", true);
+		setReadOnly("btnCalc", false);
+		setReadOnly("btnDelete", false);
 	}
 	// 申請モード(未承認)
 	if (modeCardEdit == MODE_APPLICATION_APPLY) {
@@ -115,9 +118,10 @@ function onLoadExtra() {
 		setDisabled("ckbDirectStart", true);
 		setDisabled("ckbDirectEnd", true);
 		// 申請/下書ボタン押下不可
-		setDisabled("btnSelect", true);
-		setDisabled("btnRegist", true);
-		setDisabled("btnDraft", true);
+		setReadOnly("btnSelect", true);
+		setReadOnly("btnRegist", true);
+		setReadOnly("btnCalc", true);
+		setReadOnly("btnDraft", true);
 	}
 	// 申請モード(申請済或いは休日承認済)
 	if(modeCardEdit == MODE_APPLICATION_APPLIED || modeCardEdit == MODE_APPLICATION_COMPLETED_HOLIDAY) {
@@ -125,21 +129,14 @@ function onLoadExtra() {
 		setDisabled("ckbDirectStart", true);
 		setDisabled("ckbDirectEnd", true);
 		// 申請/下書ボタン押下不可
-		setDisabled("btnSelect", true);
-		setDisabled("btnRegist", true);
-		setDisabled("btnDraft", true);
-		setDisabled("btnDelete", true);
+		setReadOnly("btnSelect", true);
+		setReadOnly("btnRegist", true);
+		setReadOnly("btnDraft", true);
+		setReadOnly("btnCalc", true);
+		setReadOnly("btnDelete", true);
 	}
-	// 勤務形態コードが所定休出又は法定休出か確認
-	var isWorkOnHolidayTime = getFormValue("pltWorkType") == CODE_WORK_ON_LEGAL || getFormValue("pltWorkType") == CODE_WORK_ON_PRESCRIBED;
-	// 休日出勤申請の場合
-	if(getFormValue("lblWorkOnHolidayDate") != "" && isWorkOnHolidayTime) {
-		// 直行直帰チェックボックス編集不可
-		setDisabled("ckbDirectStart", true);
-		setDisabled("ckbDirectEnd", true);
-		setDisabled("ckbAllMinutelyHolidayA",true);
-		setDisabled("ckbAllMinutelyHolidayB",true);
-	}
+	// 休日出勤設定
+	setWorkOnDayOff();
 }
 
 /**
@@ -149,6 +146,22 @@ function isMaxlength(obj) {
 	var mlength = obj.getAttribute ? parseInt(obj.getAttribute("maxlength")) : "";
 	if (obj.getAttribute && obj.value.length > mlength) {
 		obj.value = obj.value.substring(0, mlength);
+	}
+}
+
+/**
+ * 休日出勤設定。
+ */
+function setWorkOnDayOff() {
+	// 勤務形態コードが所定休出又は法定休出か確認
+	var isWorkOnHolidayTime = getFormValue("pltWorkType") == CODE_WORK_ON_LEGAL || getFormValue("pltWorkType") == CODE_WORK_ON_PRESCRIBED;
+	// 休日出勤申請の場合
+	if(getFormValue("lblWorkOnHolidayDate") != "" && isWorkOnHolidayTime) {
+		// 直行直帰チェックボックス編集不可
+		setDisabled("ckbDirectStart", true);
+		setDisabled("ckbDirectEnd", true);
+		setDisabled("ckbAllMinutelyHolidayA",true);
+		setDisabled("ckbAllMinutelyHolidayB",true);
 	}
 }
 
@@ -253,27 +266,37 @@ function checkTimes(aryMessage, event) {
 			if (aryMessage.length != 0) {
 				return;
 			}
+			// 各時刻始業時間、終業時間取得
 			var startTime = startTimeHour * 60 + parseIntDecimal(startTimeMinute);
 			var endTime = endTimeHour * 60 + parseIntDecimal(endTimeMinute);
-			if (startTime != 0 || endTime != 0) {
-				if (startTime < getFormValue(aryTimeHour[0]) * 60 + parseIntDecimal(getFormValue(aryTimeMinute[0]))) {
-					setBgColor(aryStartTimeHour[i], COLOR_FIELD_ERROR);
-					setBgColor(aryStartTimeMinute[i], COLOR_FIELD_ERROR);
-					aryMessage.push(getMessage(MSG_REST_CHECK, getLabel(aryStartTimeHour[i])));
-					return;
-				}
-				if (endTime > getFormValue(aryTimeHour[1]) * 60 + parseIntDecimal(getFormValue(aryTimeMinute[1]))) {
-					setBgColor(aryEndTimeHour[i], COLOR_FIELD_ERROR);
-					setBgColor(aryEndTimeMinute[i], COLOR_FIELD_ERROR);
-					aryMessage.push(getMessage(MSG_REST_CHECK, getLabel(aryStartTimeHour[i])));
-					return;
-				}
-				if (startTime > endTime) {
-					setBgColor(aryEndTimeHour[i], COLOR_FIELD_ERROR);
-					setBgColor(aryEndTimeMinute[i], COLOR_FIELD_ERROR);
-					var repArray = [getLabel(aryStartTimeHour[i]), getLabel(aryStartTimeHour[i])];
-					aryMessage.push(getMessage(MSG_END_TIME_CHECK, repArray));
-					return;
+			// 直行・直帰がない場合
+			if(!isCheckableChecked("ckbDirectStart") && !isCheckableChecked("ckbDirectEnd")){
+				// 各時刻始業時間が0でない又は終業時間が0でない場合
+				if (startTime != 0 || endTime != 0) {
+					// 各時刻始業時間が始業時刻より早い場合
+					if (startTime < getFormValue(aryTimeHour[0]) * 60 + parseIntDecimal(getFormValue(aryTimeMinute[0]))) {
+						// チェック設定
+						setBgColor(aryStartTimeHour[i], COLOR_FIELD_ERROR);
+						setBgColor(aryStartTimeMinute[i], COLOR_FIELD_ERROR);
+						aryMessage.push(getMessage(MSG_REST_CHECK, getLabel(aryStartTimeHour[i])));
+						return;
+					}
+					// 各時刻終業時間が終業時間より早い場合
+					if (endTime > getFormValue(aryTimeHour[1]) * 60 + parseIntDecimal(getFormValue(aryTimeMinute[1]))) {
+						// チェック設定
+						setBgColor(aryEndTimeHour[i], COLOR_FIELD_ERROR);
+						setBgColor(aryEndTimeMinute[i], COLOR_FIELD_ERROR);
+						aryMessage.push(getMessage(MSG_REST_CHECK, getLabel(aryStartTimeHour[i])));
+						return;
+					}
+					// 各時刻開始時間より終業時刻が早い場合
+					if (startTime > endTime) {
+						setBgColor(aryEndTimeHour[i], COLOR_FIELD_ERROR);
+						setBgColor(aryEndTimeMinute[i], COLOR_FIELD_ERROR);
+						var repArray = [getLabel(aryStartTimeHour[i]), getLabel(aryStartTimeHour[i])];
+						aryMessage.push(getMessage(MSG_END_TIME_CHECK, repArray));
+						return;
+					}
 				}
 			}
 		}
@@ -556,4 +579,13 @@ function checkTimeEmpty(aryMessage) {
  */
 function parseIntDecimal(string) {
 	return parseInt(string, 10);
+}
+
+/**
+ * カレンダ日付要素をクリックした際の追加処理を行う。
+ * mospCalendar.jsの内容を上書する。
+ */
+function onClickCalendarExtra(event) {
+	// カレンダ日付を譲渡し検索コマンドを実行する
+	submitTransfer(event, null, null, new Array("transferredGenericCode", "Calendar", "transferredDay", getFormValue("hdnTargetDate")), "TM1202");
 }

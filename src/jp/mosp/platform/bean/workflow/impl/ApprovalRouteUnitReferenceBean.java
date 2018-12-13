@@ -67,7 +67,8 @@ public class ApprovalRouteUnitReferenceBean extends PlatformBean implements Appr
 	@Override
 	public void initBean() throws MospException {
 		dao = (ApprovalRouteUnitDaoInterface)createDao(ApprovalRouteUnitDaoInterface.class);
-		approvalRouteReference = (ApprovalRouteReferenceBeanInterface)createBean(ApprovalRouteReferenceBeanInterface.class);
+		approvalRouteReference = (ApprovalRouteReferenceBeanInterface)createBean(
+				ApprovalRouteReferenceBeanInterface.class);
 	}
 	
 	@Override

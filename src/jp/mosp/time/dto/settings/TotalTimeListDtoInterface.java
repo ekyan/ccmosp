@@ -24,8 +24,8 @@ import jp.mosp.platform.dto.base.SectionCodeDtoInterface;
 /**
  * 勤怠集計結果一覧DTOインターフェース。
  */
-public interface TotalTimeListDtoInterface extends EmployeeCodeDtoInterface, EmployeeNameDtoInterface,
-		SectionCodeDtoInterface {
+public interface TotalTimeListDtoInterface
+		extends EmployeeCodeDtoInterface, EmployeeNameDtoInterface, SectionCodeDtoInterface {
 	
 	/**
 	 * @return 出勤日数。

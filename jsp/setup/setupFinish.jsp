@@ -39,6 +39,7 @@ SetupFinishVo vo = (SetupFinishVo)params.getVo();
 <center><%= params.getName("SetupFinish") %></center>
 <br>
 <br><center><%= params.getName("SetupMessage") %></center>
+<center><%= params.getName("DemoMessage") %></center>
 <br>
 <center>
 <table class="SetupTable">
@@ -82,4 +83,7 @@ SetupFinishVo vo = (SetupFinishVo)params.getVo();
 <br>
 <br>
 <button type="button" class="Name8Button"  onclick="submitRegist(event,  '', null, '<%=IndexAction.CMD_SHOW %>')"> <%= params.getName("GoMosp") %></button>
+<a target="_blank" href="https://mosp.jp/?page_id=64">
+<button type="button" class="Name6Button"  onclick="submitRegist(event,  '', null, ')"> <%= params.getName("GoDemo") %></button>
+</a>
 </center>

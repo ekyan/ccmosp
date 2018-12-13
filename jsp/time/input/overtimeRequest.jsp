@@ -25,8 +25,10 @@ errorPage    = "/jsp/common/error.jsp"
 import = "jp.mosp.framework.base.MospParams"
 import = "jp.mosp.framework.constant.MospConst"
 import = "jp.mosp.framework.utils.HtmlUtility"
+import = "jp.mosp.framework.utils.CalendarHtmlUtility"
 import = "jp.mosp.platform.constant.PlatformConst"
 import = "jp.mosp.platform.utils.PlatformUtility"
+import = "jp.mosp.time.utils.TimeNamingUtility"
 import = "jp.mosp.time.comparator.settings.OvertimeRequestApproverNameComparator"
 import = "jp.mosp.time.comparator.settings.OvertimeRequestOvertimeTypeComparator"
 import = "jp.mosp.time.comparator.settings.OvertimeRequestRequestDateComparator"
@@ -39,6 +41,7 @@ import = "jp.mosp.time.input.vo.OvertimeRequestVo"
 %><%
 MospParams params = (MospParams)request.getAttribute(MospConst.ATT_MOSP_PARAMS);
 OvertimeRequestVo vo = (OvertimeRequestVo)params.getVo();
+boolean isChanging = vo.isModeActivateDateFixed() == false;
 %>
 <div class="ListHeader">
 	<table class="EmployeeLabelTable">
@@ -48,17 +51,18 @@ OvertimeRequestVo vo = (OvertimeRequestVo)params.getVo();
 	</table>
 </div>
 <div class="List" id="divEdit">
-	<table class="ListTable" id="tblRemainder">
+	<table class="ListTable" id="overtimeRequest_tblRemainder">
 		<tr>
-			<td class="ListSelectTh" rowspan="2"><%= params.getName("Application","Possible","Time") %></td>
-			<td class="ListSelectTh"><%= params.getName("No1","Week") %></td><td class="ListSelectTh"><%= params.getName("No1","Months") %></td>
+			<td class="ListSelectTh" rowspan="2"><%= TimeNamingUtility.applicableTime(params) %></td>
+			<td class="ListSelectTh"><%= TimeNamingUtility.oneWeek(params) %></td>
+			<td class="ListSelectTh"><%= TimeNamingUtility.oneMonth(params) %></td>
 		</tr>
 		<tr>
 			<td class="SelectTd" id="lblRemainderWeek"><%= HtmlUtility.escapeHTML(vo.getLblRemainderWeek()) %></td>
 			<td class="SelectTd" id="lblRemainderMonth"><%= HtmlUtility.escapeHTML(vo.getLblRemainderMonth()) %></td>
 		</tr>
 	</table>
-	<table class="InputTable" id="tblEdit">
+	<table class="InputTable" id="overtimeRequest_tblEdit">
 		<tr>
 			<th class="EditTableTh" colspan="6">
 				<jsp:include page="<%= TimeConst.PATH_TIME_APPLY_INFO_JSP %>" flush="false" />
@@ -67,8 +71,9 @@ OvertimeRequestVo vo = (OvertimeRequestVo)params.getVo();
 		<tr>
 			<td class="TitleTd"><%= params.getName("OvertimeWork","Year","Month","Day") %></td>
 			<td class="InputTd">
+				<%= CalendarHtmlUtility.getCalendarDiv(CalendarHtmlUtility.TYPE_DAY, "pltEditRequest", "", "", false, false, isChanging) %>
 				<select class="Number4PullDown" id="pltEditRequestYear" name="pltEditRequestYear">
-					<%= HtmlUtility.getSelectOption(vo.getAryPltEditRequestYear(), vo.getPltEditRequestYear()) %>
+					<%= HtmlUtility.getSelectOption(vo.getAryPltEditRequestYear(), vo.getPltEditRequestYear(), true) %>
 				</select>
 				<%= params.getName("Year") %>&nbsp;
 				<select class="Number2PullDown" id="pltEditRequestMonth" name="pltEditRequestMonth">
@@ -105,10 +110,17 @@ OvertimeRequestVo vo = (OvertimeRequestVo)params.getVo();
 		</tr>
 	</table>
 	<jsp:include page="<%= TimeConst.PATH_TIME_APPLY_BUTTON_JSP %>" flush="false" />
+<%
+// 承認個人ID利用
+if(!params.isTargetApprovalUnit()){
+%>
 	<jsp:include page="<%= TimeConst.PATH_TIME_APPROVER_PULLDOWN_JSP %>" flush="false" />
+<%
+}
+%>
 </div>
 <div class="List">
-	<table class="InputTable SearchInputTable" id="tblSearch">
+	<table class="InputTable SearchInputTable" id="overtimeRequest_tblSearch">
 		<tr>
 			<th class="ListTableTh" colspan="8">
 				<span class="TitleTh"><%= params.getName("Search") %></span>
@@ -138,8 +150,9 @@ OvertimeRequestVo vo = (OvertimeRequestVo)params.getVo();
 			</td>
 			<td class="TitleTd"><%= params.getName("Display","Period") %></td>
 			<td class="InputTd">
+				<%= CalendarHtmlUtility.getCalendarDiv(CalendarHtmlUtility.TYPE_MONTH, "pltSearchRequest", "", "", false, false, true) %>
 				<select class="Number4PullDown" id="pltSearchRequestYear" name="pltSearchRequestYear">
-					<%= HtmlUtility.getSelectOption(vo.getAryPltSearchRequestYear(), vo.getPltSearchRequestYear()) %>
+					<%= HtmlUtility.getSelectOption(vo.getAryPltSearchRequestYear(), vo.getPltSearchRequestYear(), true) %>
 				</select>
 				<%= params.getName("Year") %>&nbsp;
 				<select class="Number2PullDown" id="pltSearchRequestMonth" name="pltSearchRequestMonth">

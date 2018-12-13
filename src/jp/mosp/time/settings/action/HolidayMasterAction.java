@@ -25,6 +25,7 @@ import jp.mosp.framework.base.BaseVo;
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.constant.MospConst;
 import jp.mosp.framework.utils.DateUtility;
+import jp.mosp.framework.utils.MospUtility;
 import jp.mosp.platform.constant.PlatformConst;
 import jp.mosp.time.base.TimeAction;
 import jp.mosp.time.bean.HolidayReferenceBeanInterface;
@@ -72,35 +73,35 @@ public class HolidayMasterAction extends TimeSettingAction {
 	 * <br>
 	 * 初期表示を行う。<br>
 	 */
-	public static final String		CMD_SHOW				= "TM4100";
+	public static final String	CMD_SHOW				= "TM4100";
 	
 	/**
 	 * 検索コマンド。<br>
 	 * <br>
 	 * 検索欄に入力した情報を元に締日情報の検索を行う。<br>
 	 */
-	public static final String		CMD_SEARCH				= "TM4102";
+	public static final String	CMD_SEARCH				= "TM4102";
 	
 	/**
 	 * 再表示コマンド。<br>
 	 * <br>
 	 * 新たな休暇種別の登録や既存の休暇種別の編集を行った際に検索結果一覧にそれらが反映されるよう再表示を行う。<br>
 	 */
-	public static final String		CMD_RE_SHOW				= "TM4103";
+	public static final String	CMD_RE_SHOW				= "TM4103";
 	
 	/**
 	 * 登録コマンド。<br>
 	 * <br>
 	 * 編集テーブルに入力されている内容を休暇種別マスタテーブルに登録する。<br>
 	 */
-	public static final String		CMD_REGIST				= "TM4105";
+	public static final String	CMD_REGIST				= "TM4105";
 	
 	/**
 	 * 削除コマンド。<br>
 	 * <br>
 	 * 一覧表示欄の選択チェックボックスで選択されているレコードを対象に論理削除を行うよう繰り返し処理を行う。<br>
 	 */
-	public static final String		CMD_DELETE				= "TM4107";
+	public static final String	CMD_DELETE				= "TM4107";
 	
 	/**
 	 * ソートコマンド。<br>
@@ -108,14 +109,14 @@ public class HolidayMasterAction extends TimeSettingAction {
 	 * それぞれのレコードの値を比較して一覧表示欄の各情報毎に並び替えを行う。<br>
 	 * これが実行される度に並び替えが昇順・降順と交互に切り替わる。<br>
 	 */
-	public static final String		CMD_SORT				= "TM4108";
+	public static final String	CMD_SORT				= "TM4108";
 	
 	/**
 	 * ページ繰りコマンド。<br>
 	 * <br>
 	 * 検索処理を行った際に検索結果が100件を超えた場合に分割されるページ間の遷移を行う。<br>
 	 */
-	public static final String		CMD_PAGE				= "TM4109";
+	public static final String	CMD_PAGE				= "TM4109";
 	
 	/**
 	 * 新規登録モード切替コマンド。<br>
@@ -123,7 +124,7 @@ public class HolidayMasterAction extends TimeSettingAction {
 	 * 編集テーブルの各入力欄に表示されているレコード内容をクリアにする。登録ボタンクリック時のコマンドを登録コマンドに切り替える。<br>
 	 * 編集テーブルヘッダに表示されている新規登録モード切替リンクを非表示にする。<br>
 	 */
-	public static final String		CMD_INSERT_MODE			= "TM4191";
+	public static final String	CMD_INSERT_MODE			= "TM4191";
 	
 	/**
 	 * 編集モード切替コマンド。<br>
@@ -131,7 +132,7 @@ public class HolidayMasterAction extends TimeSettingAction {
 	 * 選択したレコードの内容を編集テーブルの各入力欄にそれぞれ表示させる。有効日の入力欄を読取専用にする。<br>
 	 * 適用ボタンクリック時のコマンドを更新コマンドに切り替える。編集テーブルヘッダに新規登録モード、履歴追加モードの切替リンクを表示させる。<br>
 	 */
-	public static final String		CMD_EDIT_MODE			= "TM4192";
+	public static final String	CMD_EDIT_MODE			= "TM4192";
 	
 	/**
 	 * 履歴追加モード切替コマンド。<br>
@@ -140,7 +141,7 @@ public class HolidayMasterAction extends TimeSettingAction {
 	 * 登録ボタンクリック時のコマンドを履歴追加コマンドに切り替える。<br>
 	 * 編集テーブルヘッダに表示されている履歴編集モードリンクを非表示にする。<br>
 	 */
-	public static final String		CMD_ADD_MODE			= "TM4193";
+	public static final String	CMD_ADD_MODE			= "TM4193";
 	
 	/**
 	 * 一括更新コマンド。<br>
@@ -148,17 +149,12 @@ public class HolidayMasterAction extends TimeSettingAction {
 	 * 検索結果一覧の選択チェックボックスの状態を確認し、チェックの入っているレコードに一括更新テーブル内入力欄の内容を<br>
 	 * 反映させるよう繰り返し処理を行う。有効日入力欄に日付が入力されていない場合やチェックが1件も入っていない場合はエラーメッセージにて通知。<br>
 	 */
-	public static final String		CMD_BATCH_UPDATE		= "TM4195";
-	
-	/**
-	 * 休暇区分(欠勤)。<br>
-	 */
-	protected static final String	HOLIDAY_TYPE_ABSENCE	= "4";
+	public static final String	CMD_BATCH_UPDATE		= "TM4195";
 	
 	/**
 	 * 給与区分(無給)。<br>
 	 */
-	protected static final String	SALARY_PAY_TYPE_NONE	= "1";
+	public static final int		TYPE_SALARY_PAY_NONE	= 1;
 	
 	
 	/**
@@ -242,7 +238,7 @@ public class HolidayMasterAction extends TimeSettingAction {
 	}
 	
 	/**
-	 * @throws MospException 例外処理が発生した場合 
+	 * @throws MospException 例外処理が発生した場合
 	 */
 	protected void search() throws MospException {
 		// VO準備
@@ -309,14 +305,16 @@ public class HolidayMasterAction extends TimeSettingAction {
 		List<HolidayDtoInterface> list = search.getSearchList();
 		if (vo.getPltEditHolidayType().equals(String.valueOf(TimeConst.CODE_HOLIDAYTYPE_SPECIAL))) {
 			if (list.size() >= TimeConst.PRM_HOLIDAYTYPE_SPECIAL_MAX) {
-				mospParams.addErrorMessage(TimeMessageConst.MSG_HOLIDAY_TYPE_MAX_OVER, mospParams.getName("Specially")
-						+ mospParams.getName("Vacation"), String.valueOf(TimeConst.PRM_HOLIDAYTYPE_SPECIAL_MAX));
+				mospParams.addErrorMessage(TimeMessageConst.MSG_HOLIDAY_TYPE_MAX_OVER,
+						mospParams.getName("Specially") + mospParams.getName("Vacation"),
+						String.valueOf(TimeConst.PRM_HOLIDAYTYPE_SPECIAL_MAX));
 				return;
 			}
 		} else if (vo.getPltEditHolidayType().equals(String.valueOf(TimeConst.CODE_HOLIDAYTYPE_OTHER))) {
 			if (list.size() >= TimeConst.PRM_HOLIDAYTYPE_OTHER_MAX) {
-				mospParams.addErrorMessage(TimeMessageConst.MSG_HOLIDAY_TYPE_MAX_OVER, mospParams.getName("Others")
-						+ mospParams.getName("Vacation"), String.valueOf(TimeConst.PRM_HOLIDAYTYPE_OTHER_MAX));
+				mospParams.addErrorMessage(TimeMessageConst.MSG_HOLIDAY_TYPE_MAX_OVER,
+						mospParams.getName("Others") + mospParams.getName("Vacation"),
+						String.valueOf(TimeConst.PRM_HOLIDAYTYPE_OTHER_MAX));
 				return;
 			}
 		} else if (vo.getPltEditHolidayType().equals(String.valueOf(TimeConst.CODE_HOLIDAYTYPE_ABSENCE))) {
@@ -562,6 +560,7 @@ public class HolidayMasterAction extends TimeSettingAction {
 		vo.setTxtEditHolidayLimitDay("");
 		vo.setTxtEditHolidayCode("");
 		vo.setPltEditHalfHolidayRequest("");
+		vo.setPltEditHourlyHoliday(String.valueOf(MospConst.INACTIVATE_FLAG_ON));
 		vo.setPltEditHolidayType("");
 		vo.setPltEditContinue("");
 		vo.setPltEditSalary("");
@@ -589,6 +588,7 @@ public class HolidayMasterAction extends TimeSettingAction {
 		String[] aryLblHolidayGiving = new String[list.size()];
 		String[] aryLblHolidayLimit = new String[list.size()];
 		String[] aryLblHolidayContinue = new String[list.size()];
+		String[] aryLblTimelyHoliday = new String[list.size()];
 		String[] aryLblHolidaySalary = new String[list.size()];
 		String[] aryLblInactivate = new String[list.size()];
 		// データ作成
@@ -600,8 +600,8 @@ public class HolidayMasterAction extends TimeSettingAction {
 			aryLblActivateDate[i] = getStringDate(dto.getActivateDate());
 			aryLblHolidayCode[i] = dto.getHolidayCode();
 			aryLblHolidayType[i] = String.valueOf(dto.getHolidayType());
-			aryLblHolidayTypeName[i] = mospParams.getProperties().getCodeItemName(
-					TimeConst.CODE_KEY_HOLIDAY_TYPE_MASTER, aryLblHolidayType[i]);
+			aryLblHolidayTypeName[i] = mospParams.getProperties()
+				.getCodeItemName(TimeConst.CODE_KEY_HOLIDAY_TYPE_MASTER, aryLblHolidayType[i]);
 			aryLblHolidayName[i] = dto.getHolidayName();
 			aryLblHolidayAbbr[i] = dto.getHolidayAbbr();
 			if (dto.getNoLimit() == getInt(MospConst.CHECKBOX_ON)) {
@@ -626,6 +626,8 @@ public class HolidayMasterAction extends TimeSettingAction {
 			}
 			aryLblHolidayContinue[i] = mospParams.getProperties().getCodeItemName(TimeConst.CODE_KEY_CONTINUE,
 					String.valueOf(dto.getContinuousAcquisition()));
+			aryLblTimelyHoliday[i] = mospParams.getProperties().getCodeItemName(PlatformConst.CODE_KEY_INACTIVATE_FLAG,
+					String.valueOf(dto.getTimelyHolidayFlag()));
 			aryLblHolidaySalary[i] = mospParams.getProperties().getCodeItemName(TimeConst.CODE_KEY_SALARY_PAY_TYPE,
 					String.valueOf(dto.getSalary()));
 			aryLblInactivate[i] = getInactivateFlagName(dto.getInactivateFlag());
@@ -641,6 +643,7 @@ public class HolidayMasterAction extends TimeSettingAction {
 		vo.setAryLblHolidayGiving(aryLblHolidayGiving);
 		vo.setAryLblHolidayLimit(aryLblHolidayLimit);
 		vo.setAryLblHolidayContinue(aryLblHolidayContinue);
+		vo.setAryLblTimelyHoliday(aryLblTimelyHoliday);
 		vo.setAryLblHolidaySalary(aryLblHolidaySalary);
 		vo.setAryLblInactivate(aryLblInactivate);
 	}
@@ -655,33 +658,34 @@ public class HolidayMasterAction extends TimeSettingAction {
 		// DTOの値をVOに設定
 		dto.setTmmHolidayId(vo.getRecordId());
 		dto.setActivateDate(getEditActivateDate());
+		dto.setHolidayType(getInt(vo.getPltEditHolidayType()));
 		dto.setHolidayName(vo.getTxtEditHolidayName());
 		dto.setHolidayAbbr(vo.getTxtEditHolidayAbbr());
+		dto.setHolidayGiving(getDouble(vo.getTxtEditHolidayGiving()));
+		dto.setNoLimit(MospUtility.getInt(vo.getCkbNoLimit()));
 		dto.setHolidayLimitMonth(getInt(vo.getTxtEditHolidayLimitMonth()));
 		dto.setHolidayLimitDay(getInt(vo.getTxtEditHolidayLimitDay()));
 		dto.setHolidayCode(vo.getTxtEditHolidayCode());
 		dto.setHalfHolidayRequest(getInt(vo.getPltEditHalfHolidayRequest()));
-		dto.setHolidayType(getInt(vo.getPltEditHolidayType()));
+		dto.setTimelyHolidayFlag(getInt(vo.getPltEditHourlyHoliday()));
+		dto.setContinuousAcquisition(MospUtility.getInt(vo.getPltEditContinue()));
 		dto.setPaidHolidayCalc(getInt(vo.getPltEditPaidHolidayCalc()));
 		dto.setReasonType(getInt(vo.getPltEditReasonType()));
+		dto.setSalary(MospUtility.getInt(vo.getPltEditSalary()));
 		dto.setInactivateFlag(getInt(vo.getPltEditInactivate()));
 		// 休暇区分が欠勤の場合
-		if (vo.getPltEditHolidayType().equals(HOLIDAY_TYPE_ABSENCE)) {
+		if (dto.getHolidayType() == TimeConst.CODE_HOLIDAYTYPE_ABSENCE) {
 			// 無制限にチェックを付加
 			dto.setNoLimit(getInt(MospConst.CHECKBOX_ON));
 			// 給与区分設定(無給)
-			dto.setSalary(getInt(SALARY_PAY_TYPE_NONE));
+			dto.setSalary(TYPE_SALARY_PAY_NONE);
 		} else {
-			dto.setNoLimit(getInt(vo.getCkbNoLimit()));
-			dto.setSalary(getInt(vo.getPltEditSalary()));
 		}
-		// 無制限にチェックが入っていた場合
-		if (dto.getNoLimit() == 1) {
-			dto.setHolidayGiving(0);
-			dto.setContinuousAcquisition(2);
-		} else {
-			dto.setHolidayGiving(Double.parseDouble(vo.getTxtEditHolidayGiving()));
-			dto.setContinuousAcquisition(getInt(vo.getPltEditContinue()));
+		// 時間単位区分が有効であるか無制限にチェックが入っていた場合
+		if (dto.getTimelyHolidayFlag() == MospConst.INACTIVATE_FLAG_OFF
+				|| dto.getNoLimit() == getInt(MospConst.CHECKBOX_ON)) {
+			// 連続取得区分を不要に設定
+			dto.setContinuousAcquisition(TimeConst.TYPE_CONTINUOUS_UNNECESSARY);
 		}
 	}
 	
@@ -705,6 +709,7 @@ public class HolidayMasterAction extends TimeSettingAction {
 		vo.setTxtEditHolidayLimitDay(String.valueOf(dto.getHolidayLimitDay()));
 		vo.setTxtEditHolidayCode(dto.getHolidayCode());
 		vo.setPltEditHalfHolidayRequest(String.valueOf(dto.getHalfHolidayRequest()));
+		vo.setPltEditHourlyHoliday(String.valueOf(dto.getTimelyHolidayFlag()));
 		vo.setPltEditHolidayType(String.valueOf(dto.getHolidayType()));
 		vo.setPltEditContinue(String.valueOf(dto.getContinuousAcquisition()));
 		vo.setPltEditPaidHolidayCalc(String.valueOf(dto.getPaidHolidayCalc()));

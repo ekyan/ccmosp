@@ -19,15 +19,23 @@ package jp.mosp.time.bean.impl;
 
 import java.sql.Connection;
 import java.util.Date;
+import java.util.List;
 
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.base.MospParams;
 import jp.mosp.platform.utils.MonthUtility;
 import jp.mosp.time.base.TimeApplicationBean;
+import jp.mosp.time.bean.RequestUtilBeanInterface;
 import jp.mosp.time.bean.ScheduleUtilBeanInterface;
+import jp.mosp.time.bean.SubstituteReferenceBeanInterface;
+import jp.mosp.time.constant.TimeConst;
 import jp.mosp.time.dto.settings.ApplicationDtoInterface;
+import jp.mosp.time.dto.settings.DifferenceRequestDtoInterface;
 import jp.mosp.time.dto.settings.ScheduleDateDtoInterface;
 import jp.mosp.time.dto.settings.ScheduleDtoInterface;
+import jp.mosp.time.dto.settings.SubstituteDtoInterface;
+import jp.mosp.time.dto.settings.WorkOnHolidayRequestDtoInterface;
+import jp.mosp.time.dto.settings.WorkTypeChangeRequestDtoInterface;
 
 /**
  * カレンダユーティリティクラス。<br>
@@ -37,12 +45,17 @@ public class ScheduleUtilBean extends TimeApplicationBean implements ScheduleUti
 	/**
 	 * カレンダ日参照クラス。<br>
 	 */
-	private ScheduleDateReferenceBean	scheduleDateReference;
+	protected ScheduleDateReferenceBean			scheduleDateReference;
 	
 	/**
 	 * カレンダ管理参照クラス。<br>
 	 */
-	private ScheduleReferenceBean		scheduleReference;
+	protected ScheduleReferenceBean				scheduleReference;
+	
+	/**
+	 * 振替休日データ参照クラス。<br>
+	 */
+	protected SubstituteReferenceBeanInterface	substituteReference;
 	
 	
 	/**
@@ -68,7 +81,7 @@ public class ScheduleUtilBean extends TimeApplicationBean implements ScheduleUti
 		// 各種クラスの取得
 		scheduleDateReference = (ScheduleDateReferenceBean)createBean(ScheduleDateReferenceBean.class);
 		scheduleReference = (ScheduleReferenceBean)createBean(ScheduleReferenceBean.class);
-		
+		substituteReference = (SubstituteReferenceBeanInterface)createBean(SubstituteReferenceBeanInterface.class);
 	}
 	
 	@Override
@@ -95,6 +108,94 @@ public class ScheduleUtilBean extends TimeApplicationBean implements ScheduleUti
 		return getScheduledWorkTypeCode(targetDate);
 	}
 	
+	@Override
+	public String getScheduledWorkTypeCode(String personalId, Date targetDate, boolean useRequest)
+			throws MospException {
+		if (!useRequest) {
+			return getScheduledWorkTypeCode(personalId, targetDate);
+		}
+		// 申請ユーティリティ
+		RequestUtilBeanInterface requestUtil = (RequestUtilBeanInterface)createBean(RequestUtilBeanInterface.class);
+		requestUtil.setRequests(personalId, targetDate);
+		return getScheduledWorkTypeCode(personalId, targetDate, requestUtil);
+	}
+	
+	@Override
+	public String getScheduledWorkTypeCode(String personalId, Date targetDate, RequestUtilBeanInterface requestUtil)
+			throws MospException {
+		DifferenceRequestDtoInterface differenceRequestDto = requestUtil.getDifferenceDto(true);
+		if (differenceRequestDto != null) {
+			// 時差出勤申請が承認済である場合
+			return differenceRequestDto.getDifferenceType();
+		}
+		
+		// 時差出勤申請が承認済でない場合
+		WorkTypeChangeRequestDtoInterface workTypeChangeRequestDto = requestUtil.getWorkTypeChangeDto(true);
+		if (workTypeChangeRequestDto != null) {
+			// 勤務形態変更申請が承認済である場合
+			return workTypeChangeRequestDto.getWorkTypeCode();
+		}
+		
+		// 勤務形態変更申請が承認済でない場合
+		Date date = targetDate;
+		WorkOnHolidayRequestDtoInterface workOnHolidayRequestDto = requestUtil.getWorkOnHolidayDto(true);
+		if (workOnHolidayRequestDto == null) {
+			// 振出・休出申請が承認済でない場合
+			List<SubstituteDtoInterface> list = requestUtil.getSubstituteList(true);
+			for (SubstituteDtoInterface dto : list) {
+				if (dto.getSubstituteRange() == TimeConst.CODE_HOLIDAY_RANGE_ALL) {
+					// 振替休日が全休の場合
+					return dto.getSubstituteType();
+				}
+			}
+		} else {
+			// 振出・休出申請が承認済である場合
+			int substitute = workOnHolidayRequestDto.getSubstitute();
+			if (substitute == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_ON
+					|| substitute == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_AM
+					|| substitute == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_PM) {
+				// 振替出勤(勤務形態変更なし)・
+				// 振替出勤(午前)・
+				// 振替出勤(午後)の場合
+				List<SubstituteDtoInterface> list = substituteReference
+					.getSubstituteList(workOnHolidayRequestDto.getWorkflow());
+				if (list.isEmpty()) {
+					return "";
+				}
+				date = list.get(0).getSubstituteDate();
+			} else if (substitute == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_ON_WORK_TYPE_CHANGE) {
+				// 振替出勤(勤務形態変更あり)の場合
+				return workOnHolidayRequestDto.getWorkTypeCode();
+			} else if (substitute == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_OFF) {
+				// 休日出勤の場合
+				if (TimeConst.CODE_HOLIDAY_LEGAL_HOLIDAY.equals(workOnHolidayRequestDto.getWorkOnHolidayType())) {
+					// 法定休日出勤の場合
+					return TimeConst.CODE_WORK_ON_LEGAL_HOLIDAY;
+				} else if (TimeConst.CODE_HOLIDAY_PRESCRIBED_HOLIDAY
+					.equals(workOnHolidayRequestDto.getWorkOnHolidayType())) {
+					// 所定休日出勤の場合
+					return TimeConst.CODE_WORK_ON_PRESCRIBED_HOLIDAY;
+				}
+				return "";
+			} else {
+				return "";
+			}
+		}
+		if (!hasApplicationSettings(personalId, date)) {
+			return "";
+		}
+		ScheduleDtoInterface scheduleDto = scheduleReference.getScheduleInfo(applicationDto.getScheduleCode(), date);
+		if (scheduleDto == null) {
+			return "";
+		}
+		ScheduleDateDtoInterface scheduleDateDto = scheduleDateReference
+			.getScheduleDateInfo(scheduleDto.getScheduleCode(), date);
+		if (scheduleDateDto == null || scheduleDateDto.getWorkTypeCode() == null) {
+			return "";
+		}
+		return scheduleDateDto.getWorkTypeCode();
+	}
+	
 	/**
 	 * 対象日における、カレンダに登録されている勤務形態コードを取得する。<br>
 	 * 勤務形態コードの取得に失敗した場合、エラーメッセージを設定し、空文字を返す。<br>
@@ -117,7 +218,7 @@ public class ScheduleUtilBean extends TimeApplicationBean implements ScheduleUti
 		}
 		// カレンダ日付の取得
 		ScheduleDateDtoInterface scheduleDateDto = scheduleDateReference.findForKey(scheduleDto.getScheduleCode(),
-				targetYearDate, targetDate);
+				targetDate);
 		scheduleDateReference.chkExistScheduleDate(scheduleDateDto, targetDate);
 		if (mospParams.hasErrorMessage()) {
 			return "";

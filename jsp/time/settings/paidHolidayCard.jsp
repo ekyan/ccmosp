@@ -70,7 +70,7 @@ PaidHolidayCardVo vo = (PaidHolidayCardVo)params.getVo();
 					<input type="text" class="Number3RequiredTextBox" id="txtWorkRatio" name="txtWorkRatio" value="<%= HtmlUtility.escapeHTML(vo.getTxtWorkRatio()) %>"/>&nbsp;<%= params.getName("Percent","Over") %>
 				</td>
 			</tr>
-			<tr>
+			<tr id="trTimelyUnitSet">
 				<td class="TitleTd"><%= params.getName("HalfDay","Unit","Acquisition") %></td>
 				<td class="InputTd">
 					<select class="Name2PullDown" id="pltHalfDayUnit" name="pltHalfDayUnit">
@@ -84,7 +84,7 @@ PaidHolidayCardVo vo = (PaidHolidayCardVo)params.getVo();
 					</select>
 				</td>
 			</tr>
-			<tr>
+			<tr id="trTimePaidHolidaySet">
 				<td class="TitleTd"><span class="RequiredLabel">*&nbsp;</span><%= params.getName("Time","Unit","Limit") %></td>
 				<td class="InputTd">
 					<select class="Number1PullDown" id="pltTimeAcquisitionLimitDays" name="pltTimeAcquisitionLimitDays">
@@ -100,9 +100,9 @@ PaidHolidayCardVo vo = (PaidHolidayCardVo)params.getVo();
 						<%= HtmlUtility.getSelectOption(params, TimeConst.CODE_KEY_APPLI_TIME_INTERVAL, vo.getPltAppliTimeInterval(), false) %>
 					</select>
 				</td>
-			</tr>			
+			</tr>
 			<tr>
-				<td class="TitleTd"><%= params.getName("PaidHoliday") %><%= params.getName("BroughtForward") %></td>
+				<td class="TitleTd"><%= params.getName("PaidHoliday","BroughtForward") %></td>
 				<td class="InputTd">
 					<select class="Name2PullDown" id="pltMaxCarryOverYear" name="pltMaxCarryOverYear">
 						<%= HtmlUtility.getSelectOption(params, PlatformConst.CODE_KEY_INACTIVATE_FLAG, vo.getPltMaxCarryOverYear(), false) %>
@@ -114,6 +114,14 @@ PaidHolidayCardVo vo = (PaidHolidayCardVo)params.getVo();
 					<%= HtmlUtility.getSelectOption(params, TimeConst.CODE_KEY_MAX_CARRY_OVER_TIMES, vo.getPltMaxCarryOverTimes(), false) %>
 					</select>
 				</td>
+				<td class="TitleTd"><%= params.getName("Holiday", "GoingWork", "Handling") %></td>
+				<td class="InputTd">
+					<select class="Name5PullDown" id="pltWorkOnHolidayCalc" name="pltWorkOnHolidayCalc">
+						<%= HtmlUtility.getSelectOption(params, TimeConst.CODE_KEY_WORK_ON_HOLIDAY_CALC, vo.getPltWorkOnHolidayCalc(), false) %>
+					</select>
+				</td>
+			</tr>
+			<tr>
 				<td class="TitleTd"><%= params.getName("Effectiveness","Slash","Inactivate") %></td>
 				<td class="InputTd">
 					<select class="Name2PullDown" id="pltEditInactivate" name="pltEditInactivate">
@@ -123,7 +131,160 @@ PaidHolidayCardVo vo = (PaidHolidayCardVo)params.getVo();
 			</tr>
 		</tbody>
 	</table>
-	<table class="ListTable" id="FirstYearGiving" >
+	<table class="ListTable" id="Proportionally">
+		<thead>
+			<tr>
+				<th class="ListTableTh" colspan="10">
+					<span class="TitleTh"><%= params.getName("Giving") %></span>
+				</th>
+			</tr>
+			<tr>
+				<th rowspan="2" class="ListSelectTh"><div><%= params.getName("Week").substring(0, 1) %><%= params.getName("Prescribed") %></div><div><%= params.getName("Labor", "Time", "Num") %></div></th>
+				<th class="ListSelectTh" rowspan="2"><div><%= params.getName("Week").substring(0, 1) %><%= params.getName("Prescribed") %></div><div><%= params.getName("Labor", "Days") %></div></th>
+				<th class="ListSelectTh" rowspan="2"><div><%= params.getName("Year", "Prescribed") %></div><div><%= params.getName("Labor", "Days") %></div></th>
+				<th class="ListSelectTh" colspan="7"><%= params.getName("ContinuousServiceTermsCountingFromTheEmploymentDay") %></th>
+			</tr>
+			<tr>
+				<th class="ListSelectTh"><%= params.getName("0.5Years") %></th>
+				<th class="ListSelectTh"><%= params.getName("1.5Years") %></th>
+				<th class="ListSelectTh"><%= params.getName("2.5Years") %></th>
+				<th class="ListSelectTh"><%= params.getName("3.5Years") %></th>
+				<th class="ListSelectTh"><%= params.getName("4.5Years") %></th>
+				<th class="ListSelectTh"><%= params.getName("5.5Years") %></th>
+				<th class="ListSelectTh"><%= params.getName("6.5YearsOrMore") %></th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td class="TitleTd" id="td30HoursOrMore"><%= params.getName("30HoursOrMore") %></td>
+				<td class="TitleTd"><%= params.getName("5DaysOrMore") %></td>
+				<td class="TitleTd"><%= params.getName("217DaysOrMore") %></td>
+				<td class="InputTd">
+					<input type="text" class="Number2RequiredTextBox" id="txtProportionallyFiveDaysOrMoreAndSixMonths" name="txtProportionallyFiveDaysOrMoreAndSixMonths" value="<%= HtmlUtility.escapeHTML(vo.getTxtProportionallyFiveDaysOrMoreAndSixMonths()) %>">&nbsp;<label for="txtProportionallyFiveDaysOrMoreAndSixMonths"><%= params.getName("Day") %></label>
+				</td>
+				<td class="InputTd">
+					<input type="text" class="Number2RequiredTextBox" id="txtProportionallyFiveDaysOrMoreAndOneYearAndSixMonths" name="txtProportionallyFiveDaysOrMoreAndOneYearAndSixMonths" value="<%= HtmlUtility.escapeHTML(vo.getTxtProportionallyFiveDaysOrMoreAndOneYearAndSixMonths()) %>">&nbsp;<label for="txtProportionallyFiveDaysOrMoreAndOneYearAndSixMonths"><%= params.getName("Day") %></label>
+				</td>
+				<td class="InputTd">
+					<input type="text" class="Number2RequiredTextBox" id="txtProportionallyFiveDaysOrMoreAndTwoYearsAndSixMonths" name="txtProportionallyFiveDaysOrMoreAndTwoYearsAndSixMonths" value="<%= HtmlUtility.escapeHTML(vo.getTxtProportionallyFiveDaysOrMoreAndTwoYearsAndSixMonths()) %>">&nbsp;<label for="txtProportionallyFiveDaysOrMoreAndTwoYearsAndSixMonths"><%= params.getName("Day") %></label>
+				</td>
+				<td class="InputTd">
+					<input type="text" class="Number2RequiredTextBox" id="txtProportionallyFiveDaysOrMoreAndThreeYearsAndSixMonths" name="txtProportionallyFiveDaysOrMoreAndThreeYearsAndSixMonths" value="<%= HtmlUtility.escapeHTML(vo.getTxtProportionallyFiveDaysOrMoreAndThreeYearsAndSixMonths()) %>">&nbsp;<label for="txtProportionallyFiveDaysOrMoreAndThreeYearsAndSixMonths"><%= params.getName("Day") %></label>
+				</td>
+				<td class="InputTd">
+					<input type="text" class="Number2RequiredTextBox" id="txtProportionallyFiveDaysOrMoreAndFourYearsAndSixMonths" name="txtProportionallyFiveDaysOrMoreAndFourYearsAndSixMonths" value="<%= HtmlUtility.escapeHTML(vo.getTxtProportionallyFiveDaysOrMoreAndFourYearsAndSixMonths()) %>">&nbsp;<label for="txtProportionallyFiveDaysOrMoreAndFourYearsAndSixMonths"><%= params.getName("Day") %></label>
+				</td>
+				<td class="InputTd">
+					<input type="text" class="Number2RequiredTextBox" id="txtProportionallyFiveDaysOrMoreAndFiveYearsAndSixMonths" name="txtProportionallyFiveDaysOrMoreAndFiveYearsAndSixMonths" value="<%= HtmlUtility.escapeHTML(vo.getTxtProportionallyFiveDaysOrMoreAndFiveYearsAndSixMonths()) %>">&nbsp;<label for="txtProportionallyFiveDaysOrMoreAndFiveYearsAndSixMonths"><%= params.getName("Day") %></label>
+				</td>
+				<td class="InputTd">
+					<input type="text" class="Number2RequiredTextBox" id="txtProportionallyFiveDaysOrMoreAndSixYearsAndSixMonthsOrMore" name="txtProportionallyFiveDaysOrMoreAndSixYearsAndSixMonthsOrMore" value="<%= HtmlUtility.escapeHTML(vo.getTxtProportionallyFiveDaysOrMoreAndSixYearsAndSixMonthsOrMore()) %>">&nbsp;<label for="txtProportionallyFiveDaysOrMoreAndSixYearsAndSixMonthsOrMore"><%= params.getName("Day") %></label>
+				</td>
+			</tr>
+			<tr>
+				<td class="TitleTd" rowspan="4"><%= params.getName("LessThan30Hours") %></td>
+				<td class="TitleTd"><%= params.getName("4Days") %></td>
+				<td class="TitleTd"><%= params.getName("169To216Days") %></td>
+				<td class="InputTd">
+					<input type="text" class="Number2RequiredTextBox" name="txtProportionallyFourDaysAndSixMonths" id="txtProportionallyFourDaysAndSixMonths" value="<%= HtmlUtility.escapeHTML(vo.getTxtProportionallyFourDaysAndSixMonths()) %>">&nbsp;<label for="txtProportionallyFourDaysAndSixMonths"><%= params.getName("Day") %></label>
+				</td>
+				<td class="InputTd">
+					<input type="text" class="Number2RequiredTextBox" name="txtProportionallyFourDaysAndOneYearAndSixMonths" id="txtProportionallyFourDaysAndOneYearAndSixMonths" value="<%= HtmlUtility.escapeHTML(vo.getTxtProportionallyFourDaysAndOneYearAndSixMonths()) %>">&nbsp;<label for="txtProportionallyFourDaysAndOneYearAndSixMonths"><%= params.getName("Day") %></label>
+				</td>
+				<td class="InputTd">
+					<input type="text" class="Number2RequiredTextBox" name="txtProportionallyFourDaysAndTwoYearsAndSixMonths" id="txtProportionallyFourDaysAndTwoYearsAndSixMonths" value="<%= HtmlUtility.escapeHTML(vo.getTxtProportionallyFourDaysAndTwoYearsAndSixMonths()) %>">&nbsp;<label for="txtProportionallyFourDaysAndTwoYearsAndSixMonths"><%= params.getName("Day") %></label>
+				</td>
+				<td class="InputTd">
+					<input type="text" class="Number2RequiredTextBox" name="txtProportionallyFourDaysAndThreeYearsAndSixMonths" id="txtProportionallyFourDaysAndThreeYearsAndSixMonths" value="<%= HtmlUtility.escapeHTML(vo.getTxtProportionallyFourDaysAndThreeYearsAndSixMonths()) %>">&nbsp;<label for="txtProportionallyFourDaysAndThreeYearsAndSixMonths"><%= params.getName("Day") %></label>
+				</td>
+				<td class="InputTd">
+					<input type="text" class="Number2RequiredTextBox" name="txtProportionallyFourDaysAndFourYearsAndSixMonths" id="txtProportionallyFourDaysAndFourYearsAndSixMonths" value="<%= HtmlUtility.escapeHTML(vo.getTxtProportionallyFourDaysAndFourYearsAndSixMonths()) %>">&nbsp;<label for="txtProportionallyFourDaysAndFourYearsAndSixMonths"><%= params.getName("Day") %></label>
+				</td>
+				<td class="InputTd">
+					<input type="text" class="Number2RequiredTextBox" name="txtProportionallyFourDaysAndFiveYearsAndSixMonths" id="txtProportionallyFourDaysAndFiveYearsAndSixMonths" value="<%= HtmlUtility.escapeHTML(vo.getTxtProportionallyFourDaysAndFiveYearsAndSixMonths()) %>">&nbsp;<label for="txtProportionallyFourDaysAndFiveYearsAndSixMonths"><%= params.getName("Day") %></label>
+				</td>
+				<td class="InputTd">
+					<input type="text" class="Number2RequiredTextBox" name="txtProportionallyFourDaysAndSixYearsAndSixMonthsOrMore" id="txtProportionallyFourDaysAndSixYearsAndSixMonthsOrMore" value="<%= HtmlUtility.escapeHTML(vo.getTxtProportionallyFourDaysAndSixYearsAndSixMonthsOrMore()) %>">&nbsp;<label for="txtProportionallyFourDaysAndSixYearsAndSixMonthsOrMore"><%= params.getName("Day") %></label>
+				</td>
+			</tr>
+			<tr>
+				<td class="TitleTd"><%= params.getName("3Days") %></td>
+				<td class="TitleTd"><%= params.getName("121To168Days") %></td>
+				<td class="InputTd">
+					<input type="text" class="Number2RequiredTextBox" name="txtProportionallyThreeDaysAndSixMonths" id="txtProportionallyThreeDaysAndSixMonths" value="<%= HtmlUtility.escapeHTML(vo.getTxtProportionallyThreeDaysAndSixMonths()) %>">&nbsp;<label for="txtProportionallyThreeDaysAndSixMonths"><%= params.getName("Day") %></label>
+				</td>
+				<td class="InputTd">
+					<input type="text" class="Number2RequiredTextBox" name="txtProportionallyThreeDaysAndOneYearAndSixMonths" id="txtProportionallyThreeDaysAndOneYearAndSixMonths" value="<%= HtmlUtility.escapeHTML(vo.getTxtProportionallyThreeDaysAndOneYearAndSixMonths()) %>">&nbsp;<label for="txtProportionallyThreeDaysAndOneYearAndSixMonths"><%= params.getName("Day") %></label>
+				</td>
+				<td class="InputTd">
+					<input type="text" class="Number2RequiredTextBox" name="txtProportionallyThreeDaysAndTwoYearsAndSixMonths" id="txtProportionallyThreeDaysAndTwoYearsAndSixMonths" value="<%= HtmlUtility.escapeHTML(vo.getTxtProportionallyThreeDaysAndTwoYearsAndSixMonths()) %>">&nbsp;<label for="txtProportionallyThreeDaysAndTwoYearsAndSixMonths"><%= params.getName("Day") %></label>
+				</td>
+				<td class="InputTd">
+					<input type="text" class="Number2RequiredTextBox" name="txtProportionallyThreeDaysAndThreeYearsAndSixMonths" id="txtProportionallyThreeDaysAndThreeYearsAndSixMonths" value="<%= HtmlUtility.escapeHTML(vo.getTxtProportionallyThreeDaysAndThreeYearsAndSixMonths()) %>">&nbsp;<label for="txtProportionallyThreeDaysAndThreeYearsAndSixMonths"><%= params.getName("Day") %></label>
+				</td>
+				<td class="InputTd">
+					<input type="text" class="Number2RequiredTextBox" name="txtProportionallyThreeDaysAndFourYearsAndSixMonths" id="txtProportionallyThreeDaysAndFourYearsAndSixMonths" value="<%= HtmlUtility.escapeHTML(vo.getTxtProportionallyThreeDaysAndFourYearsAndSixMonths()) %>">&nbsp;<label for="txtProportionallyThreeDaysAndFourYearsAndSixMonths"><%= params.getName("Day") %></label>
+				</td>
+				<td class="InputTd">
+					<input type="text" class="Number2RequiredTextBox" name="txtProportionallyThreeDaysAndFiveYearsAndSixMonths" id="txtProportionallyThreeDaysAndFiveYearsAndSixMonths" value="<%= HtmlUtility.escapeHTML(vo.getTxtProportionallyThreeDaysAndFiveYearsAndSixMonths()) %>">&nbsp;<label for="txtProportionallyThreeDaysAndFiveYearsAndSixMonths"><%= params.getName("Day") %></label>
+				</td>
+				<td class="InputTd">
+					<input type="text" class="Number2RequiredTextBox" name="txtProportionallyThreeDaysAndSixYearsAndSixMonthsOrMore" id="txtProportionallyThreeDaysAndSixYearsAndSixMonthsOrMore" value="<%= HtmlUtility.escapeHTML(vo.getTxtProportionallyThreeDaysAndSixYearsAndSixMonthsOrMore()) %>">&nbsp;<label for="txtProportionallyThreeDaysAndSixYearsAndSixMonthsOrMore"><%= params.getName("Day") %></label>
+				</td>
+			</tr>
+			<tr>
+				<td class="TitleTd"><%= params.getName("2Days") %></td>
+				<td class="TitleTd"><%= params.getName("73To120Days") %></td>
+				<td class="InputTd">
+					<input type="text" class="Number2RequiredTextBox" name="txtProportionallyTwoDaysAndSixMonths" id="txtProportionallyTwoDaysAndSixMonths" value="<%= HtmlUtility.escapeHTML(vo.getTxtProportionallyTwoDaysAndSixMonths()) %>">&nbsp;<label for="txtProportionallyTwoDaysAndSixMonths"><%= params.getName("Day") %></label>
+				</td>
+				<td class="InputTd">
+					<input type="text" class="Number2RequiredTextBox" name="txtProportionallyTwoDaysAndOneYearAndSixMonths" id="txtProportionallyTwoDaysAndOneYearAndSixMonths" value="<%= HtmlUtility.escapeHTML(vo.getTxtProportionallyTwoDaysAndOneYearAndSixMonths()) %>">&nbsp;<label for="txtProportionallyTwoDaysAndOneYearAndSixMonths"><%= params.getName("Day") %></label>
+				</td>
+				<td class="InputTd">
+					<input type="text" class="Number2RequiredTextBox" name="txtProportionallyTwoDaysAndTwoYearsAndSixMonths" id="txtProportionallyTwoDaysAndTwoYearsAndSixMonths" value="<%= HtmlUtility.escapeHTML(vo.getTxtProportionallyTwoDaysAndTwoYearsAndSixMonths()) %>">&nbsp;<label for="txtProportionallyTwoDaysAndTwoYearsAndSixMonths"><%= params.getName("Day") %></label>
+				</td>
+				<td class="InputTd">
+					<input type="text" class="Number2RequiredTextBox" name="txtProportionallyTwoDaysAndThreeYearsAndSixMonths" id="txtProportionallyTwoDaysAndThreeYearsAndSixMonths" value="<%= HtmlUtility.escapeHTML(vo.getTxtProportionallyTwoDaysAndThreeYearsAndSixMonths()) %>">&nbsp;<label for="txtProportionallyTwoDaysAndThreeYearsAndSixMonths"><%= params.getName("Day") %></label>
+				</td>
+				<td class="InputTd">
+					<input type="text" class="Number2RequiredTextBox" name="txtProportionallyTwoDaysAndFourYearsAndSixMonths" id="txtProportionallyTwoDaysAndFourYearsAndSixMonths" value="<%= HtmlUtility.escapeHTML(vo.getTxtProportionallyTwoDaysAndFourYearsAndSixMonths()) %>">&nbsp;<label for="txtProportionallyTwoDaysAndFourYearsAndSixMonths"><%= params.getName("Day") %></label>
+				</td>
+				<td class="InputTd">
+					<input type="text" class="Number2RequiredTextBox" name="txtProportionallyTwoDaysAndFiveYearsAndSixMonths" id="txtProportionallyTwoDaysAndFiveYearsAndSixMonths" value="<%= HtmlUtility.escapeHTML(vo.getTxtProportionallyTwoDaysAndFiveYearsAndSixMonths()) %>">&nbsp;<label for="txtProportionallyTwoDaysAndFiveYearsAndSixMonths"><%= params.getName("Day") %></label>
+				</td>
+				<td class="InputTd">
+					<input type="text" class="Number2RequiredTextBox" name="txtProportionallyTwoDaysAndSixYearsAndSixMonthsOrMore" id="txtProportionallyTwoDaysAndSixYearsAndSixMonthsOrMore" value="<%= HtmlUtility.escapeHTML(vo.getTxtProportionallyTwoDaysAndSixYearsAndSixMonthsOrMore()) %>">&nbsp;<label for="txtProportionallyTwoDaysAndSixYearsAndSixMonthsOrMore"><%= params.getName("Day") %></label>
+				</td>
+			</tr>
+			<tr>
+				<td class="TitleTd"><%= params.getName("1Day") %></td>
+				<td class="TitleTd"><%= params.getName("48To72Days") %></td>
+				<td class="InputTd">
+					<input type="text" class="Number2RequiredTextBox" name="txtProportionallyOneDayAndSixMonths" id="txtProportionallyOneDayAndSixMonths" value="<%= HtmlUtility.escapeHTML(vo.getTxtProportionallyOneDayAndSixMonths()) %>">&nbsp;<label for="txtProportionallyOneDayAndSixMonths"><%= params.getName("Day") %></label>
+				</td>
+				<td class="InputTd">
+					<input type="text" class="Number2RequiredTextBox" name="txtProportionallyOneDayAndOneYearAndSixMonths" id="txtProportionallyOneDayAndOneYearAndSixMonths" value="<%= HtmlUtility.escapeHTML(vo.getTxtProportionallyOneDayAndOneYearAndSixMonths()) %>">&nbsp;<label for="txtProportionallyOneDayAndOneYearAndSixMonths"><%= params.getName("Day") %></label>
+				</td>
+				<td class="InputTd">
+					<input type="text" class="Number2RequiredTextBox" name="txtProportionallyOneDayAndTwoYearsAndSixMonths" id="txtProportionallyOneDayAndTwoYearsAndSixMonths" value="<%= HtmlUtility.escapeHTML(vo.getTxtProportionallyOneDayAndTwoYearsAndSixMonths()) %>">&nbsp;<label for="txtProportionallyOneDayAndTwoYearsAndSixMonths"><%= params.getName("Day") %></label>
+				</td>
+				<td class="InputTd">
+					<input type="text" class="Number2RequiredTextBox" name="txtProportionallyOneDayAndThreeYearsAndSixMonths" id="txtProportionallyOneDayAndThreeYearsAndSixMonths" value="<%= HtmlUtility.escapeHTML(vo.getTxtProportionallyOneDayAndThreeYearsAndSixMonths()) %>">&nbsp;<label for="txtProportionallyOneDayAndThreeYearsAndSixMonths"><%= params.getName("Day") %></label>
+				</td>
+				<td class="InputTd">
+					<input type="text" class="Number2RequiredTextBox" name="txtProportionallyOneDayAndFourYearsAndSixMonths" id="txtProportionallyOneDayAndFourYearsAndSixMonths" value="<%= HtmlUtility.escapeHTML(vo.getTxtProportionallyOneDayAndFourYearsAndSixMonths()) %>">&nbsp;<label for="txtProportionallyOneDayAndFourYearsAndSixMonths"><%= params.getName("Day") %></label>
+				</td>
+				<td class="InputTd">
+					<input type="text" class="Number2RequiredTextBox" name="txtProportionallyOneDayAndFiveYearsAndSixMonths" id="txtProportionallyOneDayAndFiveYearsAndSixMonths" value="<%= HtmlUtility.escapeHTML(vo.getTxtProportionallyOneDayAndFiveYearsAndSixMonths()) %>">&nbsp;<label for="txtProportionallyOneDayAndFiveYearsAndSixMonths"><%= params.getName("Day") %></label>
+				</td>
+				<td class="InputTd">
+					<input type="text" class="Number2RequiredTextBox" name="txtProportionallyOneDayAndSixYearsAndSixMonthsOrMore" id="txtProportionallyOneDayAndSixYearsAndSixMonthsOrMore" value="<%= HtmlUtility.escapeHTML(vo.getTxtProportionallyOneDayAndSixYearsAndSixMonthsOrMore()) %>">&nbsp;<label for="txtProportionallyOneDayAndSixYearsAndSixMonthsOrMore"><%= params.getName("Day") %></label>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+	<table class="ListTable" id="FirstYearGiving">
 		<thead>
 			<tr>
 				<th class="ListTableTh" colspan="12">
@@ -501,7 +662,7 @@ PaidHolidayCardVo vo = (PaidHolidayCardVo)params.getVo();
 	<table class="ListTable" id="tblStock">
 		<thead>
 			<tr>
-				<th class="ListTableTh" colspan="6"><span class="TitleTh"><%= params.getName("Stock","Vacation","Set") %></span></th>
+				<th class="ListTableTh" colspan="6" id="thStock"><span class="TitleTh"><%= params.getName("Stock","Vacation","Set") %></span></th>
 			</tr>
 		</thead>
 		<tbody>

@@ -23,10 +23,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLTransientException;
-import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -157,6 +155,21 @@ public abstract class BaseDao implements BaseDaoInterface {
 	protected BaseDaoInterface loadDao(Class<?> cls) throws MospException {
 		// インスタンス生成クラスを用いてDAOインスタンスを生成し初期化
 		return InstanceFactory.loadDao(cls, mospParams, null);
+	}
+	
+	/**
+	 * Beanインスタンスを生成し、初期化する。<br>
+	 * 但し、コネクションは設定しない。<br>
+	 * 暗号化したい場合等、Beanインスタンスのみが必要でコネクションは不要な際に用いる。<br>
+	 * @param <T> 対象Beanインターフェース
+	 * @param cls 対象Beanインターフェース
+	 * @return 初期化されたBeanインスタンス
+	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
+	 */
+	@SuppressWarnings("unchecked")
+	protected <T extends BaseBeanInterface> T loadBean(Class<T> cls) throws MospException {
+		// Beanインスタンスを生成し初期化
+		return (T)InstanceFactory.loadBean(cls, mospParams, connection);
 	}
 	
 	/**
@@ -666,24 +679,12 @@ public abstract class BaseDao implements BaseDaoInterface {
 	
 	// SQL実行メソッド
 	/**
-	 * 検索系SQL実行。<br>
+	 * 検索系SQL実行。
 	 * @throws MospException SQL例外が発生した場合
 	 */
 	protected void executeQuery() throws MospException {
-		// TODO キー名称
-		// TODO 検索時のリミット秒
-		executeQuery(mospParams.getApplicationProperty("", 3600));
-	}
-	
-	/**
-	 * 検索系SQL実行。
-	 * @param second 秒数
-	 * @throws MospException SQL例外が発生した場合
-	 */
-	protected void executeQuery(int second) throws MospException {
 		try {
 			if (ps != null) {
-				setQueryTimeout(second);
 				rs = ps.executeQuery();
 				// ログ出力
 				LogUtility.sqlSelect(mospParams, ps.toString());
@@ -711,22 +712,7 @@ public abstract class BaseDao implements BaseDaoInterface {
 	 * @throws MospException SQL例外が発生した場合
 	 */
 	protected void executeUpdate(boolean needLog) throws MospException {
-		// TODO キー名称
-		// TODO 更新時のリミット秒
-		// TODO 検索時と同じ？別？
-		executeUpdate(needLog, mospParams.getApplicationProperty("", 3600));
-	}
-	
-	/**
-	 * 更新系SQL実行(ログ出力制御付)。<br>
-	 * @param needLog ログ出力要否
-	 * @param seconds 秒数
-	 * @throws MospException SQL例外が発生した場合
-	 */
-	protected void executeUpdate(boolean needLog, int seconds) throws MospException {
 		if (ps != null) {
-			// タイムアウト設定
-			setQueryTimeout(seconds);
 			try {
 				cnt = ps.executeUpdate();
 				if (needLog) {
@@ -1039,6 +1025,22 @@ public abstract class BaseDao implements BaseDaoInterface {
 	}
 	
 	/**
+	 * 物理削除SQLを取得する。<br>
+	 * @param cls DTOクラス
+	 * @return 物理削除SQL文字列
+	 * @throws MospException テーブル名、フィールド値の取得に失敗した場合
+	 */
+	protected String getPhysicalDeleteQuery(Class<?> cls) throws MospException {
+		// テーブル名取得
+		String table = getTable(cls);
+		StringBuffer query = new StringBuffer();
+		query.append("DELETE FROM ");
+		query.append(table);
+		query.append(getConditionForKey(cls));
+		return query.toString();
+	}
+	
+	/**
 	 * 削除SQLを取得する。<br>
 	 * @param cls DTOクラス
 	 * @return 削除SQL文字列
@@ -1274,6 +1276,17 @@ public abstract class BaseDao implements BaseDaoInterface {
 	}
 	
 	/**
+	 * @param colFlag 対象フラグカラム
+	 * @return colFlag = {@link MospConst#FLAG_OFF}
+	 */
+	protected static String flagOff(String colFlag) {
+		if (colFlag.isEmpty()) {
+			return "";
+		}
+		return equal(colFlag, MospConst.FLAG_OFF);
+	}
+	
+	/**
 	 * @return delete_flag = {@link MospConst#DELETE_FLAG_OFF}
 	 */
 	protected String deleteFlagOff() {
@@ -1480,6 +1493,13 @@ public abstract class BaseDao implements BaseDaoInterface {
 	}
 	
 	/**
+	 * @return LEFT JOIN 文字列
+	 */
+	protected static String leftJoin() {
+		return " LEFT JOIN ";
+	}
+	
+	/**
 	 * 前方一致
 	 * @param param 対象パラメータ
 	 * @return param + %
@@ -1532,7 +1552,7 @@ public abstract class BaseDao implements BaseDaoInterface {
 	
 	/**
 	 * @param column 対象カラム
-	 * @return column IS NULL 
+	 * @return column IS NULL
 	 */
 	protected static String isNull(String column) {
 		return " " + column + " IS NULL ";
@@ -1540,7 +1560,7 @@ public abstract class BaseDao implements BaseDaoInterface {
 	
 	/**
 	 * @param column 対象カラム
-	 * @return column IS NOT NULL 
+	 * @return column IS NOT NULL
 	 */
 	protected static String isNotNull(String column) {
 		return " " + column + " IS NOT NULL ";
@@ -1548,7 +1568,7 @@ public abstract class BaseDao implements BaseDaoInterface {
 	
 	/**
 	 * @param column 対象カラム
-	 * @return SELECT MAX(column) 
+	 * @return SELECT MAX(column)
 	 */
 	protected static String selectMax(String column) {
 		StringBuffer sb = new StringBuffer();
@@ -1559,7 +1579,7 @@ public abstract class BaseDao implements BaseDaoInterface {
 	
 	/**
 	 * @param column 対象カラム
-	 * @return SELECT MAX(column) 
+	 * @return SELECT MAX(column)
 	 */
 	protected static String max(String column) {
 		StringBuffer sb = new StringBuffer();
@@ -1588,6 +1608,18 @@ public abstract class BaseDao implements BaseDaoInterface {
 	 */
 	protected static String getMaxColumn(String column) {
 		return "max_" + column;
+	}
+	
+	/**
+	 * @param column 対象カラム
+	 * @return MIN(column)
+	 */
+	protected static String min(String column) {
+		StringBuilder sb = new StringBuilder();
+		sb.append("MIN(");
+		sb.append(column);
+		sb.append(") ");
+		return sb.toString();
 	}
 	
 	/**
@@ -1692,7 +1724,7 @@ public abstract class BaseDao implements BaseDaoInterface {
 	}
 	
 	/**
-	 * @return = 
+	 * @return =
 	 */
 	protected static String equal() {
 		return " = ";
@@ -1725,11 +1757,18 @@ public abstract class BaseDao implements BaseDaoInterface {
 	}
 	
 	/**
+	 * @return  LIKE
+	 */
+	protected static String like() {
+		return " LIKE ";
+	}
+	
+	/**
 	 * @param column 対象カラム
 	 * @return column LIKE ?
 	 */
 	protected static String like(String column) {
-		return column + " LIKE ? ";
+		return column + like() + " ? ";
 	}
 	
 	/**
@@ -1745,6 +1784,13 @@ public abstract class BaseDao implements BaseDaoInterface {
 	 */
 	protected static String greater() {
 		return " > ";
+	}
+	
+	/**
+	 * @return >=
+	 */
+	protected static String greaterEqual() {
+		return " >= ";
 	}
 	
 	/**
@@ -1768,6 +1814,13 @@ public abstract class BaseDao implements BaseDaoInterface {
 	 */
 	protected static String less(String column) {
 		return column + less() + " ? ";
+	}
+	
+	/**
+	 * @return <=
+	 */
+	protected static String lessEqual() {
+		return " <= ";
 	}
 	
 	/**
@@ -1806,7 +1859,7 @@ public abstract class BaseDao implements BaseDaoInterface {
 	
 	/**
 	 * @param column 対象カラム
-	 * @return ORDER BY column 
+	 * @return ORDER BY column
 	 */
 	protected static String getOrderByColumn(String column) {
 		StringBuffer sb = new StringBuffer();
@@ -1819,7 +1872,7 @@ public abstract class BaseDao implements BaseDaoInterface {
 	/**
 	 * @param column1 対象カラム1
 	 * @param column2 対象カラム2
-	 * @return ORDER BY column 
+	 * @return ORDER BY column
 	 */
 	protected static String getOrderByColumn(String column1, String column2) {
 		StringBuffer sb = new StringBuffer();
@@ -1865,10 +1918,32 @@ public abstract class BaseDao implements BaseDaoInterface {
 		return sb.toString();
 	}
 	
+	/**
+	 * @param column1 対象カラム1
+	 * @param column2 対象カラム2
+	 * @return ORDER BY column1 DESC, column2 DESC
+	 */
+	protected static String getOrderByColumnDesc(String column1, String column2) {
+		StringBuffer sb = new StringBuffer();
+		sb.append(getOrderBy());
+		sb.append(column1);
+		sb.append(getDesc());
+		sb.append(", ");
+		sb.append(column2);
+		sb.append(getDesc());
+		return sb.toString();
+	}
+	
+	/**
+	 * @return EXISTS
+	 */
 	public static String exists() {
 		return " EXISTS ";
 	}
 	
+	/**
+	 * @return NOT EXISTS
+	 */
 	public static String notExists() {
 		return " NOT EXISTS ";
 	}
@@ -1880,13 +1955,16 @@ public abstract class BaseDao implements BaseDaoInterface {
 		return " GROUP BY ";
 	}
 	
+	/**
+	 * @return LIMIT 1
+	 */
 	protected static String limitOne() {
 		return " LIMIT 1 ";
 	}
 	
 	/**
 	 * @param columns 対象列名
-	 * @return GROUP BY column 
+	 * @return GROUP BY column
 	 */
 	protected static String groupBy(String... columns) {
 		// SQL文字列準備
@@ -1921,82 +1999,12 @@ public abstract class BaseDao implements BaseDaoInterface {
 	}
 	
 	/**
-	 * ドライバが Statement オブジェクトの実行を待つ秒数を、指定された秒数に設定します。
-	 * @see PreparedStatement#setQueryTimeout(int)
-	 * @param seconds the new query timeout limit in seconds; zero means there is no limit
-	 * @throws MospException SQL例外が発生した場合
-	 */
-	protected void setQueryTimeout(int seconds) throws MospException {
-		if (RDBMSType.PostgreSQL.equals(getRdbmsType()) == false) {
-			try {
-				if (ps != null) {
-					ps.setQueryTimeout(seconds);
-				}
-			} catch (SQLException e) {
-				throw new MospException(e);
-			}
-			return;
-		}
-		Statement st = null;
-		try {
-			String query = "";
-			long msec = seconds * 1000L;
-			if (msec < 0) {
-				msec = 0;
-			}
-			if (msec == 0) {
-				query = "RESET statement_timeout";
-			} else {
-				query = MessageFormat.format("SET LOCAL statement_timeout TO {0,number, #}", msec);
-			}
-			
-			st = connection.createStatement();
-			st.execute(query);
-			st.close();
-		} catch (SQLException e) {
-			try {
-				if (st != null) {
-					st.close();
-				}
-			} catch (SQLException ex) {
-				throw new MospException(ex);
-			}
-			throw new MospException(e);
-		}
-	}
-	
-	/**
-	 * PostgreSQLの場合{@link #setQueryTimeout(int)}にて設定した値をデフォルト(=0)に戻す。
-	 * @throws MospException SQL例外が発生した場合
-	 */
-	protected void resetPgStatementTimeOut() throws MospException {
-		if (RDBMSType.PostgreSQL.equals(getRdbmsType()) == false) {
-			return;
-		}
-		Statement st = null;
-		try {
-			st = connection.createStatement();
-			st.execute("RESET statement_timeout");
-			st.close();
-		} catch (SQLException e) {
-			try {
-				if (st != null) {
-					st.close();
-				}
-			} catch (SQLException ex) {
-				throw new MospException(ex);
-			}
-			throw new MospException(e);
-		}
-	}
-	
-	/**
 	 * @param <T> 対象DTOインターフェース
 	 * @param baseDto 対象DTO
 	 * @return キャストされたオブジェクト
 	 */
 	@SuppressWarnings("unchecked")
-	protected <T>T cast(BaseDtoInterface baseDto) {
+	protected <T> T cast(BaseDtoInterface baseDto) {
 		return (T)baseDto;
 	}
 	
@@ -2008,6 +2016,10 @@ public abstract class BaseDao implements BaseDaoInterface {
 		return equal(COL_INACTIVATE_FLAG, MospConst.INACTIVATE_FLAG_OFF);
 	}
 	
+	/**
+	 * @param phrases 括弧の中身
+	 * @return (・・・)
+	 */
 	public static String parenthesis(Object... phrases) {
 		StringBuffer sb = new StringBuffer();
 		if (phrases != null) {
@@ -2022,10 +2034,18 @@ public abstract class BaseDao implements BaseDaoInterface {
 		return sb.toString();
 	}
 	
+	/**
+	 * @param phrase ASの後ろ
+	 * @return AS ・・・
+	 */
 	public static String as(String phrase) {
 		return " AS " + phrase;
 	}
 	
+	/**
+	 * @param columns 列
+	 * @return USING ・,・,・
+	 */
 	public static String using(String... columns) {
 		StringBuffer sb = new StringBuffer();
 		if (columns != null) {
@@ -2042,6 +2062,13 @@ public abstract class BaseDao implements BaseDaoInterface {
 		return sb.toString();
 	}
 	
+	/**
+	 * @param leftTable   左テーブル
+	 * @param leftColumn  左列
+	 * @param rightTable  右テーブル
+	 * @param rightColumn 右列
+	 * @return leftTable.leftColumn = rightTable.rightColumn
+	 */
 	public static String eq(String leftTable, String leftColumn, String rightTable, String rightColumn) {
 		StringBuffer sb = new StringBuffer();
 		sb.append(getExplicitTableColumn(leftTable, leftColumn));

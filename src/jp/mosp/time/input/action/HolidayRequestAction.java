@@ -35,12 +35,14 @@ import jp.mosp.platform.constant.PlatformConst;
 import jp.mosp.platform.constant.PlatformMessageConst;
 import jp.mosp.platform.dto.workflow.WorkflowDtoInterface;
 import jp.mosp.platform.utils.MonthUtility;
+import jp.mosp.platform.utils.PlatformUtility;
 import jp.mosp.time.base.TimeAction;
 import jp.mosp.time.bean.ApplicationReferenceBeanInterface;
 import jp.mosp.time.bean.AttendanceTransactionRegistBeanInterface;
 import jp.mosp.time.bean.CutoffUtilBeanInterface;
 import jp.mosp.time.bean.HolidayInfoReferenceBeanInterface;
 import jp.mosp.time.bean.HolidayReferenceBeanInterface;
+import jp.mosp.time.bean.HolidayRequestReferenceBeanInterface;
 import jp.mosp.time.bean.HolidayRequestRegistBeanInterface;
 import jp.mosp.time.bean.HolidayRequestSearchBeanInterface;
 import jp.mosp.time.bean.PaidHolidayInfoReferenceBeanInterface;
@@ -59,6 +61,7 @@ import jp.mosp.time.dto.settings.PaidHolidayDataDtoInterface;
 import jp.mosp.time.dto.settings.PaidHolidayDtoInterface;
 import jp.mosp.time.dto.settings.StockHolidayDataDtoInterface;
 import jp.mosp.time.dto.settings.TimeSettingDtoInterface;
+import jp.mosp.time.entity.ApplicationEntity;
 import jp.mosp.time.input.vo.HolidayRequestVo;
 import jp.mosp.time.utils.TimeUtility;
 
@@ -320,7 +323,7 @@ public class HolidayRequestAction extends TimeAction {
 			prepareVo();
 			batchUpdate();
 		} else if (mospParams.getCommand().equals(CMD_SET_VIEW_PERIOD)) {
-			// 表示期間
+			// 検索表示期間
 			prepareVo();
 			setSearchActivationDate();
 		} else if (mospParams.getCommand().equals(CMD_SET_TRANSFER_HOLIDAY)) {
@@ -378,6 +381,7 @@ public class HolidayRequestAction extends TimeAction {
 	}
 	
 	/**
+	 * 検索処理を行う。<br>
 	 * @throws MospException 例外処理が発生した場合
 	 */
 	protected void search() throws MospException {
@@ -395,23 +399,19 @@ public class HolidayRequestAction extends TimeAction {
 			// 休暇種別の種類を判断
 			int holidayType = Integer.parseInt(holidayType1);
 			String holidayType2 = "";
-			String holidayLength = "";
+			String holidayLength = vo.getPltSearchHolidayRange1();
 			if (TimeConst.CODE_HOLIDAYTYPE_HOLIDAY == holidayType) {
 				// 有給休暇
 				holidayType2 = vo.getPltSearchStatusWithPay();
-				holidayLength = vo.getPltSearchHolidayRange1();
 			} else if (TimeConst.CODE_HOLIDAYTYPE_SPECIAL == holidayType) {
 				// 特別休暇
 				holidayType2 = vo.getPltSearchStatusSpecial();
-				holidayLength = vo.getPltSearchHolidayRange2();
 			} else if (TimeConst.CODE_HOLIDAYTYPE_OTHER == holidayType) {
 				// その他
 				holidayType2 = vo.getPltSearchSpecialOther();
-				holidayLength = vo.getPltSearchHolidayRange2();
 			} else if (TimeConst.CODE_HOLIDAYTYPE_ABSENCE == holidayType) {
 				// 欠勤
 				holidayType2 = vo.getPltSearchSpecialAbsence();
-				holidayLength = vo.getPltSearchHolidayRange2();
 			}
 			search.setHolidayType2(holidayType2);
 			search.setHolidayLength(holidayLength);
@@ -428,8 +428,8 @@ public class HolidayRequestAction extends TimeAction {
 		// 締日ユーティリティー取得
 		CutoffUtilBeanInterface cutoffUtil = timeReference().cutoffUtil();
 		// 締日情報取得
-		CutoffDtoInterface startMonthCutoffDto = cutoffUtil
-			.getCutoffForPersonalId(vo.getPersonalId(), year, startMonth);
+		CutoffDtoInterface startMonthCutoffDto = cutoffUtil.getCutoffForPersonalId(vo.getPersonalId(), year,
+				startMonth);
 		if (mospParams.hasErrorMessage()) {
 			// 検索結果無しメッセージ設定
 			addNoSearchResultMessage();
@@ -462,7 +462,7 @@ public class HolidayRequestAction extends TimeAction {
 		// ソート
 		sort();
 		// 検索結果確認
-		if (list.isEmpty()) {
+		if (list.isEmpty() && mospParams.getCommand().equals(CMD_SEARCH)) {
 			// 検索結果無しメッセージ設定
 			addNoSearchResultMessage();
 		}
@@ -475,6 +475,7 @@ public class HolidayRequestAction extends TimeAction {
 	public void setDefaultValues() throws MospException {
 		// VO準備
 		HolidayRequestVo vo = (HolidayRequestVo)mospParams.getVo();
+		HolidayRequestReferenceBeanInterface holidayRequest = timeReference().holidayRequest();
 		// システム日付取得
 		Date date = getSystemDate();
 		// 個人ID取得
@@ -486,6 +487,7 @@ public class HolidayRequestAction extends TimeAction {
 		HolidayInfoReferenceBeanInterface holidayInfo = timeReference().holidayInfo();
 		// ストック休暇情報取得
 		StockHolidayInfoReferenceBeanInterface stockHolidayInfo = timeReference().stockHolidayInfo();
+		vo.setJsPaidHolidayReasonRequired(holidayRequest.isPaidHolidayReasonRequired());
 		// 特別/その他休暇
 		List<HolidayDataDtoInterface> specialList = holidayInfo.getHolidayPossibleRequestList(personalId, date,
 				TimeConst.CODE_HOLIDAYTYPE_SPECIAL);
@@ -514,7 +516,8 @@ public class HolidayRequestAction extends TimeAction {
 				aryRemainder[cnt] = nameNoLimit;
 				aryLimit[cnt] = nameNoLimit;
 			} else {
-				aryRemainder[cnt] = String.valueOf(dto.getGivingDay() - dto.getCancelDay()) + mospParams.getName("Day");
+				// 残日数設定
+				aryRemainder[cnt] = getFormatDaysAndHours(dto.getGivingDay(), dto.getGivingHour(), false);
 				aryLimit[cnt] = DateUtility.getStringDateAndDay(dto.getHolidayLimitDate());
 			}
 		}
@@ -535,7 +538,8 @@ public class HolidayRequestAction extends TimeAction {
 				aryRemainder[cnt] = nameNoLimit;
 				aryLimit[cnt] = nameNoLimit;
 			} else {
-				aryRemainder[cnt] = String.valueOf(dto.getGivingDay() - dto.getCancelDay()) + mospParams.getName("Day");
+				// 残日数設定
+				aryRemainder[cnt] = getFormatDaysAndHours(dto.getGivingDay(), dto.getGivingHour(), false);
 				aryLimit[cnt] = DateUtility.getStringDateAndDay(dto.getHolidayLimitDate());
 			}
 			cnt++;
@@ -577,63 +581,7 @@ public class HolidayRequestAction extends TimeAction {
 		}
 		vo.setLblPaidHolidayStock(String.valueOf(stock));
 		// 有給休暇情報欄表示
-		Map<String, Object> map = paidHolidayInfo.getPaidHolidayPossibleRequest(personalId, date);
-		if (mospParams.hasErrorMessage()) {
-			return;
-		}
-		double formerGrantDay = 0;
-		if (map.get(TimeConst.CODE_FORMER_GRANT_DAY) != null) {
-			formerGrantDay = ((Double)map.get(TimeConst.CODE_FORMER_GRANT_DAY)).doubleValue();
-		}
-		int formerGrantHour = 0;
-		if (map.get(TimeConst.CODE_FORMER_GRANT_HOUR) != null) {
-			formerGrantHour = ((Integer)map.get(TimeConst.CODE_FORMER_GRANT_HOUR)).intValue();
-		}
-		double formerYearDay = map.get(TimeConst.CODE_FORMER_YEAR_DAY) == null ? 0 : ((Double)map
-			.get(TimeConst.CODE_FORMER_YEAR_DAY)).doubleValue();
-		int formerYearTime = map.get(TimeConst.CODE_FORMER_YEAR_TIME) == null ? 0 : ((Integer)map
-			.get(TimeConst.CODE_FORMER_YEAR_TIME)).intValue();
-		double currentGrantDay = 0;
-		if (map.get(TimeConst.CODE_CURRENT_GRANT_DAY) != null) {
-			currentGrantDay = ((Double)map.get(TimeConst.CODE_CURRENT_GRANT_DAY)).doubleValue();
-		}
-		int currentGrantHour = 0;
-		if (map.get(TimeConst.CODE_CURRENT_GRANT_HOUR) != null) {
-			currentGrantHour = ((Integer)map.get(TimeConst.CODE_CURRENT_GRANT_HOUR)).intValue();
-		}
-		double currentYearDay = map.get(TimeConst.CODE_CURRENT_YEAR_DAY) == null ? 0 : ((Double)map
-			.get(TimeConst.CODE_CURRENT_YEAR_DAY)).doubleValue();
-		int currentYearTime = map.get(TimeConst.CODE_CURRENT_TIME) == null ? 0 : ((Integer)map
-			.get(TimeConst.CODE_CURRENT_TIME)).intValue();
-		Date currentGivingDate = ((Date)map.get(TimeConst.CODE_CURRENT_GIVING_DATE));
-		Date formerGivingDate = ((Date)map.get(TimeConst.CODE_FORMER_GIVING_DATE));
-		Date currentLimitDate = ((Date)map.get(TimeConst.CODE_CURRENT_LIMIT_DATE));
-		Date formerLimitDate = ((Date)map.get(TimeConst.CODE_FORMER_LIMIT_DATE));
-		// 前年度付与日数
-		vo.setLblFormerGrantDay(getNumberOfDayAndHour(formerGrantDay, formerGrantHour));
-		// 前年度残日数
-		vo.setLblFormerDay(getNumberOfDayAndHour(formerYearDay, formerYearTime));
-		// 前年度付与日
-		vo.setLblFormerGivingDay(DateUtility.getStringDateAndDay(formerGivingDate));
-		// 前年度期限日
-		vo.setLblFormerLimitDay(DateUtility.getStringDateAndDay(formerLimitDate));
-		// 今年度付与日数
-		vo.setLblCurrentGrantDay(getNumberOfDayAndHour(currentGrantDay, currentGrantHour));
-		// 今年度残日数
-		vo.setLblCurrentDay(getNumberOfDayAndHour(currentYearDay, currentYearTime));
-		// 今年度付与日
-		vo.setLblCurrentGivingDay(DateUtility.getStringDateAndDay(currentGivingDate));
-		// 今年度期限日
-		vo.setLblCurrentLimitDay(DateUtility.getStringDateAndDay(currentLimitDate));
-		// 有給休暇付与日数
-		vo.setLblTotalGrantDay(getNumberOfDayAndHour(formerGrantDay + currentGrantDay, formerGrantHour
-				+ currentGrantHour));
-		// 有給休暇申請可能数
-		vo.setLblTotalDayAndHour(getNumberOfDayAndHour(formerYearDay + currentYearDay, formerYearTime + currentYearTime));
-		// 有休申請可能日数
-		vo.setLblTotalDay(Double.toString(formerYearDay + currentYearDay));
-		// 有休申請可能時間
-		vo.setLblTotalTime(Integer.toString(formerYearTime + currentYearTime));
+		setPaidLeave();
 		// 有給休暇情報欄表示
 		Map<String, Object> nextYearMap = paidHolidayInfo.getNextGivingInfo(personalId);
 		if (nextYearMap == null) {
@@ -649,7 +597,7 @@ public class HolidayRequestAction extends TimeAction {
 		// 有給休暇次回付与予定日
 		vo.setLblNextGivingDate(DateUtility.getStringDateAndDay(nextYearGivingDate));
 		// 有給休暇次回付与予定日数
-		vo.setLblNextGivingAmount(getNumberOfDayAndHour(nextYearDay, nextYearTime));
+		vo.setLblNextGivingAmount(getFormatDaysAndHours(nextYearDay, nextYearTime, false));
 		// 有給休暇次回付与期限日
 		vo.setLblNextLimitDate(DateUtility.getStringDateAndDay(nextYearrLimitDate));
 		// 次回付与予定日(手動)取得及び確認
@@ -661,6 +609,99 @@ public class HolidayRequestAction extends TimeAction {
 		vo.setLblNextManualGivingDate(DateUtility.getStringDateAndDay(nextManualGivingDate));
 		// 次回付与予定日数(手動)
 		vo.setLblNextManualGivingAmount(paidHolidayInfo.getNextManualGivingDaysAndHours(vo.getPersonalId()));
+	}
+	
+	/**
+	 * 有給休暇設定。
+	 * @throws MospException 例外発生時
+	 */
+	protected void setPaidLeave() throws MospException {
+		// VO取得
+		HolidayRequestVo vo = (HolidayRequestVo)mospParams.getVo();
+		PaidHolidayInfoReferenceBeanInterface paidHolidayInfo = timeReference().paidHolidayInfo();
+		Date date = getSystemDate();
+		List<Map<String, Object>> list = paidHolidayInfo.getPaidHolidayDataListForView(vo.getPersonalId(), date);
+		String[] aryLblPaidLeaveFiscalYear = new String[list.size()];
+		String[] aryLblStyle = new String[list.size()];
+		String[] aryLblPaidLeaveGrantDate = new String[list.size()];
+		String[] aryLblPaidLeaveExpirationDate = new String[list.size()];
+		String[] aryLblPaidLeaveRemainDays = new String[list.size()];
+		String[] aryLblPaidLeaveGrantDays = new String[list.size()];
+		double totalRemainDays = 0;
+		int totalRemainHours = 0;
+		for (int i = 0; i < list.size(); i++) {
+			// 情報取得
+			Map<String, Object> m = list.get(i);
+			// スタイル準備
+			aryLblStyle[i] = "";
+			// 付与日取得
+			aryLblPaidLeaveGrantDate[i] = "";
+			Object grantDate = m.get(TimeConst.CODE_PAID_LEAVE_GRANT_DATE);
+			if (grantDate != null) {
+				aryLblPaidLeaveGrantDate[i] = DateUtility.getStringDateAndDay((Date)grantDate);
+				// システム日付より付与日が先の場合
+				if (getSystemDate().compareTo((Date)grantDate) < 0) {
+					// 設定
+					aryLblStyle[i] = PlatformConst.STYLE_GRAY;
+				}
+			}
+			// 項目名取得
+			String fiscalYearString = "";
+			Object fiscalYear = m.get(TimeConst.CODE_PAID_LEAVE_FISCAL_YEAR);
+			if (fiscalYear != null) {
+				fiscalYearString = fiscalYear.toString();
+			}
+			aryLblPaidLeaveFiscalYear[i] = fiscalYearString;
+			
+			// 期限日取得
+			aryLblPaidLeaveExpirationDate[i] = "";
+			Object expirationDate = m.get(TimeConst.CODE_PAID_LEAVE_EXPIRATION_DATE);
+			if (expirationDate != null) {
+				aryLblPaidLeaveExpirationDate[i] = DateUtility.getStringDateAndDay((Date)expirationDate);
+			}
+			// 残日数取得
+			double remainDaysDouble = 0;
+			Object remainDays = m.get(TimeConst.CODE_PAID_LEAVE_REMAIN_DAYS);
+			if (remainDays != null) {
+				remainDaysDouble = ((Double)remainDays).doubleValue();
+			}
+			// 残時間取得
+			int remainHoursInt = 0;
+			Object remainHours = m.get(TimeConst.CODE_PAID_LEAVE_REMAIN_HOURS);
+			if (remainHours != null) {
+				remainHoursInt = ((Integer)remainHours).intValue();
+			}
+			// 付与日取得
+			double grantDaysDouble = 0;
+			Object grantDays = m.get(TimeConst.CODE_PAID_LEAVE_GRANT_DAYS);
+			if (grantDays != null) {
+				grantDaysDouble = ((Double)grantDays).doubleValue();
+			}
+			// 付与時間取得
+			int grantHoursInt = 0;
+			Object grantHours = m.get(TimeConst.CODE_PAID_LEAVE_GRANT_HOURS);
+			if (grantHours != null) {
+				grantHoursInt = ((Integer)grantHours).intValue();
+			}
+			aryLblPaidLeaveRemainDays[i] = getFormatDaysAndHours(remainDaysDouble, remainHoursInt, false);
+			aryLblPaidLeaveGrantDays[i] = getFormatDaysAndHours(grantDaysDouble, grantHoursInt, false);
+			if (mospParams.getName("PreviousYear", "Times").equals(fiscalYearString)
+					|| mospParams.getName("ThisYear", "Times").equals(fiscalYearString)) {
+				// 前年度又は今年度の場合
+				totalRemainDays += remainDaysDouble;
+				totalRemainHours += remainHoursInt;
+			}
+		}
+		vo.setAryLblPaidLeaveFiscalYear(aryLblPaidLeaveFiscalYear);
+		vo.setAryLblStyle(aryLblStyle);
+		vo.setAryLblPaidLeaveGrantDate(aryLblPaidLeaveGrantDate);
+		vo.setAryLblPaidLeaveExpirationDate(aryLblPaidLeaveExpirationDate);
+		vo.setAryLblPaidLeaveRemainDays(aryLblPaidLeaveRemainDays);
+		vo.setAryLblPaidLeaveGrantDays(aryLblPaidLeaveGrantDays);
+		// 有休申請可能日数
+		vo.setLblTotalDay(Double.toString(totalRemainDays));
+		// 有休申請可能時間
+		vo.setLblTotalTime(Integer.toString(totalRemainHours));
 	}
 	
 	/**
@@ -678,8 +719,8 @@ public class HolidayRequestAction extends TimeAction {
 		if (applicationDto == null) {
 			return;
 		}
-		PaidHolidayDtoInterface paidHolidayDto = paidHolidayReference.getPaidHolidayInfo(
-				applicationDto.getPaidHolidayCode(), date);
+		PaidHolidayDtoInterface paidHolidayDto = paidHolidayReference
+			.getPaidHolidayInfo(applicationDto.getPaidHolidayCode(), date);
 		if (paidHolidayDto == null) {
 			return;
 		}
@@ -693,24 +734,6 @@ public class HolidayRequestAction extends TimeAction {
 	 * @return 残数
 	 */
 	protected String getNumberOfDayAndHour(int day, int hour) {
-		StringBuffer sb = new StringBuffer();
-		sb.append(day);
-		sb.append(mospParams.getName("Day"));
-		if (hour > 0) {
-			// 0より大きい場合
-			sb.append(hour);
-			sb.append(mospParams.getName("Time"));
-		}
-		return sb.toString();
-	}
-	
-	/**
-	 * 残数を取得する。<br>
-	 * @param day 日数
-	 * @param hour 時間数
-	 * @return 残数
-	 */
-	protected String getNumberOfDayAndHour(double day, int hour) {
 		StringBuffer sb = new StringBuffer();
 		sb.append(day);
 		sb.append(mospParams.getName("Day"));
@@ -780,8 +803,6 @@ public class HolidayRequestAction extends TimeAction {
 		// 編集項目設定
 		vo.setTxtEditRequestReason("");
 		// 有給休暇情報の初期設定
-		vo.setLblFormerDay("0");
-		vo.setLblCurrentDay("0");
 		vo.setLblTotalDay("0");
 		vo.setLblTotalTime("0");
 		vo.setLblNextGivingDate("0");
@@ -803,13 +824,17 @@ public class HolidayRequestAction extends TimeAction {
 		HolidayReferenceBeanInterface holiday = timeReference().holiday();
 		HolidayInfoReferenceBeanInterface holidayInfo = timeReference().holidayInfo();
 		PaidHolidayInfoReferenceBeanInterface paidHolidayInfo = timeReference().paidHolidayInfo();
+		// 開始・終了日取得
 		Date startDate = getEditStartDate();
 		Date endDate = getEditEndDate();
+		// 区分取得
 		boolean isPaidHoliday = TimeConst.CODE_HOLIDAYTYPE_HOLIDAY == getInt(vo.getPltEditHolidayType1());
 		boolean isSpecialHoliday = TimeConst.CODE_HOLIDAYTYPE_SPECIAL == getInt(vo.getPltEditHolidayType1());
 		boolean isOtherHoliday = TimeConst.CODE_HOLIDAYTYPE_OTHER == getInt(vo.getPltEditHolidayType1());
 		boolean isAbsence = TimeConst.CODE_HOLIDAYTYPE_ABSENCE == getInt(vo.getPltEditHolidayType1());
+		// 申請日リスト取得
 		List<Date> dateList = TimeUtility.getDateList(startDate, endDate);
+		// 有給休暇の場合
 		if (isPaidHoliday) {
 			// 休暇種別が有給休暇又はストック休暇の場合
 			if (vo.getPltEditStatusWithPay().equals(String.valueOf(TimeConst.CODE_HOLIDAYTYPE_HOLIDAY))) {
@@ -823,9 +848,8 @@ public class HolidayRequestAction extends TimeAction {
 						addInsertFailedMessage();
 						return;
 					}
-					if (regist.isLegalDaysOff(workTypeCode) || regist.isPrescribedDaysOff(workTypeCode)
-							|| regist.isWorkOnLegalDaysOff(workTypeCode)
-							|| regist.isWorkOnPrescribedDaysOff(workTypeCode)) {
+					if (TimeUtility.isHoliday(workTypeCode) || TimeUtility.isWorkOnLegalHoliday(workTypeCode)
+							|| TimeUtility.isWorkOnPrescribedHoliday(workTypeCode)) {
 						// 法定休日・所定休日・法定休日労働・所定休日労働の場合
 						continue;
 					}
@@ -846,7 +870,7 @@ public class HolidayRequestAction extends TimeAction {
 									addErrorMessage = true;
 									break;
 								}
-								isHalfPaidLeave = holdDay == TimeConst.HOLIDAY_TIMES_HALF ? true : isHalfPaidLeave;
+								isHalfPaidLeave = TimeUtility.isHolidayTimesHalf(holdDay) ? true : isHalfPaidLeave;
 							}
 							if (addErrorMessage) {
 								// 前年度分が0.5日且つ今年度分が1日以上の場合
@@ -966,9 +990,8 @@ public class HolidayRequestAction extends TimeAction {
 						addInsertFailedMessage();
 						return;
 					}
-					if (regist.isLegalDaysOff(workTypeCode) || regist.isPrescribedDaysOff(workTypeCode)
-							|| regist.isWorkOnLegalDaysOff(workTypeCode)
-							|| regist.isWorkOnPrescribedDaysOff(workTypeCode)) {
+					if (TimeUtility.isHoliday(workTypeCode) || TimeUtility.isWorkOnLegalHoliday(workTypeCode)
+							|| TimeUtility.isWorkOnPrescribedHoliday(workTypeCode)) {
 						// 法定休日・所定休日・法定休日労働・所定休日労働の場合
 						continue;
 					}
@@ -989,8 +1012,8 @@ public class HolidayRequestAction extends TimeAction {
 					if (acquisitionDate == null) {
 						// 登録失敗メッセージ設定
 						addInsertFailedMessage();
-						addHolidayNumDaysExcessErrorMessage(mospParams.getName("Stock")
-								+ mospParams.getName("Vacation"));
+						addHolidayNumDaysExcessErrorMessage(
+								mospParams.getName("Stock") + mospParams.getName("Vacation"));
 						return;
 					}
 					// 下書
@@ -1019,36 +1042,57 @@ public class HolidayRequestAction extends TimeAction {
 				mospParams.addErrorMessage(PlatformMessageConst.MSG_NO_ITEM, errorMes);
 				return;
 			}
-			HolidayDataDtoInterface holidayDataDto = holidayInfo.getHolidayPossibleRequestForRequest(
-					vo.getPersonalId(), startDate, vo.getPltEditStatusSpecial(),
-					Integer.parseInt(vo.getPltEditHolidayType1()));
+			// 申請用休暇データ取得
+			HolidayDataDtoInterface holidayDataDto = holidayInfo.getHolidayPossibleRequestForRequest(vo.getPersonalId(),
+					startDate, vo.getPltEditStatusSpecial(), Integer.parseInt(vo.getPltEditHolidayType1()));
 			if (holidayDataDto == null) {
 				// 登録失敗メッセージ設定
 				addInsertFailedMessage();
 				addHolidayNotGiveErrorMessage(holidayDto.getHolidayName());
 				return;
 			}
-			double useDay = getHolidayDays(holidayDto, holidayDataDto);
-			if (mospParams.hasErrorMessage()) {
-				// 登録失敗メッセージ設定
-				addInsertFailedMessage();
-				return;
+			// 時間休の場合
+			if (TimeConst.CODE_HOLIDAY_RANGE_TIME == getInt(vo.getPltEditHolidayRange())) {
+				// 時間取得
+				int hour = getInt(vo.getPltEditEndTime());
+				// 開始時刻
+				Date startTime = DateUtility.addMinute(
+						DateUtility.addHour(startDate, Integer.parseInt(vo.getPltEditStartHour())),
+						Integer.parseInt(vo.getPltEditStartMinute()));
+				// 時休の分だけまわして登録
+				for (int i = 0; i < hour; i++) {
+					// 終了時刻
+					Date endTime = DateUtility.addHour(startTime, 1);
+					// 取得日準備
+					Date activateDate = holidayDataDto.getActivateDate();
+					// 下書
+					draft(startDate, endDate, startTime, endTime, activateDate, null, 0, 1);
+					// 登録結果確認
+					if (mospParams.hasErrorMessage()) {
+						// 登録失敗メッセージ設定
+						addInsertFailedMessage();
+						return;
+					}
+					startTime = endTime;
+				}
+			} else {
+				double useDay = getHolidayDays(holidayDto, holidayDataDto);
+				
+				if (mospParams.hasErrorMessage()) {
+					// 登録失敗メッセージ設定
+					addInsertFailedMessage();
+					return;
+				}
+				// 下書
+				draft(startDate, endDate, startDate, startDate, holidayDataDto.getActivateDate(), null, useDay, 0);
+				// 登録結果確認
+				if (mospParams.hasErrorMessage()) {
+					// 登録失敗メッセージ設定
+					addInsertFailedMessage();
+					return;
+				}
 			}
-			// 半休申請チェック
-			checkHalfHolidayRequest(holidayDto);
-			if (mospParams.hasErrorMessage()) {
-				// 登録失敗メッセージ設定
-				addInsertFailedMessage();
-				return;
-			}
-			// 下書
-			draft(startDate, endDate, startDate, startDate, holidayDataDto.getActivateDate(), null, useDay, 0);
-			// 登録結果確認
-			if (mospParams.hasErrorMessage()) {
-				// 登録失敗メッセージ設定
-				addInsertFailedMessage();
-				return;
-			}
+			
 		} else if (isOtherHoliday) {
 			// 休暇種別がその他休暇の場合
 			HolidayDtoInterface holidayDto = holiday.getHolidayInfo(vo.getPltEditSpecialOther(), startDate,
@@ -1061,35 +1105,55 @@ public class HolidayRequestAction extends TimeAction {
 				mospParams.addErrorMessage(PlatformMessageConst.MSG_NO_ITEM, errorMes);
 				return;
 			}
-			HolidayDataDtoInterface holidayDataDto = holidayInfo.getHolidayPossibleRequestForRequest(
-					vo.getPersonalId(), startDate, vo.getPltEditSpecialOther(),
-					Integer.parseInt(vo.getPltEditHolidayType1()));
+			// 申請用休暇データ取得
+			HolidayDataDtoInterface holidayDataDto = holidayInfo.getHolidayPossibleRequestForRequest(vo.getPersonalId(),
+					startDate, vo.getPltEditSpecialOther(), Integer.parseInt(vo.getPltEditHolidayType1()));
 			if (holidayDataDto == null) {
 				// 登録失敗メッセージ設定
 				addInsertFailedMessage();
 				addHolidayNotGiveErrorMessage(holidayDto.getHolidayName());
 				return;
 			}
-			double useDay = getHolidayDays(holidayDto, holidayDataDto);
-			if (mospParams.hasErrorMessage()) {
-				// 登録失敗メッセージ設定
-				addInsertFailedMessage();
-				return;
-			}
-			// 半休申請チェック
-			checkHalfHolidayRequest(holidayDto);
-			if (mospParams.hasErrorMessage()) {
-				// 登録失敗メッセージ設定
-				addInsertFailedMessage();
-				return;
-			}
-			// 下書
-			draft(startDate, endDate, startDate, startDate, holidayDataDto.getActivateDate(), null, useDay, 0);
-			// 登録結果確認
-			if (mospParams.hasErrorMessage()) {
-				// 登録失敗メッセージ設定
-				addInsertFailedMessage();
-				return;
+			// 時間休の場合
+			if (TimeConst.CODE_HOLIDAY_RANGE_TIME == getInt(vo.getPltEditHolidayRange())) {
+				// 時間取得
+				int hour = getInt(vo.getPltEditEndTime());
+				// 開始時刻
+				Date startTime = DateUtility.addMinute(
+						DateUtility.addHour(startDate, Integer.parseInt(vo.getPltEditStartHour())),
+						Integer.parseInt(vo.getPltEditStartMinute()));
+				// 時休の分だけまわして登録
+				for (int i = 0; i < hour; i++) {
+					// 終了時刻
+					Date endTime = DateUtility.addHour(startTime, 1);
+					// 取得日準備
+					Date activateDate = holidayDataDto.getActivateDate();
+					// 下書
+					draft(startDate, endDate, startTime, endTime, activateDate, null, 0, 1);
+					// 登録結果確認
+					if (mospParams.hasErrorMessage()) {
+						// 登録失敗メッセージ設定
+						addInsertFailedMessage();
+						return;
+					}
+					startTime = endTime;
+				}
+			} else {
+				// 利用日数取得
+				double useDay = getHolidayDays(holidayDto, holidayDataDto);
+				if (mospParams.hasErrorMessage()) {
+					// 登録失敗メッセージ設定
+					addInsertFailedMessage();
+					return;
+				}
+				// 下書
+				draft(startDate, endDate, startDate, startDate, holidayDataDto.getActivateDate(), null, useDay, 0);
+				// 登録結果確認
+				if (mospParams.hasErrorMessage()) {
+					// 登録失敗メッセージ設定
+					addInsertFailedMessage();
+					return;
+				}
 			}
 		} else if (isAbsence) {
 			// 休暇種別が欠勤の場合
@@ -1103,19 +1167,12 @@ public class HolidayRequestAction extends TimeAction {
 					addInsertFailedMessage();
 					return;
 				}
-				if (regist.isLegalDaysOff(workTypeCode) || regist.isPrescribedDaysOff(workTypeCode)
-						|| regist.isWorkOnLegalDaysOff(workTypeCode) || regist.isWorkOnPrescribedDaysOff(workTypeCode)) {
+				if (TimeUtility.isHoliday(workTypeCode) || TimeUtility.isWorkOnLegalHoliday(workTypeCode)
+						|| TimeUtility.isWorkOnPrescribedHoliday(workTypeCode)) {
 					// 法定休日・所定休日・法定休日労働・所定休日労働の場合
 					continue;
 				}
 				count++;
-			}
-			double useDay = 0;
-			if (TimeConst.CODE_HOLIDAY_RANGE_ALL == getInt(vo.getPltEditHolidayRange())) {
-				useDay = count;
-			} else if (TimeConst.CODE_HOLIDAY_RANGE_AM == getInt(vo.getPltEditHolidayRange())
-					|| TimeConst.CODE_HOLIDAY_RANGE_PM == getInt(vo.getPltEditHolidayRange())) {
-				useDay = count * TimeConst.HOLIDAY_TIMES_HALF;
 			}
 			HolidayDtoInterface holidayDto = holiday.getHolidayInfo(vo.getPltEditSpecialAbsence(), startDate,
 					Integer.parseInt(vo.getPltEditHolidayType1()));
@@ -1127,20 +1184,49 @@ public class HolidayRequestAction extends TimeAction {
 						mospParams.getName("Vacation", "Classification"));
 				return;
 			}
-			// 半休申請チェック
-			checkHalfHolidayRequest(holidayDto);
-			if (mospParams.hasErrorMessage()) {
-				// 登録失敗メッセージ設定
-				addInsertFailedMessage();
-				return;
-			}
-			// 下書
-			draft(startDate, endDate, startDate, startDate, startDate, null, useDay, 0);
-			// 登録結果確認
-			if (mospParams.hasErrorMessage()) {
-				// 登録失敗メッセージ設定
-				addInsertFailedMessage();
-				return;
+			// 時間休の場合
+			if (TimeConst.CODE_HOLIDAY_RANGE_TIME == getInt(vo.getPltEditHolidayRange())) {
+				// 時休
+				int useHour = 0;
+				// 時間取得
+				int hour = getInt(vo.getPltEditEndTime());
+				// 開始時刻
+				Date startTime = DateUtility.addMinute(
+						DateUtility.addHour(startDate, Integer.parseInt(vo.getPltEditStartHour())),
+						Integer.parseInt(vo.getPltEditStartMinute()));
+				// 時休の分だけまわして登録
+				for (int i = 0; i < hour; i++) {
+					// 終了時刻
+					Date endTime = DateUtility.addHour(startTime, 1);
+					// 取得日準備
+					Date activateDate = holidayDto.getActivateDate();
+					useHour = 1;
+					// 下書
+					draft(startDate, endDate, startTime, endTime, activateDate, null, 0, useHour);
+					// 登録結果確認
+					if (mospParams.hasErrorMessage()) {
+						// 登録失敗メッセージ設定
+						addInsertFailedMessage();
+						return;
+					}
+					startTime = endTime;
+				}
+			} else {
+				double useDay = 0;
+				if (TimeConst.CODE_HOLIDAY_RANGE_ALL == getInt(vo.getPltEditHolidayRange())) {
+					useDay = count;
+				} else if (TimeConst.CODE_HOLIDAY_RANGE_AM == getInt(vo.getPltEditHolidayRange())
+						|| TimeConst.CODE_HOLIDAY_RANGE_PM == getInt(vo.getPltEditHolidayRange())) {
+					useDay = count * TimeConst.HOLIDAY_TIMES_HALF;
+				}
+				// 下書
+				draft(startDate, endDate, startDate, startDate, startDate, null, useDay, 0);
+				// 登録結果確認
+				if (mospParams.hasErrorMessage()) {
+					// 登録失敗メッセージ設定
+					addInsertFailedMessage();
+					return;
+				}
 			}
 		} else {
 			// 登録失敗メッセージ設定
@@ -1248,9 +1334,7 @@ public class HolidayRequestAction extends TimeAction {
 				PlatformConst.WORKFLOW_TYPE_TIME);
 		if (workflowDto != null) {
 			// ワークフローコメント登録
-			platform().workflowCommentRegist().addComment(
-					workflowDto,
-					mospParams.getUser().getPersonalId(),
+			platform().workflowCommentRegist().addComment(workflowDto, mospParams.getUser().getPersonalId(),
 					mospParams.getProperties().getMessage(PlatformMessageConst.MSG_PROCESS_SUCCEED,
 							new String[]{ mospParams.getName("WorkPaper") }));
 			// ワークフロー番号セット
@@ -1295,9 +1379,8 @@ public class HolidayRequestAction extends TimeAction {
 						addInsertFailedMessage();
 						return;
 					}
-					if (regist.isLegalDaysOff(workTypeCode) || regist.isPrescribedDaysOff(workTypeCode)
-							|| regist.isWorkOnLegalDaysOff(workTypeCode)
-							|| regist.isWorkOnPrescribedDaysOff(workTypeCode)) {
+					if (TimeUtility.isHoliday(workTypeCode) || TimeUtility.isWorkOnLegalHoliday(workTypeCode)
+							|| TimeUtility.isWorkOnPrescribedHoliday(workTypeCode)) {
 						// 法定休日・所定休日・法定休日労働・所定休日労働の場合
 						continue;
 					}
@@ -1318,7 +1401,7 @@ public class HolidayRequestAction extends TimeAction {
 									addErrorMessage = true;
 									break;
 								}
-								isHalfPaidLeave = holdDay == TimeConst.HOLIDAY_TIMES_HALF ? true : isHalfPaidLeave;
+								isHalfPaidLeave = TimeUtility.isHolidayTimesHalf(holdDay) ? true : isHalfPaidLeave;
 							}
 							if (addErrorMessage) {
 								// 前年度分が0.5日且つ今年度分が1日以上の場合
@@ -1329,19 +1412,8 @@ public class HolidayRequestAction extends TimeAction {
 							}
 						}
 						// 取得日準備
-						Date acquisitionDate = null;
-						// 申請用有給休暇申請可能数リスト毎に処理
-						for (PaidHolidayDataDtoInterface paidHolidayDataDto : list) {
-							// 保有日数が1以上の場合
-							if (paidHolidayDataDto.getHoldDay() >= 1) {
-								// 取得日設定
-								acquisitionDate = paidHolidayDataDto.getAcquisitionDate();
-								break;
-							}
-						}
-						// 取得日がない場合
-						if (acquisitionDate == null) {
-							addHolidayNumUnitExcessErrorMessage(mospParams.getName("Day"));
+						Date acquisitionDate = getAcquisitionDate(list, TimeConst.HOLIDAY_TIMES_ALL, targetDate);
+						if (mospParams.hasErrorMessage()) {
 							return;
 						}
 						useDay = 1;
@@ -1356,22 +1428,15 @@ public class HolidayRequestAction extends TimeAction {
 					} else if (TimeConst.CODE_HOLIDAY_RANGE_AM == getInt(vo.getPltEditHolidayRangePaidHoliday())
 							|| TimeConst.CODE_HOLIDAY_RANGE_PM == getInt(vo.getPltEditHolidayRangePaidHoliday())) {
 						// 半休
-						// 取得日準備
-						Date acquisitionDate = null;
-						// 申請用有給休暇申請可能数リストを取得
 						List<PaidHolidayDataDtoInterface> list = paidHolidayInfo
 							.getPaidHolidayPossibleRequestForRequestList(vo.getPersonalId(), targetDate);
-						for (PaidHolidayDataDtoInterface paidHolidayDataDto : list) {
-							if (paidHolidayDataDto.getHoldDay() >= TimeConst.HOLIDAY_TIMES_HALF) {
-								acquisitionDate = paidHolidayDataDto.getAcquisitionDate();
-								break;
-							}
-						}
-						// 取得日がない場合
-						if (acquisitionDate == null) {
-							addHolidayNumUnitExcessErrorMessage(mospParams.getName("Day"));
+						
+						// 取得日
+						Date acquisitionDate = getAcquisitionDate(list, TimeConst.HOLIDAY_TIMES_HALF, targetDate);
+						if (mospParams.hasErrorMessage()) {
 							return;
 						}
+						
 						// 半休設定
 						useDay = TimeConst.HOLIDAY_TIMES_HALF;
 						// 登録
@@ -1452,9 +1517,8 @@ public class HolidayRequestAction extends TimeAction {
 						addInsertFailedMessage();
 						return;
 					}
-					if (regist.isLegalDaysOff(workTypeCode) || regist.isPrescribedDaysOff(workTypeCode)
-							|| regist.isWorkOnLegalDaysOff(workTypeCode)
-							|| regist.isWorkOnPrescribedDaysOff(workTypeCode)) {
+					if (TimeUtility.isHoliday(workTypeCode) || TimeUtility.isWorkOnLegalHoliday(workTypeCode)
+							|| TimeUtility.isWorkOnPrescribedHoliday(workTypeCode)) {
 						// 法定休日・所定休日・法定休日労働・所定休日労働の場合
 						continue;
 					}
@@ -1476,8 +1540,8 @@ public class HolidayRequestAction extends TimeAction {
 					if (acquisitionDate == null) {
 						// 登録失敗メッセージ設定
 						addInsertFailedMessage();
-						addHolidayNumDaysExcessErrorMessage(mospParams.getName("Stock")
-								+ mospParams.getName("Vacation"));
+						addHolidayNumDaysExcessErrorMessage(
+								mospParams.getName("Stock") + mospParams.getName("Vacation"));
 						return;
 					}
 					// 登録する
@@ -1508,35 +1572,61 @@ public class HolidayRequestAction extends TimeAction {
 				return;
 			}
 			// 申請用休暇データ取得
-			HolidayDataDtoInterface holidayDataDto = holidayInfo.getHolidayPossibleRequestForRequest(
-					vo.getPersonalId(), startDate, vo.getPltEditStatusSpecial(),
-					Integer.parseInt(vo.getPltEditHolidayType1()));
+			HolidayDataDtoInterface holidayDataDto = holidayInfo.getHolidayPossibleRequestForRequest(vo.getPersonalId(),
+					startDate, vo.getPltEditStatusSpecial(), Integer.parseInt(vo.getPltEditHolidayType1()));
 			if (holidayDataDto == null) {
 				// 登録失敗メッセージ設定
 				addInsertFailedMessage();
 				addHolidayNotGiveErrorMessage(holidayDto.getHolidayName());
 				return;
 			}
-			double useDay = getHolidayDays(holidayDto, holidayDataDto);
-			if (mospParams.hasErrorMessage()) {
-				// 登録失敗メッセージ設定
-				addInsertFailedMessage();
-				return;
-			}
-			// 半休申請チェック
-			checkHalfHolidayRequest(holidayDto);
-			if (mospParams.hasErrorMessage()) {
-				// 登録失敗メッセージ設定
-				addInsertFailedMessage();
-				return;
-			}
-			// 登録処理をする
-			regist(startDate, endDate, startDate, startDate, holidayDataDto.getActivateDate(), null, useDay, 0);
-			// 登録結果確認
-			if (mospParams.hasErrorMessage()) {
-				// 登録失敗メッセージ設定
-				addInsertFailedMessage();
-				return;
+			// 時休
+			if (TimeConst.CODE_HOLIDAY_RANGE_TIME == getInt(vo.getPltEditHolidayRange())) {
+				// 申請時間取得
+				int hour = getInt(vo.getPltEditEndTime());
+				// 時休が0の場合
+				if (hour == 0) {
+					// 登録失敗メッセージ設定
+					addInsertFailedMessage();
+					mospParams.addErrorMessage(PlatformMessageConst.MSG_REQUIRED,
+							mospParams.getName("Time", "Rest", "Application", "Time"));
+					return;
+				}
+				// 開始時刻
+				Date startTime = DateUtility.addMinute(
+						DateUtility.addHour(startDate, Integer.parseInt(vo.getPltEditStartHour())),
+						Integer.parseInt(vo.getPltEditStartMinute()));
+				// 時休の分だけまわして登録
+				for (int i = 0; i < hour; i++) {
+					// 終了時刻
+					Date endTime = DateUtility.addHour(startTime, 1);
+					// 取得日準備
+					Date activateDate = holidayDataDto.getActivateDate();
+					// 登録
+					regist(startDate, startDate, startTime, endTime, activateDate, null, 0, 1);
+					// 登録結果確認
+					if (mospParams.hasErrorMessage()) {
+						// 登録失敗メッセージ設定
+						addInsertFailedMessage();
+						return;
+					}
+					startTime = endTime;
+				}
+			} else {
+				double useDay = getHolidayDays(holidayDto, holidayDataDto);
+				if (mospParams.hasErrorMessage()) {
+					// 登録失敗メッセージ設定
+					addInsertFailedMessage();
+					return;
+				}
+				// 登録処理をする
+				regist(startDate, endDate, startDate, startDate, holidayDataDto.getActivateDate(), null, useDay, 0);
+				// 登録結果確認
+				if (mospParams.hasErrorMessage()) {
+					// 登録失敗メッセージ設定
+					addInsertFailedMessage();
+					return;
+				}
 			}
 		} else if (isOtherHoliday) {
 			// 休暇種別がその他休暇の場合
@@ -1551,62 +1641,65 @@ public class HolidayRequestAction extends TimeAction {
 				return;
 			}
 			// 申請用休暇データ取得
-			HolidayDataDtoInterface holidayDataDto = holidayInfo.getHolidayPossibleRequestForRequest(
-					vo.getPersonalId(), startDate, vo.getPltEditSpecialOther(),
-					Integer.parseInt(vo.getPltEditHolidayType1()));
+			HolidayDataDtoInterface holidayDataDto = holidayInfo.getHolidayPossibleRequestForRequest(vo.getPersonalId(),
+					startDate, vo.getPltEditSpecialOther(), Integer.parseInt(vo.getPltEditHolidayType1()));
 			if (holidayDataDto == null) {
 				// 登録失敗メッセージ設定
 				addInsertFailedMessage();
 				addHolidayNotGiveErrorMessage(holidayDto.getHolidayName());
 				return;
 			}
-			double useDay = getHolidayDays(holidayDto, holidayDataDto);
-			if (mospParams.hasErrorMessage()) {
-				// 登録失敗メッセージ設定
-				addInsertFailedMessage();
-				return;
-			}
-			// 半休申請チェック
-			checkHalfHolidayRequest(holidayDto);
-			if (mospParams.hasErrorMessage()) {
-				// 登録失敗メッセージ設定
-				addInsertFailedMessage();
-				return;
-			}
-			// 登録処理をする。
-			regist(startDate, endDate, startDate, startDate, holidayDataDto.getActivateDate(), null, useDay, 0);
-			// 登録結果確認
-			if (mospParams.hasErrorMessage()) {
-				// 登録失敗メッセージ設定
-				addInsertFailedMessage();
-				return;
-			}
-		} else if (isAbsence) {
-			// 休暇種別が欠勤の場合
-			int count = 0;
-			for (Date targetDate : dateList) {
-				// 勤務形態コード取得
-				String workTypeCode = regist.getScheduledWorkTypeCode(vo.getPersonalId(), targetDate);
-				regist.checkWorkType(startDate, endDate, targetDate, workTypeCode);
+			// 時休
+			if (TimeConst.CODE_HOLIDAY_RANGE_TIME == getInt(vo.getPltEditHolidayRange())) {
+				// 申請時間取得
+				int hour = getInt(vo.getPltEditEndTime());
+				// 時休が0の場合
+				if (hour == 0) {
+					// 登録失敗メッセージ設定
+					addInsertFailedMessage();
+					mospParams.addErrorMessage(PlatformMessageConst.MSG_REQUIRED,
+							mospParams.getName("Time", "Rest", "Application", "Time"));
+					return;
+				}
+				// 開始時刻
+				Date startTime = DateUtility.addMinute(
+						DateUtility.addHour(startDate, Integer.parseInt(vo.getPltEditStartHour())),
+						Integer.parseInt(vo.getPltEditStartMinute()));
+				// 時休の分だけまわして登録
+				for (int i = 0; i < hour; i++) {
+					// 終了時刻
+					Date endTime = DateUtility.addHour(startTime, 1);
+					// 取得日準備
+					Date activateDate = holidayDataDto.getActivateDate();
+					// 登録
+					regist(startDate, startDate, startTime, endTime, activateDate, null, 0, 1);
+					// 登録結果確認
+					if (mospParams.hasErrorMessage()) {
+						// 登録失敗メッセージ設定
+						addInsertFailedMessage();
+						return;
+					}
+					startTime = endTime;
+				}
+			} else {
+				double useDay = getHolidayDays(holidayDto, holidayDataDto);
 				if (mospParams.hasErrorMessage()) {
 					// 登録失敗メッセージ設定
 					addInsertFailedMessage();
 					return;
 				}
-				if (regist.isLegalDaysOff(workTypeCode) || regist.isPrescribedDaysOff(workTypeCode)
-						|| regist.isWorkOnLegalDaysOff(workTypeCode) || regist.isWorkOnPrescribedDaysOff(workTypeCode)) {
-					// 法定休日・所定休日・法定休日労働・所定休日労働の場合
-					continue;
+				// 登録処理をする。
+				regist(startDate, endDate, startDate, startDate, holidayDataDto.getActivateDate(), null, useDay, 0);
+				// 登録結果確認
+				if (mospParams.hasErrorMessage()) {
+					// 登録失敗メッセージ設定
+					addInsertFailedMessage();
+					return;
 				}
-				count++;
 			}
-			double useDay = 0;
-			if (TimeConst.CODE_HOLIDAY_RANGE_ALL == getInt(vo.getPltEditHolidayRange())) {
-				useDay = count;
-			} else if (TimeConst.CODE_HOLIDAY_RANGE_AM == getInt(vo.getPltEditHolidayRange())
-					|| TimeConst.CODE_HOLIDAY_RANGE_PM == getInt(vo.getPltEditHolidayRange())) {
-				useDay = count * TimeConst.HOLIDAY_TIMES_HALF;
-			}
+		} else if (isAbsence) {
+			// 休暇種別が欠勤の場合
+			Double count = getHolidayCount(startDate, endDate);
 			HolidayDtoInterface holidayDto = holiday.getHolidayInfo(vo.getPltEditSpecialAbsence(), startDate,
 					Integer.parseInt(vo.getPltEditHolidayType1()));
 			if (holidayDto == null || holidayDto.getInactivateFlag() == MospConst.INACTIVATE_FLAG_ON) {
@@ -1617,20 +1710,56 @@ public class HolidayRequestAction extends TimeAction {
 						mospParams.getName("Vacation", "Classification"));
 				return;
 			}
-			// 半休申請チェック
-			checkHalfHolidayRequest(holidayDto);
-			if (mospParams.hasErrorMessage()) {
-				// 登録失敗メッセージ設定
-				addInsertFailedMessage();
-				return;
-			}
-			// 登録処理
-			regist(startDate, endDate, startDate, startDate, startDate, null, useDay, 0);
-			// 登録結果確認
-			if (mospParams.hasErrorMessage()) {
-				// 登録失敗メッセージ設定
-				addInsertFailedMessage();
-				return;
+			// 時休
+			if (TimeConst.CODE_HOLIDAY_RANGE_TIME == getInt(vo.getPltEditHolidayRange())) {
+				// 申請時間取得
+				int hour = getInt(vo.getPltEditEndTime());
+				int useHour = 0;
+				// 時休が0の場合
+				if (hour == 0) {
+					// 登録失敗メッセージ設定
+					addInsertFailedMessage();
+					mospParams.addErrorMessage(PlatformMessageConst.MSG_REQUIRED,
+							mospParams.getName("Time", "Rest", "Application", "Time"));
+					return;
+				}
+				// 開始時刻
+				Date startTime = DateUtility.addMinute(
+						DateUtility.addHour(startDate, Integer.parseInt(vo.getPltEditStartHour())),
+						Integer.parseInt(vo.getPltEditStartMinute()));
+				// 時休の分だけまわして登録
+				for (int i = 0; i < hour; i++) {
+					// 終了時刻
+					Date endTime = DateUtility.addHour(startTime, 1);
+					// 取得日準備
+					Date activateDate = holidayDto.getActivateDate();
+					useHour = 1;
+					// 登録
+					regist(startDate, startDate, startTime, endTime, activateDate, null, 0, useHour);
+					// 登録結果確認
+					if (mospParams.hasErrorMessage()) {
+						// 登録失敗メッセージ設定
+						addInsertFailedMessage();
+						return;
+					}
+					startTime = endTime;
+				}
+			} else {
+				double useDay = 0;
+				if (TimeConst.CODE_HOLIDAY_RANGE_ALL == getInt(vo.getPltEditHolidayRange())) {
+					useDay = count;
+				} else if (TimeConst.CODE_HOLIDAY_RANGE_AM == getInt(vo.getPltEditHolidayRange())
+						|| TimeConst.CODE_HOLIDAY_RANGE_PM == getInt(vo.getPltEditHolidayRange())) {
+					useDay = count * TimeConst.HOLIDAY_TIMES_HALF;
+				}
+				// 登録処理
+				regist(startDate, endDate, startDate, startDate, startDate, null, useDay, 0);
+				// 登録結果確認
+				if (mospParams.hasErrorMessage()) {
+					// 登録失敗メッセージ設定
+					addInsertFailedMessage();
+					return;
+				}
 			}
 		} else {
 			// 登録失敗メッセージ設定
@@ -1667,6 +1796,7 @@ public class HolidayRequestAction extends TimeAction {
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
 	protected void appli(HolidayRequestDtoInterface dto) throws MospException {
+		// 登録クラス取得
 		HolidayRequestRegistBeanInterface regist = time().holidayRequestRegist();
 		WorkflowRegistBeanInterface workflowRegist = platform().workflowRegist();
 		AttendanceTransactionRegistBeanInterface attendanceTransactionRegist = time().attendanceTransactionRegist();
@@ -1678,7 +1808,11 @@ public class HolidayRequestAction extends TimeAction {
 			workflowDto = workflowRegist.getInitDto();
 			workflowDto.setFunctionCode(TimeConst.CODE_FUNCTION_VACATION);
 		}
-		workflowRegist.setDtoApproverIds(workflowDto, getSelectApproverIds());
+		// 一括更新でない場合
+		if (!mospParams.getCommand().equals(CMD_BATCH_UPDATE)) {
+			// 承認者個人IDを設定
+			workflowRegist.setDtoApproverIds(workflowDto, getSelectApproverIds());
+		}
 		// 登録後ワークフローの取得
 		workflowDto = workflowRegist.appli(workflowDto, dto.getPersonalId(), dto.getRequestStartDate(),
 				PlatformConst.WORKFLOW_TYPE_TIME, null);
@@ -1714,8 +1848,6 @@ public class HolidayRequestAction extends TimeAction {
 		HolidayRequestVo vo = (HolidayRequestVo)mospParams.getVo();
 		// 登録クラス取得
 		HolidayRequestRegistBeanInterface regist = time().holidayRequestRegist();
-		WorkflowRegistBeanInterface workflowRegist = platform().workflowRegist();
-		AttendanceTransactionRegistBeanInterface attendanceTransactionRegist = time().attendanceTransactionRegist();
 		// DTOの準備
 		HolidayRequestDtoInterface dto = timeReference().holidayRequest().findForKey(vo.getRecordId());
 		if (dto == null) {
@@ -1750,30 +1882,8 @@ public class HolidayRequestAction extends TimeAction {
 //			mospParams.getErrorMessageList().clear();
 //			continue;
 //		}
-		// 申請の相関チェック
-		regist.checkAppli(dto);
-		// ワークフローの設定
-		WorkflowDtoInterface workflowDto = reference().workflow().getLatestWorkflowInfo(dto.getWorkflow());
-		if (workflowDto == null) {
-			workflowDto = workflowRegist.getInitDto();
-			workflowDto.setFunctionCode(TimeConst.CODE_FUNCTION_VACATION);
-		}
-		workflowRegist.setDtoApproverIds(workflowDto, getSelectApproverIds());
-		// 登録後ワークフローの取得
-		workflowDto = workflowRegist.appli(workflowDto, dto.getPersonalId(), dto.getRequestStartDate(),
-				PlatformConst.WORKFLOW_TYPE_TIME, null);
-		if (workflowDto != null) {
-			// ワークフロー番号セット
-			dto.setWorkflow(workflowDto.getWorkflow());
-			// 登録
-			regist.regist(dto);
-			// 勤怠データ削除
-			regist.deleteAttendance(dto);
-			// 勤怠データ下書
-			regist.draftAttendance(dto);
-			// 勤怠トランザクション登録
-			attendanceTransactionRegist.regist(dto);
-		}
+		// 申請処理
+		appli(dto);
 	}
 	
 	/**
@@ -1801,8 +1911,8 @@ public class HolidayRequestAction extends TimeAction {
 		if (isDraft) {
 			// 下書の場合は削除する
 			workflowRegist.delete(workflowDto);
-			workflowCommentRegist.deleteList(reference().workflowComment().getWorkflowCommentList(
-					workflowDto.getWorkflow()));
+			workflowCommentRegist
+				.deleteList(reference().workflowComment().getWorkflowCommentList(workflowDto.getWorkflow()));
 			regist.delete(dto);
 		} else {
 			// 下書でない場合は取下する
@@ -1810,9 +1920,7 @@ public class HolidayRequestAction extends TimeAction {
 			workflowDto = workflowRegist.withdrawn(workflowDto);
 			if (workflowDto != null) {
 				// ワークフローコメント登録
-				workflowCommentRegist.addComment(
-						workflowDto,
-						mospParams.getUser().getPersonalId(),
+				workflowCommentRegist.addComment(workflowDto, mospParams.getUser().getPersonalId(),
 						mospParams.getProperties().getMessage(PlatformMessageConst.MSG_PROCESS_SUCCEED,
 								new String[]{ mospParams.getName("TakeDown") }));
 			}
@@ -1889,13 +1997,15 @@ public class HolidayRequestAction extends TimeAction {
 	}
 	
 	/**
-	 * プルダウン設定
-	 * @throws MospException 例外発生時
+	 * プルダウンを設定する。<br>
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
 	protected void setPulldown() throws MospException {
-		// VO準備
+		// VOを準備
 		HolidayRequestVo vo = (HolidayRequestVo)mospParams.getVo();
-		// 有効日取得
+		// 個人IDを取得
+		String personalId = vo.getPersonalId();
+		// 有効日を取得
 		Date date = getEditStartDate();
 		int editRequestYear = DateUtility.getYear(date);
 		// 編集項目設定
@@ -1909,33 +2019,44 @@ public class HolidayRequestAction extends TimeAction {
 		vo.setAryPltEditEndDay(getDayArray());
 		vo.setAryPltEditHolidayType1(mospParams.getProperties().getCodeArray(TimeConst.CODE_HOLIDAY_TYPE, false));
 		// 休暇種別2(有給休暇)プルダウン設定
-		vo.setAryPltEditHolidayType2WithPay(mospParams.getProperties().getCodeArray(
-				TimeConst.CODE_HOLIDAY_TYPE2_WITHPAY, false));
-		vo.setAryPltEditHolidayRangePaidHoliday(mospParams.getProperties().getCodeArray(
-				TimeConst.CODE_HOLIDAY_TYPE3_RANGE2, false));
+		vo.setAryPltEditHolidayType2WithPay(
+				mospParams.getProperties().getCodeArray(TimeConst.CODE_HOLIDAY_TYPE2_WITHPAY, false));
+		// 分(時間休申請時間)プルダウンを設定
 		vo.setAryPltEditStartHour(getHourArray());
-		ApplicationDtoInterface appDto = timeReference().application().findForPerson(vo.getPersonalId(), date);
-		if (appDto != null) {
-			TimeSettingDtoInterface timeSettingDto = timeReference().timeSetting().getTimeSettingInfo(
-					appDto.getWorkSettingCode(), date);
-			if (timeSettingDto != null) {
-				// 一日の起算時の23時間後まで
-				vo.setAryPltEditStartHour(getHourArray(DateUtility.getHour(timeSettingDto.getStartDayTime()) + 23, true));
-				// 終了時刻は勤怠設定の所定労働時間まで
-				vo.setAryPltEditEndTime(getHourArray(DateUtility.getHour(timeSettingDto.getGeneralWorkTime()), false));
-			}
-			PaidHolidayDtoInterface paidHolidayDto = timeReference().paidHoliday().getPaidHolidayInfo(
-					appDto.getPaidHolidayCode(), date);
-			if (paidHolidayDto != null && paidHolidayDto.getTimelyPaidHolidayFlag() == 0) {
-				// 時休が有効の場合
-				vo.setAryPltEditHolidayRangePaidHoliday(mospParams.getProperties().getCodeArray(
-						TimeConst.CODE_HOLIDAY_TYPE3_RANGE1, false));
-				// 分は1/15/30単位
-				vo.setAryPltEditStartMinute(getMinuteArray(paidHolidayDto.getAppliTimeInterval()));
+		// 休暇範囲プルダウンを取得
+		String[][] aryRange = MospUtility.getCodeArray(mospParams, TimeConst.CODE_HOLIDAY_TYPE3_RANGE2, false);
+		String[][] aryHourlyRange = MospUtility.getCodeArray(mospParams, TimeConst.CODE_HOLIDAY_TYPE3_RANGE1, false);
+		// 休暇範囲プルダウン(有給休暇用及び有給休暇以外用)を設定
+		vo.setAryPltEditHolidayRangePaidHoliday(aryRange);
+		vo.setAryPltEditHolidayRange(aryRange);
+		// 設定適用エンティティを取得
+		ApplicationEntity entity = timeReference().master().getApplicationEntity(personalId, date);
+		// 勤怠設定情報を取得
+		TimeSettingDtoInterface timeSettingDto = entity.getTimeSettingDto();
+		// 勤怠設定情報を取得できた場合
+		if (timeSettingDto != null) {
+			// 一日の起算時の23時間後まで
+			vo.setAryPltEditStartHour(getHourArray(DateUtility.getHour(timeSettingDto.getStartDayTime()) + 23, true));
+			// 終了時刻は勤怠設定の所定労働時間まで
+			vo.setAryPltEditEndTime(getHourArray(DateUtility.getHour(timeSettingDto.getGeneralWorkTime()), false));
+		}
+		// 有給休暇設定を取得
+		PaidHolidayDtoInterface paidHolidayDto = entity.getPaidHolidayDto();
+		// 有給休暇設定を取得できた場合
+		if (paidHolidayDto != null) {
+			// 分(時間休申請時間)プルダウンを設定(申請時間間隔：1/15/30単位)
+			vo.setAryPltEditStartMinute(getMinuteArray(paidHolidayDto.getAppliTimeInterval()));
+			// 時間単位取得が有効である場合
+			if (PlatformUtility.isActivate(paidHolidayDto.getTimelyPaidHolidayFlag())) {
+				// 休暇範囲(有給休暇用)プルダウンを再設定(時間休有)
+				vo.setAryPltEditHolidayRangePaidHoliday(aryHourlyRange);
 			}
 		}
-		vo.setAryPltEditHolidayRange(mospParams.getProperties()
-			.getCodeArray(TimeConst.CODE_HOLIDAY_TYPE3_RANGE2, false));
+		// 休暇種別に時間単位がある場合
+		if (timeReference().holiday().isTimelyHoliday(date)) {
+			// 休暇範囲(有給休暇以外用)プルダウンを再設定(時間休有)
+			vo.setAryPltEditHolidayRange(aryHourlyRange);
+		}
 		// 検索項目設定
 		vo.setAryPltSearchYear(getYearArray(editRequestYear));
 		vo.setAryPltSearchMonth(getMonthArray(true));
@@ -1958,7 +2079,8 @@ public class HolidayRequestAction extends TimeAction {
 			if (chkActivationDateValidate()) {
 				return;
 			}
-			if (setApproverPullDown(vo.getPersonalId(), getEditStartDate(), PlatformConst.WORKFLOW_TYPE_TIME) == false) {
+			if (setApproverPullDown(vo.getPersonalId(), getEditStartDate(),
+					PlatformConst.WORKFLOW_TYPE_TIME) == false) {
 				return;
 			}
 			HolidayRequestDtoInterface dto = timeReference().holidayRequest().findForKey(vo.getRecordId());
@@ -2005,115 +2127,106 @@ public class HolidayRequestAction extends TimeAction {
 		HolidayReferenceBeanInterface holidayReference = timeReference().holiday();
 		HolidayInfoReferenceBeanInterface holidayInfoReference = timeReference().holidayInfo();
 		// 有効日フラグ確認
-		if (vo.getModeActivateDate().equals(PlatformConst.MODE_ACTIVATE_DATE_FIXED)) {
-			Date startDate = getEditStartDate();
-			boolean paidLeave = false;
-			List<PaidHolidayDataDtoInterface> paidList = timeReference().paidHolidayInfo()
-				.getPaidHolidayPossibleRequestForRequestList(vo.getPersonalId(), startDate);
-			for (PaidHolidayDataDtoInterface paidHolidayDataDto : paidList) {
-				if (paidHolidayDataDto.getHoldDay() > 0 || paidHolidayDataDto.getHoldHour() > 0) {
-					paidLeave = true;
-					break;
+		if (!vo.getModeActivateDate().equals(PlatformConst.MODE_ACTIVATE_DATE_FIXED)) {
+			return;
+		}
+		// 休暇開始日取得
+		Date startDate = getEditStartDate();
+		// 有給休暇確認
+		boolean paidLeave = isPaidLeaveHoliday(vo.getPersonalId(), startDate);
+		// ストック休暇確認
+		boolean stockLeave = isStockLeaveHoliday(vo.getPersonalId(), startDate);
+		// 特別休暇リスト取得
+		List<HolidayDataDtoInterface> specialList = holidayInfoReference.getHolidayPossibleRequestListForRequest(
+				vo.getPersonalId(), getEditStartDate(), TimeConst.CODE_HOLIDAYTYPE_SPECIAL);
+		// 特別休暇コードセット取得
+		Set<String> specialSet = new HashSet<String>();
+		for (HolidayDataDtoInterface holidayDataDto : specialList) {
+			specialSet.add(holidayDataDto.getHolidayCode());
+		}
+		// その他休暇リスト取得
+		List<HolidayDataDtoInterface> otherList = holidayInfoReference.getHolidayPossibleRequestListForRequest(
+				vo.getPersonalId(), getEditStartDate(), TimeConst.CODE_HOLIDAYTYPE_OTHER);
+		// その他休暇コードセット取得
+		Set<String> otherSet = new HashSet<String>();
+		for (HolidayDataDtoInterface holidayDataDto : otherList) {
+			otherSet.add(holidayDataDto.getHolidayCode());
+		}
+		// プルダウンデータ取得
+		String[][] paidArray = getAryPltEditHolidayType2Paid(paidLeave, stockLeave);
+		String[][] specialArray = holidayReference.getSelectArray(startDate, TimeConst.CODE_HOLIDAYTYPE_SPECIAL, false,
+				specialSet);
+		String[][] otherArray = holidayReference.getSelectArray(startDate, TimeConst.CODE_HOLIDAYTYPE_OTHER, false,
+				otherSet);
+		String[][] absenceArray = holidayReference.getSelectArray(getEditStartDate(),
+				TimeConst.CODE_HOLIDAYTYPE_ABSENCE, false);
+		// プルダウンデータの存在チェック
+		String noObjectData = mospParams.getName("NoObjectData");
+		boolean paidStockDeleteFlag = !paidLeave && !stockLeave;
+		boolean specialDeleteFlag = noObjectData.equals(specialArray[0][1]);
+		boolean otherDeleteFlag = noObjectData.equals(otherArray[0][1]);
+		boolean absenceDeleteFlag = noObjectData.equals(absenceArray[0][1]);
+		String[][] holidayArray = mospParams.getProperties().getCodeArray(TimeConst.CODE_HOLIDAY_TYPE, false);
+		String[][] newHolidayArray = holidayArray;
+		int minus = 0;
+		if (paidStockDeleteFlag) {
+			minus++;
+		}
+		if (specialDeleteFlag) {
+			minus++;
+		}
+		if (otherDeleteFlag) {
+			minus++;
+		}
+		if (absenceDeleteFlag) {
+			minus++;
+		}
+		if (minus > 0) {
+			newHolidayArray = new String[holidayArray.length - minus][2];
+			int i = 0;
+			for (String[] holiday : holidayArray) {
+				if (paidStockDeleteFlag) {
+					if (Integer.toString(TimeConst.CODE_HOLIDAYTYPE_HOLIDAY).equals(holiday[0])) {
+						continue;
+					}
 				}
-			}
-			boolean stockLeave = false;
-			List<StockHolidayDataDtoInterface> stockList = timeReference().stockHolidayInfo()
-				.getStockHolidayPossibleRequestForRequest(vo.getPersonalId(), startDate);
-			for (StockHolidayDataDtoInterface stockHolidayDataDto : stockList) {
-				if (stockHolidayDataDto.getHoldDay() + stockHolidayDataDto.getGivingDay()
-						- stockHolidayDataDto.getCancelDay() - stockHolidayDataDto.getUseDay() > 0) {
-					stockLeave = true;
-					break;
+				if (specialDeleteFlag) {
+					if (Integer.toString(TimeConst.CODE_HOLIDAYTYPE_SPECIAL).equals(holiday[0])) {
+						continue;
+					}
 				}
-			}
-			List<HolidayDataDtoInterface> specialList = holidayInfoReference.getHolidayPossibleRequestListForRequest(
-					vo.getPersonalId(), getEditStartDate(), TimeConst.CODE_HOLIDAYTYPE_SPECIAL);
-			List<HolidayDataDtoInterface> otherList = holidayInfoReference.getHolidayPossibleRequestListForRequest(
-					vo.getPersonalId(), getEditStartDate(), TimeConst.CODE_HOLIDAYTYPE_OTHER);
-			Set<String> specialSet = new HashSet<String>();
-			for (HolidayDataDtoInterface holidayDataDto : specialList) {
-				specialSet.add(holidayDataDto.getHolidayCode());
-			}
-			Set<String> otherSet = new HashSet<String>();
-			for (HolidayDataDtoInterface holidayDataDto : otherList) {
-				otherSet.add(holidayDataDto.getHolidayCode());
-			}
-			// プルダウンデータ取得
-			String[][] paidArray = getAryPltEditHolidayType2Paid(paidLeave, stockLeave);
-			String[][] specialArray = holidayReference.getSelectArray(startDate, TimeConst.CODE_HOLIDAYTYPE_SPECIAL,
-					false, specialSet);
-			String[][] otherArray = holidayReference.getSelectArray(startDate, TimeConst.CODE_HOLIDAYTYPE_OTHER, false,
-					otherSet);
-			String[][] absenceArray = holidayReference.getSelectArray(getEditStartDate(),
-					TimeConst.CODE_HOLIDAYTYPE_ABSENCE, false);
-			// プルダウンデータの存在チェック
-			String noObjectData = mospParams.getName("NoObjectData");
-			boolean paidStockDeleteFlag = !paidLeave && !stockLeave;
-			boolean specialDeleteFlag = noObjectData.equals(specialArray[0][1]);
-			boolean otherDeleteFlag = noObjectData.equals(otherArray[0][1]);
-			boolean absenceDeleteFlag = noObjectData.equals(absenceArray[0][1]);
-			String[][] holidayArray = mospParams.getProperties().getCodeArray(TimeConst.CODE_HOLIDAY_TYPE, false);
-			String[][] newHolidayArray = holidayArray;
-			int minus = 0;
-			if (paidStockDeleteFlag) {
-				minus++;
-			}
-			if (specialDeleteFlag) {
-				minus++;
-			}
-			if (otherDeleteFlag) {
-				minus++;
-			}
-			if (absenceDeleteFlag) {
-				minus++;
-			}
-			if (minus > 0) {
-				newHolidayArray = new String[holidayArray.length - minus][2];
-				int i = 0;
-				for (String[] holiday : holidayArray) {
-					if (paidStockDeleteFlag) {
-						if (Integer.toString(TimeConst.CODE_HOLIDAYTYPE_HOLIDAY).equals(holiday[0])) {
-							continue;
-						}
+				if (otherDeleteFlag) {
+					if (Integer.toString(TimeConst.CODE_HOLIDAYTYPE_OTHER).equals(holiday[0])) {
+						continue;
 					}
-					if (specialDeleteFlag) {
-						if (Integer.toString(TimeConst.CODE_HOLIDAYTYPE_SPECIAL).equals(holiday[0])) {
-							continue;
-						}
-					}
-					if (otherDeleteFlag) {
-						if (Integer.toString(TimeConst.CODE_HOLIDAYTYPE_OTHER).equals(holiday[0])) {
-							continue;
-						}
-					}
-					if (absenceDeleteFlag) {
-						if (Integer.toString(TimeConst.CODE_HOLIDAYTYPE_ABSENCE).equals(holiday[0])) {
-							continue;
-						}
-					}
-					newHolidayArray[i][0] = holiday[0];
-					newHolidayArray[i][1] = holiday[1];
-					i++;
 				}
+				if (absenceDeleteFlag) {
+					if (Integer.toString(TimeConst.CODE_HOLIDAYTYPE_ABSENCE).equals(holiday[0])) {
+						continue;
+					}
+				}
+				newHolidayArray[i][0] = holiday[0];
+				newHolidayArray[i][1] = holiday[1];
+				i++;
 			}
-			if (newHolidayArray.length == 0) {
-				vo.setModeActivateDate(PlatformConst.MODE_ACTIVATE_DATE_CHANGING);
-				// 決定失敗メッセージ設定
-				addFixFailedMessage();
-				mospParams.addErrorMessage(PlatformMessageConst.MSG_WORKFORM_EXISTENCE, mospParams.getName("Vacation"));
-				return;
-			}
-			// プルダウン設定
-			vo.setAryPltEditHolidayType1(newHolidayArray);
-			vo.setAryPltEditHolidayType2WithPay(paidArray);
-			vo.setAryPltEditHolidayType2Special(specialArray);
-			vo.setAryPltEditHolidayType2Other(otherArray);
-			vo.setAryPltEditHolidayType2Absence(absenceArray);
-			Date endDate = getEditEndDate();
-			if (startDate.compareTo(endDate) == 0) {
-				// 同日付に時差出勤が申請されているか確認する。
-				getDifferenceRequest1(vo.getPersonalId(), startDate);
-			}
+		}
+		if (newHolidayArray.length == 0) {
+			vo.setModeActivateDate(PlatformConst.MODE_ACTIVATE_DATE_CHANGING);
+			// 決定失敗メッセージ設定
+			addFixFailedMessage();
+			mospParams.addErrorMessage(PlatformMessageConst.MSG_WORKFORM_EXISTENCE, mospParams.getName("Vacation"));
+			return;
+		}
+		// プルダウン設定
+		vo.setAryPltEditHolidayType1(newHolidayArray);
+		vo.setAryPltEditHolidayType2WithPay(paidArray);
+		vo.setAryPltEditHolidayType2Special(specialArray);
+		vo.setAryPltEditHolidayType2Other(otherArray);
+		vo.setAryPltEditHolidayType2Absence(absenceArray);
+		Date endDate = getEditEndDate();
+		if (startDate.compareTo(endDate) == 0) {
+			// 同日付に時差出勤が申請されているか確認する。
+			getDifferenceRequest1(vo.getPersonalId(), startDate);
 		}
 	}
 	
@@ -2138,6 +2251,8 @@ public class HolidayRequestAction extends TimeAction {
 	
 	/**
 	 * 休暇連続取得設定を行う。<br>
+	 * 休暇情報の連続取得判定を行うために休暇種別プルダウン切替時に<br>
+	 * その休暇の連続取得区分が"必須/警告/不要"の内どれであるかを判断する。<br>
 	 * @throws MospException 例外発生時
 	 */
 	protected void setHolidayContinue() throws MospException {
@@ -2168,8 +2283,8 @@ public class HolidayRequestAction extends TimeAction {
 				addInsertFailedMessage();
 				return;
 			}
-			if (regist.isLegalDaysOff(workTypeCode) || regist.isPrescribedDaysOff(workTypeCode)
-					|| regist.isWorkOnLegalDaysOff(workTypeCode) || regist.isWorkOnPrescribedDaysOff(workTypeCode)) {
+			if (TimeUtility.isHoliday(workTypeCode) || TimeUtility.isWorkOnLegalHoliday(workTypeCode)
+					|| TimeUtility.isWorkOnPrescribedHoliday(workTypeCode)) {
 				// 法定休日・所定休日・法定休日労働・所定休日労働の場合
 				continue;
 			}
@@ -2257,38 +2372,49 @@ public class HolidayRequestAction extends TimeAction {
 	protected void setSearchPulldown() throws MospException {
 		// VO取得
 		HolidayRequestVo vo = (HolidayRequestVo)mospParams.getVo();
-		// 有効日フラグ確認
+		// クラス取得
+		HolidayReferenceBeanInterface holidayRefer = timeReference().holiday();
+		ApplicationReferenceBeanInterface appRefer = timeReference().application();
+		PaidHolidayReferenceBeanInterface paidHolidayRefer = timeReference().paidHoliday();
+		// 有効日が決定の場合
 		if (vo.getJsSearchModeActivateDate().equals(PlatformConst.MODE_ACTIVATE_DATE_FIXED)) {
 			// プルダウン設定
 			Date date;
+			// 休暇月が空の場合
 			if (vo.getPltSearchMonth().isEmpty()) {
 				date = MonthUtility.getYearMonthTargetDate(getInt(vo.getPltSearchYear()), 1, mospParams);
 			} else {
 				date = MonthUtility.getYearMonthTargetDate(getInt(vo.getPltSearchYear()),
 						getInt(vo.getPltSearchMonth()), mospParams);
 			}
-			vo.setAryPltSearchHolidayType2Special(timeReference().holiday().getSelectArray(date,
-					TimeConst.CODE_HOLIDAYTYPE_SPECIAL, true));
-			vo.setAryPltSearchHolidayType2Other(timeReference().holiday().getSelectArray(date,
-					TimeConst.CODE_HOLIDAYTYPE_OTHER, true));
-			vo.setAryPltSearchHolidayType2Absence(timeReference().holiday().getSelectArray(date,
-					TimeConst.CODE_HOLIDAYTYPE_ABSENCE, true));
-			vo.setAryPltSearchHolidayRangePaidHoliday(mospParams.getProperties().getCodeArray(
-					TimeConst.CODE_HOLIDAY_TYPE3_RANGE2, true));
-			ApplicationDtoInterface applicationDto = timeReference().application().findForPerson(vo.getPersonalId(),
-					date);
+			// 休暇種別2を設定
+			vo.setAryPltSearchHolidayType2Special(
+					holidayRefer.getSelectArray(date, TimeConst.CODE_HOLIDAYTYPE_SPECIAL, true));
+			vo.setAryPltSearchHolidayType2Other(
+					holidayRefer.getSelectArray(date, TimeConst.CODE_HOLIDAYTYPE_OTHER, true));
+			vo.setAryPltSearchHolidayType2Absence(
+					holidayRefer.getSelectArray(date, TimeConst.CODE_HOLIDAYTYPE_ABSENCE, true));
+			vo.setAryPltSearchHolidayRangePaidHoliday(
+					mospParams.getProperties().getCodeArray(TimeConst.CODE_HOLIDAY_TYPE3_RANGE2, true));
+			// 休暇種別に時間単位がある場合
+			if (holidayRefer.isTimelyHoliday(date)) {
+				vo.setAryPltSearchHolidayRangePaidHoliday(
+						mospParams.getProperties().getCodeArray(TimeConst.CODE_HOLIDAY_TYPE3_RANGE1, true));
+			}
+			ApplicationDtoInterface applicationDto = appRefer.findForPerson(vo.getPersonalId(), date);
 			if (applicationDto == null) {
 				return;
 			}
-			PaidHolidayDtoInterface paidHolidayDto = timeReference().paidHoliday().getPaidHolidayInfo(
-					applicationDto.getPaidHolidayCode(), date);
+			// 有給休暇情報取得
+			PaidHolidayDtoInterface paidHolidayDto = paidHolidayRefer
+				.getPaidHolidayInfo(applicationDto.getPaidHolidayCode(), date);
 			if (paidHolidayDto == null) {
 				return;
 			}
+			// 時休が有効の場合
 			if (paidHolidayDto.getTimelyPaidHolidayFlag() == 0) {
-				// 時休が有効の場合
-				vo.setAryPltSearchHolidayRangePaidHoliday(mospParams.getProperties().getCodeArray(
-						TimeConst.CODE_HOLIDAY_TYPE3_RANGE1, true));
+				vo.setAryPltSearchHolidayRangePaidHoliday(
+						mospParams.getProperties().getCodeArray(TimeConst.CODE_HOLIDAY_TYPE3_RANGE1, true));
 			}
 		}
 	}
@@ -2312,7 +2438,7 @@ public class HolidayRequestAction extends TimeAction {
 		vo.setJsSearchModeActivateDate(PlatformConst.MODE_ACTIVATE_DATE_FIXED);
 		// デフォルトソートキー及びソート順設定
 		vo.setComparatorName(HolidayRequestRequestDateComparator.class.getName());
-		// 
+		//
 		vo.setJsModeDifferenceRequest1("");
 		//
 		setEditPulldown();
@@ -2427,8 +2553,8 @@ public class HolidayRequestAction extends TimeAction {
 					addBatchUpdateFailedMessage();
 					return;
 				}
-				if (regist.isLegalDaysOff(workTypeCode) || regist.isPrescribedDaysOff(workTypeCode)
-						|| regist.isWorkOnLegalDaysOff(workTypeCode) || regist.isWorkOnPrescribedDaysOff(workTypeCode)) {
+				if (TimeUtility.isHoliday(workTypeCode) || TimeUtility.isWorkOnLegalHoliday(workTypeCode)
+						|| TimeUtility.isWorkOnPrescribedHoliday(workTypeCode)) {
 					// 法定休日・所定休日・法定休日労働・所定休日労働の場合
 					continue;
 				}
@@ -2540,7 +2666,7 @@ public class HolidayRequestAction extends TimeAction {
 						addBatchUpdateFailedMessage();
 						return;
 					}
-				} else if (Integer.toString(TimeConst.CODE_HOLIDAYTYPE_HOLIDAY).equals(dto.getHolidayType2())) {
+				} else if (Integer.toString(TimeConst.CODE_HOLIDAYTYPE_STOCK).equals(dto.getHolidayType2())) {
 					// ストック休暇の場合
 					double days = count;
 					if (isHalf) {
@@ -2572,8 +2698,7 @@ public class HolidayRequestAction extends TimeAction {
 						// 取得日がない場合
 						// 更新失敗メッセージ設定
 						addBatchUpdateFailedMessage();
-						addHolidayNumDaysExcessErrorMessage(mospParams.getName("Stock")
-								+ mospParams.getName("Vacation"));
+						addHolidayNumDaysExcessErrorMessage(mospParams.getName("Stock", "Vacation"));
 						return;
 					}
 					// DTOに値をセット
@@ -2604,6 +2729,7 @@ public class HolidayRequestAction extends TimeAction {
 					return;
 				}
 				Date acquisitionDate = dto.getRequestStartDate();
+				
 				double useDay = days;
 				if (isSpecial || isOther) {
 					// 特別休暇・その他休暇の場合
@@ -2619,26 +2745,48 @@ public class HolidayRequestAction extends TimeAction {
 						return;
 					}
 					acquisitionDate = holidayDataDto.getActivateDate();
-					useDay = getHolidayDays(days, holidayDto, holidayDataDto);
-					if (mospParams.hasErrorMessage()) {
-						// 更新失敗メッセージ設定
-						addBatchUpdateFailedMessage();
-						return;
+					// 時休の場合
+					if (dto.getHolidayRange() == TimeConst.CODE_HOLIDAY_RANGE_TIME) {
+						if (Double.compare(dto.getUseDay(), 0) != 0) {
+							// 日数が異なる場合
+							// 更新失敗メッセージ設定
+							addBatchUpdateFailedMessage();
+							addHolidayNumUnitExcessErrorMessage(mospParams.getName("Day"));
+							return;
+						}
+						
+						if (holidayDataDto.getGivingHour() >= 1) {
+							// 取得日設定
+							acquisitionDate = holidayDataDto.getActivateDate();
+							
+						} else if (holidayDataDto.getGivingDay() >= 1) {
+							// 取得日設定
+							acquisitionDate = holidayDataDto.getActivateDate();
+							
+						}
+						if (acquisitionDate == null) {
+							// 取得日がない場合
+							// 更新失敗メッセージ設定
+							addBatchUpdateFailedMessage();
+							addHolidayNumUnitExcessErrorMessage(mospParams.getName("Time"));
+							return;
+						}
+						
+					} else {
+						useDay = getHolidayDays(days, holidayDto, holidayDataDto);
+						if (mospParams.hasErrorMessage()) {
+							// 更新失敗メッセージ設定
+							addBatchUpdateFailedMessage();
+							return;
+						}
+						if (Double.compare(dto.getUseDay(), useDay) != 0) {
+							// 日数が異なる場合
+							// 更新失敗メッセージ設定
+							addBatchUpdateFailedMessage();
+							addHolidayNumUnitExcessErrorMessage(mospParams.getName("Day"));
+							return;
+						}
 					}
-				}
-				if (Double.compare(dto.getUseDay(), useDay) != 0) {
-					// 日数が異なる場合
-					// 更新失敗メッセージ設定
-					addBatchUpdateFailedMessage();
-					addHolidayNumUnitExcessErrorMessage(mospParams.getName("Day"));
-					return;
-				}
-				// 半休申請チェック
-				checkHalfHolidayRequest(holidayDto, dto.getHolidayRange());
-				if (mospParams.hasErrorMessage()) {
-					// 更新失敗メッセージ設定
-					addBatchUpdateFailedMessage();
-					return;
 				}
 				// DTOに値をセット
 				setDtoFields(dto, acquisitionDate);
@@ -2728,15 +2876,15 @@ public class HolidayRequestAction extends TimeAction {
 			aryCkbRecordId[i] = String.valueOf(dto.getTmdHolidayRequestId());
 			aryLblRequestDate[i] = DateUtility.getStringDateAndDay(dto.getRequestStartDate())
 					+ mospParams.getName("Wave") + DateUtility.getStringDateAndDay(dto.getRequestEndDate());
-			aryLblHolidayType1[i] = timeReference().holiday().getHolidayType1NameForHolidayRequest(
-					dto.getHolidayType1(), dto.getHolidayType2());
+			aryLblHolidayType1[i] = timeReference().holiday()
+				.getHolidayType1NameForHolidayRequest(dto.getHolidayType1(), dto.getHolidayType2());
 			aryLblHolidayType2[i] = getHolidayType2Abbr(dto.getHolidayType1(), dto.getHolidayType2(),
 					dto.getRequestStartDate());
 			aryLblHolidayRange[i] = getHolidayRange(dto);
 			aryHolidayType1[i] = String.valueOf(dto.getHolidayType1());
 			aryHolidayType2[i] = dto.getHolidayType2();
 			aryHolidayRange[i] = String.valueOf(dto.getHolidayRange());
-			aryStartTime[i] = getStringTime(dto.getStartTime());
+			aryStartTime[i] = DateUtility.getStringTime(dto.getStartTime(), dto.getRequestStartDate());
 			aryLblRequestReason[i] = dto.getRequestReason();
 			aryLblWorkflowStatus[i] = getStatusStageValueView(dto.getState(), dto.getStage());
 			aryStatusStyle[i] = getStatusColor(dto.getState());
@@ -2942,25 +3090,11 @@ public class HolidayRequestAction extends TimeAction {
 			throws MospException {
 		// VO取得
 		HolidayRequestVo vo = (HolidayRequestVo)mospParams.getVo();
-		HolidayRequestRegistBeanInterface regist = time().holidayRequestRegist();
 		Date startDate = getEditStartDate();
 		Date endDate = getEditEndDate();
-		int count = 0;
-		List<Date> dateList = TimeUtility.getDateList(startDate, endDate);
-		for (Date targetDate : dateList) {
-			// 勤務形態コード取得
-			String workTypeCode = regist.getScheduledWorkTypeCode(vo.getPersonalId(), targetDate);
-			regist.checkWorkType(startDate, endDate, targetDate, workTypeCode);
-			if (mospParams.hasErrorMessage()) {
-				return 0;
-			}
-			if (regist.isLegalDaysOff(workTypeCode) || regist.isPrescribedDaysOff(workTypeCode)
-					|| regist.isWorkOnLegalDaysOff(workTypeCode) || regist.isWorkOnPrescribedDaysOff(workTypeCode)) {
-				// 法定休日・所定休日・法定休日労働・所定休日労働の場合
-				continue;
-			}
-			count++;
-		}
+		
+		double count = getHolidayCount(startDate, endDate);
+		
 		double holidayDays = 0;
 		if (TimeConst.CODE_HOLIDAY_RANGE_ALL == getInt(vo.getPltEditHolidayRange())) {
 			// 全休の場合
@@ -3010,7 +3144,8 @@ public class HolidayRequestAction extends TimeAction {
 	 * @param holidayDataDto 休暇データDTO
 	 * @return 休暇日数
 	 */
-	protected double getHolidayDays(double days, HolidayDtoInterface holidayDto, HolidayDataDtoInterface holidayDataDto) {
+	protected double getHolidayDays(double days, HolidayDtoInterface holidayDto,
+			HolidayDataDtoInterface holidayDataDto) {
 		if (holidayDto.getContinuousAcquisition() == 0) {
 			// 連続取得が必須の場合
 			if (days <= holidayDataDto.getGivingDay() - holidayDataDto.getCancelDay()) {
@@ -3042,30 +3177,48 @@ public class HolidayRequestAction extends TimeAction {
 	}
 	
 	/**
-	 * 半休申請チェック。
-	 * @param dto 対象DTO
+	 * 有給休暇の保有日数を確認する。
+	 * @param personalId 対象個人ID
+	 * @param startDate 休暇開始日
+	 * @return 確認結果(true：有給休暇保有日数あり、false：有給休暇保有日数なし)
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 * 
 	 */
-	protected void checkHalfHolidayRequest(HolidayDtoInterface dto) {
-		// VO取得
-		HolidayRequestVo vo = (HolidayRequestVo)mospParams.getVo();
-		if (dto == null || dto.getHalfHolidayRequest() == MospConst.INACTIVATE_FLAG_OFF
-				|| Integer.toString(TimeConst.CODE_HOLIDAY_RANGE_ALL).equals(vo.getPltEditHolidayRange())) {
-			return;
+	protected boolean isPaidLeaveHoliday(String personalId, Date startDate) throws MospException {
+		// 申請用有給休暇申請可能数リストを取得
+		List<PaidHolidayDataDtoInterface> paidList = timeReference().paidHolidayInfo()
+			.getPaidHolidayPossibleRequestForRequestList(personalId, startDate);
+		// 申請用有給休暇申請可能数リスト毎に処理
+		for (PaidHolidayDataDtoInterface paidHolidayDataDto : paidList) {
+			if (paidHolidayDataDto.getHoldDay() > 0 || paidHolidayDataDto.getHoldHour() > 0) {
+				return true;
+			}
 		}
-		addHalfHolidayRequestErrorMessage(dto.getHolidayName());
+		return false;
 	}
 	
 	/**
-	 * 半休申請チェック。
-	 * @param dto 対象DTO
-	 * @param holidayRange 休暇範囲
+	 * ストック休暇の保有日数を確認する。
+	 * @param personalId 対象個人ID
+	 * @param startDate 休暇開始日
+	 * @return 確認結果(true：ストック保有日数あり、false：ストック保有日数なし)
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 * 
 	 */
-	protected void checkHalfHolidayRequest(HolidayDtoInterface dto, int holidayRange) {
-		if (dto == null || dto.getHalfHolidayRequest() == MospConst.INACTIVATE_FLAG_OFF
-				|| holidayRange == TimeConst.CODE_HOLIDAY_RANGE_ALL) {
-			return;
+	protected boolean isStockLeaveHoliday(String personalId, Date startDate) throws MospException {
+		// 申請用ストック休暇申請可能数リストを取得
+		List<StockHolidayDataDtoInterface> stockList = timeReference().stockHolidayInfo()
+			.getStockHolidayPossibleRequestForRequest(personalId, startDate);
+		// 申請用ストック休暇申請可能数リスト毎に処理
+		for (StockHolidayDataDtoInterface stockHolidayDataDto : stockList) {
+			// 保有日数+付与日数-廃棄日数-廃棄日数が0以上の場合
+			if (stockHolidayDataDto.getHoldDay() + stockHolidayDataDto.getGivingDay()
+					- stockHolidayDataDto.getCancelDay() - stockHolidayDataDto.getUseDay() > 0) {
+				return true;
+			}
 		}
-		addHalfHolidayRequestErrorMessage(dto.getHolidayName());
+		return false;
+		
 	}
 	
 	/**
@@ -3102,7 +3255,8 @@ public class HolidayRequestAction extends TimeAction {
 			// 午前休又は午後休
 			for (StockHolidayDataDtoInterface stockHolidayDataDto : list) {
 				if (stockHolidayDataDto.getHoldDay() + stockHolidayDataDto.getGivingDay()
-						- stockHolidayDataDto.getCancelDay() - stockHolidayDataDto.getUseDay() >= TimeConst.HOLIDAY_TIMES_HALF) {
+						- stockHolidayDataDto.getCancelDay()
+						- stockHolidayDataDto.getUseDay() >= TimeConst.HOLIDAY_TIMES_HALF) {
 					return stockHolidayDataDto.getAcquisitionDate();
 				}
 			}
@@ -3151,10 +3305,59 @@ public class HolidayRequestAction extends TimeAction {
 	}
 	
 	/**
-	 * 有効な有給休暇付与情報を取得できなかった場合のエラーメッセージを設定する。<br>
+	 * 有休時の取得日を取得
+	 * @param list 有休休暇データリスト
+	 * @param holdDay 取得日種別
+	 * @param targetDate 対象日
+	 * @return 取得日
 	 */
-	protected void addNotExistHolidayInfoErrorMessage() {
-		mospParams.addErrorMessage(TimeMessageConst.MSG_NOT_EXIST_HOLIDAY_INFO);
+	protected Date getAcquisitionDate(List<PaidHolidayDataDtoInterface> list, Float holdDay, Date targetDate) {
+		// 申請用有給休暇申請可能数リスト毎に処理
+		for (PaidHolidayDataDtoInterface paidHolidayDataDto : list) {
+			// 保有日数が1以上の場合
+			if (paidHolidayDataDto.getHoldDay() >= holdDay) {
+				// 取得日設定
+				return paidHolidayDataDto.getAcquisitionDate();
+			}
+		}
+		
+		// 取得日が設定できなかった場合
+		addHolidayNumUnitExcessErrorMessage(mospParams.getName("Day"));
+		
+		return null;
+		
+	}
+	
+	/**
+	 * 休暇取得予定日数取得
+	 * @param startDate 休暇開始日
+	 * @param endDate 休暇終了日
+	 * @return 休暇取得予定日数
+	 * @throws MospException インスタンスの生成或いは、SQLの実行に失敗した場合
+	 */
+	protected Double getHolidayCount(Date startDate, Date endDate) throws MospException {
+		// VO取得
+		HolidayRequestVo vo = (HolidayRequestVo)mospParams.getVo();
+		Double count = 0.0;
+		List<Date> dateList = TimeUtility.getDateList(startDate, endDate);
+		HolidayRequestRegistBeanInterface regist = time().holidayRequestRegist();
+		
+		for (Date targetDate : dateList) {
+			// 勤務形態コード取得
+			String workTypeCode = regist.getScheduledWorkTypeCode(vo.getPersonalId(), targetDate);
+			regist.checkWorkType(startDate, endDate, targetDate, workTypeCode);
+			if (mospParams.hasErrorMessage()) {
+				return 0.0;
+			}
+			if (TimeUtility.isHoliday(workTypeCode) || TimeUtility.isWorkOnLegalHoliday(workTypeCode)
+					|| TimeUtility.isWorkOnPrescribedHoliday(workTypeCode)) {
+				// 法定休日・所定休日・法定休日労働・所定休日労働の場合
+				continue;
+			}
+			count++;
+		}
+		
+		return count;
 	}
 	
 	/**
@@ -3180,18 +3383,6 @@ public class HolidayRequestAction extends TimeAction {
 	 */
 	protected void addHolidayNotGiveErrorMessage(String holidayName) {
 		mospParams.addErrorMessage(TimeMessageConst.MSG_HOLIDAY_NOT_GIVE, holidayName);
-	}
-	
-	/**
-	 * 半休申請が無効の場合のエラーメッセージを設定する。<br>
-	 * @param holidayName 休暇名称
-	 */
-	protected void addHalfHolidayRequestErrorMessage(String holidayName) {
-		StringBuffer sb = new StringBuffer();
-		sb.append(mospParams.getName("HalfTime"));
-		sb.append(mospParams.getName("Application"));
-		mospParams.addErrorMessage(TimeMessageConst.MSG_REQUEST_CHECK_6, holidayName, sb.toString(),
-				mospParams.getName("Vacation", "Classification"));
 	}
 	
 	/**

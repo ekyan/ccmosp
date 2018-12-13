@@ -80,6 +80,16 @@ public class TmdAttendanceDao extends PlatformDao implements AttendanceDaoInterf
 	public static final String		COL_DIRECT_END												= "direct_end";
 	
 	/**
+	 * 始業忘れ。
+	 */
+	public static final String		COL_FORGOT_RECORD_WORK_START								= "forgot_record_work_start";
+	
+	/**
+	 * その他の始業できなかった場合。
+	 */
+	public static final String		COL_NOT_RECORD_WORK_START									= "not_record_work_start";
+	
+	/**
 	 * 始業時刻。
 	 */
 	public static final String		COL_START_TIME												= "start_time";
@@ -335,6 +345,21 @@ public class TmdAttendanceDao extends PlatformDao implements AttendanceDaoInterf
 	public static final String		COL_LATE_NIGHT_TIME											= "late_night_time";
 	
 	/**
+	 * 深夜所定労働時間内時間。
+	 */
+	public static final String		COL_NIGHT_WORK_WITHIN_PRESCRIBED_WORK						= "night_work_within_prescribed_work";
+	
+	/**
+	 * 深夜時間外時間。
+	 */
+	public static final String		COL_NIGHT_OVERTIME_WORK										= "night_overtime_work";
+	
+	/**
+	 * 深夜休日労働時間。
+	 */
+	public static final String		COL_NIGHT_WORK_ON_HOLIDAY									= "night_work_on_holiday";
+	
+	/**
 	 * 所定休日勤務時間。
 	 */
 	public static final String		COL_SPECIFIC_WORK_TIME										= "specific_work_time";
@@ -353,6 +378,11 @@ public class TmdAttendanceDao extends PlatformDao implements AttendanceDaoInterf
 	 * 勤怠コメント。
 	 */
 	public static final String		COL_TIME_COMMENT											= "time_comment";
+	
+	/**
+	 * 備考。
+	 */
+	public static final String		COL_REMARKS													= "remarks";
 	
 	/**
 	 * 出勤日数。
@@ -425,14 +455,29 @@ public class TmdAttendanceDao extends PlatformDao implements AttendanceDaoInterf
 	public static final String		COL_SPECIAL_LEAVE_DAYS										= "special_leave_days";
 	
 	/**
+	 * 特別休暇時間数。
+	 */
+	public static final String		COL_SPECIAL_LEAVE_HOURS										= "special_leave_hours";
+	
+	/**
 	 * その他休暇日数。
 	 */
 	public static final String		COL_OTHER_LEAVE_DAYS										= "other_leave_days";
 	
 	/**
+	 * その他休暇時間数。
+	 */
+	public static final String		COL_OTHER_LEAVE_HOURS										= "other_leave_hours";
+	
+	/**
 	 * 欠勤日数。
 	 */
 	public static final String		COL_ABSENCE_DAYS											= "absence_days";
+	
+	/**
+	 * 欠勤時間数。
+	 */
+	public static final String		COL_ABSENCE_HOURS											= "absence_hours";
 	
 	/**
 	 * 法定代休発生日数。
@@ -546,6 +591,8 @@ public class TmdAttendanceDao extends PlatformDao implements AttendanceDaoInterf
 		dto.setWorkTypeCode(getString(COL_WORK_TYPE_CODE));
 		dto.setDirectStart(getInt(COL_DIRECT_START));
 		dto.setDirectEnd(getInt(COL_DIRECT_END));
+		dto.setForgotRecordWorkStart(getInt(COL_FORGOT_RECORD_WORK_START));
+		dto.setNotRecordWorkStart(getInt(COL_NOT_RECORD_WORK_START));
 		dto.setStartTime(getTimestamp(COL_START_TIME));
 		dto.setActualStartTime(getTimestamp(COL_ACTUAL_START_TIME));
 		dto.setEndTime(getTimestamp(COL_END_TIME));
@@ -597,10 +644,14 @@ public class TmdAttendanceDao extends PlatformDao implements AttendanceDaoInterf
 		dto.setPrescribedHolidayOvertimeIn(getInt(COL_PRESCRIBED_HOLIDAY_OVERTIME_IN));
 		dto.setPrescribedHolidayOvertimeOut(getInt(COL_PRESCRIBED_HOLIDAY_OVERTIME_OUT));
 		dto.setLateNightTime(getInt(COL_LATE_NIGHT_TIME));
+		dto.setNightWorkWithinPrescribedWork(getInt(COL_NIGHT_WORK_WITHIN_PRESCRIBED_WORK));
+		dto.setNightOvertimeWork(getInt(COL_NIGHT_OVERTIME_WORK));
+		dto.setNightWorkOnHoliday(getInt(COL_NIGHT_WORK_ON_HOLIDAY));
 		dto.setSpecificWorkTime(getInt(COL_SPECIFIC_WORK_TIME));
 		dto.setLegalWorkTime(getInt(COL_LEGAL_WORK_TIME));
 		dto.setDecreaseTime(getInt(COL_DECREASE_TIME));
 		dto.setTimeComment(getString(COL_TIME_COMMENT));
+		dto.setRemarks(getString(COL_REMARKS));
 		dto.setWorkDays(getDouble(COL_WORK_DAYS));
 		dto.setWorkDaysForPaidLeave(getInt(COL_WORK_DAYS_FOR_PAID_LEAVE));
 		dto.setTotalWorkDaysForPaidLeave(getInt(COL_TOTAL_WORK_DAYS_FOR_PAID_LEAVE));
@@ -615,15 +666,20 @@ public class TmdAttendanceDao extends PlatformDao implements AttendanceDaoInterf
 		dto.setPrescribedCompensationDays(getDouble(COL_PRESCRIBED_COMPENSATION_DAYS));
 		dto.setNightCompensationDays(getDouble(COL_NIGHT_COMPENSATION_DAYS));
 		dto.setSpecialLeaveDays(getDouble(COL_SPECIAL_LEAVE_DAYS));
+		dto.setSpecialLeaveHours(getInt(COL_SPECIAL_LEAVE_HOURS));
 		dto.setOtherLeaveDays(getDouble(COL_OTHER_LEAVE_DAYS));
+		dto.setOtherLeaveHours(getInt(COL_OTHER_LEAVE_HOURS));
 		dto.setAbsenceDays(getDouble(COL_ABSENCE_DAYS));
+		dto.setAbsenceHours(getInt(COL_ABSENCE_HOURS));
 		dto.setGrantedLegalCompensationDays(getDouble(COL_GRANTED_LEGAL_COMPENSATION_DAYS));
 		dto.setGrantedPrescribedCompensationDays(getDouble(COL_GRANTED_PRESCRIBED_COMPENSATION_DAYS));
 		dto.setGrantedNightCompensationDays(getDouble(COL_GRANTED_NIGHT_COMPENSATION_DAYS));
 		dto.setLegalHolidayWorkTimeWithCompensationDay(getInt(COL_LEGAL_HOLIDAY_WORK_TIME_WITH_COMPENSATION_DAY));
 		dto.setLegalHolidayWorkTimeWithoutCompensationDay(getInt(COL_LEGAL_HOLIDAY_WORK_TIME_WITHOUT_COMPENSATION_DAY));
-		dto.setPrescribedHolidayWorkTimeWithCompensationDay(getInt(COL_PRESCRIBED_HOLIDAY_WORK_TIME_WITH_COMPENSATION_DAY));
-		dto.setPrescribedHolidayWorkTimeWithoutCompensationDay(getInt(COL_PRESCRIBED_HOLIDAY_WORK_TIME_WITHOUT_COMPENSATION_DAY));
+		dto.setPrescribedHolidayWorkTimeWithCompensationDay(
+				getInt(COL_PRESCRIBED_HOLIDAY_WORK_TIME_WITH_COMPENSATION_DAY));
+		dto.setPrescribedHolidayWorkTimeWithoutCompensationDay(
+				getInt(COL_PRESCRIBED_HOLIDAY_WORK_TIME_WITHOUT_COMPENSATION_DAY));
 		dto.setOvertimeInWithCompensationDay(getInt(COL_OVERTIME_IN_WITH_COMPENSATION_DAY));
 		dto.setOvertimeInWithoutCompensationDay(getInt(COL_OVERTIME_IN_WITHOUT_COMPENSATION_DAY));
 		dto.setOvertimeOutWithCompensationDay(getInt(COL_OVERTIME_OUT_WITH_COMPENSATION_DAY));
@@ -681,6 +737,8 @@ public class TmdAttendanceDao extends PlatformDao implements AttendanceDaoInterf
 		setParam(index++, dto.getWorkTypeCode());
 		setParam(index++, dto.getDirectStart());
 		setParam(index++, dto.getDirectEnd());
+		setParam(index++, dto.getForgotRecordWorkStart());
+		setParam(index++, dto.getNotRecordWorkStart());
 		setParam(index++, dto.getStartTime() == null ? null : new Time(dto.getStartTime().getTime()), true);
 		setParam(index++, dto.getActualStartTime(), true);
 		setParam(index++, dto.getEndTime() == null ? null : new Time(dto.getEndTime().getTime()), true);
@@ -732,10 +790,14 @@ public class TmdAttendanceDao extends PlatformDao implements AttendanceDaoInterf
 		setParam(index++, dto.getPrescribedHolidayOvertimeIn());
 		setParam(index++, dto.getPrescribedHolidayOvertimeOut());
 		setParam(index++, dto.getLateNightTime());
+		setParam(index++, dto.getNightWorkWithinPrescribedWork());
+		setParam(index++, dto.getNightOvertimeWork());
+		setParam(index++, dto.getNightWorkOnHoliday());
 		setParam(index++, dto.getSpecificWorkTime());
 		setParam(index++, dto.getLegalWorkTime());
 		setParam(index++, dto.getDecreaseTime());
 		setParam(index++, dto.getTimeComment());
+		setParam(index++, dto.getRemarks());
 		setParam(index++, dto.getWorkDays());
 		setParam(index++, dto.getWorkDaysForPaidLeave());
 		setParam(index++, dto.getTotalWorkDaysForPaidLeave());
@@ -750,8 +812,11 @@ public class TmdAttendanceDao extends PlatformDao implements AttendanceDaoInterf
 		setParam(index++, dto.getPrescribedCompensationDays());
 		setParam(index++, dto.getNightCompensationDays());
 		setParam(index++, dto.getSpecialLeaveDays());
+		setParam(index++, dto.getSpecialLeaveHours());
 		setParam(index++, dto.getOtherLeaveDays());
+		setParam(index++, dto.getOtherLeaveHours());
 		setParam(index++, dto.getAbsenceDays());
+		setParam(index++, dto.getAbsenceHours());
 		setParam(index++, dto.getGrantedLegalCompensationDays());
 		setParam(index++, dto.getGrantedPrescribedCompensationDays());
 		setParam(index++, dto.getGrantedNightCompensationDays());
@@ -919,6 +984,81 @@ public class TmdAttendanceDao extends PlatformDao implements AttendanceDaoInterf
 				setParam(index++, routeCode);
 			}
 			setParam(index++, TimeConst.CODE_FUNCTION_WORK_MANGE);
+			executeQuery();
+			return mappingAll();
+		} catch (Throwable e) {
+			throw new MospException(e);
+		} finally {
+			releaseResultSet();
+			releasePreparedStatement();
+		}
+	}
+	
+	@Override
+	public List<AttendanceDtoInterface> findForReapplicationExport(String personalId, Date firstDate, Date lastDate)
+			throws MospException {
+		try {
+			index = 1;
+			StringBuffer sb = getSelectQuery(getClass());
+			sb.append(where());
+			sb.append(deleteFlagOff());
+			sb.append(and());
+			sb.append(equal(COL_PERSONAL_ID));
+			sb.append(and());
+			sb.append(greaterEqual(COL_WORK_DATE));
+			sb.append(and());
+			sb.append(lessEqual(COL_WORK_DATE));
+			sb.append(and());
+			sb.append(leftParenthesis());
+			sb.append(leftParenthesis());
+			sb.append(greater(COL_LEGAL_WORK_TIME));
+			sb.append(and());
+			sb.append(notEqual(COL_WORK_TYPE_CODE, TimeConst.CODE_WORK_ON_LEGAL_HOLIDAY));
+			sb.append(rightParenthesis());
+			sb.append(or());
+			sb.append(leftParenthesis());
+			sb.append(greater(COL_SPECIFIC_WORK_TIME));
+			sb.append(and());
+			sb.append(notEqual(COL_WORK_TYPE_CODE, TimeConst.CODE_WORK_ON_PRESCRIBED_HOLIDAY));
+			sb.append(rightParenthesis());
+			sb.append(or());
+			sb.append(leftParenthesis());
+			sb.append(equal(COL_LEGAL_WORK_TIME, 0));
+			sb.append(and());
+			sb.append(COL_END_TIME);
+			sb.append(greater());
+			sb.append(COL_WORK_DATE);
+			sb.append(" + 1");
+			sb.append(rightParenthesis());
+			sb.append(or());
+			sb.append(leftParenthesis());
+			sb.append(equal(COL_SPECIFIC_WORK_TIME, 0));
+			sb.append(and());
+			sb.append(COL_END_TIME);
+			sb.append(greater());
+			sb.append(COL_WORK_DATE);
+			sb.append(" + 1");
+			sb.append(rightParenthesis());
+			sb.append(rightParenthesis());
+			sb.append(and());
+			sb.append(COL_WORKFLOW);
+			sb.append(in());
+			sb.append(leftParenthesis());
+			sb.append(workflowDao.getSubQueryForNotEqualDraft());
+			sb.append(rightParenthesis());
+			sb.append(and());
+			sb.append(COL_WORKFLOW);
+			sb.append(in());
+			sb.append(leftParenthesis());
+			sb.append(workflowDao.getSubQueryForNotEqualWithdrawn());
+			sb.append(rightParenthesis());
+			sb.append(getOrderByColumns(COL_PERSONAL_ID, COL_WORK_DATE));
+			prepareStatement(sb.toString());
+			setParam(index++, personalId);
+			setParam(index++, firstDate);
+			setParam(index++, lastDate);
+			setParam(index++, 0);
+			setParam(index++, 0);
 			executeQuery();
 			return mappingAll();
 		} catch (Throwable e) {

@@ -39,8 +39,8 @@ import jp.mosp.platform.bean.human.RetirementReferenceBeanInterface;
 import jp.mosp.platform.bean.human.RetirementRegistBeanInterface;
 import jp.mosp.platform.bean.human.SuspensionReferenceBeanInterface;
 import jp.mosp.platform.bean.human.SuspensionRegistBeanInterface;
+import jp.mosp.platform.bean.system.UserAccountRegistBeanInterface;
 import jp.mosp.platform.bean.system.UserMasterReferenceBeanInterface;
-import jp.mosp.platform.bean.system.UserMasterRegistBeanInterface;
 import jp.mosp.platform.bean.workflow.ApprovalUnitReferenceBeanInterface;
 import jp.mosp.platform.bean.workflow.RouteApplicationReferenceBeanInterface;
 import jp.mosp.platform.bean.workflow.SubApproverReferenceBeanInterface;
@@ -66,9 +66,9 @@ public class HistoryBasicDeleteBean extends HumanRegistBean implements HistoryBa
 	protected static final String					APP_KEY_BASIC_DELETE_BEANS	= "HistoryBasicDeleteBeans";
 	
 	/**
-	 * ユーザマスタ登録クラス。
+	 * ユーザアカウント情報登録処理。
 	 */
-	private UserMasterRegistBeanInterface			userMasterRegist;
+	private UserAccountRegistBeanInterface			userAccountRegist;
 	/**
 	 * 人事マスタ登録クラス。
 	 */
@@ -155,7 +155,7 @@ public class HistoryBasicDeleteBean extends HumanRegistBean implements HistoryBa
 	public void initBean() throws MospException {
 		super.initBean();
 		// MosPプラットフォーム用BeanHandler取得
-		userMasterRegist = (UserMasterRegistBeanInterface)createBean(UserMasterRegistBeanInterface.class);
+		userAccountRegist = (UserAccountRegistBeanInterface)createBean(UserAccountRegistBeanInterface.class);
 		humanRegist = (HumanRegistBeanInterface)createBean(HumanRegistBeanInterface.class);
 		humanHistoryRegist = (HumanHistoryRegistBeanInterface)createBean(HumanHistoryRegistBeanInterface.class);
 		entranceRegist = (EntranceRegistBeanInterface)createBean(EntranceRegistBeanInterface.class);
@@ -164,13 +164,16 @@ public class HistoryBasicDeleteBean extends HumanRegistBean implements HistoryBa
 		concurrentRegist = (ConcurrentRegistBeanInterface)createBean(ConcurrentRegistBeanInterface.class);
 		userMasterReference = (UserMasterReferenceBeanInterface)createBean(UserMasterReferenceBeanInterface.class);
 		humanReference = (HumanReferenceBeanInterface)createBean(HumanReferenceBeanInterface.class);
-		humanHistoryReference = (HumanHistoryReferenceBeanInterface)createBean(HumanHistoryReferenceBeanInterface.class);
+		humanHistoryReference = (HumanHistoryReferenceBeanInterface)createBean(
+				HumanHistoryReferenceBeanInterface.class);
 		entranceReference = (EntranceReferenceBeanInterface)createBean(EntranceReferenceBeanInterface.class);
 		suspensionReference = (SuspensionReferenceBeanInterface)createBean(SuspensionReferenceBeanInterface.class);
 		retirementReference = (RetirementReferenceBeanInterface)createBean(RetirementReferenceBeanInterface.class);
 		concurrentReference = (ConcurrentReferenceBeanInterface)createBean(ConcurrentReferenceBeanInterface.class);
-		approvalUnitReference = (ApprovalUnitReferenceBeanInterface)createBean(ApprovalUnitReferenceBeanInterface.class);
-		routeApplicationReference = (RouteApplicationReferenceBeanInterface)createBean(RouteApplicationReferenceBeanInterface.class);
+		approvalUnitReference = (ApprovalUnitReferenceBeanInterface)createBean(
+				ApprovalUnitReferenceBeanInterface.class);
+		routeApplicationReference = (RouteApplicationReferenceBeanInterface)createBean(
+				RouteApplicationReferenceBeanInterface.class);
 		subApproverReference = (SubApproverReferenceBeanInterface)createBean(SubApproverReferenceBeanInterface.class);
 	}
 	
@@ -309,8 +312,8 @@ public class HistoryBasicDeleteBean extends HumanRegistBean implements HistoryBa
 	 * @param isAllDelete 対象社員情報全削除フラグ
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
-	protected void humanDelete(List<ExtraHumanDeleteBeanInterface> extraList, HumanDtoInterface dto, boolean isAllDelete)
-			throws MospException {
+	protected void humanDelete(List<ExtraHumanDeleteBeanInterface> extraList, HumanDtoInterface dto,
+			boolean isAllDelete) throws MospException {
 		// 人事マスタ削除
 		humanRegist.delete(dto);
 		// 追加クラス毎に処理
@@ -333,7 +336,7 @@ public class HistoryBasicDeleteBean extends HumanRegistBean implements HistoryBa
 		// 人事入社情報削除
 		deleteEntrance(dto);
 		// ユーザマスタ削除
-		deleteUser(dto);
+		userAccountRegist.delete(dto.getPersonalId());
 	}
 	
 	/**
@@ -485,13 +488,15 @@ public class HistoryBasicDeleteBean extends HumanRegistBean implements HistoryBa
 	 */
 	protected void checkWorkflow(String personalId, Date endDate, HumanDtoInterface deleteDto) throws MospException {
 		// ルート適用情報存在確認(勤怠)
-		if (routeApplicationReference.hasPersonalApplication(personalId, deleteDto.getActivateDate(), endDate) == true) {
+		if (routeApplicationReference.hasPersonalApplication(personalId, deleteDto.getActivateDate(),
+				endDate) == true) {
 			// 期間内に適用されている設定が存在する場合消去しない
 			addAlreadyDeleteHistoryMessage(deleteDto.getEmployeeCode(),
 					mospParams.getName("WorkManage") + mospParams.getName("Route") + mospParams.getName("Apply"));
 		}
 		// ユニット情報存在確認
-		if (approvalUnitReference.hasPersonalUnit(deleteDto.getPersonalId(), deleteDto.getActivateDate(), endDate) == true) {
+		if (approvalUnitReference.hasPersonalUnit(deleteDto.getPersonalId(), deleteDto.getActivateDate(),
+				endDate) == true) {
 			// 期間内にユニットが設定されている場合消去しない
 			addAlreadyDeleteHistoryMessage(deleteDto.getEmployeeCode(), mospParams.getName("WorkflowUnit"));
 		}
@@ -580,45 +585,6 @@ public class HistoryBasicDeleteBean extends HumanRegistBean implements HistoryBa
 			// 入社情報削除処理
 			entranceRegist.delete(dto);
 		}
-	}
-	
-	/**
-	 * ユーザーマスタ情報を削除する。
-	 * @param humanDto 人事マスタDTO
-	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
-	 */
-	protected void deleteUser(HumanDtoInterface humanDto) throws MospException {
-		// ユーザーマスタ情報DTOの準備
-		long[] array = setDtoFieldsForUser(humanDto);
-		// ユーザーマスタ情報DTOに値を設定
-		if (array.length == 0) {
-			return;
-		}
-		// ユーザーマスタ情報登録処理
-		userMasterRegist.delete(array);
-	}
-	
-	/**
-	 * VO(編集項目)の値をDTO(ユーザー情報)に設定する。<br>
-	 * @param humanDto 人事マスタDTO
-	 * @return long[] 対象識別ID
-	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
-	 */
-	protected long[] setDtoFieldsForUser(HumanDtoInterface humanDto) throws MospException {
-		// 選択されたユーザーの履歴を取得する
-		List<UserMasterDtoInterface> listUser = userMasterReference.getUserHistoryForPersonalId(humanDto
-			.getPersonalId());
-		// 情報が存在しない場合
-		if (listUser.size() == 0) {
-			return new long[0];
-		}
-		// 識別ID配列を作成
-		int idx = 0;
-		long[] aryUser = new long[listUser.size()];
-		for (UserMasterDtoInterface dto : listUser) {
-			aryUser[idx++] = dto.getPfmUserId();
-		}
-		return aryUser;
 	}
 	
 	/**

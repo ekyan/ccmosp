@@ -38,7 +38,7 @@ public class TotalAbsenceReferenceBean extends PlatformBean implements TotalAbse
 	/**
 	 * 勤怠集計欠勤データDAOクラス。<br>
 	 */
-	TotalAbsenceDaoInterface	totalAbsenceDao;
+	TotalAbsenceDaoInterface totalAbsenceDao;
 	
 	
 	/**

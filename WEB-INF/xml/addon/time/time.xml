@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+﻿<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE MosP>
 <!--
 MosP - Mind Open Source Project    http://www.mosp.jp/
@@ -18,16 +18,37 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -->
 <MosP>
-	<!-- タイトル -->
-	<Application key="Title">
-		勤怠管理
+	
+	<!-- ログイン画面追加JSPパス -->
+	<Application key="LoginExtraJsp">
 	</Application>
 	
-	<!-- バージョン -->
-	<Application key="Version">
-		v4.3.0
+	<!-- 勤怠詳細項目JSPパス -->
+	<Application key="AttendanceCardItemJsp">
+		/jsp/time/input/attendanceCardWorkInfo.jsp,
+		/jsp/time/input/attendanceCardRestInfo.jsp,
+		/jsp/time/input/attendanceCardLateInfo.jsp,
+		/jsp/time/input/attendanceCardOvertimeInfo.jsp
 	</Application>
 	
+	<!-- 未承認詳細項目JSPパス -->
+	<Application key="ApprovalCardItemJsp">
+		/jsp/time/management/approvalCardWorkInfo.jsp,
+		/jsp/time/management/approvalCardRestInfo.jsp,
+		/jsp/time/management/approvalCardLateInfo.jsp,
+		/jsp/time/management/approvalCardOvertimeInfo.jsp
+	</Application>
+
+	<!-- 勤怠一覧項目JSPパス -->
+	<Application key="AttendanceListItemJsp">
+		/jsp/time/input/attendanceListInfo.jsp
+	</Application>
+
+	<!-- 勤怠一覧項目JSPパス -->
+	<Application key="ScheduleReferenceItemJsp">
+		/jsp/time/input/scheduleReferenceInfo.jsp
+	</Application>
+
 	<!-- ポータルBeanクラス群 -->
 	<Application key="PortalBeans">
 		jp.mosp.time.portal.bean.impl.PortalTimeCardBean,
@@ -63,8 +84,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		,DifferenceType
 		,DirectStart
 		,DirectEnd
-		,StartWork
-		,EndWork
+		,StartWorkAndEndWork
 		,PrivateGoingOut
 		,Tardiness
 		,LeaveEarly
@@ -72,11 +92,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		,Overtime
 		,Midnight
 		,TimeComment
+		,Remarks
+	</Application>
+	
+	<!-- ユニット承認者対象設定 -->
+	<Application key="UseTargetApprovalUnit">
+		false
 	</Application>
 	
 	<!-- 時短機能 -->
 	<Application key="UseShortUnpaid">
 		false
+	</Application>
+	
+	<!-- 有給休暇申請理由必須設定(true：必須、false：任意) -->
+	<Application key="PaidHolidayReasonRequired">
+		true
 	</Application>
 	
 	<!-- 分単位休暇機能 -->
@@ -87,5 +118,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<!-- ストック休暇出勤率計算扱い(1：出勤扱い、2：欠勤扱い、3：対象外) -->
 	<Application key="StockHolidayAttendance">
 		1
+	</Application>
+
+	<!-- ポータル時刻表示機能 -->
+	<Application key="ViewPortalTime">
+		true
+	</Application>
+	
+	<!-- 統計情報（季節休暇） -->
+	<Application key="SeasonHolidayCode">
+		99
 	</Application>
 </MosP>

@@ -196,8 +196,8 @@ public class TmdAllowanceDao extends PlatformDao implements AllowanceDaoInterfac
 	}
 	
 	@Override
-	public List<AllowanceDtoInterface> findForHistory(String personalId, Date workDate, int works,
-			String allowanceCode, int allowance) throws MospException {
+	public List<AllowanceDtoInterface> findForHistory(String personalId, Date workDate, int works, String allowanceCode,
+			int allowance) throws MospException {
 		try {
 			index = 1;
 			StringBuffer sb = getSelectQuery(getClass());
@@ -230,8 +230,8 @@ public class TmdAllowanceDao extends PlatformDao implements AllowanceDaoInterfac
 	}
 	
 	@Override
-	public List<AllowanceDtoInterface> findForList(String personalId, String allowanceCode, Date startDate, Date endDate)
-			throws MospException {
+	public List<AllowanceDtoInterface> findForList(String personalId, String allowanceCode, Date startDate,
+			Date endDate) throws MospException {
 		try {
 			index = 1;
 			StringBuffer sb = getSelectQuery(getClass());

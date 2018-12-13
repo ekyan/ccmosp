@@ -61,8 +61,7 @@ String imageName = (String)params.getGeneralParam(HumanHistoryCardAction.KEY_VIE
 // 履歴追加画面区分をMosP処理情報に追加
 params.addGeneralParam(HumanHistoryCardAction.KEY_VIEW_HUMAN_HISTORY_CARD, imageName);
 %>
-<jsp:include page="<%= PlatformHumanConst.PATH_HUMAN_COMMON_INFO_JSP %>" flush="false" />
-
+<jsp:include page="<%= params.getApplicationProperty(PlatformHumanConst.APP_HUMAN_COMMON_INFO_JSP) %>" flush="false" />
 <%
 //表示テーブル毎に処理
 for (String viewTable : viewTables) {

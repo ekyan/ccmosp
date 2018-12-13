@@ -104,4 +104,12 @@ public interface SubHolidayRequestReferenceBeanInterface {
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
 	void chkBasicInfo(String personalId, Date targetDate) throws MospException;
+	
+	/**
+	 * @param personalId 個人ID
+	 * @param workDate 休日出勤日
+	 * @return 代休申請情報リスト
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	List<SubHolidayRequestDtoInterface> findForWorkDate(String personalId, Date workDate) throws MospException;
 }

@@ -30,7 +30,7 @@ public class TopicPathUtility {
 	/**
 	 * メインメニュータイトル接尾辞(文言キー)。<br>
 	 */
-	public static final String	NMA_SUFFIX_MAIN_MENU_TITLE	= "Hyphen";
+	public static final String NMA_SUFFIX_MAIN_MENU_TITLE = "Hyphen";
 	
 	
 	/**

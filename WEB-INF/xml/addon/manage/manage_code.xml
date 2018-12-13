@@ -1,0 +1,326 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE MosP>
+<!--
+MosP - Mind Open Source Project    http://www.mosp.jp/
+Copyright (C) MIND Co., Ltd.       http://www.e-mind.co.jp/
+
+This program is free software: you can redistribute it and/or
+modify it under the terms of the GNU Affero General Public License
+as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<MosP>
+	
+	<!-- 勘定科目 -->
+	<Code key="MeAccountTitle">
+		<CodeItem key="SalesTotal">
+			<ItemName>売上高</ItemName>
+			<ViewIndex>1</ViewIndex>
+		</CodeItem>
+		<CodeItem key="SalesCost">
+			<ItemName>売上原価</ItemName>
+			<ViewIndex>2</ViewIndex>
+		</CodeItem>
+		<CodeItem key="GroPro">
+			<ItemName>売上総利益</ItemName>
+			<ViewIndex>3</ViewIndex>
+		</CodeItem>
+		<CodeItem key="SelGenAdm">
+			<ItemName>販管費</ItemName>
+			<ViewIndex>4</ViewIndex>
+		</CodeItem>
+		<CodeItem key="SgaNotCash">
+			<ItemName>うち、現金に含まれない</ItemName>
+			<ViewIndex>5</ViewIndex>
+		</CodeItem>
+		<CodeItem key="OpeInc">
+			<ItemName>営業利益</ItemName>
+			<ViewIndex>6</ViewIndex>
+		</CodeItem>
+		<CodeItem key="NonOpeInc">
+			<ItemName>営業外収益</ItemName>
+			<ViewIndex>7</ViewIndex>
+		</CodeItem>
+		<CodeItem key="NoiNotCash">
+			<ItemName>うち、現金に含まれない</ItemName>
+			<ViewIndex>8</ViewIndex>
+		</CodeItem>
+		<CodeItem key="NonOpeExp">
+			<ItemName>営業外費用</ItemName>
+			<ViewIndex>9</ViewIndex>
+		</CodeItem>
+		<CodeItem key="NoeNotCash">
+			<ItemName>うち、現金に含まれない</ItemName>
+			<ViewIndex>10</ViewIndex>
+		</CodeItem>
+		<CodeItem key="OrdInc">
+			<ItemName>経常利益</ItemName>
+			<ViewIndex>11</ViewIndex>
+		</CodeItem>
+	</Code>
+	
+	<!-- 金額表示単位 -->
+	<Code key="MeAmountUnit">
+		<CodeItem key="1000">
+			<ItemName>千円</ItemName>
+			<ViewIndex>1</ViewIndex>
+		</CodeItem>
+		<CodeItem key="10000">
+			<ItemName>一万円</ItemName>
+			<ViewIndex>2</ViewIndex>
+		</CodeItem>
+		<CodeItem key="100000">
+			<ItemName>十万円</ItemName>
+			<ViewIndex>3</ViewIndex>
+		</CodeItem>
+		<CodeItem key="1000000">
+			<ItemName>百万円</ItemName>
+			<ViewIndex>4</ViewIndex>
+		</CodeItem>
+		<CodeItem key="10000000">
+			<ItemName>千万円</ItemName>
+			<ViewIndex>5</ViewIndex>
+		</CodeItem>
+	</Code>
+	
+	<!-- 確度区分 -->
+	<Code key="MeAccuracyType">
+		<CodeItem key="LO">
+			<ItemName>低</ItemName>
+			<ViewIndex>1</ViewIndex>
+		</CodeItem>
+		<CodeItem key="MI">
+			<ItemName>中</ItemName>
+			<ViewIndex>2</ViewIndex>
+		</CodeItem>
+		<CodeItem key="HI">
+			<ItemName>高</ItemName>
+			<ViewIndex>3</ViewIndex>
+		</CodeItem>
+		<CodeItem key="RE">
+			<ItemName>受注</ItemName>
+			<ViewIndex>4</ViewIndex>
+		</CodeItem>
+		<CodeItem key="FA">
+			<ItemName>失注</ItemName>
+			<ViewIndex>5</ViewIndex>
+		</CodeItem>
+		<CodeItem key="CO">
+			<ItemName>完了</ItemName>
+			<ViewIndex>6</ViewIndex>
+		</CodeItem>
+	</Code>
+	
+	<!-- 支払条件 -->
+	<Code key="MePaymentType">
+		<CodeItem key="0">
+			<ItemName>当月払い</ItemName>
+			<ViewIndex>1</ViewIndex>
+		</CodeItem>
+		<CodeItem key="1">
+			<ItemName>翌月払い</ItemName>
+			<ViewIndex>2</ViewIndex>
+		</CodeItem>
+		<CodeItem key="2">
+			<ItemName>翌々月払い</ItemName>
+			<ViewIndex>3</ViewIndex>
+		</CodeItem>
+	</Code>
+	
+	<!-- 顧客仕入区分 -->
+	<Code key="MeCompanyType">
+		<CodeItem key="Customer">
+			<ItemName>顧客</ItemName>
+			<ViewIndex>1</ViewIndex>
+		</CodeItem>
+		<CodeItem key="Supplier">
+			<ItemName>仕入先</ItemName>
+			<ViewIndex>2</ViewIndex>
+		</CodeItem>
+	</Code>
+	
+	<!-- 分析モード -->
+	<Code key="MeAnalyzeMode">
+		<CodeItem key="OnlyResult">
+			<ItemName>実績のみ</ItemName>
+			<ViewIndex>1</ViewIndex>
+		</CodeItem>
+		<CodeItem key="BudgetResult">
+			<ItemName>予実差</ItemName>
+			<ViewIndex>2</ViewIndex>
+		</CodeItem>
+		<CodeItem key="LastYear">
+			<ItemName>前年差</ItemName>
+			<ViewIndex>3</ViewIndex>
+		</CodeItem>
+	</Code>
+	
+	<!-- インポートエクスポート -->
+	<Code key="MeImportTableType">
+		<CodeItem key="import_mem_company">
+			<ItemName>企業マスタ</ItemName>
+			<ViewIndex>1</ViewIndex>
+		</CodeItem>
+		<CodeItem key="import_mem_total_type">
+			<ItemName>集計区分マスタ</ItemName>
+			<ViewIndex>2</ViewIndex>
+		</CodeItem>
+		<CodeItem key="import_met_propose">
+			<ItemName>案件情報</ItemName>
+			<ViewIndex>3</ViewIndex>
+		</CodeItem>
+		<CodeItem key="import_met_claim">
+			<ItemName>売上情報</ItemName>
+			<ViewIndex>4</ViewIndex>
+		</CodeItem>
+		<CodeItem key="import_met_order">
+			<ItemName>仕入情報</ItemName>
+			<ViewIndex>5</ViewIndex>
+		</CodeItem>
+		<CodeItem key="import_met_sga">
+			<ItemName>販管費</ItemName>
+			<ViewIndex>6</ViewIndex>
+		</CodeItem>
+	</Code>
+	<Code key="import_mem_company">
+		<CodeItem key="company_code">
+			<ItemName>企業コード</ItemName>
+			<ViewIndex>101</ViewIndex>
+		</CodeItem>
+		<CodeItem key="company_name">
+			<ItemName>企業名称</ItemName>
+			<ViewIndex>103</ViewIndex>
+		</CodeItem>
+		<CodeItem key="company_type">
+			<ItemName>顧客仕入区分</ItemName>
+			<ViewIndex>104</ViewIndex>
+		</CodeItem>
+		<CodeItem key="payment_type">
+			<ItemName>支払条件</ItemName>
+			<ViewIndex>105</ViewIndex>
+		</CodeItem>
+		<CodeItem key="inactivate_flag">
+			<ItemName>有効/無効</ItemName>
+			<ViewIndex>106</ViewIndex>
+		</CodeItem>
+	</Code>
+	<Code key="import_mem_total_type">
+		<CodeItem key="total_type_code">
+			<ItemName>集計区分コード</ItemName>
+			<ViewIndex>101</ViewIndex>
+		</CodeItem>
+		<CodeItem key="total_type_name">
+			<ItemName>集計区分名称</ItemName>
+			<ViewIndex>102</ViewIndex>
+		</CodeItem>
+		<CodeItem key="total_type_abbr">
+			<ItemName>集計区分略称</ItemName>
+			<ViewIndex>103</ViewIndex>
+		</CodeItem>
+		<CodeItem key="super_type">
+			<ItemName>上位集計区分(名称)</ItemName>
+			<ViewIndex>104</ViewIndex>
+		</CodeItem>
+		<CodeItem key="inactivate_flag">
+			<ItemName>有効/無効</ItemName>
+			<ViewIndex>105</ViewIndex>
+		</CodeItem>
+	</Code>
+	<Code key="import_met_propose">
+		<CodeItem key="propose_code">
+			<ItemName>案件コード</ItemName>
+			<ViewIndex>102</ViewIndex>
+		</CodeItem>
+		<CodeItem key="propose_name">
+			<ItemName>案件名称</ItemName>
+			<ViewIndex>103</ViewIndex>
+		</CodeItem>
+		<CodeItem key="company_id">
+			<ItemName>顧客名称</ItemName>
+			<ViewIndex>104</ViewIndex>
+		</CodeItem>
+		<CodeItem key="company_pic_name">
+			<ItemName>顧客担当者</ItemName>
+			<ViewIndex>105</ViewIndex>
+		</CodeItem>
+		<CodeItem key="personal_id">
+			<ItemName>自社担当者(社員コード)</ItemName>
+			<ViewIndex>106</ViewIndex>
+		</CodeItem>
+		<CodeItem key="accuracy">
+			<ItemName>確度</ItemName>
+			<ViewIndex>107</ViewIndex>
+		</CodeItem>
+		<CodeItem key="total_type">
+			<ItemName>集計区分(名称)</ItemName>
+			<ViewIndex>108</ViewIndex>
+		</CodeItem>
+		<CodeItem key="propose_remark">
+			<ItemName>備考</ItemName>
+			<ViewIndex>109</ViewIndex>
+		</CodeItem>
+	</Code>
+	<Code key="import_met_claim">
+		<CodeItem key="propose_code">
+			<ItemName>案件コード</ItemName>
+			<ViewIndex>101</ViewIndex>
+		</CodeItem>
+		<CodeItem key="claim_month">
+			<ItemName>売上年月</ItemName>
+			<ViewIndex>102</ViewIndex>
+		</CodeItem>
+		<CodeItem key="claim_amount">
+			<ItemName>売上額</ItemName>
+			<ViewIndex>103</ViewIndex>
+		</CodeItem>
+	</Code>
+	<Code key="import_met_order">
+		<CodeItem key="propose_code">
+			<ItemName>案件コード</ItemName>
+			<ViewIndex>101</ViewIndex>
+		</CodeItem>
+		<CodeItem key="order_month">
+			<ItemName>仕入年月</ItemName>
+			<ViewIndex>103</ViewIndex>
+		</CodeItem>
+		<CodeItem key="order_amount">
+			<ItemName>仕入額</ItemName>
+			<ViewIndex>104</ViewIndex>
+		</CodeItem>
+		<CodeItem key="company_id">
+			<ItemName>仕入先</ItemName>
+			<ViewIndex>105</ViewIndex>
+		</CodeItem>
+		<CodeItem key="order_use">
+			<ItemName>用途</ItemName>
+			<ViewIndex>106</ViewIndex>
+		</CodeItem>
+	</Code>
+	<Code key="import_met_sga">
+		<CodeItem key="account_code">
+			<ItemName>勘定科目コード</ItemName>
+			<ViewIndex>101</ViewIndex>
+		</CodeItem>
+		<CodeItem key="sga_type">
+			<ItemName>予実区分</ItemName>
+			<ViewIndex>102</ViewIndex>
+		</CodeItem>
+		<CodeItem key="sga_month">
+			<ItemName>販管費年月</ItemName>
+			<ViewIndex>103</ViewIndex>
+		</CodeItem>
+		<CodeItem key="sga_amount">
+			<ItemName>販管費</ItemName>
+			<ViewIndex>104</ViewIndex>
+		</CodeItem>
+	</Code>
+	
+</MosP>

@@ -119,12 +119,12 @@ public class PfaHumanHistoryDto extends BaseDto implements HumanHistoryDtoInterf
 	
 	@Override
 	public Date getActivateDate() {
-		return activateDate;
+		return getDateClone(activateDate);
 	}
 	
 	@Override
 	public void setActivateDate(Date activateDate) {
-		this.activateDate = activateDate;
+		this.activateDate = getDateClone(activateDate);
 	}
 	
 }

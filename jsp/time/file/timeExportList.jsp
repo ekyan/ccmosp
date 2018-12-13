@@ -53,7 +53,7 @@ if (vo.getAryLblInactivate().length > 0) {
 				<label for="txtEndYear"><%= params.getName("Year") %></label>
 				<input type="text" class="Number2RequiredTextBox" id="txtEndMonth" name="txtEndMonth" value="<%= HtmlUtility.escapeHTML(vo.getTxtEndMonth()) %>" />
 				<label for="txtEndMonth"><%= params.getName("Month") %></label>
-				<button type="button" class="Name2Button" id="btnActivateDate" onclick="submitForm(event, 'tdActivateDate', null, '<%= TimeExportListAction.CMD_SET_ACTIVATION_DATE %>')">
+				<button type="button" class="Name2Button" id="btnActivateDate" onclick="submitForm(event, 'tdActivateDate', checkActivateDateExtra, '<%= TimeExportListAction.CMD_SET_ACTIVATION_DATE %>')">
 					<%= vo.getModeActivateDate().equals(PlatformConst.MODE_ACTIVATE_DATE_FIXED) ? params.getName("Change") : params.getName("Decision") %>
 				</button>
 			</td>
@@ -84,6 +84,7 @@ if (vo.getAryLblInactivate().length > 0) {
 				<select class="SectionNamePullDown" id="pltSection" name="pltSection">
 					<%= HtmlUtility.getSelectOption(vo.getAryPltSection(), vo.getPltSection()) %>
 				</select>
+				<input type="checkbox" class="CheckBox" id="ckbNeedLowerSection" name="ckbNeedLowerSection" value="<%= MospConst.CHECKBOX_ON %>" <%= HtmlUtility.getChecked(vo.getCkbNeedLowerSection()) %> />&nbsp;<%= params.getName("NeedLowerSection") %>
 			</td>
 			<td class="TitleTd"><%= params.getName("Position") %></td>
 			<td class="InputTd">

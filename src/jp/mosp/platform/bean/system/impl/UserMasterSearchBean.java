@@ -25,8 +25,10 @@ import java.util.Map;
 
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.base.MospParams;
+import jp.mosp.framework.constant.MospConst;
 import jp.mosp.platform.base.PlatformBean;
 import jp.mosp.platform.bean.system.RoleReferenceBeanInterface;
+import jp.mosp.platform.bean.system.UserExtraRoleReferenceBeanInterface;
 import jp.mosp.platform.bean.system.UserMasterSearchBeanInterface;
 import jp.mosp.platform.dao.human.HumanDaoInterface;
 import jp.mosp.platform.dao.system.UserMasterDaoInterface;
@@ -43,37 +45,47 @@ public class UserMasterSearchBean extends PlatformBean implements UserMasterSear
 	/**
 	 * ユーザマスタ検索DAO
 	 */
-	private UserMasterDaoInterface	userMasterDao;
+	protected UserMasterDaoInterface				userMasterDao;
+	
+	/**
+	 * ユーザ追加ロール情報参照処理。<br>
+	 */
+	protected UserExtraRoleReferenceBeanInterface	extraRoleRefer;
+	
+	/**
+	 * ロール参照処理。<br>
+	 */
+	protected RoleReferenceBeanInterface			roleRefer;
 	
 	/**
 	 * 有効日。
 	 */
-	private Date					activateDate;
+	private Date									activateDate;
 	
 	/**
 	 * ユーザID。
 	 */
-	private String					userId;
+	private String									userId;
 	
 	/**
 	 * 社員コード。
 	 */
-	private String					employeeCode;
+	private String									employeeCode;
 	
 	/**
 	 * 社員名。
 	 */
-	private String					employeeName;
+	private String									employeeName;
 	
 	/**
 	 * ロールコード。
 	 */
-	private String					roleCode;
+	private String									roleCode;
 	
 	/**
 	 * 有効無効フラグ。
 	 */
-	private String					inactivateFlag;
+	private String									inactivateFlag;
 	
 	
 	/**
@@ -94,7 +106,11 @@ public class UserMasterSearchBean extends PlatformBean implements UserMasterSear
 	
 	@Override
 	public void initBean() throws MospException {
+		// DAOを準備
 		userMasterDao = (UserMasterDaoInterface)createDao(UserMasterDaoInterface.class);
+		// Beanを準備
+		extraRoleRefer = (UserExtraRoleReferenceBeanInterface)createBean(UserExtraRoleReferenceBeanInterface.class);
+		roleRefer = (RoleReferenceBeanInterface)createBean(RoleReferenceBeanInterface.class);
 	}
 	
 	@Override
@@ -117,14 +133,15 @@ public class UserMasterSearchBean extends PlatformBean implements UserMasterSear
 		}
 		// 人事マスタDAO準備
 		HumanDaoInterface humanDao = (HumanDaoInterface)createDao(HumanDaoInterface.class);
-		// ロール参照準備
-		RoleReferenceBeanInterface roleReference = (RoleReferenceBeanInterface)createBean(RoleReferenceBeanInterface.class);
-		// ロール配列取得
-		String[][] roleArray = roleReference.getSelectArray(activateDate, false);
+		// プルダウン用配列(全て)を取得
+		String[][] array = roleRefer.getAllArrays(activateDate, false, false);
 		// アカウント情報リスト作成
 		for (UserMasterDtoInterface userDto : userList) {
 			// 社員コード、有効日から社員情報を取得する
 			HumanDtoInterface humanDto = humanDao.findForInfo(userDto.getPersonalId(), activateDate);
+			// ユーザIDと有効日が合致するユーザ追加ロールコード群(ロール区分のインデックス順)を取得
+			Map<String, String> extraRoles = extraRoleRefer.getUserExtraRoleMap(userDto.getUserId(),
+					userDto.getActivateDate());
 			// アカウント情報DTO生成
 			AccountInfoDtoInterface dto = new AccountInfoDto();
 			dto.setActivateDate(userDto.getActivateDate());
@@ -133,7 +150,8 @@ public class UserMasterSearchBean extends PlatformBean implements UserMasterSear
 			dto.setInactivateFlag(userDto.getInactivateFlag());
 			dto.setPfmUserId(userDto.getPfmUserId());
 			dto.setRoleCode(userDto.getRoleCode());
-			dto.setRoleName(getCodeName(userDto.getRoleCode(), roleArray));
+			dto.setExtraRoles(extraRoles);
+			dto.setRoleName(getRoleName(userDto, extraRoles, array));
 			dto.setEmployeeCode("");
 			dto.setLastName("");
 			dto.setFirstName("");
@@ -147,6 +165,28 @@ public class UserMasterSearchBean extends PlatformBean implements UserMasterSear
 			accountList.add(dto);
 		}
 		return accountList;
+	}
+	
+	/**
+	 * ロール名称(追加ロール含む)を取得する。<br>
+	 * @param userDto    ユーザマスタ情報
+	 * @param extraRoles ユーザ追加ロール情報群(キー：ロール区分、値：ロールコード)
+	 * @param array      プルダウン用配列(全て)
+	 * @return ロール名称(追加ロール含む)
+	 */
+	protected String getRoleName(UserMasterDtoInterface userDto, Map<String, String> extraRoles, String[][] array) {
+		// ロール名称(追加ロール含む)を準備
+		StringBuilder sb = new StringBuilder();
+		// メインロールの名称をロール名称(追加ロール含む)に追加
+		sb.append(getCodeName(userDto.getRoleCode(), array));
+		// ユーザ追加ロール情報毎(ロール区分インデックス昇順)に処理
+		for (String extraRole : extraRoles.values()) {
+			// ユーザ追加ロールの名称をロール名称(追加ロール含む)に追加
+			sb.append(MospConst.STR_SB_SPACE);
+			sb.append(getCodeName(extraRole, array));
+		}
+		// ロール名称(追加ロール含む)を取得
+		return sb.toString();
 	}
 	
 	@Override

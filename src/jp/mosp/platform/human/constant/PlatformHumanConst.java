@@ -31,9 +31,9 @@ public class PlatformHumanConst {
 	
 	
 	/**
-	 * ファイルパス(MosPプラットフォーム人事管理共通JSP)。
+	 * MosPアプリケーション設定キー(MosPプラットフォーム人事管理共通JSPファイルパス)。<br>
 	 */
-	public static final String	PATH_HUMAN_COMMON_INFO_JSP				= "/jsp/platform/human/humanCommonInfo.jsp";
+	public static final String	APP_HUMAN_COMMON_INFO_JSP				= "HumanCommonInfoJsp";
 	
 	/**
 	 * ファイルパス(人事汎用管理区分共通JSP)。
@@ -251,6 +251,16 @@ public class PlatformHumanConst {
 	public static final String	KEY_HUMAN_ITEM_TYPE_CONCATENATED_LABEL	= "concatenatedLabel";
 	
 	/**
+	 * 人事汎用入力形式(checkbox)。<br>
+	 */
+	public static final String	KEY_HUMAN_ITEM_TYPE_CHECK_BOX			= "checkbox";
+	
+	/**
+	 * 人事汎用入力形式(radio)。<br>
+	 */
+	public static final String	KEY_HUMAN_ITEM_TYPE_RADIO				= "radio";
+	
+	/**
 	 * 人事汎用表示テーブル形式(書類テーブル)。<br>
 	 */
 	public static final String	TYPE_VIEW_TABLE_CARD					= "CardTable";
@@ -310,4 +320,8 @@ public class PlatformHumanConst {
 	 */
 	public static final int		LEN_FILE_NAME							= 50;
 	
+	/**
+	 * 人事汎用項目名：メールアドレス
+	 */
+	public static final String	ITEM_NAME_HUMAN_MAIL					= "mailAddress";
 }

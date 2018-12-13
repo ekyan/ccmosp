@@ -595,9 +595,9 @@ public class RouteCardAction extends PlatformSystemAction {
 		// ルート名称
 		dto.setRouteName(vo.getTxtRouteName());
 		// 階層数
-		dto.setApprovalCount(Integer.valueOf(vo.getPltRouteStage()));
+		dto.setApprovalCount(getInt(vo.getPltRouteStage()));
 		// 無効フラグ
-		dto.setInactivateFlag(Integer.valueOf(vo.getPltEditInactivate()));
+		dto.setInactivateFlag(getInt(vo.getPltEditInactivate()));
 		
 	}
 	
@@ -661,7 +661,7 @@ public class RouteCardAction extends PlatformSystemAction {
 				break;
 		}
 		// 無効フラグ
-		dto.setInactivateFlag(Integer.valueOf(vo.getPltEditInactivate()));
+		dto.setInactivateFlag(getInt(vo.getPltEditInactivate()));
 		
 	}
 	

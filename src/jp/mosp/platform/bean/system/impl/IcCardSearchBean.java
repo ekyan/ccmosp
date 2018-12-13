@@ -165,7 +165,7 @@ public class IcCardSearchBean extends PlatformBean implements IcCardSearchBeanIn
 	
 	@Override
 	public void setActivateDate(Date activateDate) {
-		this.activateDate = activateDate;
+		this.activateDate = getDateClone(activateDate);
 	}
 	
 	@Override

@@ -37,7 +37,7 @@ public class GeneralReferenceBean extends PlatformBean implements GeneralReferen
 	/**
 	 * 汎用データDAOクラス。<br>
 	 */
-	GeneralDaoInterface	dao;
+	GeneralDaoInterface dao;
 	
 	
 	/**
@@ -77,6 +77,12 @@ public class GeneralReferenceBean extends PlatformBean implements GeneralReferen
 	public List<GeneralDtoInterface> findForTerm(String generalType, String generalCode, Date firstDate, Date lastDate)
 			throws MospException {
 		return dao.findForTerm(generalType, generalCode, firstDate, lastDate);
+	}
+	
+	@Override
+	public GeneralDtoInterface findForInfo(String generalType, String generalCode, Date generalDate)
+			throws MospException {
+		return dao.findForInfo(generalType, generalCode, generalDate);
 	}
 	
 }

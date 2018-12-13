@@ -18,6 +18,7 @@
 package jp.mosp.platform.human.vo;
 
 import java.util.Date;
+import java.util.List;
 
 import jp.mosp.platform.base.PlatformVo;
 
@@ -65,6 +66,16 @@ public class BasicNewCardVo extends PlatformVo {
 	
 	// 名称区分：役職追加判断
 	private boolean				needPost;
+	
+	/**
+	 * 追加JSPリスト。<br>
+	 */
+	private List<String>		extraJspList;
+	
+	/**
+	 * 自動設定ボタン要否。<br>
+	 */
+	private boolean				needNumberingButton;
 	
 	
 	/**
@@ -415,6 +426,34 @@ public class BasicNewCardVo extends PlatformVo {
 	 */
 	public boolean getNeedPost() {
 		return needPost;
+	}
+	
+	/**
+	 * @return extraJspList
+	 */
+	public List<String> getExtraJspList() {
+		return extraJspList;
+	}
+	
+	/**
+	 * @param extraJspList セットする extraJspList
+	 */
+	public void setExtraJspList(List<String> extraJspList) {
+		this.extraJspList = extraJspList;
+	}
+	
+	/**
+	 * @return needNumberingButton
+	 */
+	public boolean isNeedNumberingButton() {
+		return needNumberingButton;
+	}
+	
+	/**
+	 * @param needNumberingButton セットする needNumberingButton
+	 */
+	public void setNeedNumberingButton(boolean needNumberingButton) {
+		this.needNumberingButton = needNumberingButton;
 	}
 	
 }

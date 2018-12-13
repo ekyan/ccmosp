@@ -38,7 +38,7 @@ public class TotalLeaveReferenceBean extends PlatformBean implements TotalLeaveR
 	/**
 	 * 勤怠集計データDAOクラス。<br>
 	 */
-	TotalLeaveDaoInterface	totalLeaveDao;
+	TotalLeaveDaoInterface totalLeaveDao;
 	
 	
 	/**

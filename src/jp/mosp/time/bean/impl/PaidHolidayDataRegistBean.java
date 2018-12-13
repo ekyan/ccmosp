@@ -24,17 +24,22 @@ import java.util.Map;
 
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.base.MospParams;
+import jp.mosp.framework.utils.MospUtility;
 import jp.mosp.platform.base.PlatformBean;
+import jp.mosp.platform.utils.InputCheckUtility;
 import jp.mosp.time.bean.HolidayRequestReferenceBeanInterface;
 import jp.mosp.time.bean.PaidHolidayDataRegistBeanInterface;
 import jp.mosp.time.bean.PaidHolidayTransactionReferenceBeanInterface;
 import jp.mosp.time.constant.TimeConst;
+import jp.mosp.time.constant.TimeFileConst;
 import jp.mosp.time.constant.TimeMessageConst;
 import jp.mosp.time.dao.settings.PaidHolidayDataDaoInterface;
+import jp.mosp.time.dto.settings.HolidayRequestDtoInterface;
 import jp.mosp.time.dto.settings.PaidHolidayDataDtoInterface;
 import jp.mosp.time.dto.settings.PaidHolidayTransactionDtoInterface;
 import jp.mosp.time.dto.settings.impl.TmdPaidHolidayDataDto;
 import jp.mosp.time.input.vo.HolidayRequestVo;
+import jp.mosp.time.utils.TimeMessageUtility;
 
 /**
  * 有給休暇データ雇用契約マスタ登録クラス。
@@ -77,8 +82,10 @@ public class PaidHolidayDataRegistBean extends PlatformBean implements PaidHolid
 	public void initBean() throws MospException {
 		// DAO準備
 		dao = (PaidHolidayDataDaoInterface)createDao(PaidHolidayDataDaoInterface.class);
-		paidHolidayTransactionReference = (PaidHolidayTransactionReferenceBeanInterface)createBean(PaidHolidayTransactionReferenceBeanInterface.class);
-		holidayRequestReference = (HolidayRequestReferenceBeanInterface)createBean(HolidayRequestReferenceBeanInterface.class);
+		paidHolidayTransactionReference = (PaidHolidayTransactionReferenceBeanInterface)createBean(
+				PaidHolidayTransactionReferenceBeanInterface.class);
+		holidayRequestReference = (HolidayRequestReferenceBeanInterface)createBean(
+				HolidayRequestReferenceBeanInterface.class);
 	}
 	
 	@Override
@@ -264,7 +271,72 @@ public class PaidHolidayDataRegistBean extends PlatformBean implements PaidHolid
 	 * @param dto 対象DTO
 	 */
 	protected void validate(PaidHolidayDataDtoInterface dto) {
-		// TODO 妥当性確認
+		// 名称取得
+		String employeeCode = MospUtility.getCodeName("employee_code",
+				mospParams.getProperties().getCodeArray(TimeFileConst.CODE_IMPORT_TYPE_TMD_PAID_HOLIDAY, false));
+		// 有効日
+		String activateDate = MospUtility.getCodeName("activate_date",
+				mospParams.getProperties().getCodeArray(TimeFileConst.CODE_IMPORT_TYPE_TMD_PAID_HOLIDAY, false));
+		// 取得日
+		String acquisitionDate = MospUtility.getCodeName("acquisition_date",
+				mospParams.getProperties().getCodeArray(TimeFileConst.CODE_IMPORT_TYPE_TMD_PAID_HOLIDAY, false));
+		// 期限日
+		String limitDate = MospUtility.getCodeName("limit_date",
+				mospParams.getProperties().getCodeArray(TimeFileConst.CODE_IMPORT_TYPE_TMD_PAID_HOLIDAY, false));
+		
+		// 必須入力チェック
+		InputCheckUtility.checkRequired(mospParams, dto.getPersonalId(), employeeCode);
+		InputCheckUtility.checkRequired(mospParams, getStringDate(dto.getActivateDate()), activateDate);
+		InputCheckUtility.checkRequired(mospParams, getStringDate(dto.getAcquisitionDate()), acquisitionDate);
+		InputCheckUtility.checkRequired(mospParams, getStringDate(dto.getAcquisitionDate()), limitDate);
 	}
 	
+	@Override
+	public void checkDeleteConfirm(PaidHolidayDataDtoInterface dto) throws MospException {
+		// 個人ID・有給付与日取得
+		String personalId = dto.getPersonalId();
+		Date acquisitionDate = dto.getAcquisitionDate();
+		// 削除確認フラグ
+		boolean isDelete = isDleteConfirm(dto);
+		// 利用休暇申請一覧を取得
+		List<HolidayRequestDtoInterface> list = holidayRequestReference.getUsePaidHolidayDataList(personalId,
+				acquisitionDate);
+		// 利用休暇申請一覧毎に処理
+		for (HolidayRequestDtoInterface holidayDto : list) {
+			// 削除できない場合
+			if (!isDelete) {
+				// メッセージ追加
+				TimeMessageUtility.addErrorNoDeleteForHolidayRequest(mospParams, acquisitionDate,
+						holidayDto.getRequestStartDate());
+			}
+		}
+		// 利用有給休暇手動付与リスト取得
+		List<PaidHolidayTransactionDtoInterface> transacList = paidHolidayTransactionReference
+			.findForAcquisitionList(personalId, acquisitionDate);
+		// 利用有給休暇手動付与リスト毎に処理
+		for (PaidHolidayTransactionDtoInterface transacDto : transacList) {
+			// 削除できない場合
+			if (!isDelete) {
+				// メッセージ追加
+				TimeMessageUtility.addErrorNoDeleteForPaidHolidayTransaction(mospParams, acquisitionDate,
+						transacDto.getActivateDate());
+			}
+		}
+	}
+	
+	/**
+	 * 同じ付与日情報がある場合、削除の妥当性確認を行う。<br>
+	 * @param dto 有給休暇情報
+	 * @return 確認結果(true：削除できる、false：削除できない)
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 */
+	protected boolean isDleteConfirm(PaidHolidayDataDtoInterface dto) throws MospException {
+		// 付与日リスト取得
+		List<PaidHolidayDataDtoInterface> list = dao.findForHistory(dto.getPersonalId(), dto.getAcquisitionDate());
+		// 同じ有給データが一つでなく有効日と付与日が同じでない場合
+		if (list.size() != 1 && dto.getActivateDate().compareTo(dto.getAcquisitionDate()) != 0) {
+			return true;
+		}
+		return false;
+	}
 }

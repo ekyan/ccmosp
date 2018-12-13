@@ -552,7 +552,7 @@ public class EmploymentMasterAction extends PlatformSystemAction {
 		dto.setActivateDate(getEditActivateDate());
 		dto.setEmploymentContractName(vo.getTxtEditEmploymentName());
 		dto.setEmploymentContractAbbr(vo.getTxtEditEmploymentAbbr());
-		dto.setInactivateFlag(Integer.valueOf(vo.getPltEditInactivate()));
+		dto.setInactivateFlag(getInt(vo.getPltEditInactivate()));
 	}
 	
 	/**

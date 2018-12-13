@@ -24,8 +24,9 @@ import jp.mosp.framework.base.BaseDtoInterface;
 import jp.mosp.framework.base.BaseVo;
 import jp.mosp.framework.base.MospException;
 import jp.mosp.platform.bean.human.HumanReferenceBeanInterface;
+import jp.mosp.platform.bean.system.PlatformMasterBeanInterface;
 import jp.mosp.platform.constant.PlatformConst;
-import jp.mosp.time.base.TimeAction;
+import jp.mosp.time.bean.ApplicationRegistBeanInterface;
 import jp.mosp.time.bean.ApplicationSearchBeanInterface;
 import jp.mosp.time.bean.PaidHolidayReferenceBeanInterface;
 import jp.mosp.time.bean.ScheduleReferenceBeanInterface;
@@ -44,11 +45,15 @@ import jp.mosp.time.settings.vo.ApplicationListVo;
  * </li><li>
  * {@link #CMD_SEARCH}
  * </li><li>
+ * {@link #CMD_RE_SEARCH}
+ * </li><li>
  * {@link #CMD_DELETE}
  * </li><li>
  * {@link #CMD_SORT}
  * </li><li>
  * {@link #CMD_PAGE}
+ * </li><li>
+ * {@link #CMD_SET_ACTIVATION_DATE}
  * </li><li>
  * {@link #CMD_BATCH_UPDATE}
  * </li></ul>
@@ -119,7 +124,7 @@ public class ApplicationListAction extends TimeSettingAction {
 	
 	
 	/**
-	 * {@link TimeAction#TimeAction()}を実行する。<br>
+	 * {@link TimeSettingAction#TimeSettingAction()}を実行する。<br>
 	 */
 	public ApplicationListAction() {
 		super();
@@ -184,6 +189,14 @@ public class ApplicationListAction extends TimeSettingAction {
 		vo.setTxtSearchApplicationName("");
 		vo.setTxtSearchApplicationAbbr("");
 		vo.setRadApplicationType(PlatformConst.APPLICATION_TYPE_MASTER);
+		vo.setPltSearchWorkPlaceMaster("");
+		vo.setPltSearchEmploymentMaster("");
+		vo.setPltSearchSectionMaster("");
+		vo.setPltSearchPositionMaster("");
+		vo.setTxtSearchEmployeeCode("");
+		vo.setPltSearchWorkSetting("");
+		vo.setPltSearchSchedule("");
+		vo.setPltSearchPaidHoliday("");
 		// ページ繰り設定
 		setPageInfo(CMD_PAGE, getListLength());
 		// デフォルトソートキー及びソート順設定
@@ -196,7 +209,7 @@ public class ApplicationListAction extends TimeSettingAction {
 	
 	/**
 	 * 検索処理を行う。<br>
-	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合 
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
 	protected void search() throws MospException {
 		// VO準備
@@ -236,7 +249,7 @@ public class ApplicationListAction extends TimeSettingAction {
 	
 	/**
 	 * 削除処理を行う。<br>
-	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合 
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
 	protected void delete() throws MospException {
 		// VO取得
@@ -269,7 +282,7 @@ public class ApplicationListAction extends TimeSettingAction {
 	
 	/**
 	 * 一覧のページ処理を行う。
-	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合 
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
 	protected void page() throws MospException {
 		setVoList(pageList());
@@ -297,14 +310,18 @@ public class ApplicationListAction extends TimeSettingAction {
 	
 	/**
 	 * 一括更新処理を行う。<br>
-	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合 
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
 	protected void batchUpdate() throws MospException {
 		// VO準備
 		ApplicationListVo vo = (ApplicationListVo)mospParams.getVo();
+		// クラス準備
+		ApplicationRegistBeanInterface regist = time().applicationRegist();
+		// 値準備
+		long[] chbSelect = getIdArray(vo.getCkbSelect());
+		int inactiveFlag = getInt(vo.getPltUpdateInactivate());
 		// 一括更新処理
-		time().applicationRegist().update(getIdArray(vo.getCkbSelect()), getUpdateActivateDate(),
-				Integer.valueOf(vo.getPltUpdateInactivate()));
+		regist.update(chbSelect, getUpdateActivateDate(), inactiveFlag);
 		// 一括更新結果確認
 		if (mospParams.hasErrorMessage()) {
 			// 更新失敗メッセージ設定
@@ -321,7 +338,7 @@ public class ApplicationListAction extends TimeSettingAction {
 	
 	/**
 	 * プルダウンを設定する。<br>
-	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合 
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
 	private void setPulldown() throws MospException {
 		// VO準備
@@ -370,7 +387,6 @@ public class ApplicationListAction extends TimeSettingAction {
 		// データ配列初期化
 		String[] aryLblActivateDate = new String[list.size()];
 		String[] aryLblApplicationCode = new String[list.size()];
-		String[] aryLblApplicationName = new String[list.size()];
 		String[] aryLblApplicationAbbr = new String[list.size()];
 		String[] aryLblWorkPlace = new String[list.size()];
 		String[] aryLblEmployment = new String[list.size()];
@@ -388,6 +404,7 @@ public class ApplicationListAction extends TimeSettingAction {
 		ScheduleReferenceBeanInterface schedule = timeReference().schedule();
 		PaidHolidayReferenceBeanInterface paidHoliday = timeReference().paidHoliday();
 		HumanReferenceBeanInterface human = reference().human();
+		PlatformMasterBeanInterface platformMaster = reference().master();
 		// データ作成
 		for (int i = 0; i < list.size(); i++) {
 			// リストから情報を取得
@@ -395,18 +412,17 @@ public class ApplicationListAction extends TimeSettingAction {
 			// 配列に情報を設定
 			aryLblActivateDate[i] = getStringDate(dto.getActivateDate());
 			aryLblApplicationCode[i] = dto.getApplicationCode();
-			aryLblApplicationName[i] = dto.getApplicationName();
 			aryLblApplicationAbbr[i] = dto.getApplicationAbbr();
 			aryLblWorkPlace[i] = reference().workPlace().getWorkPlaceAbbr(dto.getWorkPlaceCode(), targetDate);
 			aryLblEmployment[i] = reference().employmentContract().getContractAbbr(dto.getEmploymentContractCode(),
 					targetDate);
-			aryLblSection[i] = reference().section().getSectionAbbr(dto.getSectionCode(), targetDate);
+			aryLblSection[i] = platformMaster.getSectionAbbr(dto.getSectionCode(), targetDate);
 			aryLblPosition[i] = reference().position().getPositionAbbr(dto.getPositionCode(), targetDate);
 			aryLblWorkSetting[i] = timeSetting.getTimeSettingAbbr(dto.getWorkSettingCode(), targetDate);
 			aryLblSchadeule[i] = schedule.getScheduleAbbr(dto.getScheduleCode(), targetDate);
 			aryLblPaidHoliday[i] = paidHoliday.getPaidHolidayAbbr(dto.getPaidHolidayCode(), targetDate);
 			aryLblInactivate[i] = getInactivateFlagName(dto.getInactivateFlag());
-			aryLblEmployeeCode[i] = human.getHumanNames(dto.getPersonalId(), targetDate);
+			aryLblEmployeeCode[i] = human.getHumanNames(dto.getPersonalIds(), targetDate);
 		}
 		// データをVOに設定
 		vo.setAryLblActivateDate(aryLblActivateDate);
@@ -422,4 +438,5 @@ public class ApplicationListAction extends TimeSettingAction {
 		vo.setAryLblPaidHoliday(aryLblPaidHoliday);
 		vo.setAryLblInactivate(aryLblInactivate);
 	}
+	
 }

@@ -17,7 +17,7 @@
  */
 package jp.mosp.time.settings.action;
 
-import java.text.NumberFormat;
+import java.text.Format;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -29,10 +29,14 @@ import jp.mosp.time.bean.ApplicationReferenceBeanInterface;
 import jp.mosp.time.bean.PaidHolidayDataGrantBeanInterface;
 import jp.mosp.time.bean.PaidHolidayDataReferenceBeanInterface;
 import jp.mosp.time.bean.PaidHolidayDataRegistBeanInterface;
+import jp.mosp.time.bean.PaidHolidayGrantReferenceBeanInterface;
+import jp.mosp.time.bean.PaidHolidayGrantRegistBeanInterface;
 import jp.mosp.time.bean.PaidHolidayReferenceBeanInterface;
+import jp.mosp.time.bean.impl.PaidHolidayDataSearchBean;
 import jp.mosp.time.dto.settings.ApplicationDtoInterface;
 import jp.mosp.time.dto.settings.PaidHolidayDataDtoInterface;
 import jp.mosp.time.dto.settings.PaidHolidayDtoInterface;
+import jp.mosp.time.dto.settings.PaidHolidayGrantDtoInterface;
 import jp.mosp.time.settings.vo.PaidHolidayDataGrantCardVo;
 
 /**
@@ -87,6 +91,10 @@ public class PaidHolidayDataGrantCardAction extends TimeAction {
 			// 登録
 			prepareVo();
 			regist();
+		} else if (mospParams.getCommand().equals(CMD_DELETE)) {
+			// 削除
+			prepareVo();
+			delete();
 		} else {
 			throwInvalidCommandException();
 		}
@@ -112,15 +120,23 @@ public class PaidHolidayDataGrantCardAction extends TimeAction {
 		// VO取得
 		PaidHolidayDataGrantCardVo vo = (PaidHolidayDataGrantCardVo)mospParams.getVo();
 		PaidHolidayDataReferenceBeanInterface paidHolidayData = timeReference().paidHolidayData();
+		PaidHolidayDataRegistBeanInterface paidHolidayDataRegist = time().paidHolidayDataRegist();
 		for (int i = 0; i < vo.getAryRecordId().length; i++) {
 			PaidHolidayDataDtoInterface dto = paidHolidayData.findForKey(vo.getAryRecordId()[i]);
 			if (dto == null) {
 				// 新規登録
-				insert(i);
+				dto = paidHolidayDataRegist.getInitDto();
+				insert(dto, i);
 			} else {
 				// 履歴更新
 				update(dto, i);
 			}
+			if (mospParams.hasErrorMessage()) {
+				// 更新失敗メッセージ設定
+				addUpdateFailedMessage();
+				return;
+			}
+			paidHolidayGrantRegist(dto);
 			if (mospParams.hasErrorMessage()) {
 				// 更新失敗メッセージ設定
 				addUpdateFailedMessage();
@@ -137,10 +153,11 @@ public class PaidHolidayDataGrantCardAction extends TimeAction {
 	
 	/**
 	 * 新規登録処理を行う。<br>
+	 * @param dto 対象DTO
 	 * @param i インデックス
 	 * @throws MospException 例外発生時
 	 */
-	protected void insert(int i) throws MospException {
+	protected void insert(PaidHolidayDataDtoInterface dto, int i) throws MospException {
 		// VO取得
 		PaidHolidayDataGrantCardVo vo = (PaidHolidayDataGrantCardVo)mospParams.getVo();
 		PaidHolidayDataRegistBeanInterface regist = time().paidHolidayDataRegist();
@@ -159,10 +176,9 @@ public class PaidHolidayDataGrantCardAction extends TimeAction {
 		if (mospParams.hasErrorMessage()) {
 			return;
 		}
-		PaidHolidayDataDtoInterface dto = regist.getInitDto();
 		// DTOに値を設定
 		setDtoFields(dto, paidHolidayDto);
-		setDtoFields(dto, i);
+		setDtoFields(dto, i, true);
 		// 相関チェック
 		regist.checkModify(dto);
 		if (mospParams.hasErrorMessage()) {
@@ -181,7 +197,7 @@ public class PaidHolidayDataGrantCardAction extends TimeAction {
 	protected void update(PaidHolidayDataDtoInterface dto, int i) throws MospException {
 		PaidHolidayDataRegistBeanInterface regist = time().paidHolidayDataRegist();
 		// DTOに値を設定
-		setDtoFields(dto, i);
+		setDtoFields(dto, i, false);
 		// 相関チェック
 		regist.checkModify(dto);
 		if (mospParams.hasErrorMessage()) {
@@ -192,26 +208,123 @@ public class PaidHolidayDataGrantCardAction extends TimeAction {
 	}
 	
 	/**
+	 * 削除処理を行う。<br>
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	protected void delete() throws MospException {
+		// VO取得
+		PaidHolidayDataGrantCardVo vo = (PaidHolidayDataGrantCardVo)mospParams.getVo();
+		// クラス取得
+		PaidHolidayDataRegistBeanInterface regist = time().paidHolidayDataRegist();
+		PaidHolidayDataReferenceBeanInterface paidHolidayData = timeReference().paidHolidayData();
+		// 削除対象有給休暇情報取得
+		PaidHolidayDataDtoInterface dto = paidHolidayData.findForKey(vo.getAryRecordId()[getTransferredIndex()]);
+		if (dto == null) {
+			// 削除失敗メッセージ設定
+			addDeleteHistoryFailedMessage();
+			return;
+		}
+		// 削除チェック
+		regist.checkDeleteConfirm(dto);
+		if (mospParams.hasErrorMessage()) {
+			// 削除失敗メッセージ設定
+			addDeleteHistoryFailedMessage();
+			return;
+		}
+		// 削除
+		regist.delete(dto);
+		if (mospParams.hasErrorMessage()) {
+			// 削除失敗メッセージ設定
+			addDeleteHistoryFailedMessage();
+			return;
+		}
+		paidHolidayGrantDelete(dto.getAcquisitionDate());
+		if (mospParams.hasErrorMessage()) {
+			// 削除失敗メッセージ設定
+			addDeleteHistoryFailedMessage();
+			return;
+		}
+		// コミット
+		commit();
+		// 削除成功メッセージ設定
+		addDeleteMessage();
+		// 有給休暇データ設定
+		setPaidHolidayDataList();
+	}
+	
+	/**
+	 * 有給休暇付与登録処理を行う。<br>
+	 * @param dto 対象DTO
+	 * @throws MospException 例外発生時
+	 */
+	protected void paidHolidayGrantRegist(PaidHolidayDataDtoInterface dto) throws MospException {
+		// VO取得
+		PaidHolidayDataGrantCardVo vo = (PaidHolidayDataGrantCardVo)mospParams.getVo();
+		PaidHolidayGrantReferenceBeanInterface paidHolidayGrant = timeReference().paidHolidayGrant();
+		PaidHolidayGrantRegistBeanInterface paidHolidayGrantRegist = time().paidHolidayGrantRegist();
+		PaidHolidayGrantDtoInterface paidHolidayGrantDto = paidHolidayGrant.findForKey(vo.getPersonalId(),
+				dto.getAcquisitionDate());
+		if (paidHolidayGrantDto == null) {
+			paidHolidayGrantDto = paidHolidayGrantRegist.getInitDto();
+		}
+		setDtoFields(paidHolidayGrantDto, dto);
+		// 登録処理
+		paidHolidayGrantRegist.regist(paidHolidayGrantDto);
+	}
+	
+	/**
+	 * 有給休暇付与削除処理を行う。<br>
+	 * @param grantDate 付与日
+	 * @throws MospException 例外発生時
+	 */
+	protected void paidHolidayGrantDelete(Date grantDate) throws MospException {
+		// VO取得
+		PaidHolidayDataGrantCardVo vo = (PaidHolidayDataGrantCardVo)mospParams.getVo();
+		PaidHolidayGrantReferenceBeanInterface paidHolidayGrant = timeReference().paidHolidayGrant();
+		PaidHolidayGrantRegistBeanInterface paidHolidayGrantRegist = time().paidHolidayGrantRegist();
+		PaidHolidayGrantDtoInterface dto = paidHolidayGrant.findForKey(vo.getPersonalId(), grantDate);
+		if (dto == null) {
+			return;
+		}
+		// 削除処理
+		paidHolidayGrantRegist.delete(dto);
+	}
+	
+	/**
 	 * 有給休暇データリストを設定する。<br>
 	 * @throws MospException 例外発生時
 	 */
 	protected void setPaidHolidayDataList() throws MospException {
 		// VO取得
 		PaidHolidayDataGrantCardVo vo = (PaidHolidayDataGrantCardVo)mospParams.getVo();
+		// クラス準備
 		PaidHolidayDataReferenceBeanInterface paidHolidayData = timeReference().paidHolidayData();
 		PaidHolidayDataGrantBeanInterface paidHolidayDataGrant = time().paidHolidayDataGrant();
+		// 有給休暇データ取得
 		PaidHolidayDataDtoInterface dto = paidHolidayData.findForKey(vo.getPersonalId(), vo.getTargetDate(),
 				vo.getTargetDate());
+		// 有給休暇情報確認フラグ
 		boolean granted = dto != null;
+		// 有給休暇情報がない場合
 		if (!granted) {
+			// 有給休暇データを生成
 			dto = paidHolidayDataGrant.create(vo.getPersonalId(), vo.getTargetDate(), false);
 		}
+		// リスト準備
 		List<PaidHolidayDataDtoInterface> list = new ArrayList<PaidHolidayDataDtoInterface>();
-		for (PaidHolidayDataDtoInterface paidHolidayDataDto : paidHolidayData.getPaidHolidayDataInfoList(
-				vo.getPersonalId(), vo.getTargetDate())) {
+		if (dto == null) {
+			// VOに設定
+			setVoFields(list, granted);
+			return;
+		}
+		// 有給休暇データリスト毎に処理
+		for (PaidHolidayDataDtoInterface paidHolidayDataDto : paidHolidayData
+			.getPaidHolidayDataInfoAllList(vo.getPersonalId(), vo.getTargetDate())) {
+			// 取得日が同じ場合
 			if (paidHolidayDataDto.getAcquisitionDate().equals(dto.getAcquisitionDate())) {
-				break;
+				continue;
 			}
+			// リスト追加
 			list.add(paidHolidayDataDto);
 		}
 		list.add(dto);
@@ -234,6 +347,7 @@ public class PaidHolidayDataGrantCardAction extends TimeAction {
 		String[] aryLblExpirationDate = new String[list.size()];
 		String[] aryLblGrantDays = new String[list.size()];
 		String[] aryTxtGrantDays = new String[list.size()];
+		Format format = getNumberFormat();
 		for (int i = 0; i < list.size(); i++) {
 			PaidHolidayDataDtoInterface dto = list.get(i);
 			aryRecordId[i] = dto.getTmdPaidHolidayId();
@@ -243,11 +357,11 @@ public class PaidHolidayDataGrantCardAction extends TimeAction {
 			aryLblGrantDays[i] = mospParams.getName("Hyphen");
 			if (i != list.size() - 1 || isGranted) {
 				StringBuffer sb = new StringBuffer();
-				sb.append(getGrantDays(dto.getHoldDay()));
+				sb.append(getGrantDays(dto.getHoldDay(), format));
 				sb.append(mospParams.getName("Day"));
 				aryLblGrantDays[i] = sb.toString();
 			}
-			aryTxtGrantDays[i] = getGrantDays(Math.floor(dto.getHoldDay()));
+			aryTxtGrantDays[i] = getGrantDays(Math.floor(dto.getHoldDay()), format);
 		}
 		// 配列をVOに設定
 		vo.setAryRecordId(aryRecordId);
@@ -262,15 +376,19 @@ public class PaidHolidayDataGrantCardAction extends TimeAction {
 	 * VO(編集項目)の値をDTOに設定する。<br>
 	 * @param dto 対象DTO
 	 * @param i インデックス
+	 * @param isInsert 新規登録フラグ(true：新規登録、false：更新)
 	 */
-	protected void setDtoFields(PaidHolidayDataDtoInterface dto, int i) {
+	protected void setDtoFields(PaidHolidayDataDtoInterface dto, int i, boolean isInsert) {
 		// VO取得
 		PaidHolidayDataGrantCardVo vo = (PaidHolidayDataGrantCardVo)mospParams.getVo();
-		Date grantDate = getDate(vo.getAryLblGrantDate()[i]);
-		dto.setPersonalId(vo.getPersonalId());
-		dto.setAcquisitionDate(grantDate);
-		dto.setActivateDate(grantDate);
-		dto.setLimitDate(getDate(vo.getAryLblExpirationDate()[i]));
+		// 新規登録の場合
+		if (isInsert) {
+			Date grantDate = getDate(vo.getAryLblGrantDate()[i]);
+			dto.setPersonalId(vo.getPersonalId());
+			dto.setAcquisitionDate(grantDate);
+			dto.setActivateDate(grantDate);
+			dto.setLimitDate(getDate(vo.getAryLblExpirationDate()[i]));
+		}
 		dto.setHoldDay(Double.parseDouble(vo.getAryTxtGrantDays()[i]));
 	}
 	
@@ -285,12 +403,26 @@ public class PaidHolidayDataGrantCardAction extends TimeAction {
 	}
 	
 	/**
+	 * VO(編集項目)の値をDTOに設定する。<br>
+	 * @param dto 対象DTO
+	 * @param paidHolidayDataDto 有給休暇データDTO
+	 */
+	protected void setDtoFields(PaidHolidayGrantDtoInterface dto, PaidHolidayDataDtoInterface paidHolidayDataDto) {
+		// VO取得
+		PaidHolidayDataGrantCardVo vo = (PaidHolidayDataGrantCardVo)mospParams.getVo();
+		dto.setPersonalId(vo.getPersonalId());
+		dto.setGrantDate(paidHolidayDataDto.getAcquisitionDate());
+		dto.setGrantStatus(PaidHolidayDataSearchBean.GRANTED);
+	}
+	
+	/**
 	 * 付与日数を取得する。
 	 * @param grantDays 付与日数
+	 * @param format フォーマット
 	 * @return 付与日数
 	 */
-	protected String getGrantDays(double grantDays) {
-		return NumberFormat.getInstance().format(grantDays);
+	protected String getGrantDays(double grantDays, Format format) {
+		return format.format(grantDays);
 	}
 	
 }

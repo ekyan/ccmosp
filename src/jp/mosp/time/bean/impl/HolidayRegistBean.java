@@ -410,8 +410,8 @@ public class HolidayRegistBean extends PlatformBean implements HolidayRegistBean
 			// 警告メッセージ出力
 			mospParams.addErrorMessage(TimeMessageConst.MSG_WARNING_TARGET_CODE_VACATION_GRANT_DELETE,
 					dto.getHolidayCode(), humanDto.getEmployeeCode(),
-					mospParams.getName("Vacation") + mospParams.getName("Application"), mospParams.getName("Vacation")
-							+ mospParams.getName("Application"));
+					mospParams.getName("Vacation") + mospParams.getName("Application"),
+					mospParams.getName("Vacation") + mospParams.getName("Application"));
 		}
 	}
 	
@@ -454,8 +454,8 @@ public class HolidayRegistBean extends PlatformBean implements HolidayRegistBean
 		// 休暇データDAO取得
 		HolidayDataDaoInterface holidayDataDao = (HolidayDataDaoInterface)createDao(HolidayDataDaoInterface.class);
 		// 無効期間で休暇データ情報を取得(対象DTOの有効日～次の履歴の有効日)
-		return holidayDataDao.findForTerm(dto.getActivateDate(), getNextActivateDate(dto.getActivateDate(), list),
-				code, holidayType);
+		return holidayDataDao.findForTerm(dto.getActivateDate(), getNextActivateDate(dto.getActivateDate(), list), code,
+				holidayType);
 	}
 	
 	/**

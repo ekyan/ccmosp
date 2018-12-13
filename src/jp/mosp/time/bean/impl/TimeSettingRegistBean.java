@@ -38,14 +38,14 @@ import jp.mosp.time.dto.settings.TimeSettingDtoInterface;
 import jp.mosp.time.dto.settings.impl.TmmTimeSettingDto;
 
 /**
- * 勤怠設定登録クラス。
+ * 勤怠設定登録処理。<br>
  */
 public class TimeSettingRegistBean extends PlatformBean implements TimeSettingRegistBeanInterface {
 	
 	/**
-	 * 勤怠設定管理DAO
+	 * 勤怠設定管理DAO。<br>
 	 */
-	private TimeSettingDaoInterface	dao;
+	protected TimeSettingDaoInterface dao;
 	
 	
 	/**
@@ -66,6 +66,7 @@ public class TimeSettingRegistBean extends PlatformBean implements TimeSettingRe
 	
 	@Override
 	public void initBean() throws MospException {
+		// DAOを準備
 		dao = (TimeSettingDaoInterface)createDao(TimeSettingDaoInterface.class);
 	}
 	
@@ -165,8 +166,6 @@ public class TimeSettingRegistBean extends PlatformBean implements TimeSettingRe
 	
 	@Override
 	public void update(TimeSettingDtoInterface dto) throws MospException {
-		// レコード識別IDを取得。
-		dto.setTmmTimeSettingId(getRecordID(dto));
 		// DTOの妥当性確認
 		validate(dto);
 		if (mospParams.hasErrorMessage()) {
@@ -186,16 +185,17 @@ public class TimeSettingRegistBean extends PlatformBean implements TimeSettingRe
 	}
 	
 	@Override
-	public void delete(TimeSettingDtoInterface dto) throws MospException {
-		// レコード識別IDを取得。
-		dto.setTmmTimeSettingId(getRecordID(dto));
+	public void delete(long recordId) throws MospException {
+		// 削除対象勤怠設定情報を取得
+		TimeSettingDtoInterface dto = (TimeSettingDtoInterface)dao.findForKey(recordId, true);
 		// 削除対象勤怠設定情報が使用されていないかを確認
 		checkDelete(dto);
+		// 処理結果確認
 		if (mospParams.hasErrorMessage()) {
 			return;
 		}
 		// 論理削除
-		logicalDelete(dao, dto.getTmmTimeSettingId());
+		logicalDelete(dao, recordId);
 	}
 	
 	/**
@@ -261,16 +261,15 @@ public class TimeSettingRegistBean extends PlatformBean implements TimeSettingRe
 	/**
 	 * 削除時の確認処理を行う。<br>
 	 * 削除対象勤怠設定情報を設定している設定適用管理情報がないかの確認を行う。<br>
-	 * @param dto 対象DTO
+	 * @param dto 勤怠設定情報
 	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
 	 */
 	protected void checkDelete(TimeSettingDtoInterface dto) throws MospException {
-		// 対象レコード識別IDのデータが削除されていないかを確認
-		checkExclusive(dao, dto.getTmmTimeSettingId());
-		// 対象DTOの無効フラグ確認
-		// 画面上の無効フラグは変更可能であるため確認しない。
-		if (!isDtoActivate(dao.findForKey(dto.getTmmTimeSettingId(), true))) {
-			// 削除対象が無効であれば無効期間は発生しない
+		// 削除対象勤怠設定情報が削除されていないかを確認
+		checkExclusive(dto);
+		// 削除対象勤怠設定情報が無効である場合
+		if (isDtoActivate(dto) == false) {
+			// 無効期間は発生しないため処理終了
 			return;
 		}
 		// 削除対象コードの履歴情報を取得
@@ -371,21 +370,9 @@ public class TimeSettingRegistBean extends PlatformBean implements TimeSettingRe
 		// 削除対象の有効日以前で最新の設定適用マスタリストを取得
 		List<ApplicationDtoInterface> appList = appDao.findForActivateDate(dto.getActivateDate());
 		// 無効期間で設定適用マスタ履歴情報を取得(対象DTOの有効日～次の履歴の有効日)
-		appList.addAll(appDao.findForTerm(dto.getActivateDate(), getNextActivateDate(dto.getActivateDate(), list)));
+		appList
+			.addAll(appDao.findForCheckTerm(dto.getActivateDate(), getNextActivateDate(dto.getActivateDate(), list)));
 		return appList;
-	}
-	
-	/**
-	 * レコード識別IDを取得する。<br>
-	 * @param dto 	対象DTO
-	 * @return レコード識別ID
-	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
-	 */
-	protected long getRecordID(TimeSettingDtoInterface dto) throws MospException {
-		// 勤怠設定情報を取得する。
-		TimeSettingDtoInterface subDto = dao.findForKey(dto.getWorkSettingCode(), dto.getActivateDate());
-		// レコード識別IDを返す。
-		return subDto.getTmmTimeSettingId();
 	}
 	
 }

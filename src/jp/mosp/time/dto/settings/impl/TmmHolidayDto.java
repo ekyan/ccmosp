@@ -78,6 +78,10 @@ public class TmmHolidayDto extends BaseDto implements HolidayDtoInterface {
 	 */
 	private int					continuousAcquisition;
 	/**
+	 * 時間単位休暇機能。
+	 */
+	private int					timelyHolidayFlag;
+	/**
 	 * 出勤率計算。
 	 */
 	private int					paidHolidayCalc;
@@ -89,6 +93,7 @@ public class TmmHolidayDto extends BaseDto implements HolidayDtoInterface {
 	 * 理由種別。
 	 */
 	private int					reasonType;
+	
 	/**
 	 * 無効フラグ。
 	 */
@@ -110,6 +115,11 @@ public class TmmHolidayDto extends BaseDto implements HolidayDtoInterface {
 	@Override
 	public int getContinuousAcquisition() {
 		return continuousAcquisition;
+	}
+	
+	@Override
+	public int getTimelyHolidayFlag() {
+		return timelyHolidayFlag;
 	}
 	
 	@Override
@@ -185,6 +195,11 @@ public class TmmHolidayDto extends BaseDto implements HolidayDtoInterface {
 	@Override
 	public void setContinuousAcquisition(int continuousAcquisition) {
 		this.continuousAcquisition = continuousAcquisition;
+	}
+	
+	@Override
+	public void setTimelyHolidayFlag(int timelyHolidayFlag) {
+		this.timelyHolidayFlag = timelyHolidayFlag;
 	}
 	
 	@Override

@@ -43,14 +43,20 @@ RouteCardVo vo = (RouteCardVo)params.getVo();
 		</tr>
 		<tr>
 			<td class="TitleTd"><span class="RequiredLabel">*&nbsp;</span><%= params.getName("ActivateDate") %></td>
-			<td class="InputTd" id="tdNoBorderBottom">
-				<div id="divSearchUnitCode">
+			<td class="InputTd" rowspan="2">
+				<div id="divEditActivateDate">
 					<input type="text" class="Number4RequiredTextBox" id="txtEditActivateYear" name="txtEditActivateYear" value="<%= HtmlUtility.escapeHTML(vo.getTxtEditActivateYear()) %>" />
 					<label for="txtEditActivateYear"><%= params.getName("Year") %></label>
 					<input type="text" class="Number2RequiredTextBox" id="txtEditActivateMonth" name="txtEditActivateMonth" value="<%= HtmlUtility.escapeHTML(vo.getTxtEditActivateMonth()) %>" />
 					<label for="txtEditActivateMonth"><%= params.getName("Month") %></label>
 					<input type="text" class="Number2RequiredTextBox" id="txtEditActivateDay" name="txtEditActivateDay" value="<%= HtmlUtility.escapeHTML(vo.getTxtEditActivateDay()) %>" />
 					<label for="txtEditActivateDay"><%= params.getName("Day") %></label>
+				</div>
+				<div>
+					<select class="Number2PullDown" id="pltRouteStage" name="pltRouteStage">
+					<%= HtmlUtility.getSelectOption(params, PlatformConst.CODE_KEY_APPROVAL_COUNT, vo.getPltRouteStage(), false) %>
+					</select>&nbsp;
+					<button type="button" class="Name2Button" id="btnActivateDate" onclick="submitForm(event, 'divSearchUnitCode', null, '<%= RouteCardAction.CMD_SET_ACTIVATION_DATE %>')"><%= vo.getModeActivateDate().equals(PlatformConst.MODE_ACTIVATE_DATE_FIXED) ? params.getName("Change") : params.getName("Decision") %></button>
 				</div>
 			</td>
 			<td class="TitleTd"><span class="RequiredLabel">*&nbsp;</span><label for="txtRouteCode"><%= params.getName("Route") %><%= params.getName("Code") %></label></td>
@@ -60,12 +66,7 @@ RouteCardVo vo = (RouteCardVo)params.getVo();
 		</tr>
 		<tr>	
 			<td class="TitleTd"><label for="pltRouteStage"><%= params.getName("Hierarchy") %><%= params.getName("Num") %></label></td>
-			<td class="InputTd" id="tdNoBorderTop">
-				<select class="Number2PullDown" id="pltRouteStage" name="pltRouteStage">
-					<%= HtmlUtility.getSelectOption(params, PlatformConst.CODE_KEY_APPROVAL_COUNT, vo.getPltRouteStage(), false) %>
-				</select>&nbsp;
-				<button type="button" class="Name2Button" id="btnActivateDate" onclick="submitForm(event, 'divSearchUnitCode', null, '<%= RouteCardAction.CMD_SET_ACTIVATION_DATE %>')"><%= vo.getModeActivateDate().equals(PlatformConst.MODE_ACTIVATE_DATE_FIXED) ? params.getName("Change") : params.getName("Decision") %></button>
-			</td>
+			
 			<td class="TitleTd"><span><label for="pltInactivate"><%= params.getName("Effectiveness") %><%= params.getName("Slash") %><%= params.getName("Inactivate") %></label></span></td>
 			<td class="InputTd">
 				<select class="Name2PullDown" id="pltEditInactivate" name="pltEditInactivate">

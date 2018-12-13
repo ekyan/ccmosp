@@ -174,7 +174,12 @@ WorkTypeCardVo vo = (WorkTypeCardVo)params.getVo();
 				<input type="text" class="Number2RequiredTextBox" id="txtOverBeforeHour" name="txtOverBeforeHour" value="<%= HtmlUtility.escapeHTML(vo.getTxtOverBeforeHour()) %>" />&nbsp;<label for="txtOverBeforeHour"><%= params.getName("Time") %></label>
 				<input type="text" class="Number2RequiredTextBox" id="txtOverBeforeMinute" name="txtOverBeforeMinute" value="<%= HtmlUtility.escapeHTML(vo.getTxtOverBeforeMinute()) %>" />&nbsp;<label for="txtOverBeforeMinute"><%= params.getName("Minutes") %></label>
 			</td>
-			<td class="Blank" colspan="2"></td>
+			<td class="TitleTd"><%= params.getName("Work", "Ahead", "OvertimeWork" , "Performance" ,"Insert") %></td>
+			<td class="InputTd">
+				<select id="pltAutoBeforeOverWork" name="pltAutoBeforeOverWork">
+					<%= HtmlUtility.getSelectOption(params, PlatformConst.CODE_KEY_INACTIVATE_FLAG, vo.getPltAutoBeforeOverWork(), false) %>
+				</select>
+			</td>
 		</tr>
 		<tr>
 			<td class="TitleTd"><%= params.getName("HalfTime", "Acquisition", "Hour", "RestTime") %></td>

@@ -20,8 +20,10 @@ package jp.mosp.platform.bean.system.impl;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import jp.mosp.framework.base.BaseDto;
 import jp.mosp.framework.base.MospException;
@@ -163,7 +165,8 @@ public class SectionReferenceBean extends PlatformBean implements SectionReferen
 	}
 	
 	@Override
-	public String[][] getNameSelectArray(Date targetDate, boolean needBlank, String operationType) throws MospException {
+	public String[][] getNameSelectArray(Date targetDate, boolean needBlank, String operationType)
+			throws MospException {
 		// プルダウン用配列取得(名称)
 		return getSelectArray(targetDate, needBlank, true, false, operationType);
 	}
@@ -393,10 +396,11 @@ public class SectionReferenceBean extends PlatformBean implements SectionReferen
 		// 操作範囲(所属)配列をリストに変換(ここに兼務情報を追加する)
 		List<String> rangeList = new ArrayList<String>(MospUtility.asList(rangeArray));
 		// 人事兼務情報参照クラス取得
-		ConcurrentReferenceBeanInterface concurrentRefer = (ConcurrentReferenceBeanInterface)createBean(ConcurrentReferenceBeanInterface.class);
+		ConcurrentReferenceBeanInterface concurrentRefer = (ConcurrentReferenceBeanInterface)createBean(
+				ConcurrentReferenceBeanInterface.class);
 		// 対象日時点で終了していない人事兼務情報のリストを取得
-		List<ConcurrentDtoInterface> concurrentList = concurrentRefer.getConcurrentList(mospParams.getUser()
-			.getPersonalId(), targetDate);
+		List<ConcurrentDtoInterface> concurrentList = concurrentRefer
+			.getConcurrentList(mospParams.getUser().getPersonalId(), targetDate);
 		// 人事兼務情報毎に処理
 		for (ConcurrentDtoInterface concurrent : concurrentList) {
 			// 操作範囲(所属)リストに追加
@@ -479,6 +483,44 @@ public class SectionReferenceBean extends PlatformBean implements SectionReferen
 			higherSectionCode = route[level];
 		}
 		return higherSectionCode;
+	}
+	
+	/**
+	 * 所属コード群を取得する。<br>
+	 * <br>
+	 * 所属コードFromと所属コードToで、所属コード群を取得する。<br>
+	 * <br>
+	 * @param sectionCodeFrom 所属コードFrom
+	 * @param sectionCodeTo   所属コードTo
+	 * @param activateDate    有効日
+	 * @return 所属コード群
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	@Override
+	public Set<String> getSectionCodeSetForCodeRange(String sectionCodeFrom, String sectionCodeTo, Date activateDate)
+			throws MospException {
+		// 所属コードFromと所属コードToで所属コードリストを取得
+		List<SectionDtoInterface> list = dao.findForCodeRange(sectionCodeFrom, sectionCodeTo, activateDate);
+		// 所属情報リストから所属コード群を取得
+		return getSectionCodeSet(list);
+	}
+	
+	/**
+	 * 所属情報リストから所属コード群を取得する。<br>
+	 * <br>
+	 * @param list 所属情報リスト
+	 * @return 所属コード群
+	 */
+	protected Set<String> getSectionCodeSet(List<SectionDtoInterface> list) {
+		// 所属コード群を準備
+		Set<String> set = new HashSet<String>();
+		// 所属情報毎に処理
+		for (SectionDtoInterface dto : list) {
+			// 所属コード群に追加
+			set.add(dto.getSectionCode());
+		}
+		// 所属コード群を取得
+		return set;
 	}
 	
 }

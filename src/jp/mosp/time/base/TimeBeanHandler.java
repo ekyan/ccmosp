@@ -21,6 +21,8 @@ import java.util.Date;
 
 import jp.mosp.framework.base.BaseBeanHandler;
 import jp.mosp.framework.base.MospException;
+import jp.mosp.platform.bean.file.ImportBeanInterface;
+import jp.mosp.time.bean.AfterApplyAttendancesExecuteBeanInterface;
 import jp.mosp.time.bean.AllowanceRegistBeanInterface;
 import jp.mosp.time.bean.ApplicationRegistBeanInterface;
 import jp.mosp.time.bean.AttendanceCalcBeanInterface;
@@ -40,7 +42,9 @@ import jp.mosp.time.bean.PaidHolidayDataGrantBeanInterface;
 import jp.mosp.time.bean.PaidHolidayDataRegistBeanInterface;
 import jp.mosp.time.bean.PaidHolidayEntranceDateRegistBeanInterface;
 import jp.mosp.time.bean.PaidHolidayFirstYearRegistBeanInterface;
+import jp.mosp.time.bean.PaidHolidayGrantRegistBeanInterface;
 import jp.mosp.time.bean.PaidHolidayPointDateRegistBeanInterface;
+import jp.mosp.time.bean.PaidHolidayProportionallyRegistBeanInterface;
 import jp.mosp.time.bean.PaidHolidayRegistBeanInterface;
 import jp.mosp.time.bean.PaidHolidayTransactionRegistBeanInterface;
 import jp.mosp.time.bean.RestRegistBeanInterface;
@@ -54,8 +58,8 @@ import jp.mosp.time.bean.SubHolidayRegistBeanInterface;
 import jp.mosp.time.bean.SubHolidayRequestRegistBeanInterface;
 import jp.mosp.time.bean.SubstituteRegistBeanInterface;
 import jp.mosp.time.bean.TimeApprovalBeanInterface;
+import jp.mosp.time.bean.TimeRecordBeanInterface;
 import jp.mosp.time.bean.TimeSettingRegistBeanInterface;
-import jp.mosp.time.bean.TimelyPaidHolidayRegistBeanInterface;
 import jp.mosp.time.bean.TotalAbsenceRegistBeanInterface;
 import jp.mosp.time.bean.TotalAllowanceRegistBeanInterface;
 import jp.mosp.time.bean.TotalLeaveRegistBeanInterface;
@@ -63,7 +67,6 @@ import jp.mosp.time.bean.TotalOtherVacationRegistBeanInterface;
 import jp.mosp.time.bean.TotalTimeCalcBeanInterface;
 import jp.mosp.time.bean.TotalTimeCorrectionRegistBeanInterface;
 import jp.mosp.time.bean.TotalTimeEmployeeTransactionRegistBeanInterface;
-import jp.mosp.time.bean.TotalTimePersonalBeanInterface;
 import jp.mosp.time.bean.TotalTimeRegistBeanInterface;
 import jp.mosp.time.bean.TotalTimeTransactionRegistBeanInterface;
 import jp.mosp.time.bean.WorkOnHolidayRequestRegistBeanInterface;
@@ -72,6 +75,8 @@ import jp.mosp.time.bean.WorkTypeItemRegistBeanInterface;
 import jp.mosp.time.bean.WorkTypePatternItemRegistBeanInterface;
 import jp.mosp.time.bean.WorkTypePatternRegistBeanInterface;
 import jp.mosp.time.bean.WorkTypeRegistBeanInterface;
+import jp.mosp.time.bean.impl.HolidayRequestImportBean;
+import jp.mosp.time.bean.impl.WorkOnHolidayRequestImportBean;
 
 /**
  * MosPプラットフォーム用BeanHandler。<br>
@@ -157,7 +162,8 @@ public class TimeBeanHandler extends BaseBeanHandler implements TimeBeanHandlerI
 	
 	@Override
 	public TotalTimeEmployeeTransactionRegistBeanInterface totalTimeEmployeeTransactionRegist() throws MospException {
-		return (TotalTimeEmployeeTransactionRegistBeanInterface)createBean(TotalTimeEmployeeTransactionRegistBeanInterface.class);
+		return (TotalTimeEmployeeTransactionRegistBeanInterface)createBean(
+				TotalTimeEmployeeTransactionRegistBeanInterface.class);
 	}
 	
 	@Override
@@ -256,6 +262,12 @@ public class TimeBeanHandler extends BaseBeanHandler implements TimeBeanHandlerI
 	}
 	
 	@Override
+	public PaidHolidayProportionallyRegistBeanInterface paidHolidayProportionallyRegist() throws MospException {
+		return (PaidHolidayProportionallyRegistBeanInterface)createBean(
+				PaidHolidayProportionallyRegistBeanInterface.class);
+	}
+	
+	@Override
 	public PaidHolidayFirstYearRegistBeanInterface paidHolidayFirstYearRegist() throws MospException {
 		return (PaidHolidayFirstYearRegistBeanInterface)createBean(PaidHolidayFirstYearRegistBeanInterface.class);
 	}
@@ -268,11 +280,6 @@ public class TimeBeanHandler extends BaseBeanHandler implements TimeBeanHandlerI
 	@Override
 	public PaidHolidayEntranceDateRegistBeanInterface paidHolidayEntranceDateRegist() throws MospException {
 		return (PaidHolidayEntranceDateRegistBeanInterface)createBean(PaidHolidayEntranceDateRegistBeanInterface.class);
-	}
-	
-	@Override
-	public TimelyPaidHolidayRegistBeanInterface timelyPaidHolidayRegist() throws MospException {
-		return (TimelyPaidHolidayRegistBeanInterface)createBean(TimelyPaidHolidayRegistBeanInterface.class);
 	}
 	
 	@Override
@@ -336,8 +343,8 @@ public class TimeBeanHandler extends BaseBeanHandler implements TimeBeanHandlerI
 	}
 	
 	@Override
-	public TotalTimePersonalBeanInterface totalTimePersonal() throws MospException {
-		return (TotalTimePersonalBeanInterface)createBean(TotalTimePersonalBeanInterface.class);
+	public PaidHolidayGrantRegistBeanInterface paidHolidayGrantRegist() throws MospException {
+		return (PaidHolidayGrantRegistBeanInterface)createBean(PaidHolidayGrantRegistBeanInterface.class);
 	}
 	
 	@Override
@@ -348,6 +355,26 @@ public class TimeBeanHandler extends BaseBeanHandler implements TimeBeanHandlerI
 	@Override
 	public StockHolidayDataGrantBeanInterface stockHolidayDataGrant() throws MospException {
 		return (StockHolidayDataGrantBeanInterface)createBean(StockHolidayDataGrantBeanInterface.class);
+	}
+	
+	@Override
+	public ImportBeanInterface holidayRequestImport() throws MospException {
+		return (HolidayRequestImportBean)createBean(HolidayRequestImportBean.class);
+	}
+	
+	@Override
+	public ImportBeanInterface workOnHolidayRequestImport() throws MospException {
+		return (WorkOnHolidayRequestImportBean)createBean(WorkOnHolidayRequestImportBean.class);
+	}
+	
+	@Override
+	public AfterApplyAttendancesExecuteBeanInterface afterApplyAttendancesExecute() throws MospException {
+		return (AfterApplyAttendancesExecuteBeanInterface)createBean(AfterApplyAttendancesExecuteBeanInterface.class);
+	}
+	
+	@Override
+	public TimeRecordBeanInterface timeRecord() throws MospException {
+		return (TimeRecordBeanInterface)createBean(TimeRecordBeanInterface.class);
 	}
 	
 }

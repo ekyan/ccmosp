@@ -20,8 +20,10 @@ package jp.mosp.time.dao.settings.impl;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import jp.mosp.framework.base.BaseDto;
 import jp.mosp.framework.base.BaseDtoInterface;
@@ -103,6 +105,11 @@ public class TmmHolidayDao extends PlatformDao implements HolidayDaoInterface {
 	public static final String	COL_CONTINUOUS_ACQUISITION	= "continuous_acquisition";
 	
 	/**
+	 * 時間単位休暇機能。
+	 */
+	public static final String	COL_TIMELY_HOLIDAY_FLAG		= "timely_holiday_flag";
+	
+	/**
 	 * 出勤率計算。
 	 */
 	public static final String	COL_PAID_HOLIDAY_CALC		= "paid_holiday_calc";
@@ -155,6 +162,7 @@ public class TmmHolidayDao extends PlatformDao implements HolidayDaoInterface {
 		dto.setHolidayLimitDay(getInt(COL_HOLIDAY_LIMIT_DAY));
 		dto.setHalfHolidayRequest(getInt(COL_HALF_HOLIDAY_REQUEST));
 		dto.setContinuousAcquisition(getInt(COL_CONTINUOUS_ACQUISITION));
+		dto.setTimelyHolidayFlag(getInt(COL_TIMELY_HOLIDAY_FLAG));
 		dto.setPaidHolidayCalc(getInt(COL_PAID_HOLIDAY_CALC));
 		dto.setSalary(getInt(COL_SALARY));
 		dto.setReasonType(getInt(COL_REASON_TYPE));
@@ -172,11 +180,28 @@ public class TmmHolidayDao extends PlatformDao implements HolidayDaoInterface {
 		return all;
 	}
 	
+	/**
+	 * ResultSetの内容を、休暇種別情報群として取得する。<br>
+	 * @return 休暇種別情報群
+	 * @throws MospException SQL例外が発生した場合
+	 */
+	protected Set<HolidayDtoInterface> mappingAllSet() throws MospException {
+		Set<HolidayDtoInterface> all = new HashSet<HolidayDtoInterface>();
+		while (next()) {
+			all.add((HolidayDtoInterface)mapping());
+		}
+		return all;
+	}
+	
 	@Override
 	public List<HolidayDtoInterface> findForActivateDate(Date activateDate, int holidayType) throws MospException {
 		try {
 			index = 1;
+			// SELECT部追加
 			StringBuffer sb = getSelectQuery(getClass());
+			// 対象日以前で削除されていない最新の情報を取得
+			sb.append(getQueryForMaxActivateDate(TABLE, COL_ACTIVATE_DATE, COL_HOLIDAY_CODE, COL_HOLIDAY_TYPE));
+			// WHERE部追加
 			sb.append(where());
 			sb.append(deleteFlagOff());
 			sb.append(and());
@@ -185,14 +210,41 @@ public class TmmHolidayDao extends PlatformDao implements HolidayDaoInterface {
 			sb.append(MospConst.INACTIVATE_FLAG_OFF);
 			sb.append(and());
 			sb.append(equal(COL_HOLIDAY_TYPE));
-			sb.append(and());
-			sb.append(getQueryForMaxActivateDate());
 			sb.append(getOrderByColumn(COL_HOLIDAY_CODE));
 			prepareStatement(sb.toString());
-			setParam(index++, holidayType);
 			setParam(index++, activateDate);
+			setParam(index++, holidayType);
 			executeQuery();
 			return mappingAll();
+		} catch (Throwable e) {
+			throw new MospException(e);
+		} finally {
+			releaseResultSet();
+			releasePreparedStatement();
+		}
+	}
+	
+	@Override
+	public Set<HolidayDtoInterface> findForActivateDate(Date activateDate) throws MospException {
+		try {
+			index = 1;
+			// SELECT部追加
+			StringBuffer sb = getSelectQuery(getClass());
+			// 対象日以前で削除されていない最新の情報を取得
+			sb.append(getQueryForMaxActivateDate(TABLE, COL_ACTIVATE_DATE, COL_HOLIDAY_CODE, COL_HOLIDAY_TYPE));
+			// WHERE部追加
+			sb.append(where());
+			sb.append(deleteFlagOff());
+			sb.append(and());
+			sb.append(inactivateFlagOff());
+			// ステートメント準備
+			prepareStatement(sb.toString());
+			// パラメータ設定
+			setParam(index++, activateDate);
+			// SQL実行
+			executeQuery();
+			// 結果取得
+			return mappingAllSet();
 		} catch (Throwable e) {
 			throw new MospException(e);
 		} finally {
@@ -258,7 +310,8 @@ public class TmmHolidayDao extends PlatformDao implements HolidayDaoInterface {
 	}
 	
 	@Override
-	public HolidayDtoInterface findForInfo(String holidayCode, Date activateDate, int holidayType) throws MospException {
+	public HolidayDtoInterface findForInfo(String holidayCode, Date activateDate, int holidayType)
+			throws MospException {
 		try {
 			index = 1;
 			StringBuffer sb = getSelectQuery(getClass());
@@ -294,17 +347,19 @@ public class TmmHolidayDao extends PlatformDao implements HolidayDaoInterface {
 	public List<HolidayDtoInterface> findForExport(Date activateDate, int holidayType) throws MospException {
 		try {
 			index = 1;
+			// SELECT部追加
 			StringBuffer sb = getSelectQuery(getClass());
+			// 対象日以前で削除されていない最新の情報を取得
+			sb.append(getQueryForMaxActivateDate(TABLE, COL_ACTIVATE_DATE, COL_HOLIDAY_CODE, COL_HOLIDAY_TYPE));
+			// WHERE部追加
 			sb.append(where());
 			sb.append(deleteFlagOff());
 			sb.append(and());
 			sb.append(equal(COL_HOLIDAY_TYPE));
-			sb.append(and());
-			sb.append(getQueryForMaxActivateDate());
 			sb.append(getOrderByColumn(COL_HOLIDAY_CODE));
 			prepareStatement(sb.toString());
-			setParam(index++, holidayType);
 			setParam(index++, activateDate);
+			setParam(index++, holidayType);
 			executeQuery();
 			return mappingAll();
 		} catch (Throwable e) {
@@ -323,14 +378,13 @@ public class TmmHolidayDao extends PlatformDao implements HolidayDaoInterface {
 			String holidayType = String.valueOf(param.get("holidayType"));
 			String inactivateFlag = String.valueOf(param.get("inactivateFlag"));
 			index = 1;
+			// SELECT部追加
 			StringBuffer sb = getSelectQuery(getClass());
+			// 対象日以前で削除されていない最新の情報を取得
+			sb.append(getQueryForMaxActivateDate(TABLE, COL_ACTIVATE_DATE, COL_HOLIDAY_CODE, COL_HOLIDAY_TYPE));
+			// WHERE部追加
 			sb.append(where());
 			sb.append(deleteFlagOff());
-			// 有効日以前で最新の情報を取得
-			if (activateDate != null) {
-				sb.append(and());
-				sb.append(getQueryForMaxActivateDate());
-			}
 			// 休暇コード条件
 			if (!holidayCode.isEmpty()) {
 				sb.append(and());
@@ -419,6 +473,7 @@ public class TmmHolidayDao extends PlatformDao implements HolidayDaoInterface {
 		setParam(index++, dto.getHolidayLimitDay());
 		setParam(index++, dto.getHalfHolidayRequest());
 		setParam(index++, dto.getContinuousAcquisition());
+		setParam(index++, dto.getTimelyHolidayFlag());
 		setParam(index++, dto.getPaidHolidayCalc());
 		setParam(index++, dto.getSalary());
 		setParam(index++, dto.getReasonType());
@@ -430,29 +485,6 @@ public class TmmHolidayDao extends PlatformDao implements HolidayDaoInterface {
 	public Map<String, Object> getParamsMap() {
 		Map<String, Object> map = new HashMap<String, Object>();
 		return map;
-	}
-	
-	@Override
-	public StringBuffer getQueryForMaxActivateDate() {
-		StringBuffer sb = new StringBuffer();
-		sb.append(COL_ACTIVATE_DATE);
-		sb.append(" IN (");
-		sb.append("SELECT ");
-		sb.append("MAX(" + COL_ACTIVATE_DATE + ")");
-		sb.append(from(TABLE) + " AS A ");
-		sb.append(where());
-		sb.append(TABLE + "." + COL_HOLIDAY_CODE);
-		sb.append(" = A." + COL_HOLIDAY_CODE);
-		sb.append(and());
-		sb.append(TABLE + "." + COL_HOLIDAY_TYPE);
-		sb.append(" = A." + COL_HOLIDAY_TYPE);
-		sb.append(and());
-		sb.append(deleteFlagOff());
-		sb.append(and());
-		sb.append(COL_ACTIVATE_DATE);
-		sb.append(" <= ?");
-		sb.append(")");
-		return sb;
 	}
 	
 }

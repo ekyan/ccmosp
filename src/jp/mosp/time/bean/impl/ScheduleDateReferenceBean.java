@@ -29,7 +29,6 @@ import jp.mosp.framework.base.MospParams;
 import jp.mosp.framework.utils.DateUtility;
 import jp.mosp.platform.base.PlatformBean;
 import jp.mosp.time.bean.ScheduleDateReferenceBeanInterface;
-import jp.mosp.time.constant.TimeConst;
 import jp.mosp.time.constant.TimeMessageConst;
 import jp.mosp.time.dao.settings.ScheduleDateDaoInterface;
 import jp.mosp.time.dto.settings.ScheduleDateDtoInterface;
@@ -42,7 +41,7 @@ public class ScheduleDateReferenceBean extends PlatformBean implements ScheduleD
 	/**
 	 * カレンダ日マスタDAO。
 	 */
-	private ScheduleDateDaoInterface	dao;
+	private ScheduleDateDaoInterface dao;
 	
 	
 	/**
@@ -67,15 +66,8 @@ public class ScheduleDateReferenceBean extends PlatformBean implements ScheduleD
 	}
 	
 	@Override
-	public ScheduleDateDtoInterface getScheduleDateInfo(String scheduleCode, Date targetDate, Date scheduleDate)
-			throws MospException {
-		return dao.findForInfo(scheduleCode, targetDate, scheduleDate);
-	}
-	
-	@Override
-	public ScheduleDateDtoInterface findForKey(String scheduleCode, Date activateDate, Date scheduleDate)
-			throws MospException {
-		return dao.findForKey(scheduleCode, activateDate, scheduleDate);
+	public ScheduleDateDtoInterface getScheduleDateInfo(String scheduleCode, Date scheduleDate) throws MospException {
+		return dao.findForKey(scheduleCode, scheduleDate);
 	}
 	
 	@Override
@@ -89,34 +81,9 @@ public class ScheduleDateReferenceBean extends PlatformBean implements ScheduleD
 	}
 	
 	@Override
-	public List<ScheduleDateDtoInterface> findForList(String scheduleCode, Date activateDate, Date startDate,
-			Date endDate) throws MospException {
-		return dao.findForList(scheduleCode, activateDate, startDate, endDate);
-	}
-	
-	@Override
 	public List<ScheduleDateDtoInterface> findForList(String scheduleCode, Date startDate, Date endDate)
 			throws MospException {
 		return dao.findForList(scheduleCode, startDate, endDate);
-	}
-	
-	@Override
-	public boolean isHoliday(String scheduleCode, Date targetDate) throws MospException {
-		// カレンダーコードにおける対象日の情報取得
-		ScheduleDateDtoInterface scheduleDateDto = dao.findForInfo(scheduleCode, targetDate, targetDate);
-		// カレンダー日情報確認
-		if (scheduleDateDto == null) {
-			return false;
-		}
-		// 法定休日確認
-		if (TimeConst.CODE_HOLIDAY_LEGAL_HOLIDAY.equals(scheduleDateDto.getWorkTypeCode())) {
-			return true;
-		}
-		// 所定休日確認
-		if (TimeConst.CODE_HOLIDAY_PRESCRIBED_HOLIDAY.equals(scheduleDateDto.getWorkTypeCode())) {
-			return true;
-		}
-		return false;
 	}
 	
 	@Override

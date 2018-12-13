@@ -62,6 +62,16 @@ public interface AttendanceDtoInterface extends BaseDtoInterface {
 	int getDirectEnd();
 	
 	/**
+	 * @return 始業忘れ。
+	 */
+	int getForgotRecordWorkStart();
+	
+	/**
+	 * @return その他の始業できなかった場合。
+	 */
+	int getNotRecordWorkStart();
+	
+	/**
 	 * @return 始業時刻。
 	 */
 	Date getStartTime();
@@ -317,6 +327,21 @@ public interface AttendanceDtoInterface extends BaseDtoInterface {
 	int getLateNightTime();
 	
 	/**
+	 * @return 深夜所定労働時間内時間。
+	 */
+	int getNightWorkWithinPrescribedWork();
+	
+	/**
+	 * @return 深夜時間外時間。
+	 */
+	int getNightOvertimeWork();
+	
+	/**
+	 * @return 深夜休日労働時間。
+	 */
+	int getNightWorkOnHoliday();
+	
+	/**
 	 * @return 所定休日勤務時間。
 	 */
 	int getSpecificWorkTime();
@@ -335,6 +360,11 @@ public interface AttendanceDtoInterface extends BaseDtoInterface {
 	 * @return 勤怠コメント。
 	 */
 	String getTimeComment();
+	
+	/**
+	 * @return 備考。
+	 */
+	String getRemarks();
 	
 	/**
 	 * @return 出勤日数。
@@ -407,14 +437,29 @@ public interface AttendanceDtoInterface extends BaseDtoInterface {
 	double getSpecialLeaveDays();
 	
 	/**
+	 * @return 特別休暇時間数。
+	 */
+	int getSpecialLeaveHours();
+	
+	/**
 	 * @return その他休暇日数。
 	 */
 	double getOtherLeaveDays();
 	
 	/**
+	 * @return その他休暇時間数。
+	 */
+	int getOtherLeaveHours();
+	
+	/**
 	 * @return 欠勤日数。
 	 */
 	double getAbsenceDays();
+	
+	/**
+	 * @return 欠勤時間数。
+	 */
+	int getAbsenceHours();
 	
 	/**
 	 * @return 法定代休発生日数。
@@ -530,6 +575,16 @@ public interface AttendanceDtoInterface extends BaseDtoInterface {
 	 * @param directEnd セットする 直帰。
 	 */
 	void setDirectEnd(int directEnd);
+	
+	/**
+	 * @param forgotRecordWorkStart セットする 始業忘れ。
+	 */
+	void setForgotRecordWorkStart(int forgotRecordWorkStart);
+	
+	/**
+	 * @param notRecordWorkStart セットする その他の始業できなかった場合。
+	 */
+	void setNotRecordWorkStart(int notRecordWorkStart);
 	
 	/**
 	 * @param startTime セットする 始業時刻。
@@ -787,6 +842,21 @@ public interface AttendanceDtoInterface extends BaseDtoInterface {
 	void setLateNightTime(int lateNightTime);
 	
 	/**
+	 * @param nightWorkWithinPrescribedWork セットする 深夜所定労働時間内時間。
+	 */
+	void setNightWorkWithinPrescribedWork(int nightWorkWithinPrescribedWork);
+	
+	/**
+	 * @param nightOvertimeWork セットする 深夜時間外時間。
+	 */
+	void setNightOvertimeWork(int nightOvertimeWork);
+	
+	/**
+	 * @param nightWorkOnHoliday セットする 深夜休日労働時間。
+	 */
+	void setNightWorkOnHoliday(int nightWorkOnHoliday);
+	
+	/**
 	 * @param specificWorkTime セットする 所定休日勤務時間。
 	 */
 	void setSpecificWorkTime(int specificWorkTime);
@@ -805,6 +875,11 @@ public interface AttendanceDtoInterface extends BaseDtoInterface {
 	 * @param timeComment セットする 勤怠コメント。
 	 */
 	void setTimeComment(String timeComment);
+	
+	/**
+	 * @param remarks セットする 備考。
+	 */
+	void setRemarks(String remarks);
 	
 	/**
 	 * @param workDays セットする 出勤日数。
@@ -877,14 +952,29 @@ public interface AttendanceDtoInterface extends BaseDtoInterface {
 	void setSpecialLeaveDays(double specialLeaveDays);
 	
 	/**
+	 * @param specialLeaveHours セットする 特別休暇時間数。
+	 */
+	void setSpecialLeaveHours(int specialLeaveHours);
+	
+	/**
 	 * @param otherLeaveDays セットする その他休暇日数。
 	 */
 	void setOtherLeaveDays(double otherLeaveDays);
 	
 	/**
+	 * @param otherLeaveHours セットする その他休暇時間数。
+	 */
+	void setOtherLeaveHours(int otherLeaveHours);
+	
+	/**
 	 * @param absenceDays セットする 欠勤日数。
 	 */
 	void setAbsenceDays(double absenceDays);
+	
+	/**
+	 * @param absenceHours セットする 欠勤時間数。
+	 */
+	void setAbsenceHours(int absenceHours);
 	
 	/**
 	 * @param grantedLegalCompensationDays セットする 法定代休発生日数。

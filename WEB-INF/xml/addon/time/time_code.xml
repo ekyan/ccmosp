@@ -18,6 +18,16 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -->
 <MosP>
+	<Code key="MessageType">
+		<CodeItem key="1">
+			<ItemName>勤怠</ItemName>
+			<ViewIndex>1</ViewIndex>
+		</CodeItem>
+		<CodeItem key="2">
+			<ItemName>人事</ItemName>
+			<ViewIndex>2</ViewIndex>
+		</CodeItem>
+	</Code>
 	<Code key="CutoffDate">
 		<CodeItem key="1">
 			<ItemName>翌1日締</ItemName>
@@ -162,16 +172,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 <!--
 		<CodeItem key="1">
 			<ItemName>入社月</ItemName>
-			<ViewIndex>2</ViewIndex>
+			<ViewIndex>3</ViewIndex>
 		</CodeItem>
 		<CodeItem key="2">
 			<ItemName>入社日</ItemName>
-			<ViewIndex>3</ViewIndex>
+			<ViewIndex>4</ViewIndex>
 		</CodeItem>
 -->
 		<CodeItem key="3">
 			<ItemName>対象外</ItemName>
-			<ViewIndex>4</ViewIndex>
+			<ViewIndex>5</ViewIndex>
+		</CodeItem>
+		<CodeItem key="4">
+			<ItemName>比例</ItemName>
+			<ViewIndex>2</ViewIndex>
 		</CodeItem>
 	</Code>
 	<Code key="PaidHolidayTime">
@@ -430,16 +444,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	</Code>
 	<Code key="NotApproved">
 		<CodeItem key="0">
-			<ItemName>無し</ItemName>
+			<ItemName>未承認無し</ItemName>
 			<ViewIndex>1</ViewIndex>
 		</CodeItem>
 		<CodeItem key="1">
-			<ItemName>有り</ItemName>
+			<ItemName>未承認有り</ItemName>
 			<ViewIndex>2</ViewIndex>
 		</CodeItem>
 		<CodeItem key="2">
 			<ItemName>勤怠未申請有り</ItemName>
 			<ViewIndex>3</ViewIndex>
+		</CodeItem>
+		<CodeItem key="3">
+			<ItemName>未承認・未申請有り</ItemName>
+			<ViewIndex>4</ViewIndex>
 		</CodeItem>
 	</Code>
 	<Code key="ScheduleOver">
@@ -459,16 +477,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		</CodeItem>
 		<CodeItem key="2">
 			<ItemName>勤務後残業</ItemName>
-			<ViewIndex>2</ViewIndex>
-		</CodeItem>
-	</Code>
-	<Code key="Substitute">
-		<CodeItem key="1">
-			<ItemName>振替出勤</ItemName>
-			<ViewIndex>1</ViewIndex>
-		</CodeItem>
-		<CodeItem key="2">
-			<ItemName>休日出勤</ItemName>
 			<ViewIndex>2</ViewIndex>
 		</CodeItem>
 	</Code>
@@ -564,6 +572,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 			<ViewIndex>3</ViewIndex>
 		</CodeItem>
 	</Code>
+	<Code key="SubordinateSearchType">
+		<CodeItem key="1">
+			<ItemName>承認すべき申請者</ItemName>
+			<ViewIndex>1</ViewIndex>
+		</CodeItem>
+		<CodeItem key="2">
+			<ItemName>部下</ItemName>
+			<ViewIndex>2</ViewIndex>
+		</CodeItem>
+	</Code>
 	<Code key="EditType">
 		<CodeItem key="1">
 			<ItemName>csv</ItemName>
@@ -578,32 +596,50 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 			<ViewIndex>3</ViewIndex>
 		</CodeItem>
 	</Code>
+	<!-- インポート -->
 	<Code key="TimeImportTableType">
 		<CodeItem key="import_tmd_attendance">
 			<ItemName>勤怠データ</ItemName>
 			<ViewIndex>1</ViewIndex>
 		</CodeItem>
+		<CodeItem key="import_tmd_attendance_self">
+			<ItemName>勤怠データ【自己承認】</ItemName>
+			<ViewIndex>2</ViewIndex>
+		</CodeItem>
 		<CodeItem key="import_tmd_total_time">
 			<ItemName>勤怠集計データ</ItemName>
-			<ViewIndex>2</ViewIndex>
+			<ViewIndex>3</ViewIndex>
 		</CodeItem>
 		<CodeItem key="import_tmd_paid_holiday">
 			<ItemName>有給休暇データ</ItemName>
-			<ViewIndex>3</ViewIndex>
+			<ViewIndex>4</ViewIndex>
 		</CodeItem>
 		<CodeItem key="import_tmd_stock_holiday">
 			<ItemName>ストック休暇データ</ItemName>
-			<ViewIndex>4</ViewIndex>
-		</CodeItem>
-<!--
-		<CodeItem key="import_tmd_timely_paid_holiday">
-			<ItemName>時間単位有給休暇データ</ItemName>
 			<ViewIndex>5</ViewIndex>
 		</CodeItem>
--->
 		<CodeItem key="import_tmd_holiday">
-			<ItemName>休暇データ</ItemName>
-			<ViewIndex>6</ViewIndex>
+			<ItemName>休暇付与データ</ItemName>
+			<ViewIndex>7</ViewIndex>
+		</CodeItem>
+		<CodeItem key="import_tmd_holiday_request">
+			<ItemName>休暇申請データ【自己承認】</ItemName>
+			<ViewIndex>8</ViewIndex>
+		</CodeItem>
+		<CodeItem key="import_tmd_work_on_holiday_request">
+<!--
+			<ItemName>振出・休出申請データ【自己承認】</ItemName>
+-->
+			<ItemName>振替出勤申請データ【自己承認】</ItemName>
+			<ViewIndex>9</ViewIndex>
+		</CodeItem>
+		<CodeItem key="import_tmd_work_on_holiday_request_substitute_off">
+			<ItemName>休日出勤申請データ【自己承認】</ItemName>
+			<ViewIndex>10</ViewIndex>
+		</CodeItem>
+		<CodeItem key="import_tmd_work_type">
+			<ItemName>勤務形態データ</ItemName>
+			<ViewIndex>11</ViewIndex>
 		</CodeItem>
 	</Code>
 	<Code key="import_tmd_attendance">
@@ -751,21 +787,207 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 			<ItemName>深夜勤務時間</ItemName>
 			<ViewIndex>133</ViewIndex>
 		</CodeItem>
+		<CodeItem key="night_work_within_prescribed_work">
+			<ItemName>深夜所定労働時間内時間</ItemName>
+			<ViewIndex>134</ViewIndex>
+		</CodeItem>
+		<CodeItem key="night_overtime_work">
+			<ItemName>深夜時間外時間</ItemName>
+			<ViewIndex>135</ViewIndex>
+		</CodeItem>
+		<CodeItem key="night_work_on_holiday">
+			<ItemName>深夜休日労働時間</ItemName>
+			<ViewIndex>136</ViewIndex>
+		</CodeItem>
 		<CodeItem key="specific_work_time">
 			<ItemName>所定休日勤務時間</ItemName>
-			<ViewIndex>134</ViewIndex>
+			<ViewIndex>137</ViewIndex>
 		</CodeItem>
 		<CodeItem key="legal_work_time">
 			<ItemName>法定休日勤務時間</ItemName>
-			<ViewIndex>135</ViewIndex>
+			<ViewIndex>138</ViewIndex>
 		</CodeItem>
 		<CodeItem key="decrease_time">
 			<ItemName>減額対象時間</ItemName>
-			<ViewIndex>136</ViewIndex>
+			<ViewIndex>139</ViewIndex>
 		</CodeItem>
 		<CodeItem key="time_comment">
 			<ItemName>勤怠コメント</ItemName>
+			<ViewIndex>140</ViewIndex>
+		</CodeItem>
+	</Code>
+	<Code key="import_tmd_attendance_self">
+		<CodeItem key="employee_code">
+			<ItemName>社員コード</ItemName>
+			<ViewIndex>1</ViewIndex>
+		</CodeItem>
+		<CodeItem key="work_date">
+			<ItemName>勤務日</ItemName>
+			<ViewIndex>101</ViewIndex>
+		</CodeItem>
+		<CodeItem key="times_work">
+			<ItemName>勤務回数</ItemName>
+			<ViewIndex>102</ViewIndex>
+		</CodeItem>
+		<CodeItem key="work_type_code">
+			<ItemName>勤務形態コード</ItemName>
+			<ViewIndex>103</ViewIndex>
+		</CodeItem>
+		<CodeItem key="direct_start">
+			<ItemName>直行</ItemName>
+			<ViewIndex>104</ViewIndex>
+		</CodeItem>
+		<CodeItem key="direct_end">
+			<ItemName>直帰</ItemName>
+			<ViewIndex>105</ViewIndex>
+		</CodeItem>
+		<CodeItem key="start_time">
+			<ItemName>始業時刻(丸め打刻)</ItemName>
+			<ViewIndex>106</ViewIndex>
+		</CodeItem>
+		<CodeItem key="actual_start_time">
+			<ItemName>始業時刻(実打刻)</ItemName>
+			<ViewIndex>107</ViewIndex>
+		</CodeItem>
+		<CodeItem key="end_time">
+			<ItemName>終業時刻(丸め打刻)</ItemName>
+			<ViewIndex>108</ViewIndex>
+		</CodeItem>
+		<CodeItem key="actual_end_time">
+			<ItemName>終業時刻(実打刻)</ItemName>
+			<ViewIndex>109</ViewIndex>
+		</CodeItem>
+		<CodeItem key="late_time">
+			<ItemName>遅刻時間</ItemName>
+			<ViewIndex>110</ViewIndex>
+		</CodeItem>
+<!--
+		<CodeItem key="actual_late_time">
+			<ItemName>実遅刻時間</ItemName>
+			<ViewIndex>111</ViewIndex>
+		</CodeItem>
+-->
+		<CodeItem key="late_reason">
+			<ItemName>遅刻理由</ItemName>
+			<ViewIndex>112</ViewIndex>
+		</CodeItem>
+		<CodeItem key="late_certificate">
+			<ItemName>遅刻証明書</ItemName>
+			<ViewIndex>113</ViewIndex>
+		</CodeItem>
+		<CodeItem key="late_comment">
+			<ItemName>遅刻コメント</ItemName>
+			<ViewIndex>114</ViewIndex>
+		</CodeItem>
+		<CodeItem key="leave_early_time">
+			<ItemName>早退時間</ItemName>
+			<ViewIndex>115</ViewIndex>
+		</CodeItem>
+<!--
+		<CodeItem key="actual_leave_early_time">
+			<ItemName>実早退時間</ItemName>
+			<ViewIndex>116</ViewIndex>
+		</CodeItem>
+-->
+		<CodeItem key="leave_early_reason">
+			<ItemName>早退理由</ItemName>
+			<ViewIndex>117</ViewIndex>
+		</CodeItem>
+		<CodeItem key="leave_early_certificate">
+			<ItemName>早退証明書</ItemName>
+			<ViewIndex>118</ViewIndex>
+		</CodeItem>
+		<CodeItem key="leave_early_comment">
+			<ItemName>早退コメント</ItemName>
+			<ViewIndex>119</ViewIndex>
+		</CodeItem>
+		<CodeItem key="work_time">
+			<ItemName>勤務時間</ItemName>
+			<ViewIndex>120</ViewIndex>
+		</CodeItem>
+		<CodeItem key="general_work_time">
+			<ItemName>所定労働時間</ItemName>
+			<ViewIndex>121</ViewIndex>
+		</CodeItem>
+<!--
+		<CodeItem key="short_unpaid">
+			<ItemName>無給時短時間</ItemName>
+			<ViewIndex>122</ViewIndex>
+		</CodeItem>
+-->
+		<CodeItem key="rest_time">
+			<ItemName>休憩時間</ItemName>
+			<ViewIndex>123</ViewIndex>
+		</CodeItem>
+<!--
+		<CodeItem key="over_rest_time">
+			<ItemName>法定外休憩時間</ItemName>
+			<ViewIndex>124</ViewIndex>
+		</CodeItem>
+-->
+		<CodeItem key="night_rest_time">
+			<ItemName>深夜休憩時間</ItemName>
+			<ViewIndex>125</ViewIndex>
+		</CodeItem>
+		<CodeItem key="public_time">
+			<ItemName>公用外出時間</ItemName>
+			<ViewIndex>126</ViewIndex>
+		</CodeItem>
+		<CodeItem key="private_time">
+			<ItemName>私用外出時間</ItemName>
+			<ViewIndex>127</ViewIndex>
+		</CodeItem>
+		<CodeItem key="overtime">
+			<ItemName>残業時間</ItemName>
+			<ViewIndex>128</ViewIndex>
+		</CodeItem>
+		<CodeItem key="overtime_before">
+			<ItemName>前残業時間</ItemName>
+			<ViewIndex>129</ViewIndex>
+		</CodeItem>
+		<CodeItem key="overtime_after">
+			<ItemName>後残業時間</ItemName>
+			<ViewIndex>130</ViewIndex>
+		</CodeItem>
+		<CodeItem key="overtime_in">
+			<ItemName>法定内残業時間</ItemName>
+			<ViewIndex>131</ViewIndex>
+		</CodeItem>
+		<CodeItem key="overtime_out">
+			<ItemName>法定外残業時間</ItemName>
+			<ViewIndex>132</ViewIndex>
+		</CodeItem>
+		<CodeItem key="late_night_time">
+			<ItemName>深夜勤務時間</ItemName>
+			<ViewIndex>133</ViewIndex>
+		</CodeItem>
+		<CodeItem key="night_work_within_prescribed_work">
+			<ItemName>深夜所定労働時間内時間</ItemName>
+			<ViewIndex>134</ViewIndex>
+		</CodeItem>
+		<CodeItem key="night_overtime_work">
+			<ItemName>深夜時間外時間</ItemName>
+			<ViewIndex>135</ViewIndex>
+		</CodeItem>
+		<CodeItem key="night_work_on_holiday">
+			<ItemName>深夜休日労働時間</ItemName>
+			<ViewIndex>136</ViewIndex>
+		</CodeItem>
+		<CodeItem key="specific_work_time">
+			<ItemName>所定休日勤務時間</ItemName>
 			<ViewIndex>137</ViewIndex>
+		</CodeItem>
+		<CodeItem key="legal_work_time">
+			<ItemName>法定休日勤務時間</ItemName>
+			<ViewIndex>138</ViewIndex>
+		</CodeItem>
+		<CodeItem key="decrease_time">
+			<ItemName>減額対象時間</ItemName>
+			<ViewIndex>139</ViewIndex>
+		</CodeItem>
+		<CodeItem key="time_comment">
+			<ItemName>勤怠コメント</ItemName>
+			<ViewIndex>140</ViewIndex>
 		</CodeItem>
 	</Code>
 	<Code key="import_tmd_total_time">
@@ -877,233 +1099,257 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 			<ItemName>深夜時間</ItemName>
 			<ViewIndex>125</ViewIndex>
 		</CodeItem>
+		<CodeItem key="night_work_within_prescribed_work">
+			<ItemName>深夜所定労働時間内時間</ItemName>
+			<ViewIndex>126</ViewIndex>
+		</CodeItem>
+		<CodeItem key="night_overtime_work">
+			<ItemName>深夜時間外時間</ItemName>
+			<ViewIndex>127</ViewIndex>
+		</CodeItem>
+		<CodeItem key="night_work_on_holiday">
+			<ItemName>深夜休日労働時間</ItemName>
+			<ViewIndex>128</ViewIndex>
+		</CodeItem>
 		<CodeItem key="work_on_specific_holiday">
 			<ItemName>所定休出時間</ItemName>
-			<ViewIndex>126</ViewIndex>
+			<ViewIndex>129</ViewIndex>
 		</CodeItem>
 		<CodeItem key="work_on_holiday">
 			<ItemName>法定休出時間</ItemName>
-			<ViewIndex>127</ViewIndex>
+			<ViewIndex>130</ViewIndex>
 		</CodeItem>
 		<CodeItem key="decrease_time">
 			<ItemName>減額対象時間</ItemName>
-			<ViewIndex>128</ViewIndex>
+			<ViewIndex>131</ViewIndex>
 		</CodeItem>
 		<CodeItem key="forty_five_hour_overtime">
 			<ItemName>45時間超残業時間</ItemName>
-			<ViewIndex>129</ViewIndex>
+			<ViewIndex>132</ViewIndex>
 		</CodeItem>
 		<CodeItem key="times_overtime">
 			<ItemName>残業回数</ItemName>
-			<ViewIndex>130</ViewIndex>
+			<ViewIndex>133</ViewIndex>
 		</CodeItem>
 		<CodeItem key="times_working_holiday">
 			<ItemName>休日出勤回数</ItemName>
-			<ViewIndex>131</ViewIndex>
+			<ViewIndex>134</ViewIndex>
 		</CodeItem>
 		<CodeItem key="late_days">
 			<ItemName>遅刻合計日数</ItemName>
-			<ViewIndex>132</ViewIndex>
+			<ViewIndex>135</ViewIndex>
 		</CodeItem>
 		<CodeItem key="late_thirty_minutes_or_more">
 			<ItemName>遅刻30分以上日数</ItemName>
-			<ViewIndex>133</ViewIndex>
+			<ViewIndex>136</ViewIndex>
 		</CodeItem>
 		<CodeItem key="late_less_than_thirty_minutes">
 			<ItemName>遅刻30分未満日数</ItemName>
-			<ViewIndex>134</ViewIndex>
+			<ViewIndex>137</ViewIndex>
 		</CodeItem>
 		<CodeItem key="late_time">
 			<ItemName>遅刻合計時間</ItemName>
-			<ViewIndex>135</ViewIndex>
+			<ViewIndex>138</ViewIndex>
 		</CodeItem>
 		<CodeItem key="late_thirty_minutes_or_more_time">
 			<ItemName>遅刻30分以上時間</ItemName>
-			<ViewIndex>136</ViewIndex>
+			<ViewIndex>139</ViewIndex>
 		</CodeItem>
 		<CodeItem key="late_less_than_thirty_minutes_time">
 			<ItemName>遅刻30分未満時間</ItemName>
-			<ViewIndex>137</ViewIndex>
+			<ViewIndex>140</ViewIndex>
 		</CodeItem>
 <!--
 		<CodeItem key="times_late">
 			<ItemName>遅刻合計回数</ItemName>
-			<ViewIndex>138</ViewIndex>
+			<ViewIndex>141</ViewIndex>
 		</CodeItem>
 -->
 		<CodeItem key="leave_early_days">
 			<ItemName>早退合計日数</ItemName>
-			<ViewIndex>139</ViewIndex>
+			<ViewIndex>142</ViewIndex>
 		</CodeItem>
 		<CodeItem key="leave_early_thirty_minutes_or_more">
 			<ItemName>早退30分以上日数</ItemName>
-			<ViewIndex>140</ViewIndex>
+			<ViewIndex>143</ViewIndex>
 		</CodeItem>
 		<CodeItem key="leave_early_less_than_thirty_minutes">
 			<ItemName>早退30分未満日数</ItemName>
-			<ViewIndex>141</ViewIndex>
+			<ViewIndex>144</ViewIndex>
 		</CodeItem>
 		<CodeItem key="leave_early_time">
 			<ItemName>早退合計時間</ItemName>
-			<ViewIndex>142</ViewIndex>
+			<ViewIndex>145</ViewIndex>
 		</CodeItem>
 		<CodeItem key="leave_early_thirty_minutes_or_more_time">
 			<ItemName>早退30分以上時間</ItemName>
-			<ViewIndex>143</ViewIndex>
+			<ViewIndex>146</ViewIndex>
 		</CodeItem>
 		<CodeItem key="leave_early_less_than_thirty_minutes_time">
 			<ItemName>早退30分未満時間</ItemName>
-			<ViewIndex>144</ViewIndex>
+			<ViewIndex>147</ViewIndex>
 		</CodeItem>
 <!--
 		<CodeItem key="times_leave_early">
 			<ItemName>早退合計回数</ItemName>
-			<ViewIndex>145</ViewIndex>
+			<ViewIndex>148</ViewIndex>
 		</CodeItem>
 -->
 		<CodeItem key="times_holiday">
 			<ItemName>合計休日日数</ItemName>
-			<ViewIndex>146</ViewIndex>
+			<ViewIndex>149</ViewIndex>
 		</CodeItem>
 		<CodeItem key="times_legal_holiday">
 			<ItemName>法定休日日数</ItemName>
-			<ViewIndex>147</ViewIndex>
+			<ViewIndex>150</ViewIndex>
 		</CodeItem>
 		<CodeItem key="times_specific_holiday">
 			<ItemName>所定休日日数</ItemName>
-			<ViewIndex>148</ViewIndex>
+			<ViewIndex>151</ViewIndex>
 		</CodeItem>
 		<CodeItem key="times_paid_holiday">
 			<ItemName>有給休暇日数</ItemName>
-			<ViewIndex>149</ViewIndex>
+			<ViewIndex>152</ViewIndex>
 		</CodeItem>
 		<CodeItem key="paid_holiday_hour">
 			<ItemName>有給休暇時間</ItemName>
-			<ViewIndex>150</ViewIndex>
+			<ViewIndex>153</ViewIndex>
 		</CodeItem>
 		<CodeItem key="times_stock_holiday">
 			<ItemName>ストック休暇日数</ItemName>
-			<ViewIndex>151</ViewIndex>
+			<ViewIndex>154</ViewIndex>
 		</CodeItem>
 		<CodeItem key="times_compensation">
 			<ItemName>合計代休日数</ItemName>
-			<ViewIndex>152</ViewIndex>
+			<ViewIndex>155</ViewIndex>
 		</CodeItem>
 		<CodeItem key="times_legal_compensation">
 			<ItemName>法定代休日数</ItemName>
-			<ViewIndex>153</ViewIndex>
+			<ViewIndex>156</ViewIndex>
 		</CodeItem>
 		<CodeItem key="times_specific_compensation">
 			<ItemName>所定代休日数</ItemName>
-			<ViewIndex>154</ViewIndex>
+			<ViewIndex>157</ViewIndex>
 		</CodeItem>
 <!--
 		<CodeItem key="times_late_compensation">
 			<ItemName>深夜代休日数</ItemName>
-			<ViewIndex>155</ViewIndex>
+			<ViewIndex>158</ViewIndex>
 		</CodeItem>
 -->
 		<CodeItem key="times_holiday_substitute">
 			<ItemName>合計振替休日日数</ItemName>
-			<ViewIndex>156</ViewIndex>
+			<ViewIndex>159</ViewIndex>
 		</CodeItem>
 		<CodeItem key="times_legal_holiday_substitute">
 			<ItemName>法定振替休日日数</ItemName>
-			<ViewIndex>157</ViewIndex>
+			<ViewIndex>160</ViewIndex>
 		</CodeItem>
 		<CodeItem key="times_specific_holiday_substitute">
 			<ItemName>所定振替休日日数</ItemName>
-			<ViewIndex>158</ViewIndex>
+			<ViewIndex>161</ViewIndex>
 		</CodeItem>
 		<CodeItem key="total_special_holiday">
 			<ItemName>特別休暇合計日数</ItemName>
-			<ViewIndex>159</ViewIndex>
+			<ViewIndex>162</ViewIndex>
+		</CodeItem>
+		<CodeItem key="special_holiday_hour">
+			<ItemName>特別休暇時間</ItemName>
+			<ViewIndex>163</ViewIndex>
 		</CodeItem>
 		<CodeItem key="total_other_holiday">
 			<ItemName>その他休暇合計日数</ItemName>
-			<ViewIndex>160</ViewIndex>
+			<ViewIndex>164</ViewIndex>
+		</CodeItem>
+		<CodeItem key="other_holiday_hour">
+			<ItemName>その他休暇時間</ItemName>
+			<ViewIndex>165</ViewIndex>
 		</CodeItem>
 		<CodeItem key="total_absence">
 			<ItemName>欠勤合計日数</ItemName>
-			<ViewIndex>161</ViewIndex>
+			<ViewIndex>166</ViewIndex>
+		</CodeItem>
+		<CodeItem key="absence_hour">
+			<ItemName>欠勤時間</ItemName>
+			<ViewIndex>167</ViewIndex>
 		</CodeItem>
 <!--
 		<CodeItem key="total_allowance">
 			<ItemName>手当合計</ItemName>
-			<ViewIndex>162</ViewIndex>
+			<ViewIndex>168</ViewIndex>
 		</CodeItem>
 -->
 		<CodeItem key="sixty_hour_overtime">
 			<ItemName>60時間超残業時間</ItemName>
-			<ViewIndex>163</ViewIndex>
+			<ViewIndex>169</ViewIndex>
 		</CodeItem>
 		<CodeItem key="week_day_overtime">
 			<ItemName>平日時間外時間</ItemName>
-			<ViewIndex>164</ViewIndex>
+			<ViewIndex>170</ViewIndex>
 		</CodeItem>
 		<CodeItem key="specific_overtime">
 			<ItemName>所定休日時間外時間</ItemName>
-			<ViewIndex>165</ViewIndex>
+			<ViewIndex>171</ViewIndex>
 		</CodeItem>
 		<CodeItem key="times_alternative">
 			<ItemName>代替休暇日数</ItemName>
-			<ViewIndex>166</ViewIndex>
+			<ViewIndex>172</ViewIndex>
 		</CodeItem>
 		<CodeItem key="legal_compensation_occurred">
 			<ItemName>法定代休発生日数</ItemName>
-			<ViewIndex>167</ViewIndex>
+			<ViewIndex>173</ViewIndex>
 		</CodeItem>
 		<CodeItem key="specific_compensation_occurred">
 			<ItemName>所定代休発生日数</ItemName>
-			<ViewIndex>168</ViewIndex>
+			<ViewIndex>174</ViewIndex>
 		</CodeItem>
 <!--
 		<CodeItem key="late_compensation_occurred">
 			<ItemName>深夜代休発生日数</ItemName>
-			<ViewIndex>169</ViewIndex>
+			<ViewIndex>175</ViewIndex>
 		</CodeItem>
 -->
 		<CodeItem key="legal_compensation_unused">
 			<ItemName>法定代休未取得日数</ItemName>
-			<ViewIndex>170</ViewIndex>
+			<ViewIndex>176</ViewIndex>
 		</CodeItem>
 		<CodeItem key="specific_compensation_unused">
 			<ItemName>所定代休未取得日数</ItemName>
-			<ViewIndex>171</ViewIndex>
+			<ViewIndex>177</ViewIndex>
 		</CodeItem>
 <!--
 		<CodeItem key="late_compensation_unused">
 			<ItemName>深夜代休未取得日数</ItemName>
-			<ViewIndex>172</ViewIndex>
+			<ViewIndex>178</ViewIndex>
 		</CodeItem>
 -->
 		<CodeItem key="weekly_over_forty_hour_work_time">
 			<ItemName>週40時間超勤務時間</ItemName>
-			<ViewIndex>173</ViewIndex>
+			<ViewIndex>179</ViewIndex>
 		</CodeItem>
 		<CodeItem key="overtime_in_no_weekly_forty">
 			<ItemName>法定内残業時間(週40時間超除く)</ItemName>
-			<ViewIndex>174</ViewIndex>
+			<ViewIndex>180</ViewIndex>
 		</CodeItem>
 		<CodeItem key="overtime_out_no_weekly_forty">
 			<ItemName>法定外残業時間(週40時間超除く)</ItemName>
-			<ViewIndex>175</ViewIndex>
+			<ViewIndex>181</ViewIndex>
 		</CodeItem>
 		<CodeItem key="week_day_overtime_total">
 			<ItemName>平日残業合計時間</ItemName>
-			<ViewIndex>176</ViewIndex>
+			<ViewIndex>182</ViewIndex>
 		</CodeItem>
 		<CodeItem key="week_day_overtime_in_no_weekly_forty">
 			<ItemName>平日時間内時間(週40時間超除く)</ItemName>
-			<ViewIndex>177</ViewIndex>
+			<ViewIndex>183</ViewIndex>
 		</CodeItem>
 		<CodeItem key="week_day_overtime_out_no_weekly_forty">
 			<ItemName>平日時間外時間(週40時間超除く)</ItemName>
-			<ViewIndex>178</ViewIndex>
+			<ViewIndex>184</ViewIndex>
 		</CodeItem>
 		<CodeItem key="week_day_overtime_in">
 			<ItemName>平日時間内時間</ItemName>
-			<ViewIndex>179</ViewIndex>
+			<ViewIndex>185</ViewIndex>
 		</CodeItem>
 	</Code>
 	<Code key="import_tmd_paid_holiday">
@@ -1184,45 +1430,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 			<ItemName>付与日数</ItemName>
 			<ViewIndex>105</ViewIndex>
 		</CodeItem>
-		<CodeItem key="cancel_day">
-			<ItemName>廃棄日数</ItemName>
-			<ViewIndex>106</ViewIndex>
-		</CodeItem>
-		<CodeItem key="use_day">
-			<ItemName>使用日数</ItemName>
-			<ViewIndex>107</ViewIndex>
-		</CodeItem>
--->
-	</Code>
-	<Code key="import_tmd_timely_paid_holiday">
-		<CodeItem key="employee_code">
-			<ItemName>社員コード</ItemName>
-			<ViewIndex>1</ViewIndex>
-		</CodeItem>
-		<CodeItem key="activate_date">
-			<ItemName>有効日</ItemName>
-			<ViewIndex>101</ViewIndex>
-		</CodeItem>
-		<CodeItem key="acquisition_date">
-			<ItemName>取得日</ItemName>
-			<ViewIndex>102</ViewIndex>
-		</CodeItem>
-		<CodeItem key="possible_hour">
-			<ItemName>利用可能時間数</ItemName>
-			<ViewIndex>103</ViewIndex>
-		</CodeItem>
-<!--
 		<CodeItem key="giving_hour">
 			<ItemName>付与時間数</ItemName>
-			<ViewIndex>104</ViewIndex>
+			<ViewIndex>106</ViewIndex>
+		</CodeItem>
+		<CodeItem key="cancel_day">
+			<ItemName>廃棄日数</ItemName>
+			<ViewIndex>107</ViewIndex>
 		</CodeItem>
 		<CodeItem key="cancel_hour">
 			<ItemName>廃棄時間数</ItemName>
-			<ViewIndex>105</ViewIndex>
+			<ViewIndex>108</ViewIndex>
+		</CodeItem>
+		<CodeItem key="use_day">
+			<ItemName>使用日数</ItemName>
+			<ViewIndex>109</ViewIndex>
 		</CodeItem>
 		<CodeItem key="use_hour">
 			<ItemName>使用時間数</ItemName>
-			<ViewIndex>106</ViewIndex>
+			<ViewIndex>110</ViewIndex>
 		</CodeItem>
 -->
 	</Code>
@@ -1266,6 +1492,282 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 			<ViewIndex>108</ViewIndex>
 		</CodeItem>
 	</Code>
+	<Code key="import_tmd_holiday_request">
+		<CodeItem key="personal_id">
+			<ItemName>社員コード</ItemName>
+			<ViewIndex>1</ViewIndex>
+		</CodeItem>
+		<CodeItem key="request_start_date">
+			<ItemName>申請開始日</ItemName>
+			<ViewIndex>2</ViewIndex>
+		</CodeItem>
+		<CodeItem key="request_end_date">
+			<ItemName>申請終了日</ItemName>
+			<ViewIndex>3</ViewIndex>
+		</CodeItem>
+		<CodeItem key="holiday_type1">
+			<ItemName>休暇種別1</ItemName>
+			<ViewIndex>4</ViewIndex>
+		</CodeItem>
+		<CodeItem key="holiday_type2">
+			<ItemName>休暇種別2</ItemName>
+			<ViewIndex>5</ViewIndex>
+		</CodeItem>
+		<CodeItem key="holiday_range">
+			<ItemName>休暇範囲</ItemName>
+			<ViewIndex>6</ViewIndex>
+		</CodeItem>
+		<CodeItem key="start_time">
+			<ItemName>時休開始時刻</ItemName>
+			<ViewIndex>7</ViewIndex>
+		</CodeItem>
+		<CodeItem key="request_reason">
+			<ItemName>理由</ItemName>
+			<ViewIndex>8</ViewIndex>
+		</CodeItem>
+	</Code>
+	<Code key="import_tmd_work_on_holiday_request">
+		<CodeItem key="personal_id">
+			<ItemName>社員コード</ItemName>
+			<ViewIndex>1</ViewIndex>
+		</CodeItem>
+		<CodeItem key="request_date">
+			<ItemName>出勤日</ItemName>
+			<ViewIndex>2</ViewIndex>
+		</CodeItem>
+<!--
+		<CodeItem key="times_work">
+			<ItemName>勤務回数</ItemName>
+			<ViewIndex>3</ViewIndex>
+		</CodeItem>
+-->
+<!--
+		<CodeItem key="work_on_holiday_type">
+			<ItemName>休出種別</ItemName>
+			<ViewIndex>4</ViewIndex>
+		</CodeItem>
+-->
+<!--
+		<CodeItem key="substitute">
+			<ItemName>振替申請</ItemName>
+			<ViewIndex>5</ViewIndex>
+		</CodeItem>
+-->
+		<CodeItem key="work_type_code">
+			<ItemName>勤務形態コード</ItemName>
+			<ViewIndex>6</ViewIndex>
+		</CodeItem>
+<!--
+		<CodeItem key="start_time">
+			<ItemName>出勤予定時刻</ItemName>
+			<ViewIndex>7</ViewIndex>
+		</CodeItem>
+-->
+<!--
+		<CodeItem key="end_time">
+			<ItemName>退勤予定時刻</ItemName>
+			<ViewIndex>8</ViewIndex>
+		</CodeItem>
+-->
+		<CodeItem key="request_reason">
+			<ItemName>理由</ItemName>
+			<ViewIndex>9</ViewIndex>
+		</CodeItem>
+		<CodeItem key="substitute_date">
+			<ItemName>振替日</ItemName>
+			<ViewIndex>10</ViewIndex>
+		</CodeItem>
+<!--
+		<CodeItem key="substitute_range">
+			<ItemName>振替範囲</ItemName>
+			<ViewIndex>11</ViewIndex>
+		</CodeItem>
+-->
+	</Code>
+	<Code key="import_tmd_work_on_holiday_request_substitute_off">
+		<CodeItem key="personal_id">
+			<ItemName>社員コード</ItemName>
+			<ViewIndex>1</ViewIndex>
+		</CodeItem>
+		<CodeItem key="request_date">
+			<ItemName>出勤日</ItemName>
+			<ViewIndex>2</ViewIndex>
+		</CodeItem>
+		<CodeItem key="start_time">
+			<ItemName>出勤予定時刻</ItemName>
+			<ViewIndex>7</ViewIndex>
+		</CodeItem>
+		<CodeItem key="end_time">
+			<ItemName>退勤予定時刻</ItemName>
+			<ViewIndex>8</ViewIndex>
+		</CodeItem>
+		<CodeItem key="request_reason">
+			<ItemName>理由</ItemName>
+			<ViewIndex>9</ViewIndex>
+		</CodeItem>
+	</Code>
+	<!-- 勤務形態データ -->
+	<Code key="import_tmd_work_type">
+		<CodeItem key="activate_date_year">
+			<ItemName>有効日(年)</ItemName>
+			<ViewIndex>1</ViewIndex>
+		</CodeItem>
+		<CodeItem key="activate_date_month">
+			<ItemName>有効日(月)</ItemName>
+			<ViewIndex>2</ViewIndex>
+		</CodeItem>
+		<CodeItem key="work_type_code">
+			<ItemName>勤務形態コード</ItemName>
+			<ViewIndex>3</ViewIndex>
+		</CodeItem>
+		<CodeItem key="work_type_name">
+			<ItemName>勤務形態名称</ItemName>
+			<ViewIndex>4</ViewIndex>
+		</CodeItem>
+		<CodeItem key="work_type_abbr">
+			<ItemName>勤務形態略称</ItemName>
+			<ViewIndex>5</ViewIndex>
+		</CodeItem>
+		<CodeItem key="inactivate_flag">
+			<ItemName>有効/無効</ItemName>
+			<ViewIndex>6</ViewIndex>
+		</CodeItem>
+		<CodeItem key="work_start_time">
+			<ItemName>始業時刻</ItemName>
+			<ViewIndex>7</ViewIndex>
+		</CodeItem>
+		<CodeItem key="work_end_time">
+			<ItemName>終業時刻</ItemName>
+			<ViewIndex>8</ViewIndex>
+		</CodeItem>
+<!--
+		<CodeItem key="work_time">
+			<ItemName>勤務時間</ItemName>
+			<ViewIndex>9</ViewIndex>
+		</CodeItem>
+		<CodeItem key="rest_time">
+			<ItemName>休憩時間</ItemName>
+			<ViewIndex>10</ViewIndex>
+		</CodeItem>
+-->
+		<CodeItem key="rest1_start_time">
+			<ItemName>休憩1(開始時間)</ItemName>
+			<ViewIndex>11</ViewIndex>
+		</CodeItem>
+		<CodeItem key="rest1_end_time">
+			<ItemName>休憩1(終了時間)</ItemName>
+			<ViewIndex>12</ViewIndex>
+		</CodeItem>
+		<CodeItem key="rest2_start_time">
+			<ItemName>休憩2(開始時間)</ItemName>
+			<ViewIndex>13</ViewIndex>
+		</CodeItem>
+		<CodeItem key="rest2_end_time">
+			<ItemName>休憩2(終了時間)</ItemName>
+			<ViewIndex>14</ViewIndex>
+		</CodeItem>
+		<CodeItem key="rest3_start_time">
+			<ItemName>休憩3(開始時間)</ItemName>
+			<ViewIndex>15</ViewIndex>
+		</CodeItem>
+		<CodeItem key="rest3_end_time">
+			<ItemName>休憩3(終了時間)</ItemName>
+			<ViewIndex>16</ViewIndex>
+		</CodeItem>
+		<CodeItem key="rest4_start_time">
+			<ItemName>休憩4(開始時間)</ItemName>
+			<ViewIndex>17</ViewIndex>
+		</CodeItem>
+		<CodeItem key="rest4_end_time">
+			<ItemName>休憩4(終了時間)</ItemName>
+			<ViewIndex>18</ViewIndex>
+		</CodeItem>
+		<CodeItem key="front_start_time">
+			<ItemName>午前休(開始時間)</ItemName>
+			<ViewIndex>19</ViewIndex>
+		</CodeItem>
+		<CodeItem key="front_end_time">
+			<ItemName>午前休(終了時間)</ItemName>
+			<ViewIndex>20</ViewIndex>
+		</CodeItem>
+		<CodeItem key="back_start_time">
+			<ItemName>午後休(開始時間)</ItemName>
+			<ViewIndex>21</ViewIndex>
+		</CodeItem>
+		<CodeItem key="back_end_time">
+			<ItemName>午後休(終了時間)</ItemName>
+			<ViewIndex>22</ViewIndex>
+		</CodeItem>
+		<CodeItem key="over_per">
+			<ItemName>残業休憩時間[毎]</ItemName>
+			<ViewIndex>23</ViewIndex>
+		</CodeItem>
+		<CodeItem key="over_rest">
+			<ItemName>残業休憩時間</ItemName>
+			<ViewIndex>24</ViewIndex>
+		</CodeItem>
+		<CodeItem key="over_before">
+			<ItemName>残前休憩</ItemName>
+			<ViewIndex>25</ViewIndex>
+		</CodeItem>
+		<CodeItem key="before_overtime">
+			<ItemName>勤務前残業実績登録</ItemName>
+			<ViewIndex>26</ViewIndex>
+		</CodeItem>
+		<CodeItem key="half_rest_work_time">
+			<ItemName>半休取得時休憩(午前休取得日の勤務時間)</ItemName>
+			<ViewIndex>27</ViewIndex>
+		</CodeItem>
+		<CodeItem key="half_rest_start_time">
+			<ItemName>半休取得時休憩(休憩開始時間)</ItemName>
+			<ViewIndex>28</ViewIndex>
+		</CodeItem>
+		<CodeItem key="half_rest_end_time">
+			<ItemName>半休取得時休憩(休憩終了時間)</ItemName>
+			<ViewIndex>29</ViewIndex>
+		</CodeItem>
+		<!-- 時短機能 -->
+<!--
+		<CodeItem key="direct_start">
+			<ItemName>直行</ItemName>
+			<ViewIndex>100</ViewIndex>
+		</CodeItem>
+		<CodeItem key="direct_end">
+			<ItemName>直帰</ItemName>
+			<ViewIndex>101</ViewIndex>
+		</CodeItem>
+		<CodeItem key="exclude_night_rest">
+			<ItemName>割増休憩除外</ItemName>
+			<ViewIndex>102</ViewIndex>
+		</CodeItem>
+		<CodeItem key="short1_start">
+			<ItemName>時短時間1(開始時間)</ItemName>
+			<ViewIndex>103</ViewIndex>
+		</CodeItem>
+		<CodeItem key="short1_end">
+			<ItemName>時短時間1(終了時間)</ItemName>
+			<ViewIndex>104</ViewIndex>
+		</CodeItem>
+		<CodeItem key="short1_type">
+			<ItemName>時短時間1(区分)</ItemName>
+			<ViewIndex>105</ViewIndex>
+		</CodeItem>
+		<CodeItem key="short2_start">
+			<ItemName>時短時間2(開始時間)</ItemName>
+			<ViewIndex>106</ViewIndex>
+		</CodeItem>
+		<CodeItem key="short2_end">
+			<ItemName>時短時間2(終了時間)</ItemName>
+			<ViewIndex>107</ViewIndex>
+		</CodeItem>
+		<CodeItem key="short2_type">
+			<ItemName>時短時間2(区分)</ItemName>
+			<ViewIndex>108</ViewIndex>
+		</CodeItem>
+-->
+	</Code>
+
+	<!-- エクスポート -->
 	<Code key="TimeExportTableType">
 		<CodeItem key="export_tmd_attendance">
 			<ItemName>勤怠データ</ItemName>
@@ -1283,14 +1785,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 			<ItemName>ストック休暇データ</ItemName>
 			<ViewIndex>4</ViewIndex>
 		</CodeItem>
-<!--
-		<CodeItem key="export_tmd_timely_paid_holiday">
-			<ItemName>時間単位有給休暇データ</ItemName>
-			<ViewIndex>5</ViewIndex>
-		</CodeItem>
--->
 		<CodeItem key="export_tmd_holiday">
-			<ItemName>休暇データ</ItemName>
+			<ItemName>休暇付与データ</ItemName>
 			<ViewIndex>6</ViewIndex>
 		</CodeItem>
 		<CodeItem key="export_tmd_sub_holiday">
@@ -1304,6 +1800,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		<CodeItem key="export_holiday_request_data">
 			<ItemName>休暇取得データ</ItemName>
 			<ViewIndex>9</ViewIndex>
+		</CodeItem>
+		<CodeItem key="export_attendance_reapplication">
+			<ItemName>勤怠再申請対象者</ItemName>
+			<ViewIndex>10</ViewIndex>
+		</CodeItem>
+		<CodeItem key="export_appli_reason_data">
+			<ItemName>各種申請理由データ</ItemName>
+			<ViewIndex>12</ViewIndex>
 		</CodeItem>
 	</Code>
 	<Code key="export_tmd_attendance">
@@ -1577,155 +2081,179 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 			<ItemName>深夜勤務時間</ItemName>
 			<ViewIndex>164</ViewIndex>
 		</CodeItem>
+		<CodeItem key="night_work_within_prescribed_work">
+			<ItemName>深夜所定労働時間内時間</ItemName>
+			<ViewIndex>165</ViewIndex>
+		</CodeItem>
+		<CodeItem key="night_overtime_work">
+			<ItemName>深夜時間外時間</ItemName>
+			<ViewIndex>166</ViewIndex>
+		</CodeItem>
+		<CodeItem key="night_work_on_holiday">
+			<ItemName>深夜休日労働時間</ItemName>
+			<ViewIndex>167</ViewIndex>
+		</CodeItem>
 		<CodeItem key="specific_work_time">
 			<ItemName>所定休日勤務時間</ItemName>
-			<ViewIndex>165</ViewIndex>
+			<ViewIndex>168</ViewIndex>
 		</CodeItem>
 		<CodeItem key="legal_work_time">
 			<ItemName>法定休日勤務時間</ItemName>
-			<ViewIndex>166</ViewIndex>
+			<ViewIndex>169</ViewIndex>
 		</CodeItem>
 		<CodeItem key="decrease_time">
 			<ItemName>減額対象時間</ItemName>
-			<ViewIndex>167</ViewIndex>
+			<ViewIndex>170</ViewIndex>
 		</CodeItem>
 		<CodeItem key="time_comment">
 			<ItemName>勤怠コメント</ItemName>
-			<ViewIndex>168</ViewIndex>
+			<ViewIndex>171</ViewIndex>
 		</CodeItem>
 <!--
 		<CodeItem key="work_days">
 			<ItemName>出勤日数</ItemName>
-			<ViewIndex>169</ViewIndex>
+			<ViewIndex>172</ViewIndex>
 		</CodeItem>
 --><!--
 		<CodeItem key="work_days_for_paid_leave">
 			<ItemName>有給休暇用出勤日数</ItemName>
-			<ViewIndex>170</ViewIndex>
+			<ViewIndex>173</ViewIndex>
 		</CodeItem>
 --><!--
 		<CodeItem key="total_work_days_for_paid_leave">
 			<ItemName>有給休暇用全労働日</ItemName>
-			<ViewIndex>171</ViewIndex>
+			<ViewIndex>174</ViewIndex>
 		</CodeItem>
 --><!--
 		<CodeItem key="times_holiday_work">
 			<ItemName>休日出勤回数</ItemName>
-			<ViewIndex>172</ViewIndex>
+			<ViewIndex>175</ViewIndex>
 		</CodeItem>
 --><!--
 		<CodeItem key="times_legal_holiday_work">
 			<ItemName>法定休日出勤回数</ItemName>
-			<ViewIndex>173</ViewIndex>
+			<ViewIndex>176</ViewIndex>
 		</CodeItem>
 --><!--
 		<CodeItem key="times_prescribed_holiday_work">
 			<ItemName>所定休日出勤回数</ItemName>
-			<ViewIndex>174</ViewIndex>
+			<ViewIndex>177</ViewIndex>
 		</CodeItem>
 -->
 		<CodeItem key="paid_leave_days">
 			<ItemName>有給休暇日数</ItemName>
-			<ViewIndex>175</ViewIndex>
+			<ViewIndex>178</ViewIndex>
 		</CodeItem>
 		<CodeItem key="paid_leave_hours">
 			<ItemName>有給休暇時間数</ItemName>
-			<ViewIndex>176</ViewIndex>
+			<ViewIndex>179</ViewIndex>
 		</CodeItem>
 		<CodeItem key="stock_leave_days">
 			<ItemName>ストック休暇日数</ItemName>
-			<ViewIndex>177</ViewIndex>
+			<ViewIndex>180</ViewIndex>
 		</CodeItem>
 		<CodeItem key="compensation_days">
 			<ItemName>代休日数</ItemName>
-			<ViewIndex>178</ViewIndex>
+			<ViewIndex>181</ViewIndex>
 		</CodeItem>
 		<CodeItem key="legal_compensation_days">
 			<ItemName>法定代休日数</ItemName>
-			<ViewIndex>179</ViewIndex>
+			<ViewIndex>182</ViewIndex>
 		</CodeItem>
 		<CodeItem key="prescribed_compensation_days">
 			<ItemName>所定代休日数</ItemName>
-			<ViewIndex>180</ViewIndex>
+			<ViewIndex>183</ViewIndex>
 		</CodeItem>
 <!--
 		<CodeItem key="night_compensation_days">
 			<ItemName>深夜代休日数</ItemName>
-			<ViewIndex>181</ViewIndex>
+			<ViewIndex>184</ViewIndex>
 		</CodeItem>
 -->
 		<CodeItem key="special_leave_days">
 			<ItemName>特別休暇日数</ItemName>
-			<ViewIndex>182</ViewIndex>
+			<ViewIndex>185</ViewIndex>
+		</CodeItem>
+		<CodeItem key="special_leave_hours">
+			<ItemName>特別休暇時間数</ItemName>
+			<ViewIndex>186</ViewIndex>
 		</CodeItem>
 		<CodeItem key="other_leave_days">
 			<ItemName>その他休暇日数</ItemName>
-			<ViewIndex>183</ViewIndex>
+			<ViewIndex>187</ViewIndex>
+		</CodeItem>
+		<CodeItem key="other_leave_hours">
+			<ItemName>その他休暇時間数</ItemName>
+			<ViewIndex>188</ViewIndex>
 		</CodeItem>
 		<CodeItem key="absence_days">
 			<ItemName>欠勤日数</ItemName>
-			<ViewIndex>184</ViewIndex>
+			<ViewIndex>189</ViewIndex>
+		</CodeItem>
+		<CodeItem key="absence_hours">
+			<ItemName>欠勤時間数</ItemName>
+			<ViewIndex>190</ViewIndex>
 		</CodeItem>
 		<CodeItem key="granted_legal_compensation_days">
 			<ItemName>法定代休発生日数</ItemName>
-			<ViewIndex>185</ViewIndex>
+			<ViewIndex>191</ViewIndex>
 		</CodeItem>
 		<CodeItem key="granted_prescribed_compensation_days">
 			<ItemName>所定代休発生日数</ItemName>
-			<ViewIndex>186</ViewIndex>
+			<ViewIndex>192</ViewIndex>
 		</CodeItem>
 <!--
 		<CodeItem key="granted_night_compensation_days">
 			<ItemName>深夜代休発生日数</ItemName>
-			<ViewIndex>187</ViewIndex>
+			<ViewIndex>193</ViewIndex>
 		</CodeItem>
 		<CodeItem key="legal_holiday_work_time_with_compensation_day">
 			<ItemName>法定休出時間(代休あり)</ItemName>
-			<ViewIndex>188</ViewIndex>
+			<ViewIndex>194</ViewIndex>
 		</CodeItem>
 		<CodeItem key="legal_holiday_work_time_without_compensation_day">
 			<ItemName>法定休出時間(代休なし)</ItemName>
-			<ViewIndex>189</ViewIndex>
+			<ViewIndex>195</ViewIndex>
 		</CodeItem>
 		<CodeItem key="prescribed_holiday_work_time_with_compensation_day">
 			<ItemName>所定休出時間(代休あり)</ItemName>
-			<ViewIndex>190</ViewIndex>
+			<ViewIndex>196</ViewIndex>
 		</CodeItem>
 		<CodeItem key="prescribed_holiday_work_time_without_compensation_day">
 			<ItemName>所定休出時間(代休なし)</ItemName>
-			<ViewIndex>191</ViewIndex>
+			<ViewIndex>197</ViewIndex>
 		</CodeItem>
 		<CodeItem key="overtime_in_with_compensation_day">
 			<ItemName>法定労働時間内残業時間(代休あり)</ItemName>
-			<ViewIndex>192</ViewIndex>
+			<ViewIndex>198</ViewIndex>
 		</CodeItem>
 		<CodeItem key="overtime_in_without_compensation_day">
 			<ItemName>法定労働時間内残業時間(代休なし)</ItemName>
-			<ViewIndex>193</ViewIndex>
+			<ViewIndex>199</ViewIndex>
 		</CodeItem>
 		<CodeItem key="overtime_out_with_compensation_day">
 			<ItemName>法定労働時間外残業時間(代休あり)</ItemName>
-			<ViewIndex>194</ViewIndex>
+			<ViewIndex>200</ViewIndex>
 		</CodeItem>
 		<CodeItem key="overtime_out_without_compensation_day">
 			<ItemName>法定労働時間外残業時間(代休なし)</ItemName>
-			<ViewIndex>195</ViewIndex>
+			<ViewIndex>201</ViewIndex>
 		</CodeItem>
-		<CodeItem key="statutory_holiday_work_time_in">
+		<CodeItem key="statutory_holiday_work_time_in"> 
 			<ItemName>所定労働時間内法定休日労働時間</ItemName>
-			<ViewIndex>196</ViewIndex>
+			<ViewIndex>202</ViewIndex>
 		</CodeItem>
 		<CodeItem key="statutory_holiday_work_time_out">
 			<ItemName>所定労働時間外法定休日労働時間</ItemName>
-			<ViewIndex>197</ViewIndex>
+			<ViewIndex>203</ViewIndex>
 		</CodeItem>
-		<CodeItem key="prescribed_holiday_work_time_in">
+		<CodeItem key="prescribed_holiday_work_time_in"> 
 			<ItemName>所定労働時間内所定休日労働時間</ItemName>
-			<ViewIndex>198</ViewIndex>
+			<ViewIndex>204</ViewIndex>
 		</CodeItem>
 		<CodeItem key="prescribed_holiday_work_time_out">
 			<ItemName>所定労働時間外所定休日労働時間</ItemName>
-			<ViewIndex>199</ViewIndex>
+			<ViewIndex>205</ViewIndex>
 		</CodeItem>
 -->
 	</Code>
@@ -1836,7 +2364,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 			<ItemName>私用外出時間</ItemName>
 			<ViewIndex>121</ViewIndex>
 		</CodeItem>
-<!-- 
+<!--
 		<CodeItem key="minutely_holiday_a_time">
 			<ItemName>分単位休暇A時間</ItemName>
 			<ViewIndex>122</ViewIndex>
@@ -1845,7 +2373,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 			<ItemName>分単位休暇B時間</ItemName>
 			<ViewIndex>123</ViewIndex>
 		</CodeItem>
- -->
+-->
 		<CodeItem key="overtime">
 			<ItemName>残業時間</ItemName>
 			<ViewIndex>124</ViewIndex>
@@ -1862,249 +2390,273 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 			<ItemName>深夜時間</ItemName>
 			<ViewIndex>127</ViewIndex>
 		</CodeItem>
+		<CodeItem key="night_work_within_prescribed_work">
+			<ItemName>深夜所定労働時間内時間</ItemName>
+			<ViewIndex>128</ViewIndex>
+		</CodeItem>
+		<CodeItem key="night_overtime_work">
+			<ItemName>深夜時間外時間</ItemName>
+			<ViewIndex>129</ViewIndex>
+		</CodeItem>
+		<CodeItem key="night_work_on_holiday">
+			<ItemName>深夜休日労働時間</ItemName>
+			<ViewIndex>130</ViewIndex>
+		</CodeItem>
 		<CodeItem key="work_on_specific_holiday">
 			<ItemName>所定休出時間</ItemName>
-			<ViewIndex>128</ViewIndex>
+			<ViewIndex>131</ViewIndex>
 		</CodeItem>
 		<CodeItem key="work_on_holiday">
 			<ItemName>法定休出時間</ItemName>
-			<ViewIndex>129</ViewIndex>
+			<ViewIndex>132</ViewIndex>
 		</CodeItem>
 		<CodeItem key="decrease_time">
 			<ItemName>減額対象時間</ItemName>
-			<ViewIndex>130</ViewIndex>
+			<ViewIndex>133</ViewIndex>
 		</CodeItem>
 		<CodeItem key="forty_five_hour_overtime">
 			<ItemName>45時間超残業時間</ItemName>
-			<ViewIndex>131</ViewIndex>
+			<ViewIndex>134</ViewIndex>
 		</CodeItem>
 		<CodeItem key="times_overtime">
 			<ItemName>残業回数</ItemName>
-			<ViewIndex>132</ViewIndex>
+			<ViewIndex>135</ViewIndex>
 		</CodeItem>
 		<CodeItem key="times_working_holiday">
 			<ItemName>休日出勤回数</ItemName>
-			<ViewIndex>133</ViewIndex>
+			<ViewIndex>136</ViewIndex>
 		</CodeItem>
 		<CodeItem key="late_days">
 			<ItemName>遅刻合計日数</ItemName>
-			<ViewIndex>134</ViewIndex>
+			<ViewIndex>137</ViewIndex>
 		</CodeItem>
 		<CodeItem key="late_thirty_minutes_or_more">
 			<ItemName>遅刻30分以上日数</ItemName>
-			<ViewIndex>135</ViewIndex>
+			<ViewIndex>138</ViewIndex>
 		</CodeItem>
 		<CodeItem key="late_less_than_thirty_minutes">
 			<ItemName>遅刻30分未満日数</ItemName>
-			<ViewIndex>136</ViewIndex>
+			<ViewIndex>139</ViewIndex>
 		</CodeItem>
 		<CodeItem key="late_time">
 			<ItemName>遅刻合計時間</ItemName>
-			<ViewIndex>137</ViewIndex>
+			<ViewIndex>140</ViewIndex>
 		</CodeItem>
 		<CodeItem key="late_thirty_minutes_or_more_time">
 			<ItemName>遅刻30分以上時間</ItemName>
-			<ViewIndex>138</ViewIndex>
+			<ViewIndex>141</ViewIndex>
 		</CodeItem>
 		<CodeItem key="late_less_than_thirty_minutes_time">
 			<ItemName>遅刻30分未満時間</ItemName>
-			<ViewIndex>139</ViewIndex>
+			<ViewIndex>142</ViewIndex>
 		</CodeItem>
 <!--
 		<CodeItem key="times_late">
 			<ItemName>遅刻合計回数</ItemName>
-			<ViewIndex>140</ViewIndex>
+			<ViewIndex>143</ViewIndex>
 		</CodeItem>
 -->
 		<CodeItem key="leave_early_days">
 			<ItemName>早退合計日数</ItemName>
-			<ViewIndex>141</ViewIndex>
+			<ViewIndex>144</ViewIndex>
 		</CodeItem>
 		<CodeItem key="leave_early_thirty_minutes_or_more">
 			<ItemName>早退30分以上日数</ItemName>
-			<ViewIndex>142</ViewIndex>
+			<ViewIndex>145</ViewIndex>
 		</CodeItem>
 		<CodeItem key="leave_early_less_than_thirty_minutes">
 			<ItemName>早退30分未満日数</ItemName>
-			<ViewIndex>143</ViewIndex>
+			<ViewIndex>146</ViewIndex>
 		</CodeItem>
 		<CodeItem key="leave_early_time">
 			<ItemName>早退合計時間</ItemName>
-			<ViewIndex>144</ViewIndex>
+			<ViewIndex>147</ViewIndex>
 		</CodeItem>
 		<CodeItem key="leave_early_thirty_minutes_or_more_time">
 			<ItemName>早退30分以上時間</ItemName>
-			<ViewIndex>145</ViewIndex>
+			<ViewIndex>148</ViewIndex>
 		</CodeItem>
 		<CodeItem key="leave_early_less_than_thirty_minutes_time">
 			<ItemName>早退30分未満時間</ItemName>
-			<ViewIndex>146</ViewIndex>
+			<ViewIndex>149</ViewIndex>
 		</CodeItem>
 <!--
 		<CodeItem key="times_leave_early">
 			<ItemName>早退合計回数</ItemName>
-			<ViewIndex>147</ViewIndex>
+			<ViewIndex>150</ViewIndex>
 		</CodeItem>
 -->
 		<CodeItem key="times_holiday">
 			<ItemName>合計休日日数</ItemName>
-			<ViewIndex>148</ViewIndex>
+			<ViewIndex>151</ViewIndex>
 		</CodeItem>
 		<CodeItem key="times_legal_holiday">
 			<ItemName>法定休日日数</ItemName>
-			<ViewIndex>149</ViewIndex>
+			<ViewIndex>152</ViewIndex>
 		</CodeItem>
 		<CodeItem key="times_specific_holiday">
 			<ItemName>所定休日日数</ItemName>
-			<ViewIndex>150</ViewIndex>
+			<ViewIndex>153</ViewIndex>
 		</CodeItem>
 		<CodeItem key="times_paid_holiday">
 			<ItemName>有給休暇日数</ItemName>
-			<ViewIndex>151</ViewIndex>
+			<ViewIndex>154</ViewIndex>
 		</CodeItem>
 		<CodeItem key="paid_holiday_hour">
 			<ItemName>有給休暇時間</ItemName>
-			<ViewIndex>152</ViewIndex>
+			<ViewIndex>155</ViewIndex>
 		</CodeItem>
 		<CodeItem key="times_stock_holiday">
 			<ItemName>ストック休暇日数</ItemName>
-			<ViewIndex>153</ViewIndex>
+			<ViewIndex>156</ViewIndex>
 		</CodeItem>
 		<CodeItem key="times_compensation">
 			<ItemName>合計代休日数</ItemName>
-			<ViewIndex>154</ViewIndex>
+			<ViewIndex>157</ViewIndex>
 		</CodeItem>
 		<CodeItem key="times_legal_compensation">
 			<ItemName>法定代休日数</ItemName>
-			<ViewIndex>155</ViewIndex>
+			<ViewIndex>158</ViewIndex>
 		</CodeItem>
 		<CodeItem key="times_specific_compensation">
 			<ItemName>所定代休日数</ItemName>
-			<ViewIndex>156</ViewIndex>
+			<ViewIndex>159</ViewIndex>
 		</CodeItem>
 <!--
 		<CodeItem key="times_late_compensation">
 			<ItemName>深夜代休日数</ItemName>
-			<ViewIndex>157</ViewIndex>
+			<ViewIndex>160</ViewIndex>
 		</CodeItem>
 -->
 		<CodeItem key="times_holiday_substitute">
 			<ItemName>合計振替休日日数</ItemName>
-			<ViewIndex>158</ViewIndex>
+			<ViewIndex>161</ViewIndex>
 		</CodeItem>
 		<CodeItem key="times_legal_holiday_substitute">
 			<ItemName>法定振替休日日数</ItemName>
-			<ViewIndex>159</ViewIndex>
+			<ViewIndex>162</ViewIndex>
 		</CodeItem>
 		<CodeItem key="times_specific_holiday_substitute">
 			<ItemName>所定振替休日日数</ItemName>
-			<ViewIndex>160</ViewIndex>
+			<ViewIndex>163</ViewIndex>
 		</CodeItem>
 		<CodeItem key="total_special_holiday">
 			<ItemName>特別休暇合計日数</ItemName>
-			<ViewIndex>161</ViewIndex>
+			<ViewIndex>164</ViewIndex>
+		</CodeItem>
+		<CodeItem key="special_holiday_hour">
+			<ItemName>特別休暇時間</ItemName>
+			<ViewIndex>166</ViewIndex>
 		</CodeItem>
 		<CodeItem key="total_other_holiday">
 			<ItemName>その他休暇合計日数</ItemName>
-			<ViewIndex>162</ViewIndex>
+			<ViewIndex>167</ViewIndex>
+		</CodeItem>
+		<CodeItem key="other_holiday_hour">
+			<ItemName>その他休暇時間</ItemName>
+			<ViewIndex>168</ViewIndex>
 		</CodeItem>
 		<CodeItem key="total_absence">
 			<ItemName>欠勤合計日数</ItemName>
-			<ViewIndex>163</ViewIndex>
+			<ViewIndex>169</ViewIndex>
+		</CodeItem>
+		<CodeItem key="absence_hour">
+			<ItemName>欠勤時間</ItemName>
+			<ViewIndex>170</ViewIndex>
 		</CodeItem>
 <!--
 		<CodeItem key="total_allowance">
 			<ItemName>手当合計</ItemName>
-			<ViewIndex>164</ViewIndex>
+			<ViewIndex>171</ViewIndex>
 		</CodeItem>
 -->
 		<CodeItem key="sixty_hour_overtime">
 			<ItemName>60時間超残業時間</ItemName>
-			<ViewIndex>165</ViewIndex>
+			<ViewIndex>172</ViewIndex>
 		</CodeItem>
 		<CodeItem key="week_day_overtime">
 			<ItemName>平日時間外時間</ItemName>
-			<ViewIndex>166</ViewIndex>
+			<ViewIndex>173</ViewIndex>
 		</CodeItem>
 		<CodeItem key="specific_overtime">
 			<ItemName>所定休日時間外時間</ItemName>
-			<ViewIndex>167</ViewIndex>
+			<ViewIndex>174</ViewIndex>
 		</CodeItem>
 		<CodeItem key="times_alternative">
 			<ItemName>代替休暇日数</ItemName>
-			<ViewIndex>168</ViewIndex>
+			<ViewIndex>175</ViewIndex>
 		</CodeItem>
 		<CodeItem key="legal_compensation_occurred">
 			<ItemName>法定代休発生日数</ItemName>
-			<ViewIndex>169</ViewIndex>
+			<ViewIndex>176</ViewIndex>
 		</CodeItem>
 		<CodeItem key="specific_compensation_occurred">
 			<ItemName>所定代休発生日数</ItemName>
-			<ViewIndex>170</ViewIndex>
+			<ViewIndex>177</ViewIndex>
 		</CodeItem>
 <!--
 		<CodeItem key="late_compensation_occurred">
 			<ItemName>深夜代休発生日数</ItemName>
-			<ViewIndex>171</ViewIndex>
+			<ViewIndex>178</ViewIndex>
 		</CodeItem>
 -->
 		<CodeItem key="legal_compensation_unused">
 			<ItemName>法定代休未取得日数</ItemName>
-			<ViewIndex>172</ViewIndex>
+			<ViewIndex>179</ViewIndex>
 		</CodeItem>
 		<CodeItem key="specific_compensation_unused">
 			<ItemName>所定代休未取得日数</ItemName>
-			<ViewIndex>173</ViewIndex>
+			<ViewIndex>180</ViewIndex>
 		</CodeItem>
 <!--
 		<CodeItem key="late_compensation_unused">
 			<ItemName>深夜代休未取得日数</ItemName>
-			<ViewIndex>174</ViewIndex>
+			<ViewIndex>181</ViewIndex>
 		</CodeItem>
 		<CodeItem key="statutory_holiday_work_time_in">
 			<ItemName>所定労働時間内法定休日労働時間</ItemName>
-			<ViewIndex>175</ViewIndex>
+			<ViewIndex>182</ViewIndex>
 		</CodeItem>
 		<CodeItem key="statutory_holiday_work_time_out">
 			<ItemName>所定労働時間外法定休日労働時間</ItemName>
-			<ViewIndex>176</ViewIndex>
+			<ViewIndex>183</ViewIndex>
 		</CodeItem>
 		<CodeItem key="prescribed_holiday_work_time_in">
 			<ItemName>所定労働時間内所定休日労働時間</ItemName>
-			<ViewIndex>177</ViewIndex>
+			<ViewIndex>184</ViewIndex>
 		</CodeItem>
 		<CodeItem key="prescribed_holiday_work_time_out">
 			<ItemName>所定労働時間外所定休日労働時間</ItemName>
-			<ViewIndex>178</ViewIndex>
+			<ViewIndex>185</ViewIndex>
 		</CodeItem>
 -->
 		<CodeItem key="weekly_over_forty_hour_work_time">
 			<ItemName>週40時間超勤務時間</ItemName>
-			<ViewIndex>179</ViewIndex>
+			<ViewIndex>186</ViewIndex>
 		</CodeItem>
 		<CodeItem key="overtime_in_no_weekly_forty">
 			<ItemName>法定内残業時間(週40時間超除く)</ItemName>
-			<ViewIndex>180</ViewIndex>
+			<ViewIndex>187</ViewIndex>
 		</CodeItem>
 		<CodeItem key="overtime_out_no_weekly_forty">
 			<ItemName>法定外残業時間(週40時間超除く)</ItemName>
-			<ViewIndex>181</ViewIndex>
+			<ViewIndex>188</ViewIndex>
 		</CodeItem>
 		<CodeItem key="week_day_overtime_total">
 			<ItemName>平日残業合計時間</ItemName>
-			<ViewIndex>182</ViewIndex>
+			<ViewIndex>189</ViewIndex>
 		</CodeItem>
 		<CodeItem key="week_day_overtime_in_no_weekly_forty">
 			<ItemName>平日時間内時間(週40時間超除く)</ItemName>
-			<ViewIndex>183</ViewIndex>
+			<ViewIndex>190</ViewIndex>
 		</CodeItem>
 		<CodeItem key="week_day_overtime_out_no_weekly_forty">
 			<ItemName>平日時間外時間(週40時間超除く)</ItemName>
-			<ViewIndex>184</ViewIndex>
+			<ViewIndex>191</ViewIndex>
 		</CodeItem>
 		<CodeItem key="week_day_overtime_in">
 			<ItemName>平日時間内時間</ItemName>
-			<ViewIndex>185</ViewIndex>
+			<ViewIndex>192</ViewIndex>
 		</CodeItem>
 	</Code>
 	<Code key="export_tmd_paid_holiday">
@@ -2172,6 +2724,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 			<ViewIndex>111</ViewIndex>
 		</CodeItem>
 -->
+		<CodeItem key="carryover_day">
+			<ItemName>前年繰越日数</ItemName>
+			<ViewIndex>112</ViewIndex>
+		</CodeItem>
+		<CodeItem key="carryover_hour">
+			<ItemName>前年繰越時間数</ItemName>
+			<ViewIndex>113</ViewIndex>
+		</CodeItem>
 	</Code>
 	<Code key="export_tmd_stock_holiday">
 		<CodeItem key="employee_code">
@@ -2220,52 +2780,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		<CodeItem key="use_day">
 			<ItemName>使用日数</ItemName>
 			<ViewIndex>107</ViewIndex>
-		</CodeItem>
--->
-	</Code>
-	<Code key="export_tmd_timely_paid_holiday">
-		<CodeItem key="employee_code">
-			<ItemName>社員コード</ItemName>
-			<ViewIndex>1</ViewIndex>
-		</CodeItem>
-		<CodeItem key="full_name">
-			<ItemName>氏名</ItemName>
-			<ViewIndex>2</ViewIndex>
-		</CodeItem>
-		<CodeItem key="section_name">
-			<ItemName>所属名称</ItemName>
-			<ViewIndex>3</ViewIndex>
-		</CodeItem>
-<!--
-		<CodeItem key="section_display">
-			<ItemName>所属表示名称</ItemName>
-			<ViewIndex>4</ViewIndex>
-		</CodeItem>
--->
-		<CodeItem key="activate_date">
-			<ItemName>有効日</ItemName>
-			<ViewIndex>101</ViewIndex>
-		</CodeItem>
-		<CodeItem key="acquisition_date">
-			<ItemName>取得日</ItemName>
-			<ViewIndex>102</ViewIndex>
-		</CodeItem>
-		<CodeItem key="possible_hour">
-			<ItemName>利用可能時間数</ItemName>
-			<ViewIndex>103</ViewIndex>
-		</CodeItem>
-<!--
-		<CodeItem key="giving_hour">
-			<ItemName>付与時間数</ItemName>
-			<ViewIndex>104</ViewIndex>
-		</CodeItem>
-		<CodeItem key="cancel_hour">
-			<ItemName>廃棄時間数</ItemName>
-			<ViewIndex>105</ViewIndex>
-		</CodeItem>
-		<CodeItem key="use_hour">
-			<ItemName>使用時間数</ItemName>
-			<ViewIndex>106</ViewIndex>
 		</CodeItem>
 -->
 	</Code>
@@ -2491,6 +3005,70 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 			<ViewIndex>41</ViewIndex>
 		</CodeItem>
 	</Code>
+	<Code key="export_attendance_reapplication">
+		<CodeItem key="employee_code">
+			<ItemName>社員コード</ItemName>
+			<ViewIndex>1</ViewIndex>
+		</CodeItem>
+		<CodeItem key="full_name">
+			<ItemName>氏名</ItemName>
+			<ViewIndex>2</ViewIndex>
+		</CodeItem>
+		<CodeItem key="work_date">
+			<ItemName>出勤日</ItemName>
+			<ViewIndex>3</ViewIndex>
+		</CodeItem>
+	</Code>
+	<Code key="export_appli_reason_data">
+		<CodeItem key="employee_code">
+			<ItemName>社員コード</ItemName>
+			<ViewIndex>1</ViewIndex>
+		</CodeItem>
+		<CodeItem key="full_name">
+			<ItemName>氏名</ItemName>
+			<ViewIndex>2</ViewIndex>
+		</CodeItem>
+		<CodeItem key="section_name">
+			<ItemName>所属名称</ItemName>
+			<ViewIndex>3</ViewIndex>
+		</CodeItem>
+<!--
+		<CodeItem key="section_display">
+			<ItemName>所属表示名称</ItemName>
+			<ViewIndex>4</ViewIndex>
+		</CodeItem>
+-->
+		<CodeItem key="work_date">
+			<ItemName>日付</ItemName>
+			<ViewIndex>5</ViewIndex>
+		</CodeItem>
+		<CodeItem key="appli_type">
+			<ItemName>申請区分</ItemName>
+			<ViewIndex>6</ViewIndex>
+		</CodeItem>
+		<CodeItem key="appli_detailed_1">
+			<ItemName>詳細1</ItemName>
+			<ViewIndex>7</ViewIndex>
+		</CodeItem>
+		<CodeItem key="appli_detailed_2">
+			<ItemName>詳細2</ItemName>
+			<ViewIndex>8</ViewIndex>
+		</CodeItem>
+		<CodeItem key="appli_detailed_3">
+			<ItemName>詳細3</ItemName>
+			<ViewIndex>9</ViewIndex>
+		</CodeItem>
+		<CodeItem key="appli_detailed_4">
+			<ItemName>詳細4</ItemName>
+			<ViewIndex>10</ViewIndex>
+		</CodeItem>
+		<CodeItem key="appli_reason">
+			<ItemName>申請理由</ItemName>
+			<ViewIndex>11</ViewIndex>
+		</CodeItem>
+	</Code>
+	
+	
 	<Code key="Allowance">
 		<CodeItem key="0">
 			<ItemName>無し</ItemName>
@@ -2601,15 +3179,33 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	</Code>
 	<Code key="WorkOnHolidaySubstitute">
 		<CodeItem key="1">
-			<ItemName>振替出勤</ItemName>
+			<ItemName>振替出勤(勤務形態変更なし)</ItemName>
 			<ViewIndex>1</ViewIndex>
 		</CodeItem>
 		<CodeItem key="2">
-			<ItemName>休日出勤</ItemName>
+			<ItemName>振替日なし(休日出勤)</ItemName>
+			<ViewIndex>3</ViewIndex>
+		</CodeItem>
+		<CodeItem key="5">
+			<ItemName>振替出勤(勤務形態変更あり)</ItemName>
 			<ViewIndex>2</ViewIndex>
 		</CodeItem>
 	</Code>
 	<Code key="PaidHolidayCalc">
+		<CodeItem key="1">
+			<ItemName>出勤扱い</ItemName>
+			<ViewIndex>1</ViewIndex>
+		</CodeItem>
+		<CodeItem key="2">
+			<ItemName>欠勤扱い</ItemName>
+			<ViewIndex>2</ViewIndex>
+		</CodeItem>
+		<CodeItem key="3">
+			<ItemName>計算対象外</ItemName>
+			<ViewIndex>3</ViewIndex>
+		</CodeItem>
+	</Code>
+	<Code key="WorkOnHolidayCalc">
 		<CodeItem key="1">
 			<ItemName>出勤扱い</ItemName>
 			<ViewIndex>1</ViewIndex>
@@ -2730,13 +3326,31 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		</CodeItem>
 	</Code>
 	<Code key="Grant">
-		<CodeItem key="0">
+		<CodeItem key="1">
+			<ItemName>未計算</ItemName>
+			<ViewIndex>1</ViewIndex>
+		</CodeItem>
+		<CodeItem key="2">
 			<ItemName>未付与</ItemName>
+			<ViewIndex>2</ViewIndex>
+		</CodeItem>
+		<CodeItem key="3">
+			<ItemName>付与済</ItemName>
+			<ViewIndex>3</ViewIndex>
+		</CodeItem>
+	</Code>
+	<Code key="TimeManagement">
+		<CodeItem key="0">
+			<ItemName>有効</ItemName>
 			<ViewIndex>1</ViewIndex>
 		</CodeItem>
 		<CodeItem key="1">
-			<ItemName>付与済</ItemName>
+			<ItemName>無効</ItemName>
 			<ViewIndex>2</ViewIndex>
+		</CodeItem>
+		<CodeItem key="2">
+			<ItemName>無効(勤怠/残業/代休申請不可)</ItemName>
+			<ViewIndex>3</ViewIndex>
 		</CodeItem>
 	</Code>
 	<Code key="PortalRestButtons">

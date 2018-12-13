@@ -30,6 +30,7 @@ import jp.mosp.platform.base.PlatformBean;
 import jp.mosp.platform.constant.PlatformConst;
 import jp.mosp.time.base.TimeBean;
 import jp.mosp.time.bean.AttendanceReferenceBeanInterface;
+import jp.mosp.time.constant.TimeConst;
 import jp.mosp.time.dao.settings.AttendanceDaoInterface;
 import jp.mosp.time.dto.settings.AttendanceDtoInterface;
 
@@ -41,7 +42,7 @@ public class AttendanceReferenceBean extends TimeBean implements AttendanceRefer
 	/**
 	 * 勤怠データDAOクラス。<br>
 	 */
-	AttendanceDaoInterface	dao;
+	AttendanceDaoInterface dao;
 	
 	
 	/**
@@ -117,6 +118,7 @@ public class AttendanceReferenceBean extends TimeBean implements AttendanceRefer
 	
 	@Override
 	public void chkBasicInfo(String personalId, Date targetDate) throws MospException {
-		initial(personalId, targetDate);
+		// 勤怠基本情報確認
+		initial(personalId, targetDate, TimeConst.CODE_FUNCTION_WORK_MANGE);
 	}
 }

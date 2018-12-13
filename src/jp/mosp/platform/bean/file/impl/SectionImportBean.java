@@ -45,7 +45,7 @@ public class SectionImportBean extends SectionRegistBean implements SectionImpor
 	/**
 	 * 所属情報リスト。<br>
 	 */
-	protected List<SectionDtoInterface>	sectionList;
+	protected List<SectionDtoInterface> sectionList;
 	
 	
 	/**
@@ -149,9 +149,8 @@ public class SectionImportBean extends SectionRegistBean implements SectionImpor
 		// 上位所属コード
 		String upperSectionCode = "";
 		for (String[] data : dataList) {
-			if (dto.getSectionCode().equals(getFieldValue(PfmSectionDao.COL_SECTION_CODE, fieldList, data))
-					&& dto.getActivateDate()
-						.equals(getDateFieldValue(PfmSectionDao.COL_ACTIVATE_DATE, fieldList, data))) {
+			if (dto.getSectionCode().equals(getFieldValue(PfmSectionDao.COL_SECTION_CODE, fieldList, data)) && dto
+				.getActivateDate().equals(getDateFieldValue(PfmSectionDao.COL_ACTIVATE_DATE, fieldList, data))) {
 				// 所属コード及び有効日が一致する場合
 				upperSectionCode = getFieldValue(PlatformFileConst.FIELD_UPPER_SECTION_CODE, fieldList, data);
 			}
@@ -183,7 +182,8 @@ public class SectionImportBean extends SectionRegistBean implements SectionImpor
 			}
 			return null;
 		}
-		if (maxUpperActivateDate == null || Integer.toString(MospConst.INACTIVATE_FLAG_ON).equals(upperInactivateFlag)) {
+		if (maxUpperActivateDate == null
+				|| Integer.toString(MospConst.INACTIVATE_FLAG_ON).equals(upperInactivateFlag)) {
 			return null;
 		}
 		SectionDtoInterface sectionDto = getInitDto();

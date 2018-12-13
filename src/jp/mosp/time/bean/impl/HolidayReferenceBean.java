@@ -25,9 +25,11 @@ import java.util.Set;
 
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.base.MospParams;
+import jp.mosp.framework.constant.MospConst;
 import jp.mosp.platform.base.PlatformBean;
 import jp.mosp.time.bean.HolidayReferenceBeanInterface;
 import jp.mosp.time.constant.TimeConst;
+import jp.mosp.time.constant.TimeFileConst;
 import jp.mosp.time.dao.settings.HolidayDaoInterface;
 import jp.mosp.time.dto.settings.HolidayDtoInterface;
 
@@ -39,7 +41,7 @@ public class HolidayReferenceBean extends PlatformBean implements HolidayReferen
 	/**
 	 * 休暇種別管理DAO。
 	 */
-	private HolidayDaoInterface	dao;
+	private HolidayDaoInterface dao;
 	
 	
 	/**
@@ -151,45 +153,50 @@ public class HolidayReferenceBean extends PlatformBean implements HolidayReferen
 		String backParentheses = mospParams.getName("BackParentheses");
 		String allHoliday = frontParentheses + mospParams.getName("AllTime") + backParentheses;
 		String halfHoliday = frontParentheses + mospParams.getName("HalfTime") + backParentheses;
-		String all = "all";
-		String half = "half";
+		String hourHoliday = frontParentheses + mospParams.getName("HourTime") + backParentheses;
 		// 配列準備
-		String[][] array = prepareSelectArray((specialList.size() + otherList.size() + absenceList.size()) * 2, false);
+		String[][] array = prepareSelectArray((specialList.size() + otherList.size() + absenceList.size()) * 3, false);
 		// 配列作成
-		for (int i = 0; i < array.length; i += 2) {
-			if (i / 2 < specialList.size()) {
-				HolidayDtoInterface dto = specialList.get(i / 2);
+		for (int i = 0; i < array.length; i += 3) {
+			if (i / 3 < specialList.size()) {
+				HolidayDtoInterface dto = specialList.get(i / 3);
 				StringBuffer sb = new StringBuffer();
 				sb.append(TimeConst.CODE_HOLIDAYTYPE_SPECIAL);
 				sb.append(comma);
 				sb.append(dto.getHolidayCode());
 				sb.append(comma);
-				array[i][0] = sb.toString() + all;
+				array[i][0] = sb.toString() + TimeFileConst.FIELD_ALL;
 				array[i][1] = dto.getHolidayAbbr() + allHoliday;
-				array[i + 1][0] = sb.toString() + half;
+				array[i + 1][0] = sb.toString() + TimeFileConst.FIELD_HALF;
 				array[i + 1][1] = dto.getHolidayAbbr() + halfHoliday;
-			} else if (i / 2 < specialList.size() + otherList.size()) {
-				HolidayDtoInterface dto = otherList.get((i / 2) - specialList.size());
+				array[i + 2][0] = sb.toString() + TimeFileConst.FIELD_HOUR;
+				array[i + 2][1] = dto.getHolidayAbbr() + hourHoliday;
+			} else if (i / 3 < specialList.size() + otherList.size()) {
+				HolidayDtoInterface dto = otherList.get((i / 3) - specialList.size());
 				StringBuffer sb = new StringBuffer();
 				sb.append(TimeConst.CODE_HOLIDAYTYPE_OTHER);
 				sb.append(comma);
 				sb.append(dto.getHolidayCode());
 				sb.append(comma);
-				array[i][0] = sb.toString() + all;
+				array[i][0] = sb.toString() + TimeFileConst.FIELD_ALL;
 				array[i][1] = dto.getHolidayAbbr() + allHoliday;
-				array[i + 1][0] = sb.toString() + half;
+				array[i + 1][0] = sb.toString() + TimeFileConst.FIELD_HALF;
 				array[i + 1][1] = dto.getHolidayAbbr() + halfHoliday;
-			} else if (i / 2 < specialList.size() + otherList.size() + absenceList.size()) {
-				HolidayDtoInterface dto = absenceList.get((i / 2) - specialList.size() - otherList.size());
+				array[i + 2][0] = sb.toString() + TimeFileConst.FIELD_HOUR;
+				array[i + 2][1] = dto.getHolidayAbbr() + hourHoliday;
+			} else if (i / 3 < specialList.size() + otherList.size() + absenceList.size()) {
+				HolidayDtoInterface dto = absenceList.get((i / 3) - specialList.size() - otherList.size());
 				StringBuffer sb = new StringBuffer();
 				sb.append(TimeConst.CODE_HOLIDAYTYPE_ABSENCE);
 				sb.append(comma);
 				sb.append(dto.getHolidayCode());
 				sb.append(comma);
-				array[i][0] = sb.toString() + all;
+				array[i][0] = sb.toString() + TimeFileConst.FIELD_ALL;
 				array[i][1] = dto.getHolidayAbbr() + allHoliday;
-				array[i + 1][0] = sb.toString() + half;
+				array[i + 1][0] = sb.toString() + TimeFileConst.FIELD_HALF;
 				array[i + 1][1] = dto.getHolidayAbbr() + halfHoliday;
+				array[i + 2][0] = sb.toString() + TimeFileConst.FIELD_HOUR;
+				array[i + 2][1] = dto.getHolidayAbbr() + hourHoliday;
 			}
 		}
 		return array;
@@ -238,6 +245,20 @@ public class HolidayReferenceBean extends PlatformBean implements HolidayReferen
 			return mospParams.getName("Absence");
 		}
 		return "";
+	}
+	
+	@Override
+	public boolean isTimelyHoliday(Date activateDate) throws MospException {
+		// 有効な休暇種別を取得
+		Set<HolidayDtoInterface> set = dao.findForActivateDate(activateDate);
+		// 有効な休暇種別情報毎に処理
+		for (HolidayDtoInterface dto : set) {
+			// 時間休利用の場合
+			if (dto.getTimelyHolidayFlag() == MospConst.INACTIVATE_FLAG_OFF) {
+				return true;
+			}
+		}
+		return false;
 	}
 	
 }

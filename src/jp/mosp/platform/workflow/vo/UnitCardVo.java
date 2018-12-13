@@ -26,15 +26,16 @@ public class UnitCardVo extends PlatformSystemVo {
 	
 	private static final long	serialVersionUID	= -1400905617157875943L;
 	
-	private String				txtUnitCode;									// ユニットコード
-	private String				txtUnitName;									// ユニット名称
-	private String				pltRouteStage;									// 複数決済
-	private String				pltSectionMaster;								// 所属プルダウン
-	private String				pltPositionMaster;								// 職位プルダウン
-	private String				txtEmployeeCode;								// 個人指定欄
+	private String				txtUnitCode;								// ユニットコード
+	private String				txtUnitName;								// ユニット名称
+	private String				pltRouteStage;								// 複数決済
+	private String				pltSectionMaster;							// 所属プルダウン
+	private String				pltPositionMaster;							// 職位プルダウン
+	private String				pltPositionGradeRange;
+	private String				txtEmployeeCode;							// 個人指定欄
 	private String				lblSectionPosition;							// 所属指定承認部署
-	private String				lblEmployeeCode;								// 個人指定承認者
-																				
+	private String				lblEmployeeCode;							// 個人指定承認者
+	
 	private String[][]			aryPltRouteStage;
 	private String[][]			aryPltEditInactivate;
 	private String[][]			aryPltSectionMaster;
@@ -112,6 +113,20 @@ public class UnitCardVo extends PlatformSystemVo {
 	 */
 	public void setPltPositionMaster(String pltPositionMaster) {
 		this.pltPositionMaster = pltPositionMaster;
+	}
+	
+	/**
+	 * @return pltPositionGradeRange
+	 */
+	public String getPltPositionGradeRange() {
+		return pltPositionGradeRange;
+	}
+	
+	/**
+	 * @param pltPositionGradeRange セットする pltPositionGradeRange
+	 */
+	public void setPltPositionGradeRange(String pltPositionGradeRange) {
+		this.pltPositionGradeRange = pltPositionGradeRange;
 	}
 	
 	/**

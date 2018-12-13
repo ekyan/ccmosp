@@ -70,6 +70,10 @@ public class TmdTotalAbsenceDto extends BaseDto implements TotalAbsenceDtoInterf
 	 * 欠勤日数。
 	 */
 	private double				times;
+	/**
+	 * 欠勤時間数。
+	 */
+	private int					hours;
 	
 	
 	@Override
@@ -130,6 +134,16 @@ public class TmdTotalAbsenceDto extends BaseDto implements TotalAbsenceDtoInterf
 	@Override
 	public void setTimes(double times) {
 		this.times = times;
+	}
+	
+	@Override
+	public int getHours() {
+		return hours;
+	}
+	
+	@Override
+	public void setHours(int hours) {
+		this.hours = hours;
 	}
 	
 }

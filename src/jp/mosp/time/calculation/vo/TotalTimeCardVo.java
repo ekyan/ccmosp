@@ -17,6 +17,9 @@
  */
 package jp.mosp.time.calculation.vo;
 
+import jp.mosp.framework.js.DirectJs;
+import jp.mosp.framework.utils.MospUtility;
+import jp.mosp.platform.constant.PlatformConst;
 import jp.mosp.time.base.TotalTimeBaseVo;
 
 /**
@@ -46,8 +49,6 @@ public class TotalTimeCardVo extends TotalTimeBaseVo {
 	
 	private String				txtRestTimeHour;
 	private String				txtRestTimeMinute;
-	private String				txtOverRestTimeHour;
-	private String				txtOverRestTimeMinute;
 	private String				txtRestLateNightHour;
 	private String				txtRestLateNightMinute;
 	private String				txtRestWorkOnSpecificHour;
@@ -58,7 +59,7 @@ public class TotalTimeCardVo extends TotalTimeBaseVo {
 	private String				txtPrivateMinute;
 	private String				txtPublicHour;
 	private String				txtPublicMinute;
-	// TODO
+	
 	private String				txtMinutelyHolidayAHour;
 	private String				txtMinutelyHolidayAMinute;
 	private String				txtMinutelyHolidayBHour;
@@ -90,7 +91,6 @@ public class TotalTimeCardVo extends TotalTimeBaseVo {
 	private String				txtLateThirtyMinutesOrMoreTimeMinute;
 	private String				txtLateLessThanThirtyMinutesTimeHour;
 	private String				txtLateLessThanThirtyMinutesTimeMinute;
-	private String				txtTimesLate;
 	private String				txtLeaveEarlyDays;
 	private String				txtLeaveEarlyThirtyMinutesOrMore;
 	private String				txtLeaveEarlyLessThanThirtyMinutes;
@@ -100,7 +100,6 @@ public class TotalTimeCardVo extends TotalTimeBaseVo {
 	private String				txtLeaveEarlyThirtyMinutesOrMoreTimeMinute;
 	private String				txtLeaveEarlyLessThanThirtyMinutesTimeHour;
 	private String				txtLeaveEarlyLessThanThirtyMinutesTimeMinute;
-	private String				txtTimesLeaveEarly;
 	
 	private String				txtTimesHoliday;
 	private String				txtTimesLegalHoliday;
@@ -124,34 +123,28 @@ public class TotalTimeCardVo extends TotalTimeBaseVo {
 	private String				txtLateCompensationUnused;
 	
 	private String[]			aryTxtTimesSpecialLeave;
+	private String[]			aryTxtTimesSpecialHour;
 	private String[]			aryTxtTimesSpecialLeaveTitle;
 	private String[]			aryTxtTimesSpecialLeaveCode;
 	private long[]				aryTimesSpecialLeaveId;
 	private String				txtTotalSpecialHoliday;
+	private String				txtSpecialHolidayHour;
 	
 	private String[]			aryTxtTimesOtherVacation;
+	private String[]			aryTxtTimesOtherVacationHour;
 	private String[]			aryTxtTimesOtherVacationTitle;
 	private String[]			aryTxtTimesOtherVacationCode;
 	private long[]				aryTimesOtherVacationId;
 	private String				txtTotalOtherHoliday;
+	private String				txtOtherHolidayHour;
 	
 	private String[]			aryTxtDeduction;
+	private String[]			aryTxtDeductionHour;
 	private String[]			aryTxtDeductionTitle;
 	private String[]			aryTxtDeductionCode;
 	private long[]				aryDeductionId;
 	private String				txtTotalDeduction;
-	
-	private String				txtTimesAllowance1;
-	private String				txtTimesAllowance2;
-	private String				txtTimesAllowance3;
-	private String				txtTimesAllowance4;
-	private String				txtTimesAllowance5;
-	private String				txtTimesAllowance6;
-	private String				txtTimesAllowance7;
-	private String				txtTimesAllowance8;
-	private String				txtTimesAllowance9;
-	private String				txtTimesAllowance10;
-	private String				txtTotalAllowance;
+	private String				txtDeductionHour;
 	
 	private String				txt60HourOverTimeHour;
 	private String				txt60HourOverTimeMinute;
@@ -165,14 +158,9 @@ public class TotalTimeCardVo extends TotalTimeBaseVo {
 	private String				lblEmployeeName;
 	private String				lblSection;
 	
-	private String				txtRestWorkOnOverHour;
-	private String				txtRestWorkOnOverMinute;
-	private String				txtWorkOnOverHour;
-	private String				txtWorkOnOverMinute;
 	private String				txtTimesLegalHolidaySubstitute;
 	
 	private long				tmdTotalTimeId;
-	private long				tmdAllowanceId;
 	private long				tmdOvertimeRequestId;
 	
 	private String				txtTimesAchievement;
@@ -180,8 +168,20 @@ public class TotalTimeCardVo extends TotalTimeBaseVo {
 	private String				txtTimesOvertime;
 	private String				txtTimesWorkingHoliday;
 	
-	private String				jsModeCutoffStateEdit;
+	/**
+	 * 締状態フラグ(true：確定、false：確定以外)。<br>
+	 */
+	@DirectJs
+	private boolean				isTightened;
 	
+	
+	/**
+	 * 表示モードであるかを確認する。<br>
+	 * @return 確認結果(true：表示モードである、false：修正モードである)
+	 */
+	public boolean isViewMode() {
+		return MospUtility.isEqual(getModeCardEdit(), PlatformConst.MODE_CARD_EDIT_INSERT);
+	}
 	
 	/**
 	 * @return txtCorrectionReason
@@ -391,34 +391,6 @@ public class TotalTimeCardVo extends TotalTimeBaseVo {
 	 */
 	public void setTxtRestTimeMinute(String txtRestTimeMinute) {
 		this.txtRestTimeMinute = txtRestTimeMinute;
-	}
-	
-	/**
-	 * @return txtOverRestTimeHour
-	 */
-	public String getTxtOverRestTimeHour() {
-		return txtOverRestTimeHour;
-	}
-	
-	/**
-	 * @param txtOverRestTimeHour セットする txtOverRestTimeHour
-	 */
-	public void setTxtOverRestTimeHour(String txtOverRestTimeHour) {
-		this.txtOverRestTimeHour = txtOverRestTimeHour;
-	}
-	
-	/**
-	 * @return txtOverRestTimeMinute
-	 */
-	public String getTxtOverRestTimeMinute() {
-		return txtOverRestTimeMinute;
-	}
-	
-	/**
-	 * @param txtOverRestTimeMinute セットする txtOverRestTimeMinute
-	 */
-	public void setTxtOverRestTimeMinute(String txtOverRestTimeMinute) {
-		this.txtOverRestTimeMinute = txtOverRestTimeMinute;
 	}
 	
 	/**
@@ -968,20 +940,6 @@ public class TotalTimeCardVo extends TotalTimeBaseVo {
 	}
 	
 	/**
-	 * @return txtTimesLate
-	 */
-	public String getTxtTimesLate() {
-		return txtTimesLate;
-	}
-	
-	/**
-	 * @param txtTimesLate セットする txtTimesLate
-	 */
-	public void setTxtTimesLate(String txtTimesLate) {
-		this.txtTimesLate = txtTimesLate;
-	}
-	
-	/**
 	 * @return txtLeaveEarlyDays
 	 */
 	public String getTxtLeaveEarlyDays() {
@@ -1105,20 +1063,6 @@ public class TotalTimeCardVo extends TotalTimeBaseVo {
 	 */
 	public void setTxtLeaveEarlyLessThanThirtyMinutesTimeMinute(String txtLeaveEarlyLessThanThirtyMinutesTimeMinute) {
 		this.txtLeaveEarlyLessThanThirtyMinutesTimeMinute = txtLeaveEarlyLessThanThirtyMinutesTimeMinute;
-	}
-	
-	/**
-	 * @return txtTimesLeaveEarly
-	 */
-	public String getTxtTimesLeaveEarly() {
-		return txtTimesLeaveEarly;
-	}
-	
-	/**
-	 * @param txtTimesLeaveEarly セットする txtTimesLeaveEarly
-	 */
-	public void setTxtTimesLeaveEarly(String txtTimesLeaveEarly) {
-		this.txtTimesLeaveEarly = txtTimesLeaveEarly;
 	}
 	
 	/**
@@ -1416,160 +1360,6 @@ public class TotalTimeCardVo extends TotalTimeBaseVo {
 	}
 	
 	/**
-	 * @return txtTimesAllowance1
-	 */
-	public String getTxtTimesAllowance1() {
-		return txtTimesAllowance1;
-	}
-	
-	/**
-	 * @param txtTimesAllowance1 セットする txtTimesAllowance1
-	 */
-	public void setTxtTimesAllowance1(String txtTimesAllowance1) {
-		this.txtTimesAllowance1 = txtTimesAllowance1;
-	}
-	
-	/**
-	 * @return txtTimesAllowance2
-	 */
-	public String getTxtTimesAllowance2() {
-		return txtTimesAllowance2;
-	}
-	
-	/**
-	 * @param txtTimesAllowance2 セットする txtTimesAllowance2
-	 */
-	public void setTxtTimesAllowance2(String txtTimesAllowance2) {
-		this.txtTimesAllowance2 = txtTimesAllowance2;
-	}
-	
-	/**
-	 * @return txtTimesAllowance3
-	 */
-	public String getTxtTimesAllowance3() {
-		return txtTimesAllowance3;
-	}
-	
-	/**
-	 * @param txtTimesAllowance3 セットする txtTimesAllowance3
-	 */
-	public void setTxtTimesAllowance3(String txtTimesAllowance3) {
-		this.txtTimesAllowance3 = txtTimesAllowance3;
-	}
-	
-	/**
-	 * @return txtTimesAllowance4
-	 */
-	public String getTxtTimesAllowance4() {
-		return txtTimesAllowance4;
-	}
-	
-	/**
-	 * @param txtTimesAllowance4 セットする txtTimesAllowance4
-	 */
-	public void setTxtTimesAllowance4(String txtTimesAllowance4) {
-		this.txtTimesAllowance4 = txtTimesAllowance4;
-	}
-	
-	/**
-	 * @return txtTimesAllowance5
-	 */
-	public String getTxtTimesAllowance5() {
-		return txtTimesAllowance5;
-	}
-	
-	/**
-	 * @param txtTimesAllowance5 セットする txtTimesAllowance5
-	 */
-	public void setTxtTimesAllowance5(String txtTimesAllowance5) {
-		this.txtTimesAllowance5 = txtTimesAllowance5;
-	}
-	
-	/**
-	 * @return txtTimesAllowance6
-	 */
-	public String getTxtTimesAllowance6() {
-		return txtTimesAllowance6;
-	}
-	
-	/**
-	 * @param txtTimesAllowance6 セットする txtTimesAllowance6
-	 */
-	public void setTxtTimesAllowance6(String txtTimesAllowance6) {
-		this.txtTimesAllowance6 = txtTimesAllowance6;
-	}
-	
-	/**
-	 * @return txtTimesAllowance7
-	 */
-	public String getTxtTimesAllowance7() {
-		return txtTimesAllowance7;
-	}
-	
-	/**
-	 * @param txtTimesAllowance7 セットする txtTimesAllowance7
-	 */
-	public void setTxtTimesAllowance7(String txtTimesAllowance7) {
-		this.txtTimesAllowance7 = txtTimesAllowance7;
-	}
-	
-	/**
-	 * @return txtTimesAllowance8
-	 */
-	public String getTxtTimesAllowance8() {
-		return txtTimesAllowance8;
-	}
-	
-	/**
-	 * @param txtTimesAllowance8 セットする txtTimesAllowance8
-	 */
-	public void setTxtTimesAllowance8(String txtTimesAllowance8) {
-		this.txtTimesAllowance8 = txtTimesAllowance8;
-	}
-	
-	/**
-	 * @return txtTimesAllowance9
-	 */
-	public String getTxtTimesAllowance9() {
-		return txtTimesAllowance9;
-	}
-	
-	/**
-	 * @param txtTimesAllowance9 セットする txtTimesAllowance9
-	 */
-	public void setTxtTimesAllowance9(String txtTimesAllowance9) {
-		this.txtTimesAllowance9 = txtTimesAllowance9;
-	}
-	
-	/**
-	 * @return txtTimesAllowance10
-	 */
-	public String getTxtTimesAllowance10() {
-		return txtTimesAllowance10;
-	}
-	
-	/**
-	 * @param txtTimesAllowance10 セットする txtTimesAllowance10
-	 */
-	public void setTxtTimesAllowance10(String txtTimesAllowance10) {
-		this.txtTimesAllowance10 = txtTimesAllowance10;
-	}
-	
-	/**
-	 * @return txtTotalAllowance
-	 */
-	public String getTxtTotalAllowance() {
-		return txtTotalAllowance;
-	}
-	
-	/**
-	 * @param txtTotalAllowance セットする txtTotalAllowance
-	 */
-	public void setTxtTotalAllowance(String txtTotalAllowance) {
-		this.txtTotalAllowance = txtTotalAllowance;
-	}
-	
-	/**
 	 * @return txt60HourOverTimeHour
 	 */
 	public String getTxt60HourOverTimeHour() {
@@ -1742,66 +1532,10 @@ public class TotalTimeCardVo extends TotalTimeBaseVo {
 	}
 	
 	/**
-	 * @return txtRestWorkOnOverHour
-	 */
-	public String getTxtRestWorkOnOverHour() {
-		return txtRestWorkOnOverHour;
-	}
-	
-	/**
-	 * @return txtRestWorkOnOverMinute
-	 */
-	public String getTxtRestWorkOnOverMinute() {
-		return txtRestWorkOnOverMinute;
-	}
-	
-	/**
-	 * @return txtWorkOnOverHour
-	 */
-	public String getTxtWorkOnOverHour() {
-		return txtWorkOnOverHour;
-	}
-	
-	/**
-	 * @return txtWorkOnOverMinute
-	 */
-	public String getTxtWorkOnOverMinute() {
-		return txtWorkOnOverMinute;
-	}
-	
-	/**
 	 * @return txtTimesLegalHolidaySubstitute
 	 */
 	public String getTxtTimesLegalHolidaySubstitute() {
 		return txtTimesLegalHolidaySubstitute;
-	}
-	
-	/**
-	 * @param txtRestWorkOnOverHour セットする txtRestWorkOnOverHour
-	 */
-	public void setTxtRestWorkOnOverHour(String txtRestWorkOnOverHour) {
-		this.txtRestWorkOnOverHour = txtRestWorkOnOverHour;
-	}
-	
-	/**
-	 * @param txtRestWorkOnOverMinute セットする txtRestWorkOnOverMinute
-	 */
-	public void setTxtRestWorkOnOverMinute(String txtRestWorkOnOverMinute) {
-		this.txtRestWorkOnOverMinute = txtRestWorkOnOverMinute;
-	}
-	
-	/**
-	 * @param txtWorkOnOverHour セットする txtWorkOnOverHour
-	 */
-	public void setTxtWorkOnOverHour(String txtWorkOnOverHour) {
-		this.txtWorkOnOverHour = txtWorkOnOverHour;
-	}
-	
-	/**
-	 * @param txtWorkOnOverMinute セットする txtWorkOnOverMinute
-	 */
-	public void setTxtWorkOnOverMinute(String txtWorkOnOverMinute) {
-		this.txtWorkOnOverMinute = txtWorkOnOverMinute;
 	}
 	
 	/**
@@ -1823,20 +1557,6 @@ public class TotalTimeCardVo extends TotalTimeBaseVo {
 	 */
 	public void setTmdTotalTimeId(long tmdTotalTimeId) {
 		this.tmdTotalTimeId = tmdTotalTimeId;
-	}
-	
-	/**
-	 * @return tmdAllowanceId
-	 */
-	public long getTmdAllowanceId() {
-		return tmdAllowanceId;
-	}
-	
-	/**
-	 * @param tmdAllowanceId セットする tmdAllowanceId
-	 */
-	public void setTmdAllowanceId(long tmdAllowanceId) {
-		this.tmdAllowanceId = tmdAllowanceId;
 	}
 	
 	/**
@@ -1917,6 +1637,14 @@ public class TotalTimeCardVo extends TotalTimeBaseVo {
 	}
 	
 	/**
+	 * @param idx インデックス
+	 * @return aryTxtTimesSpecialLeave
+	 */
+	public String getAryTxtTimesSpecialLeave(int idx) {
+		return aryTxtTimesSpecialLeave[idx];
+	}
+	
+	/**
 	 * @param aryTxtTimesSpecialLeave セットする aryTxtTimesSpecialLeave
 	 */
 	public void setAryTxtTimesSpecialLeave(String[] aryTxtTimesSpecialLeave) {
@@ -1928,6 +1656,14 @@ public class TotalTimeCardVo extends TotalTimeBaseVo {
 	 */
 	public String[] getAryTxtTimesOtherVacation() {
 		return getStringArrayClone(aryTxtTimesOtherVacation);
+	}
+	
+	/**
+	 * @param idx インデックス
+	 * @return aryTxtTimesOtherVacation
+	 */
+	public String getAryTxtTimesOtherVacation(int idx) {
+		return aryTxtTimesOtherVacation[idx];
 	}
 	
 	/**
@@ -1945,6 +1681,14 @@ public class TotalTimeCardVo extends TotalTimeBaseVo {
 	}
 	
 	/**
+	 * @param idx インデックス
+	 * @return aryTxtDeduction
+	 */
+	public String getAryTxtDeduction(int idx) {
+		return aryTxtDeduction[idx];
+	}
+	
+	/**
 	 * @param aryTxtDeduction セットする aryTxtDeduction
 	 */
 	public void setAryTxtDeduction(String[] aryTxtDeduction) {
@@ -1952,10 +1696,11 @@ public class TotalTimeCardVo extends TotalTimeBaseVo {
 	}
 	
 	/**
+	 * @param idx インデックス
 	 * @return aryTxtTimesSpecialLeaveTitle
 	 */
-	public String[] getAryTxtTimesSpecialLeaveTitle() {
-		return getStringArrayClone(aryTxtTimesSpecialLeaveTitle);
+	public String getAryTxtTimesSpecialLeaveTitle(int idx) {
+		return aryTxtTimesSpecialLeaveTitle[idx];
 	}
 	
 	/**
@@ -1966,10 +1711,11 @@ public class TotalTimeCardVo extends TotalTimeBaseVo {
 	}
 	
 	/**
+	 * @param idx インデックス
 	 * @return aryTxtTimesOtherVacationTitle
 	 */
-	public String[] getAryTxtTimesOtherVacationTitle() {
-		return getStringArrayClone(aryTxtTimesOtherVacationTitle);
+	public String getAryTxtTimesOtherVacationTitle(int idx) {
+		return aryTxtTimesOtherVacationTitle[idx];
 	}
 	
 	/**
@@ -1980,10 +1726,11 @@ public class TotalTimeCardVo extends TotalTimeBaseVo {
 	}
 	
 	/**
+	 * @param idx インデックス
 	 * @return aryTxtDeductionTitle
 	 */
-	public String[] getAryTxtDeductionTitle() {
-		return getStringArrayClone(aryTxtDeductionTitle);
+	public String getAryTxtDeductionTitle(int idx) {
+		return aryTxtDeductionTitle[idx];
 	}
 	
 	/**
@@ -1997,97 +1744,178 @@ public class TotalTimeCardVo extends TotalTimeBaseVo {
 	 * @return aryTxtTimesSpecialLeaveCode
 	 */
 	public String[] getAryTxtTimesSpecialLeaveCode() {
-		return aryTxtTimesSpecialLeaveCode;
+		return getStringArrayClone(aryTxtTimesSpecialLeaveCode);
 	}
 	
 	/**
 	 * @param aryTxtTimesSpecialLeaveCode セットする aryTxtTimesSpecialLeaveCode
 	 */
 	public void setAryTxtTimesSpecialLeaveCode(String[] aryTxtTimesSpecialLeaveCode) {
-		this.aryTxtTimesSpecialLeaveCode = aryTxtTimesSpecialLeaveCode;
+		this.aryTxtTimesSpecialLeaveCode = getStringArrayClone(aryTxtTimesSpecialLeaveCode);
 	}
 	
 	/**
 	 * @return aryTxtTimesOtherVacationCode
 	 */
 	public String[] getAryTxtTimesOtherVacationCode() {
-		return aryTxtTimesOtherVacationCode;
+		return getStringArrayClone(aryTxtTimesOtherVacationCode);
 	}
 	
 	/**
 	 * @param aryTxtTimesOtherVacationCode セットする aryTxtTimesOtherVacationCode
 	 */
 	public void setAryTxtTimesOtherVacationCode(String[] aryTxtTimesOtherVacationCode) {
-		this.aryTxtTimesOtherVacationCode = aryTxtTimesOtherVacationCode;
+		this.aryTxtTimesOtherVacationCode = getStringArrayClone(aryTxtTimesOtherVacationCode);
 	}
 	
 	/**
 	 * @return aryTxtDeductionCode
 	 */
 	public String[] getAryTxtDeductionCode() {
-		return aryTxtDeductionCode;
+		return getStringArrayClone(aryTxtDeductionCode);
 	}
 	
 	/**
 	 * @param aryTxtDeductionCode セットする aryTxtDeductionCode
 	 */
 	public void setAryTxtDeductionCode(String[] aryTxtDeductionCode) {
-		this.aryTxtDeductionCode = aryTxtDeductionCode;
+		this.aryTxtDeductionCode = getStringArrayClone(aryTxtDeductionCode);
 	}
 	
 	/**
 	 * @return aryTimesSpecialLeaveId
 	 */
 	public long[] getAryTimesSpecialLeaveId() {
-		return aryTimesSpecialLeaveId;
+		return getLongArrayClone(aryTimesSpecialLeaveId);
 	}
 	
 	/**
 	 * @param aryTimesSpecialLeaveId セットする aryTimesSpecialLeaveId
 	 */
 	public void setAryTimesSpecialLeaveId(long[] aryTimesSpecialLeaveId) {
-		this.aryTimesSpecialLeaveId = aryTimesSpecialLeaveId;
+		this.aryTimesSpecialLeaveId = getLongArrayClone(aryTimesSpecialLeaveId);
 	}
 	
 	/**
 	 * @return aryTimesOtherVacation
 	 */
 	public long[] getAryTimesOtherVacationId() {
-		return aryTimesOtherVacationId;
+		return getLongArrayClone(aryTimesOtherVacationId);
 	}
 	
 	/**
 	 * @param aryTimesOtherVacationId セットする aryTimesOtherVacationId
 	 */
 	public void setAryTimesOtherVacationId(long[] aryTimesOtherVacationId) {
-		this.aryTimesOtherVacationId = aryTimesOtherVacationId;
+		this.aryTimesOtherVacationId = getLongArrayClone(aryTimesOtherVacationId);
 	}
 	
 	/**
 	 * @return aryDeduction
 	 */
 	public long[] getAryDeductionId() {
-		return aryDeductionId;
+		return getLongArrayClone(aryDeductionId);
 	}
 	
 	/**
 	 * @param aryDeductionId セットする aryDeductionId
 	 */
 	public void setAryDeductionId(long[] aryDeductionId) {
-		this.aryDeductionId = aryDeductionId;
+		this.aryDeductionId = getLongArrayClone(aryDeductionId);
 	}
 	
 	/**
-	 * @return jsModeCutoffStateEdit
+	 * @return txtSpecialHolidayHour
 	 */
-	public String getJsModeCutoffStateEdit() {
-		return jsModeCutoffStateEdit;
+	public String getTxtSpecialHolidayHour() {
+		return txtSpecialHolidayHour;
 	}
 	
 	/**
-	 * @param jsModeCutoffStateEdit セットする jsModeCutoffStateEdit
+	 * @param txtSpecialHolidayHour セットする txtSpecialHolidayHour
 	 */
-	public void setJsModeCutoffStateEdit(String jsModeCutoffStateEdit) {
-		this.jsModeCutoffStateEdit = jsModeCutoffStateEdit;
+	public void setTxtSpecialHolidayHour(String txtSpecialHolidayHour) {
+		this.txtSpecialHolidayHour = txtSpecialHolidayHour;
 	}
+	
+	/**
+	 * @return txtOtherHolidayHour
+	 */
+	public String getTxtOtherHolidayHour() {
+		return txtOtherHolidayHour;
+	}
+	
+	/**
+	 * @param txtOtherHolidayHour セットする txtOtherHolidayHour
+	 */
+	public void setTxtOtherHolidayHour(String txtOtherHolidayHour) {
+		this.txtOtherHolidayHour = txtOtherHolidayHour;
+	}
+	
+	/**
+	 * @return txtDeductionHour
+	 */
+	public String getTxtDeductionHour() {
+		return txtDeductionHour;
+	}
+	
+	/**
+	 * @param txtDeductionHour セットする txtDeductionHour
+	 */
+	public void setTxtDeductionHour(String txtDeductionHour) {
+		this.txtDeductionHour = txtDeductionHour;
+	}
+	
+	/**
+	 * @param idx インデックス
+	 * @return aryTxtTimesSpecialHour
+	 */
+	public String getAryTxtTimesSpecialHour(int idx) {
+		return aryTxtTimesSpecialHour[idx];
+	}
+	
+	/**
+	 * @param aryTxtTimesSpecialHour セットする aryTxtTimesSpecialHour
+	 */
+	public void setAryTxtTimesSpecialHour(String[] aryTxtTimesSpecialHour) {
+		this.aryTxtTimesSpecialHour = getStringArrayClone(aryTxtTimesSpecialHour);
+	}
+	
+	/**
+	 * @param idx インデックス
+	 * @return aryTxtTimesOtherVacationHour
+	 */
+	public String getAryTxtTimesOtherVacationHour(int idx) {
+		return aryTxtTimesOtherVacationHour[idx];
+	}
+	
+	/**
+	 * @param aryTxtTimesOtherVacationHour セットする aryTxtTimesOtherVacationHour
+	 */
+	public void setAryTxtTimesOtherVacationHour(String[] aryTxtTimesOtherVacationHour) {
+		this.aryTxtTimesOtherVacationHour = getStringArrayClone(aryTxtTimesOtherVacationHour);
+	}
+	
+	/**
+	 * @param idx インデックス
+	 * @return aryTxtDeductionHour
+	 */
+	public String getAryTxtDeductionHour(int idx) {
+		return aryTxtDeductionHour[idx];
+	}
+	
+	/**
+	 * @param aryTxtDeductionHour セットする aryTxtDeductionHour
+	 */
+	public void setAryTxtDeductionHour(String[] aryTxtDeductionHour) {
+		this.aryTxtDeductionHour = getStringArrayClone(aryTxtDeductionHour);
+	}
+	
+	/**
+	 * @param isTightened セットする isTightened
+	 */
+	public void setTightened(boolean isTightened) {
+		this.isTightened = isTightened;
+	}
+	
 }

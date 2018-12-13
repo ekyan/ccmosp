@@ -23,7 +23,7 @@
 /**
  * 申請可能時間表示欄。
  */
-.List #tblRemainder {
+.List #overtimeRequest_tblRemainder {
 	width: 450px;
 	margin-left: 0px;
 }
@@ -31,7 +31,7 @@
 /**
  * 申請可能時間表示欄(ListSelectTh)。
  */
-#tblRemainder .ListSelectTh {
+#overtimeRequest_tblRemainder .ListSelectTh {
 	width: 150px;
 }
 

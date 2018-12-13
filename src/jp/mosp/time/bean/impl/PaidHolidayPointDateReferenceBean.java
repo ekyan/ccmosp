@@ -34,13 +34,13 @@ import jp.mosp.time.dto.settings.PaidHolidayPointDateDtoInterface;
 /**
  * 有給休暇自動付与(基準日)参照クラス。
  */
-public class PaidHolidayPointDateReferenceBean extends PlatformBean implements
-		PaidHolidayPointDateReferenceBeanInterface {
+public class PaidHolidayPointDateReferenceBean extends PlatformBean
+		implements PaidHolidayPointDateReferenceBeanInterface {
 	
 	/**
 	 * 有給休暇自動付与(基準日)DAO。
 	 */
-	private PaidHolidayPointDateDaoInterface	dao;
+	private PaidHolidayPointDateDaoInterface dao;
 	
 	
 	/**

@@ -38,6 +38,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<Model key="ConcurrentDao">
 		jp.mosp.platform.dao.human.impl.PfaHumanConcurrentDao
 	</Model>
+	<Model key="AddressDao">
+		jp.mosp.platform.dao.human.impl.PfaAddressDao
+	</Model>
+	<Model key="PhoneDao">
+		jp.mosp.platform.dao.human.impl.PfaPhoneDao
+	</Model>
+	<Model key="AccountDao">
+		jp.mosp.platform.dao.human.impl.PfaAccountDao
+	</Model>
 	<Model key="HumanHistoryDao">
 		jp.mosp.platform.dao.human.impl.PfaHumanHistoryDao
 	</Model>
@@ -61,8 +70,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<Model key="UserMasterDao">
 		jp.mosp.platform.dao.system.impl.PfmUserDao
 	</Model>
+	<Model key="UserExtraRoleDao">
+		jp.mosp.platform.dao.system.impl.PfaUserExtraRoleDao
+	</Model>
 	<Model key="UserPasswordDao">
 		jp.mosp.platform.dao.system.impl.PfaUserPasswordDao
+	</Model>
+	<Model key="UserCountDao">
+		jp.mosp.platform.dao.system.impl.UserCountDao
 	</Model>
 	<Model key="PositionDao">
 		jp.mosp.platform.dao.system.impl.PfmPositionDao
@@ -88,7 +103,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<Model key="IcCardDao">
 		jp.mosp.platform.dao.system.impl.PfmIcCardDao
 	</Model>
-	
+	<Model key="PostalCodeDao">
+		jp.mosp.platform.dao.system.impl.PfmPostalCodeDao
+	</Model>
+	<Model key="BankBaseDao">
+		jp.mosp.platform.dao.system.impl.PfmBankBaseDao
+	</Model>
+	<Model key="BankBranchDao">
+		jp.mosp.platform.dao.system.impl.PfmBankBranchDao
+	</Model>
+	<Model key="AppPropertyDao">
+		jp.mosp.platform.dao.system.impl.PfmAppPropertyDao
+	</Model>
 	
 <!--jp.mosp.platform.dao.message-->
 	<Model key="MessageDao">

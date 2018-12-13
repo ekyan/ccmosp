@@ -55,6 +55,11 @@ public class ViewConfigProperty implements BaseProperty, Serializable {
 	private Map<String, BaseProperty>	viewTable;
 	
 	/**
+	 * 人事汎用管理チェック情報群。
+	 */
+	private Map<String, BaseProperty>	checkConfig;
+	
+	/**
 	 * 有効日日付制限確認フラグ。
 	 * 履歴タイプ登録時に個人履歴有効日より
 	 * 前の日付で登録できるか確認する。
@@ -70,6 +75,7 @@ public class ViewConfigProperty implements BaseProperty, Serializable {
 		this.key = key;
 		view = new HashMap<String, BaseProperty>();
 		viewTable = new HashMap<String, BaseProperty>();
+		checkConfig = new HashMap<String, BaseProperty>();
 		isHumanExist = false;
 	}
 	
@@ -106,6 +112,10 @@ public class ViewConfigProperty implements BaseProperty, Serializable {
 		if (property instanceof ViewTableProperty) {
 			viewTable.put(property.getKey(), property);
 		}
+		
+		if (property instanceof CheckConfigProperty) {
+			checkConfig.put(property.getKey(), property);
+		}
 	}
 	
 	/**
@@ -126,6 +136,16 @@ public class ViewConfigProperty implements BaseProperty, Serializable {
 	public ViewTableProperty getViewTable(String key) {
 		BaseProperty property = viewTable.get(key);
 		return property != null ? (ViewTableProperty)property : null;
+	}
+	
+	/**
+	 * 人事汎用管理チェック情報を取得する。
+	 * @param key 人事汎用管理チェック情報
+	 * @return 人事汎用管理チェック情報
+	 */
+	public CheckConfigProperty getCheckConfig(String key) {
+		BaseProperty property = checkConfig.get(key);
+		return property != null ? (CheckConfigProperty)property : null;
 	}
 	
 	/**

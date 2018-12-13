@@ -17,31 +17,30 @@
  */
 package jp.mosp.platform.human.action;
 
+import java.util.ArrayList;
 import java.util.Date;
-import java.util.Map.Entry;
+import java.util.List;
 
 import jp.mosp.framework.base.BaseVo;
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.constant.MospConst;
-import jp.mosp.framework.property.RoleProperty;
-import jp.mosp.framework.utils.SeUtility;
+import jp.mosp.framework.utils.MospUtility;
+import jp.mosp.framework.utils.RoleUtility;
 import jp.mosp.platform.base.PlatformAction;
 import jp.mosp.platform.bean.human.EntranceRegistBeanInterface;
 import jp.mosp.platform.bean.human.HumanHistoryRegistBeanInterface;
 import jp.mosp.platform.bean.human.HumanReferenceBeanInterface;
 import jp.mosp.platform.bean.human.HumanRegistBeanInterface;
-import jp.mosp.platform.bean.system.UserMasterReferenceBeanInterface;
-import jp.mosp.platform.bean.system.UserMasterRegistBeanInterface;
-import jp.mosp.platform.bean.system.UserPasswordRegistBeanInterface;
+import jp.mosp.platform.bean.system.UserAccountRegistBeanInterface;
 import jp.mosp.platform.constant.PlatformConst;
 import jp.mosp.platform.constant.PlatformMessageConst;
 import jp.mosp.platform.dto.human.EntranceDtoInterface;
 import jp.mosp.platform.dto.human.HumanDtoInterface;
 import jp.mosp.platform.dto.human.HumanHistoryDtoInterface;
 import jp.mosp.platform.dto.system.UserMasterDtoInterface;
-import jp.mosp.platform.dto.system.UserPasswordDtoInterface;
 import jp.mosp.platform.human.base.PlatformHumanAction;
 import jp.mosp.platform.human.vo.BasicNewCardVo;
+import jp.mosp.platform.utils.PlatformNamingUtility;
 
 /**
  * 社員基本情報の新規登録を行う。<br>
@@ -80,6 +79,13 @@ public class BasicNewCardAction extends PlatformHumanAction {
 	 * 有効日決定後、有効日は編集不可になる。<br>
 	 */
 	public static final String		CMD_SET_ACTIVATION_DATE	= "PF1211";
+	
+	/**
+	 * 自動設定コマンド。<br>
+	 * <br>
+	 * 社員コードを自動採番して、VOに設定する。<br>
+	 */
+	public static final String		CMD_AUTO_NUMBERING		= "PF1212";
 	
 	/**
 	 * 新規登録コマンド。<br>
@@ -121,6 +127,10 @@ public class BasicNewCardAction extends PlatformHumanAction {
 			// 有効日決定
 			prepareVo();
 			setActivationDate();
+		} else if (mospParams.getCommand().equals(CMD_AUTO_NUMBERING)) {
+			// 自動設定
+			prepareVo();
+			autoNumbering();
 		} else if (mospParams.getCommand().equals(CMD_INSERT)) {
 			// 新規登録
 			prepareVo();
@@ -156,6 +166,10 @@ public class BasicNewCardAction extends PlatformHumanAction {
 		vo.setModeActivateDate(PlatformConst.MODE_ACTIVATE_DATE_CHANGING);
 		// 追加機能情報取得
 		vo.setNeedPost(mospParams.getApplicationPropertyBool(PlatformConst.APP_ADD_USE_POST));
+		// 自動設定ボタン要否設定
+		vo.setNeedNumberingButton(reference().employeeNumbering().isEmployeeNumberingAvailable());
+		// 追加JSPリスト初期化
+		vo.setExtraJspList(new ArrayList<String>());
 		// プルダウン設定
 		setPulldown();
 		setPostPulldown();
@@ -179,6 +193,19 @@ public class BasicNewCardAction extends PlatformHumanAction {
 		// プルダウン設定
 		setPulldown();
 		setPostPulldown();
+	}
+	
+	/**
+	 * 自動設定処理を行う。<br>
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	protected void autoNumbering() throws MospException {
+		// VO取得
+		BasicNewCardVo vo = (BasicNewCardVo)mospParams.getVo();
+		// 自動採番
+		String employeeCode = reference().employeeNumbering().getNewEmployeeCode();
+		// VO(社員コード)に設定
+		vo.setTxtEmployeeCode(employeeCode);
 	}
 	
 	/**
@@ -217,6 +244,13 @@ public class BasicNewCardAction extends PlatformHumanAction {
 			addInsertFailedMessage();
 			return;
 		}
+		// 追加情報登録
+		registExtra(dto.getPersonalId());
+		if (mospParams.hasErrorMessage()) {
+			// 登録失敗メッセージ設定
+			addInsertFailedMessage();
+			return;
+		}
 		// コミット
 		commit();
 		// 登録成功メッセージ設定
@@ -227,19 +261,7 @@ public class BasicNewCardAction extends PlatformHumanAction {
 		// 人事情報一覧遷移ボタン利用設定
 		mospParams.addGeneralParam(MGP_JS_HUMAN_INFO, "");
 		// 入力項目初期化
-		vo.setTxtEmployeeCode("");
-		vo.setTxtLastName("");
-		vo.setTxtFirstName("");
-		vo.setTxtLastKana("");
-		vo.setTxtFirstKana("");
-		vo.setPltSectionName("");
-		vo.setPltPositionName("");
-		vo.setPltEmploymentName("");
-		vo.setPltWorkPlaceName("");
-		vo.setTxtUserId("");
-		vo.setTxtEntranceYear("");
-		vo.setTxtEntranceMonth("");
-		vo.setTxtEntranceDay("");
+		initVoFields();
 		// 有効日モード設定
 		vo.setModeActivateDate(PlatformConst.MODE_ACTIVATE_DATE_CHANGING);
 		// プルダウン設定
@@ -309,8 +331,30 @@ public class BasicNewCardAction extends PlatformHumanAction {
 			return;
 		}
 		// 役職プルダウン設定
-		vo.setAryPltPostName(reference().naming().getCodedSelectArray(PlatformConst.NAMING_TYPE_POST,
-				getEditActivateDate(), true));
+		vo.setAryPltPostName(
+				reference().naming().getCodedSelectArray(PlatformConst.NAMING_TYPE_POST, getEditActivateDate(), true));
+	}
+	
+	/**
+	 * VOのフィールドを初期化する。<br>
+	 */
+	protected void initVoFields() {
+		// VO準備
+		BasicNewCardVo vo = (BasicNewCardVo)mospParams.getVo();
+		// VOのフィールドを初期化
+		vo.setTxtEmployeeCode("");
+		vo.setTxtLastName("");
+		vo.setTxtFirstName("");
+		vo.setTxtLastKana("");
+		vo.setTxtFirstKana("");
+		vo.setPltSectionName("");
+		vo.setPltPositionName("");
+		vo.setPltEmploymentName("");
+		vo.setPltWorkPlaceName("");
+		vo.setTxtUserId("");
+		vo.setTxtEntranceYear("");
+		vo.setTxtEntranceMonth("");
+		vo.setTxtEntranceDay("");
 	}
 	
 	/**
@@ -358,33 +402,17 @@ public class BasicNewCardAction extends PlatformHumanAction {
 	protected void setDtoFields(UserMasterDtoInterface dto) throws MospException {
 		// VO準備
 		BasicNewCardVo vo = (BasicNewCardVo)mospParams.getVo();
+		// メインロールの初期ロールコードを取得
+		String roleCode = RoleUtility.getDefaultRole(mospParams);
 		// VOの値をDTOに設定
 		dto.setUserId(vo.getTxtUserId());
 		dto.setActivateDate(getEditActivateDate());
 		// 社員コードから個人IDを取得して設定
 		dto.setPersonalId(reference().human().getPersonalId(vo.getTxtEmployeeCode(), getEditActivateDate()));
 		// デフォルトロールコード設定
-		dto.setRoleCode(getDefaultRole());
+		dto.setRoleCode(roleCode);
 		// 無効フラグ設定(有効)
 		dto.setInactivateFlag(MospConst.DELETE_FLAG_OFF);
-	}
-	
-	/**
-	 * VO(編集項目)の値をDTO(ユーザパスワード情報)に設定する。<br>
-	 * @param dto 対象DTO
-	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
-	 */
-	protected void setDtoFields(UserPasswordDtoInterface dto) throws MospException {
-		// VO準備
-		BasicNewCardVo vo = (BasicNewCardVo)mospParams.getVo();
-		// VOの値をDTOに設定
-		dto.setChangeDate(getEditActivateDate());
-		// ユーザID設定
-		dto.setUserId(vo.getTxtUserId());
-		// 初期パスワード取得
-		String initialPassword = platform().passwordCheck().getInitialPassword(vo.getTxtUserId());
-		// パスワード設定
-		dto.setPassword(SeUtility.encrypt(SeUtility.encrypt(initialPassword)));
 	}
 	
 	/**
@@ -395,7 +423,7 @@ public class BasicNewCardAction extends PlatformHumanAction {
 	protected HumanDtoInterface registHuman() throws MospException {
 		// VO取得
 		BasicNewCardVo vo = (BasicNewCardVo)mospParams.getVo();
-		// 登録クラス取得		
+		// 登録クラス取得
 		HumanRegistBeanInterface regist = platform().humanRegist();
 		// 参照クラス取得
 		HumanReferenceBeanInterface reference = reference().human();
@@ -404,7 +432,7 @@ public class BasicNewCardAction extends PlatformHumanAction {
 		// 既に社員コードが使用済でないか確認
 		HumanDtoInterface oldHoman = reference.getHumanInfoForEmployeeCode(employeeCode, getEditActivateDate());
 		if (oldHoman != null) {
-			String[] rep = { mospParams.getName("Employee", "Code"), employeeCode };
+			String[] rep = { PlatformNamingUtility.employeeCode(mospParams), employeeCode };
 			mospParams.addErrorMessage(PlatformMessageConst.MSG_SELECTED_CODE_EXIST, rep);
 			return null;
 		}
@@ -441,48 +469,21 @@ public class BasicNewCardAction extends PlatformHumanAction {
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
 	protected void registUser() throws MospException {
-		// VO取得
+		// VOを準備
 		BasicNewCardVo vo = (BasicNewCardVo)mospParams.getVo();
-		// 入力されたユーザID取得
-		String userId = vo.getTxtUserId();
-		// ユーザID確認
-		if (userId.isEmpty()) {
+		// ユーザIDが入力されていない場合
+		if (MospUtility.isEmpty(vo.getTxtUserId())) {
+			// 登録不要
 			return;
 		}
-		// ユーザマスタ参照クラス取得
-		UserMasterReferenceBeanInterface reference = reference().user();
-		// 既に情報がないか確認
-		UserMasterDtoInterface oldDto = reference.getUserInfo(userId, getEditActivateDate());
-		if (oldDto != null) {
-			String[] rep = { mospParams.getName("User", "Id"), userId };
-			mospParams.addErrorMessage(PlatformMessageConst.MSG_SELECTED_CODE_EXIST, rep);
-			return;
-		}
-		// ユーザマスタ登録クラス取得
-		UserMasterRegistBeanInterface regist = platform().userMasterRegist();
-		// ユーザマスタDTOの準備
-		UserMasterDtoInterface dto = regist.getInitDto();
-		// ユーザマスタDTOに値を設定
-		setDtoFields(dto);
-		// ユーザマスタ登録処理
-		regist.insert(dto);
-		// ユーザパスワード情報
-		registUserPassword();
-	}
-	
-	/**
-	 * ユーザパスワード情報を登録する。
-	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
-	 */
-	protected void registUserPassword() throws MospException {
-		// ユーザパスワード情報登録クラス取得
-		UserPasswordRegistBeanInterface regist = platform().userPasswordRegist();
-		// ユーザパスワード情報DTOの準備
-		UserPasswordDtoInterface dto = regist.getInitDto();
-		// ユーザパスワード情報DTOに値を設定
-		setDtoFields(dto);
-		// ユーザパスワード情報登録処理
-		regist.regist(dto);
+		// 登録処理を準備
+		UserAccountRegistBeanInterface regist = platform().userAccountRegist();
+		// 初期DTOを準備
+		UserMasterDtoInterface userDto = regist.getInitUserDto();
+		// 初期DTOに値を設定
+		setDtoFields(userDto);
+		// 新規登録(デフォルトユーザ追加ロール情報も登録)
+		regist.insert(userDto, true);
 	}
 	
 	/**
@@ -512,6 +513,15 @@ public class BasicNewCardAction extends PlatformHumanAction {
 	}
 	
 	/**
+	 * 追加情報を登録する。<br>
+	 * @param personalId 個人ID
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	protected void registExtra(String personalId) throws MospException {
+		// アドオン等で実装
+	}
+	
+	/**
 	 * VOから有効日(編集)を取得する。<br>
 	 * @return 有効日(編集)
 	 */
@@ -534,21 +544,16 @@ public class BasicNewCardAction extends PlatformHumanAction {
 	}
 	
 	/**
-	 * デフォルトロールコードを取得する。<br>
-	 * @return デフォルトロールコード
+	 * 追加JSPをリストに追加する。<br>
+	 * @param path 追加JSPパス
 	 */
-	protected String getDefaultRole() {
-		String roleCode = "";
-		// ロール情報取得
-		for (Entry<String, RoleProperty> entry : mospParams.getProperties().getRoleProperties().entrySet()) {
-			// ロール情報取得
-			RoleProperty roleProperty = entry.getValue();
-			// デフォルトロール設定確認
-			if (roleProperty.isDefault()) {
-				return roleProperty.getKey();
-			}
-		}
-		return roleCode;
+	protected void addExtraJsp(String path) {
+		// VO取得
+		BasicNewCardVo vo = (BasicNewCardVo)mospParams.getVo();
+		// 追加JSPリスト取得
+		List<String> extraJspList = vo.getExtraJspList();
+		// 追加JSPをリストに追加
+		extraJspList.add(path);
 	}
 	
 }

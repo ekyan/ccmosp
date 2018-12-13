@@ -582,56 +582,56 @@ public class RouteApplicationReferenceVo extends PlatformSystemVo {
 	 * @return aryPltSearchWorkPlaceMaster
 	 */
 	public String[][] getAryPltSearchWorkPlaceMaster() {
-		return aryPltSearchWorkPlaceMaster;
+		return getStringArrayClone(aryPltSearchWorkPlaceMaster);
 	}
 	
 	/**
 	 * @param aryPltSearchWorkPlaceMaster セットする aryPltSearchWorkPlaceMaster
 	 */
 	public void setAryPltSearchWorkPlaceMaster(String[][] aryPltSearchWorkPlaceMaster) {
-		this.aryPltSearchWorkPlaceMaster = aryPltSearchWorkPlaceMaster;
+		this.aryPltSearchWorkPlaceMaster = getStringArrayClone(aryPltSearchWorkPlaceMaster);
 	}
 	
 	/**
 	 * @return aryPltSearchEmploymentMaster
 	 */
 	public String[][] getAryPltSearchEmploymentMaster() {
-		return aryPltSearchEmploymentMaster;
+		return getStringArrayClone(aryPltSearchEmploymentMaster);
 	}
 	
 	/**
 	 * @param aryPltSearchEmploymentMaster セットする aryPltSearchEmploymentMaster
 	 */
 	public void setAryPltSearchEmploymentMaster(String[][] aryPltSearchEmploymentMaster) {
-		this.aryPltSearchEmploymentMaster = aryPltSearchEmploymentMaster;
+		this.aryPltSearchEmploymentMaster = getStringArrayClone(aryPltSearchEmploymentMaster);
 	}
 	
 	/**
 	 * @return aryPltSearchSectionMaster
 	 */
 	public String[][] getAryPltSearchSectionMaster() {
-		return aryPltSearchSectionMaster;
+		return getStringArrayClone(aryPltSearchSectionMaster);
 	}
 	
 	/**
 	 * @param aryPltSearchSectionMaster セットする aryPltSearchSectionMaster
 	 */
 	public void setAryPltSearchSectionMaster(String[][] aryPltSearchSectionMaster) {
-		this.aryPltSearchSectionMaster = aryPltSearchSectionMaster;
+		this.aryPltSearchSectionMaster = getStringArrayClone(aryPltSearchSectionMaster);
 	}
 	
 	/**
 	 * @return aryPltSearchPositionMaster
 	 */
 	public String[][] getAryPltSearchPositionMaster() {
-		return aryPltSearchPositionMaster;
+		return getStringArrayClone(aryPltSearchPositionMaster);
 	}
 	
 	/**
 	 * @param aryPltSearchPositionMaster セットする aryPltSearchPositionMaster
 	 */
 	public void setAryPltSearchPositionMaster(String[][] aryPltSearchPositionMaster) {
-		this.aryPltSearchPositionMaster = aryPltSearchPositionMaster;
+		this.aryPltSearchPositionMaster = getStringArrayClone(aryPltSearchPositionMaster);
 	}
 	
 	/**

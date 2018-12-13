@@ -120,8 +120,8 @@ public interface ApprovalInfoReferenceBeanInterface {
 	 * @return 承認可能勤怠申請情報
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
-	ManagementRequestListDtoInterface getManagementRequestListDto(WorkflowDtoInterface workflowDto, boolean isSubApprove)
-			throws MospException;
+	ManagementRequestListDtoInterface getManagementRequestListDto(WorkflowDtoInterface workflowDto,
+			boolean isSubApprove) throws MospException;
 	
 	/**
 	 * ワークフロー番号から申請情報を取得する。

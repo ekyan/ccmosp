@@ -36,7 +36,7 @@ public class WorkTypePatternRegistBean extends PlatformBean implements WorkTypeP
 	/**
 	 * 勤務形態パターンマスタDAOクラス。<br>
 	 */
-	WorkTypePatternDaoInterface	dao;
+	WorkTypePatternDaoInterface dao;
 	
 	
 	/**

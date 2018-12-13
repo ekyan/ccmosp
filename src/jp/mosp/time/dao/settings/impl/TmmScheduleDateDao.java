@@ -126,63 +126,6 @@ public class TmmScheduleDateDao extends PlatformDao implements ScheduleDateDaoIn
 	}
 	
 	@Override
-	public List<ScheduleDateDtoInterface> findForHistory(String scheduleCode, Date scheduleDate) throws MospException {
-		try {
-			index = 1;
-			StringBuffer sb = getSelectQuery(getClass());
-			sb.append(where());
-			sb.append(deleteFlagOff());
-			sb.append(and());
-			sb.append(equal(COL_SCHEDULE_CODE));
-			sb.append(and());
-			sb.append(equal(COL_SCHEDULE_DATE));
-			sb.append(getOrderByColumn(COL_ACTIVATE_DATE));
-			prepareStatement(sb.toString());
-			setParam(index++, scheduleCode);
-			setParam(index++, scheduleDate);
-			executeQuery();
-			return mappingAll();
-		} catch (Throwable e) {
-			throw new MospException(e);
-		} finally {
-			releaseResultSet();
-			releasePreparedStatement();
-		}
-	}
-	
-	@Override
-	public ScheduleDateDtoInterface findForKey(String scheduleCode, Date activateDate, Date scheduleDate)
-			throws MospException {
-		try {
-			index = 1;
-			StringBuffer sb = getSelectQuery(getClass());
-			sb.append(where());
-			sb.append(deleteFlagOff());
-			sb.append(and());
-			sb.append(equal(COL_SCHEDULE_CODE));
-			sb.append(and());
-			sb.append(equal(COL_ACTIVATE_DATE));
-			sb.append(and());
-			sb.append(equal(COL_SCHEDULE_DATE));
-			prepareStatement(sb.toString());
-			setParam(index++, scheduleCode);
-			setParam(index++, activateDate);
-			setParam(index++, scheduleDate);
-			executeQuery();
-			ScheduleDateDtoInterface dto = null;
-			if (next()) {
-				dto = (ScheduleDateDtoInterface)mapping();
-			}
-			return dto;
-		} catch (Throwable e) {
-			throw new MospException(e);
-		} finally {
-			releaseResultSet();
-			releasePreparedStatement();
-		}
-	}
-	
-	@Override
 	public ScheduleDateDtoInterface findForKey(String scheduleCode, Date scheduleDate) throws MospException {
 		try {
 			index = 1;
@@ -221,76 +164,12 @@ public class TmmScheduleDateDao extends PlatformDao implements ScheduleDateDaoIn
 			sb.append(equal(COL_SCHEDULE_CODE));
 			sb.append(and());
 			sb.append(equal(COL_ACTIVATE_DATE));
+			sb.append(getOrderByColumn(COL_SCHEDULE_DATE));
 			prepareStatement(sb.toString());
 			setParam(index++, scheduleCode);
 			setParam(index++, activateDate);
 			executeQuery();
 			return mappingAll();
-		} catch (Throwable e) {
-			throw new MospException(e);
-		} finally {
-			releaseResultSet();
-			releasePreparedStatement();
-		}
-	}
-	
-	@Override
-	public List<ScheduleDateDtoInterface> findForList(String scheduleCode, Date activateDate, Date startDate,
-			Date endDate) throws MospException {
-		try {
-			index = 1;
-			StringBuffer sb = getSelectQuery(getClass());
-			sb.append(where());
-			sb.append(deleteFlagOff());
-			sb.append(and());
-			sb.append(equal(COL_SCHEDULE_CODE));
-			sb.append(and());
-			sb.append(equal(COL_ACTIVATE_DATE));
-			sb.append(and());
-			sb.append(greaterEqual(COL_SCHEDULE_DATE));
-			sb.append(and());
-			sb.append(lessEqual(COL_SCHEDULE_DATE));
-			prepareStatement(sb.toString());
-			setParam(index++, scheduleCode);
-			setParam(index++, activateDate);
-			setParam(index++, startDate);
-			setParam(index++, endDate);
-			executeQuery();
-			return mappingAll();
-		} catch (Throwable e) {
-			throw new MospException(e);
-		} finally {
-			releaseResultSet();
-			releasePreparedStatement();
-		}
-	}
-	
-	@Override
-	public ScheduleDateDtoInterface findForInfo(String scheduleCode, Date activateDate, Date scheduleDate)
-			throws MospException {
-		try {
-			index = 1;
-			StringBuffer sb = getSelectQuery(getClass());
-			sb.append(where());
-			sb.append(deleteFlagOff());
-			sb.append(and());
-			sb.append(equal(COL_SCHEDULE_CODE));
-			sb.append(and());
-			sb.append(equal(COL_SCHEDULE_DATE));
-			sb.append(and());
-			sb.append(COL_ACTIVATE_DATE);
-			sb.append(" <= ? ");
-			sb.append(getOrderByColumnDescLimit1(COL_ACTIVATE_DATE));
-			prepareStatement(sb.toString());
-			setParam(index++, scheduleCode);
-			setParam(index++, scheduleDate);
-			setParam(index++, activateDate);
-			executeQuery();
-			ScheduleDateDtoInterface dto = null;
-			if (next()) {
-				dto = (ScheduleDateDtoInterface)mapping();
-			}
-			return dto;
 		} catch (Throwable e) {
 			throw new MospException(e);
 		} finally {
@@ -364,6 +243,7 @@ public class TmmScheduleDateDao extends PlatformDao implements ScheduleDateDaoIn
 			sb.append(greaterEqual(COL_SCHEDULE_DATE));
 			sb.append(and());
 			sb.append(lessEqual(COL_SCHEDULE_DATE));
+			sb.append(getOrderByColumn(COL_SCHEDULE_DATE));
 			prepareStatement(sb.toString());
 			setParam(index++, scheduleCode);
 			setParam(index++, startDate);
@@ -392,7 +272,7 @@ public class TmmScheduleDateDao extends PlatformDao implements ScheduleDateDaoIn
 			sb.append(equal(COL_INACTIVATE_FLAG, MospConst.INACTIVATE_FLAG_OFF));
 			sb.append(and());
 			sb.append(getQueryForMaxActivateDate());
-			sb.append(getOrderByColumn(COL_SCHEDULE_CODE));
+			sb.append(getOrderByColumn(COL_SCHEDULE_CODE, COL_SCHEDULE_DATE));
 			prepareStatement(sb.toString());
 			setParam(index++, targetCode);
 			setParam(index++, activateDate);
@@ -456,7 +336,12 @@ public class TmmScheduleDateDao extends PlatformDao implements ScheduleDateDaoIn
 		}
 	}
 	
-	@Override
+	/**
+	 * 条件による検索のための文字列。
+	 * <p>
+	 * 最大有効日レコードのクエリを取得する。
+	 * @return カレンダコードに紐づく有効日が最大であるレコード取得クエリ
+	 */
 	public StringBuffer getQueryForMaxActivateDate() {
 		StringBuffer sb = new StringBuffer();
 		sb.append(COL_ACTIVATE_DATE);

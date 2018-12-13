@@ -26,123 +26,90 @@ import java.util.Set;
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.base.MospParams;
 import jp.mosp.framework.constant.MospConst;
-import jp.mosp.platform.base.PlatformBean;
-import jp.mosp.platform.bean.human.impl.HumanSearchBean;
-import jp.mosp.platform.bean.workflow.RouteApplicationReferenceBeanInterface;
-import jp.mosp.platform.bean.workflow.WorkflowIntegrateBeanInterface;
+import jp.mosp.platform.bean.human.impl.HumanSubordinateBean;
 import jp.mosp.platform.constant.PlatformConst;
 import jp.mosp.platform.dto.human.HumanDtoInterface;
-import jp.mosp.platform.dto.workflow.RouteApplicationDtoInterface;
-import jp.mosp.time.bean.ApplicationReferenceBeanInterface;
-import jp.mosp.time.bean.AttendanceListReferenceBeanInterface;
-import jp.mosp.time.bean.CutoffUtilBeanInterface;
-import jp.mosp.time.bean.LimitStandardReferenceBeanInterface;
+import jp.mosp.platform.utils.PlatformNamingUtility;
 import jp.mosp.time.bean.SubordinateSearchBeanInterface;
-import jp.mosp.time.bean.TotalTimeCalcBeanInterface;
+import jp.mosp.time.bean.TimeMasterBeanInterface;
 import jp.mosp.time.bean.TotalTimeCorrectionReferenceBeanInterface;
 import jp.mosp.time.bean.TotalTimeEmployeeTransactionReferenceBeanInterface;
 import jp.mosp.time.bean.TotalTimeTransactionReferenceBeanInterface;
 import jp.mosp.time.constant.TimeConst;
 import jp.mosp.time.dao.settings.TotalTimeDataDaoInterface;
-import jp.mosp.time.dto.settings.ApplicationDtoInterface;
-import jp.mosp.time.dto.settings.CutoffDtoInterface;
-import jp.mosp.time.dto.settings.LimitStandardDtoInterface;
 import jp.mosp.time.dto.settings.SubordinateListDtoInterface;
 import jp.mosp.time.dto.settings.TotalTimeCorrectionDtoInterface;
 import jp.mosp.time.dto.settings.TotalTimeDataDtoInterface;
-import jp.mosp.time.dto.settings.TotalTimeDtoInterface;
 import jp.mosp.time.dto.settings.TotalTimeEmployeeDtoInterface;
 import jp.mosp.time.dto.settings.impl.SubordinateListDto;
+import jp.mosp.time.entity.ApplicationEntity;
+import jp.mosp.time.entity.RequestDetectEntityInterface;
+import jp.mosp.time.utils.TimeUtility;
 
 /**
  * 部下一覧検索クラス。
  */
-public class SubordinateSearchBean extends HumanSearchBean implements SubordinateSearchBeanInterface {
-	
-	/**
-	 * 限度基準期間(1ヶ月)。
-	 */
-	public static final String									LIMIT_STANDARD_TERM_MONTH1	= "month1";
+public class SubordinateSearchBean extends HumanSubordinateBean implements SubordinateSearchBeanInterface {
 	
 	/**
 	 * 勤怠集計データDAO。
 	 */
-	private TotalTimeDataDaoInterface							totalTimeDataDao;
+	protected TotalTimeDataDaoInterface								totalTimeDataDao;
 	
 	/**
 	 * 勤怠集計修正情報参照。
 	 */
-	private TotalTimeCorrectionReferenceBeanInterface			totalTimeCorrection;
+	protected TotalTimeCorrectionReferenceBeanInterface				totalTimeCorrection;
 	
 	/**
 	 * 社員勤怠集計管理参照。
 	 */
-	private TotalTimeEmployeeTransactionReferenceBeanInterface	totalTimeEmployeeTransaction;
-	
-	/**
-	 * 勤怠集計。
-	 */
-	TotalTimeCalcBeanInterface									totalTimeCalc;
-	
-	/**
-	 * 承認ルート設定適用参照クラス。
-	 */
-	protected RouteApplicationReferenceBeanInterface			routeApplication;
-	
-	/**
-	 * ワークフロー統合クラス。
-	 */
-	protected WorkflowIntegrateBeanInterface					workflowIntegrate;
+	protected TotalTimeEmployeeTransactionReferenceBeanInterface	totalTimeEmployeeTransaction;
 	
 	/**
 	 * 勤怠集計管理参照クラス。
 	 */
-	protected TotalTimeTransactionReferenceBeanInterface		totalTimeTransactionRefer;
+	protected TotalTimeTransactionReferenceBeanInterface			totalTimeTransactionRefer;
 	
 	/**
-	 * 勤怠一覧参照クラス。
+	 * 勤怠集計エンティティ取得クラス。<br>
 	 */
-	protected AttendanceListReferenceBeanInterface				attendanceList;
+	protected TotalTimeEntityReferenceBean							totalTimeEntityRefer;
 	
 	/**
-	 * 設定適用管理参照クラス。
+	 * 勤怠関連マスタ参照クラス。<br>
 	 */
-	protected ApplicationReferenceBeanInterface					applicationReference;
-	
-	/**
-	 * 限度基準参照クラス。
-	 */
-	protected LimitStandardReferenceBeanInterface				limitStandardReference;
-	
-	/**
-	 * 締日ユーティリティクラス。
-	 */
-	protected CutoffUtilBeanInterface							cutoffUtill;
+	protected TimeMasterBeanInterface								timeMaster;
 	
 	/**
 	 * 対象年。
 	 */
-	private int													targetYear;
+	protected int													targetYear;
 	
 	/**
 	 * 対象月。
 	 */
-	private int													targetMonth;
+	protected int													targetMonth;
 	
 	/**
 	 * 未承認。
 	 */
-	private String												approval;
+	protected String												approval;
+	
+	/**
+	 * 未承認前日フラグ。
+	 */
+	protected String												approvalBeforeDay;
 	
 	/**
 	 * 締状態。
 	 */
-	private String												calc;
+	protected String												calc;
 	
 	/**
-	 * 勤怠未承認
+	 * 社員区分。
 	 */
-	private String												CODE_NOT_ATTENDANCE			= "2";
+	protected String												humanType;
 	
 	
 	/**
@@ -153,7 +120,7 @@ public class SubordinateSearchBean extends HumanSearchBean implements Subordinat
 	}
 	
 	/**
-	 * {@link PlatformBean#PlatformBean(MospParams, Connection)}を実行する。<br>
+	 * {@link HumanSubordinateBean#HumanSubordinateBean(MospParams, Connection)}を実行する。<br>
 	 * @param mospParams MosP処理情報
 	 * @param connection DBコネクション
 	 */
@@ -167,35 +134,28 @@ public class SubordinateSearchBean extends HumanSearchBean implements Subordinat
 		// 勤怠集計データDAO取得
 		totalTimeDataDao = (TotalTimeDataDaoInterface)createDao(TotalTimeDataDaoInterface.class);
 		// 勤怠集計修正情報参照クラス取得
-		totalTimeCorrection = (TotalTimeCorrectionReferenceBeanInterface)createBean(TotalTimeCorrectionReferenceBeanInterface.class);
-		// 謝金勤怠集計管理参照クラス取得
-		totalTimeEmployeeTransaction = (TotalTimeEmployeeTransactionReferenceBeanInterface)createBean(TotalTimeEmployeeTransactionReferenceBeanInterface.class);
-		// 勤怠集計クラス取得
-		totalTimeCalc = (TotalTimeCalcBeanInterface)createBean(TotalTimeCalcBeanInterface.class);
-		// 承認ルート設定適用参照クラス取得
-		routeApplication = (RouteApplicationReferenceBeanInterface)createBean(RouteApplicationReferenceBeanInterface.class);
-		// ワークフロー統合クラス取得
-		workflowIntegrate = (WorkflowIntegrateBeanInterface)createBean(WorkflowIntegrateBeanInterface.class);
+		totalTimeCorrection = (TotalTimeCorrectionReferenceBeanInterface)createBean(
+				TotalTimeCorrectionReferenceBeanInterface.class);
+		// 社員勤怠集計管理参照クラス取得
+		totalTimeEmployeeTransaction = (TotalTimeEmployeeTransactionReferenceBeanInterface)createBean(
+				TotalTimeEmployeeTransactionReferenceBeanInterface.class);
 		// 勤怠集計管理参照クラス取得
-		totalTimeTransactionRefer = (TotalTimeTransactionReferenceBeanInterface)createBean(TotalTimeTransactionReferenceBeanInterface.class);
-		// 勤怠一覧参照クラス取得
-		attendanceList = (AttendanceListReferenceBeanInterface)createBean(AttendanceListReferenceBeanInterface.class);
-		// 設定適用管理参照クラス取得
-		applicationReference = (ApplicationReferenceBeanInterface)createBean(ApplicationReferenceBeanInterface.class);
-		// 限度基準参照クラス取得
-		limitStandardReference = (LimitStandardReferenceBeanInterface)createBean(LimitStandardReferenceBeanInterface.class);
-		// 締日ユーティリティクラス取得
-		cutoffUtill = (CutoffUtilBeanInterface)createBean(CutoffUtilBeanInterface.class);
+		totalTimeTransactionRefer = (TotalTimeTransactionReferenceBeanInterface)createBean(
+				TotalTimeTransactionReferenceBeanInterface.class);
+		// 勤怠集計エンティティ取得クラス取得
+		totalTimeEntityRefer = (TotalTimeEntityReferenceBean)createBean(TotalTimeEntityReferenceBean.class);
+		// 勤怠関連マスタ参照クラスを取得
+		timeMaster = (TimeMasterBeanInterface)createBean(TimeMasterBeanInterface.class);
+		// プラットフォームマスタ参照クラスを勤怠集計エンティティ取得クラスに設定
+		totalTimeEntityRefer.setPlatformMasterBean(platformMaster);
+		// 勤怠関連マスタ参照クラスを勤怠集計エンティティ取得クラスに設定
+		totalTimeEntityRefer.setTimeMasterBean(timeMaster);
 	}
 	
 	@Override
 	public List<SubordinateListDtoInterface> getSubordinateList() throws MospException {
-		// 検索条件(部下)設定
-		setSubordinateParams();
-		// 検索条件設定(検索区分(社員コード))
-		setEmployeeCodeType(PlatformConst.SEARCH_FORWARD_MATCH);
 		// 部下一覧情報リスト取得
-		return getSubordinateList(search());
+		return getSubordinateList(getHumanSubordinates(humanType, PlatformConst.WORKFLOW_TYPE_TIME));
 	}
 	
 	@Override
@@ -209,72 +169,10 @@ public class SubordinateSearchBean extends HumanSearchBean implements Subordinat
 	}
 	
 	/**
-	 * 検索条件(部下)を設定する。<br>
-	 */
-	protected void setSubordinateParams() {
-		// 検索条件設定(休退職区分)
-		setStateType(PlatformConst.EMPLOYEE_STATE_PRESENCE);
-		// 検索条件設定(下位所属要否)
-		setNeedLowerSection(true);
-		// 検索条件設定(兼務要否)
-		setNeedConcurrent(true);
-		// 検索条件設定(操作区分)
-		setOperationType(MospConst.OPERATION_TYPE_REFER);
-	}
-	
-	@Override
-	public List<SubordinateListDtoInterface> getApprovableList() throws MospException {
-		/* THINK 承認者から被承認社員を取得する処理について
-		 * 
-		 * 承認者から被承認社員を取得する処理は、承認ルート設定適用の仕様上、コストがかかる。
-		 * 
-		 * 承認ルート設定適用は、被承認者が設定されている承認ルートを特定するためのものであり、
-		 * 承認適用設定情報から被承認者を取得することは困難である。
-		 * 
-		 * 承認ルート設定適用は、個人或いはマスタ(勤務地、雇用契約、所属、職位)の組合せで、
-		 * 被承認者の承認ルートを特定するものである。
-		 * 承認ルートを特定するにあたり、優先順位が存在する。
-		 * その優先順位に沿って確認が行われ、被承認者の人事基本情報に最初に合致した
-		 * 承認ルート設定適用が用いられることになる。
-		 * 
-		 * そのため、承認ルート設定適用から被承認者を取得しようとした場合、
-		 * その承認ルート設定適用に合致する社員を取得するだけでなく、その承認ルート設定適用
-		 * より優先順位の高い承認ルート設定適用に合致する社員を除かなくてはならない。
-		 * 例えば、マスタの組合せで全て空白の承認ルート設定適用があった場合、登録されている
-		 * 全ての承認ルート設定適用に対して合致する社員を取得しそれらを除かなくてはならない。
-		 * 
-		 * 当メソッドでは、検索条件に合致する社員一人一人に対して、承認ルート設定適用情報を取得
-		 * し、承認者がユニットとして登録されているルートが適用される承認ルート設定適用情報と
-		 * 合致するかで判断することとする。
-		 * この方法でもコストがかかることに変わりは無い。
-		 * 検索条件を指定しない場合などは、全社員に対して承認ルート設定適用情報を確認することに
-		 * なり、相応のコストが想定される。
-		 * 
-		 * 利用に堪えないようであれば、承認ルート設定適用から被承認者を取得する方法を試してみる。
-		 * それでも改善されない場合は、仕様自体を再検討する必要がある。
-		 */
-		// 検索条件(部下)設定
-		setSubordinateParams();
-		// 検索条件設定(検索区分(社員コード))
-		setEmployeeCodeType(PlatformConst.SEARCH_FORWARD_MATCH);
-		// 人事情報検索(部下一覧)
-		List<HumanDtoInterface> approvableList = search();
-		// 検索条件再設定(操作区分)(承認対象者全員が検索対象となるためnullを設定)
-		setOperationType(null);
-		// 人事情報検索
-		List<HumanDtoInterface> humanList = search();
-		// 承認者がユニットとして登録されているルートのリストを取得
-		Set<String> routeSet = workflowIntegrate.getApproverRouteSet(mospParams.getUser().getPersonalId(), targetDate);
-		// 検索人事情報毎に被承認者かどうかを確認して人事情報リストに追加
-		for (HumanDtoInterface humanDto : humanList) {
-			addApprovable(humanDto, routeSet, approvableList);
-		}
-		// 部下一覧情報リスト取得
-		return getSubordinateList(approvableList);
-	}
-	
-	/**
 	 * 人事情報リストを基に、部下一覧情報リストを取得する。<br>
+	 * <br>
+	 * 検索条件(未承認、未承認)に合致する部下一覧情報のみ、リストに加える。<br>
+	 * <br>
 	 * @param humanList 人事情報リスト
 	 * @return 部下一覧情報リスト
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
@@ -283,36 +181,81 @@ public class SubordinateSearchBean extends HumanSearchBean implements Subordinat
 			throws MospException {
 		// 部下一覧リスト準備
 		List<SubordinateListDtoInterface> subordinateList = new ArrayList<SubordinateListDtoInterface>();
+		// 前日までフラグ(承認状態取得用)を取得
+		boolean searchBeforeDay = approvalBeforeDay.equals(MospConst.CHECKBOX_ON);
 		// 検索結果から部下一覧リストを作成
-		for (HumanDtoInterface dto : humanList) {
-			TotalTimeDataDtoInterface totalTimeDto = totalTimeDataDao.findForKey(dto.getPersonalId(), targetYear,
-					targetMonth);
-			SubordinateListDtoInterface subordinateListDto = getSubordinateListDto(dto, targetYear, targetMonth,
-					totalTimeDto, approval, calc);
-			if (subordinateListDto != null) {
-				subordinateList.add(subordinateListDto);
+		for (HumanDtoInterface humanDto : humanList) {
+			// 個人IDを取得
+			String personalId = humanDto.getPersonalId();
+			// 勤怠集計データを取得
+			TotalTimeDataDtoInterface totalTimeDto = totalTimeDataDao.findForKey(personalId, targetYear, targetMonth);
+			// 部下一覧情報DTOに設定
+			SubordinateListDtoInterface dto = getSubordinateListDto(humanDto, targetYear, targetMonth, totalTimeDto,
+					searchBeforeDay);
+			// 部下一覧情報が検索条件に合致する場合
+			if (isApprovalConditionMatch(dto) && isCalcConditionMatch(dto)) {
+				// 部下一覧情報リストに追加
+				subordinateList.add(dto);
 			}
 		}
+		// 部下一覧情報リストを取得
 		return subordinateList;
 	}
 	
 	/**
-	 * 承認状態表示クラスを取得する。
-	 * @param approvalState 承認状態
+	 * 承認状態表示名を取得する。<br>
+	 * <br>
+	 * @param isApprovableExist 未承認フラグ(true：未承認有、false：未承認無)
+	 * @param isAppliableExist  未申請フラグ(true：勤怠未申請有、false：勤怠未申請無)
+	 * @return 承認状態表示名
+	 */
+	protected String getApprovalStateName(boolean isApprovableExist, boolean isAppliableExist) {
+		// 勤怠未申請有の場合(部下一覧等未申表示をする場合)
+		if (isAppliableExist && isAppliableExistShow()) {
+			// 未申
+			return mospParams.getName("Ram", "Register");
+		}
+		// 未承認有の場合
+		if (isApprovableExist) {
+			// 有
+			return PlatformNamingUtility.exsistAbbr(mospParams);
+		}
+		// 無(未承認無で勤怠未申請無の場合)
+		return PlatformNamingUtility.notExsistAbbr(mospParams);
+	}
+	
+	/**
+	 * 承認状態表示クラスを取得する。<br>
+	 * <br>
+	 * @param isApprovableExist 未承認フラグ(true：未承認有、false：未承認無)
+	 * @param isAppliableExist  未申請フラグ(true：勤怠未申請有、false：勤怠未申請無)
 	 * @return 承認状態表示クラス
 	 */
-	protected String getApprovalStateClass(int approvalState) {
-		// 承認状態確認
-		switch (approvalState) {
-			case TimeConst.CODE_NOT_APPROVED_NONE:
-				// 未承認無しの場合(青文字)
-				return TimeConst.CSS_BLUE_LABEL;
-			case TimeConst.CODE_NOT_APPROVED_EXIST:
-				// 未承認有りの場合(赤文字)
-				return TimeConst.CSS_RED_LABEL;
-			default:
-				return "";
+	protected String getApprovalStateClass(boolean isApprovableExist, boolean isAppliableExist) {
+		// 勤怠未申請有か未承認有の場合
+		if (isAppliableExist && isAppliableExistShow()) {
+			// 赤文字
+			return TimeConst.CSS_RED_LABEL;
 		}
+		// 未承認有の場合
+		if (isApprovableExist) {
+			// 赤文字
+			return TimeConst.CSS_RED_LABEL;
+		}
+		// 青文字(未承認無で勤怠未申請無の場合)
+		return TimeConst.CSS_BLUE_LABEL;
+	}
+	
+	/**
+	 * 部下一覧等未申表示をするかどうかを確認する。<br>
+	 * <br>
+	 * 一覧の未承認欄に「有り」と「無し」に加えて「未申」を
+	 * 表示するかを確認する。<br>
+	 * <br>
+	 * @return 確認結果(true：未申表示をする、false：しない)
+	 */
+	protected boolean isAppliableExistShow() {
+		return mospParams.getApplicationPropertyBool(TimeConst.APP_SHOW_APPLIABLE_EXIST);
 	}
 	
 	/**
@@ -338,46 +281,65 @@ public class SubordinateSearchBean extends HumanSearchBean implements Subordinat
 	}
 	
 	/**
-	 * 対象人事情報の社員が被承認者である場合、被承認者リストに追加する。<br>
-	 * 対象人事情報から承認ルート適用設定情報を取得し、そのルートコードが
-	 * 承認対象ルートリストに含まれるかで、被承認者であるかを確認する。<br>
-	 * @param humanDto       対象人事情報
-	 * @param routeSet       承認対象ルートコード群
-	 * @param approvableList 被承認者リストルート設定適用情報リスト
-	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 * 部下一覧情報が未承認(検索条件)に合致するかを確認する。<br>
+	 * <br>
+	 * @param dto 対象部下一覧情報
+	 * @return 確認結果(true：合致する、false：合致しない)
 	 */
-	protected void addApprovable(HumanDtoInterface humanDto, Set<String> routeSet,
-			List<HumanDtoInterface> approvableList) throws MospException {
-		// 被承認者リスト確認
-		for (HumanDtoInterface approvable : approvableList) {
-			// 既に被承認者リストに存在している場合は処理無し
-			if (approvable.getPersonalId().equals(humanDto.getPersonalId())) {
-				return;
-			}
+	protected boolean isApprovalConditionMatch(SubordinateListDtoInterface dto) {
+		// 部下一覧情報が存在しない場合
+		if (dto == null) {
+			return false;
 		}
-		// 対象人事情報の社員が適用されている承認ルート適用設定情報を取得
-		RouteApplicationDtoInterface targetRouteApplication = workflowIntegrate.findForPerson(humanDto.getPersonalId(),
-				targetDate, PlatformConst.WORKFLOW_TYPE_TIME);
-		// 承認ルート適用設定情報を確認
-		if (isApprovable(targetRouteApplication, routeSet)) {
-			// 人事情報リスト(部下一覧)に追加
-			approvableList.add(humanDto);
+		// 未承認(検索条件)が無い場合
+		if (approval == null || approval.isEmpty()) {
+			// 合致すると判断
+			return true;
 		}
+		// 未承認(検索条件)を取得
+		int condition = getInteger(approval);
+		// 未承認(検索条件)が無しの場合
+		if (condition == TimeConst.CODE_NOT_APPROVED_NONE) {
+			// 部下一覧情報が未承認無であるかを確認
+			return dto.isApprovableExist() == false;
+		}
+		// 未承認(検索条件)が有りの場合
+		if (condition == TimeConst.CODE_NOT_APPROVED_EXIST) {
+			// 部下一覧情報が未承認有であるかを確認
+			return dto.isApprovableExist();
+		}
+		// 未承認(検索条件)が勤怠未申請有りの場合
+		if (condition == TimeConst.CODE_NOT_TIME_APPROVED_EXIST) {
+			// 部下一覧情報が未申請有であるかを確認
+			return dto.isAppliableExist();
+		}
+		// 未承認(検索条件)が未承認・未申請有りの場合
+		if (condition == TimeConst.CODE_NOT_CUTOFF_INFO_EXIST) {
+			// 部下一覧情報が未承認有か未申請有であるかを確認
+			return dto.isApprovableExist() || dto.isAppliableExist();
+		}
+		// 検索条件が何れでもない場合
+		return false;
 	}
 	
 	/**
-	 * 対象ルート設定適用情報に設定されたルートコードが、
-	 * ルート設定適用情報リストの中に含まれているかを確認する。<br>
-	 * @param routeApplicationDto 対象ルート設定適用リスト
-	 * @param routeSet            ルートコード群
-	 * @return 確認結果(true：対象がリストの中に含まれる、false：対象がリストの中に含まれない)
+	 * 部下一覧情報が締状態(検索条件)に合致するかを確認する。<br>
+	 * <br>
+	 * @param dto 対象部下一覧情報
+	 * @return 確認結果(true：合致する、false：合致しない)
 	 */
-	protected boolean isApprovable(RouteApplicationDtoInterface routeApplicationDto, Set<String> routeSet) {
-		// 対象ルート設定適用情報確認
-		if (routeApplicationDto == null) {
+	protected boolean isCalcConditionMatch(SubordinateListDtoInterface dto) {
+		// 部下一覧情報が存在しない場合
+		if (dto == null) {
 			return false;
 		}
-		return routeSet.contains(routeApplicationDto.getRouteCode());
+		// 締状態(検索条件)が無い場合
+		if (calc == null || calc.isEmpty()) {
+			// 合致すると判断
+			return true;
+		}
+		//  部下一覧情報の締状態と締状態(検索条件)が合致するかを確認
+		return calc.equals(String.valueOf(dto.getCutoffState()));
 	}
 	
 	@Override
@@ -396,96 +358,63 @@ public class SubordinateSearchBean extends HumanSearchBean implements Subordinat
 	}
 	
 	@Override
+	public void setApprovalBeforeDay(String approvalBeforeDay) {
+		this.approvalBeforeDay = approvalBeforeDay;
+	}
+	
+	@Override
 	public void setCalc(String calc) {
 		this.calc = calc;
 	}
 	
 	@Override
+	public void setHumanType(String humanType) {
+		this.humanType = humanType;
+	}
+	
+	@Override
 	public SubordinateListDtoInterface getSubordinateListDto(HumanDtoInterface humanDto, int year, int month,
-			TotalTimeDataDtoInterface totalTimeDataDto, String searchApprovalState, String searchCutoffState)
-			throws MospException {
-		// 人事情報確認
+			TotalTimeDataDtoInterface totalTimeDataDto, boolean searchBeforeDay) throws MospException {
+		// 人事情報が取得できなかった場合
 		if (humanDto == null) {
 			return null;
 		}
+		// 設定適用エンティティを取得(年月指定時の基準日で)
+		ApplicationEntity applicationEntity = timeMaster.getApplicationEntity(humanDto, year, month);
+		// 設定適用エンティティが無効である(必要な情報が揃っていない)場合
+		if (applicationEntity.isValid() == false) {
+			return null;
+		}
+		// 設定適用エンティティから締日情報を取得
+		int cutoffDate = applicationEntity.getCutoffDate();
+		// 締期間最終日取得
+		Date cutoffLastDate = TimeUtility.getCutoffLastDate(cutoffDate, year, month);
+		// 締最終日時点で入社していない又は締日最終日時点で設定適用がない場合
+		if (!isEntered(humanDto.getPersonalId(), cutoffLastDate) || timeMaster
+			.getApplication(getHumanInfo(humanDto.getPersonalId(), cutoffLastDate), cutoffLastDate) == null) {
+			// 検索結果から除去
+			return null;
+		}
+		// 設定適用エンティティから勤怠設定コードを取得
+		String workSettingCode = applicationEntity.getWorkSettingCode();
 		// 部下一覧情報準備
 		SubordinateListDtoInterface dto = new SubordinateListDto();
-		// 人事情報設定
+		// 対象年月を設定
+		dto.setTargetYear(year);
+		dto.setTargetMonth(month);
+		// 部下一覧情報に人事情報を設定
 		setHuman(dto, humanDto);
-		// 承認状態設定
-		setApprovalState(dto, year, month);
-		// 勤怠未申請の場合
-		if (searchApprovalState.equals(CODE_NOT_ATTENDANCE)) {
-			// 対象社員の勤怠が未申請でない場合
-			if (isAllAttendanceApplied(humanDto.getPersonalId(), year, month)) {
-				mospParams.getErrorMessageList().clear();
-				return null;
-			}
-		} else if (!searchApprovalState.isEmpty()
-				&& !searchApprovalState.equals(String.valueOf(dto.getApprovalState()))) {
-			// 検索条件：承認状態確認
-			return null;
-		}
-		// 締状態設定
-		setCutoffState(dto, year, month);
-		// 検索条件：締状態確認
-		if (!searchCutoffState.isEmpty() && !searchCutoffState.equals(String.valueOf(dto.getCutoffState()))) {
-			return null;
-		}
-		// 勤怠修正情報設定
-		setCorrection(dto, year, month);
-		// 処理結果確認
-		if (mospParams.hasErrorMessage()) {
-			mospParams.getErrorMessageList().clear();
-			return null;
-		}
-		// 勤怠集計データ設定
+		// 部下一覧情報に勤怠集計データを設定
 		setTotalTimeData(dto, totalTimeDataDto);
-		ApplicationDtoInterface applicationDto = applicationReference.findForPerson(humanDto.getPersonalId(),
-				targetDate);
-		if (applicationDto == null) {
-			return dto;
-		}
-		LimitStandardDtoInterface limitStandardDto = limitStandardReference.getLimitStandardInfo(
-				applicationDto.getWorkSettingCode(), targetDate, LIMIT_STANDARD_TERM_MONTH1);
-		if (limitStandardDto == null) {
-			return dto;
-		}
-		setLimitStandard(dto, limitStandardDto);
+		// 部下一覧情報に承認状態を設定
+		setApprovalState(dto, cutoffDate, searchBeforeDay);
+		// 締状態設定
+		setCutoffState(dto);
+		// 勤怠修正情報設定
+		setCorrection(dto);
+		// 限度基準情報を設定
+		setLimitStandard(dto, workSettingCode);
 		return dto;
-	}
-	
-	/**
-	 * 対象社員が勤怠を申請しているか確認する。
-	 * @param personalId 個人ID
-	 * @param year 対象年
-	 * @param month 対象月
-	 * @return 確認結果(true：勤怠が申請済、false：勤怠が未申請のものがある)
-	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
-	 */
-	protected boolean isAllAttendanceApplied(String personalId, int year, int month) throws MospException {
-		// 対象社員締情報取得
-		CutoffDtoInterface cutoffDto = cutoffUtill.getCutoffForPersonalId(personalId, year, month);
-		if (mospParams.hasErrorMessage()) {
-			return true;
-		}
-		// 締期間初日取得
-		Date firstDate = cutoffUtill.getCutoffFirstDate(cutoffDto.getCutoffCode(), year, month);
-		// 締期間最終日取得
-		Date lastDate = cutoffUtill.getCutoffLastDate(cutoffDto.getCutoffCode(), year, month);
-		if (mospParams.hasErrorMessage()) {
-			return true;
-		}
-		// 勤怠未入力(勤怠入力用チェックボックス有)の日付リストを取得
-		List<Date> dateList = attendanceList.getNotAttendanceAppliList(personalId, firstDate, lastDate);
-		if (mospParams.hasErrorMessage()) {
-			return true;
-		}
-		// 日付リストがある場合
-		if (dateList != null && !dateList.isEmpty()) {
-			return false;
-		}
-		return true;
 	}
 	
 	@Override
@@ -501,32 +430,56 @@ public class SubordinateSearchBean extends HumanSearchBean implements Subordinat
 	}
 	
 	/**
-	 * 承認状態を設定する。<br>
-	 * @param dto 対象DTO
-	 * @param year 年
-	 * @param month 月
+	 * 部下一覧情報に承認状態及び申請状態を設定する。<br>
+	 * <br>
+	 * @param dto             対象部下一覧情報
+	 * @param cutoffDate      締日
+	 * @param searchBeforeDay 前日までフラグ(承認状態取得用)
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
-	protected void setApprovalState(SubordinateListDtoInterface dto, int year, int month) throws MospException {
-		int approvalStatus = totalTimeCalc.getApprovalStatus(dto.getPersonalId(), year, month);
-		// 承認状態取得
-		dto.setApprovalState(approvalStatus);
+	protected void setApprovalState(SubordinateListDtoInterface dto, int cutoffDate, boolean searchBeforeDay)
+			throws MospException {
+		// 個人ID及び対象年月を取得
+		String personalId = dto.getPersonalId();
+		int targetYear = dto.getTargetYear();
+		int targetMonth = dto.getTargetMonth();
+		
+		// 申請検出エンティティを取得
+		RequestDetectEntityInterface entity = totalTimeEntityRefer.getRequestDetectEntity(personalId, targetYear,
+				targetMonth, cutoffDate);
+		
+		// 前日までの場合
+		if (searchBeforeDay) {
+			// 対象期間をシステム日付前日までに設定
+			entity.setBeforeDay(getSystemDate());
+		}
+		
+		// 未承認フラグを取得
+		boolean isApprovableExist = entity.isApprovableExist(true);
+		// 勤怠未申請フラグを取得
+		boolean isAppliableExist = entity.isAppliableExist(true);
+		// 承認状態設定
+		dto.setApprovableExist(isApprovableExist);
+		// 申請状況設定
+		dto.setAppliableExist(isAppliableExist);
 		// 承認状態表示名称設定
-		dto.setApproval(getCodeName(approvalStatus, TimeConst.CODE_NOT_APPROVED));
+		dto.setApproval(getApprovalStateName(isApprovableExist, isAppliableExist));
 		// 承認状態表示クラス設定
-		dto.setApprovalStateClass(getApprovalStateClass(approvalStatus));
+		dto.setApprovalStateClass(getApprovalStateClass(isApprovableExist, isAppliableExist));
 	}
 	
 	/**
 	 * 締状態を設定する。<br>
-	 * @param dto 対象DTO
-	 * @param year 年
-	 * @param month 月
+	 * @param dto 対象部下一覧情報
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
-	protected void setCutoffState(SubordinateListDtoInterface dto, int year, int month) throws MospException {
+	protected void setCutoffState(SubordinateListDtoInterface dto) throws MospException {
+		// 個人ID及び対象年月を取得
+		String personalId = dto.getPersonalId();
+		int targetYear = dto.getTargetYear();
+		int targetMonth = dto.getTargetMonth();
 		// 締状態取得
-		int cutoffState = getCutoffState(dto.getPersonalId(), year, month);
+		int cutoffState = getCutoffState(personalId, targetYear, targetMonth);
 		// 締状態設定
 		dto.setCutoffState(cutoffState);
 		// 締状態表示名称設定
@@ -537,15 +490,17 @@ public class SubordinateSearchBean extends HumanSearchBean implements Subordinat
 	
 	/**
 	 * 勤怠修正情報を設定する。<br>
-	 * @param dto 対象DTO
-	 * @param year 年
-	 * @param month 月
+	 * @param dto 対象部下一覧情報
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
-	protected void setCorrection(SubordinateListDtoInterface dto, int year, int month) throws MospException {
+	protected void setCorrection(SubordinateListDtoInterface dto) throws MospException {
+		// 個人ID及び対象年月を取得
+		String personalId = dto.getPersonalId();
+		int targetYear = dto.getTargetYear();
+		int targetMonth = dto.getTargetMonth();
 		// 勤怠集計修正情報取得
-		TotalTimeCorrectionDtoInterface totalTimeCorrectionDto = totalTimeCorrection.getLatestTotalTimeCorrectionInfo(
-				dto.getPersonalId(), year, month);
+		TotalTimeCorrectionDtoInterface totalTimeCorrectionDto = totalTimeCorrection
+			.getLatestTotalTimeCorrectionInfo(personalId, targetYear, targetMonth);
 		if (totalTimeCorrectionDto == null) {
 			dto.setCorrection("");
 			return;
@@ -591,12 +546,27 @@ public class SubordinateSearchBean extends HumanSearchBean implements Subordinat
 		dto.setTimesHolidaySubstitute(totalTimeDataDto.getTimesHolidaySubstitute());
 	}
 	
+	@Override
+	public void setLimitStandard(SubordinateListDtoInterface dto, HumanDtoInterface humanDto) throws MospException {
+		// 設定適用エンティティを取得(年月指定時の基準日で)
+		ApplicationEntity applicationEntity = timeMaster.getApplicationEntity(humanDto, dto.getTargetYear(),
+				dto.getTargetMonth());
+		// 設定適用エンティティが無効である(必要な情報が揃っていない)場合
+		if (applicationEntity.isValid() == false) {
+			return;
+		}
+		// 限度基準情報を設定
+		setLimitStandard(dto, applicationEntity.getWorkSettingCode());
+	}
+	
 	/**
 	 * 限度基準情報を設定する。<br>
-	 * @param dto 対象DTO
-	 * @param limitStandardDto 限度基準マスタDTO
+	 * <br>
+	 * @param dto             対象部下一覧情報
+	 * @param workSettingCode 勤怠設定コード
 	 */
-	protected void setLimitStandard(SubordinateListDtoInterface dto, LimitStandardDtoInterface limitStandardDto) {
+	@SuppressWarnings("all")
+	protected void setLimitStandard(SubordinateListDtoInterface dto, String workSettingCode) throws MospException {
 		// 処理なし
 	}
 	
@@ -614,17 +584,20 @@ public class SubordinateSearchBean extends HumanSearchBean implements Subordinat
 				targetYear, targetMonth);
 		// 社員勤怠集計管理情報確認
 		if (totalTimeEmployeeDto == null) {
-			// 未締
+			// 未締であると判断
 			return TimeConst.CODE_CUTOFF_STATE_NOT_TIGHT;
 		}
-		// 勤怠集計管理情報取得
-		TotalTimeDtoInterface totalTimeDto = totalTimeTransactionRefer.findForKey(targetYear, targetMonth,
-				totalTimeEmployeeDto.getCutoffCode());
-		// 勤怠集計管理情報確認
-		if (totalTimeDto != null && totalTimeDto.getCutoffState() == TimeConst.CODE_CUTOFF_STATE_TIGHTENED) {
+		// 締日コードを取得
+		String cutoffCode = totalTimeEmployeeDto.getCutoffCode();
+		// 勤怠集計管理情報から締状態を取得
+		int cutoffState = totalTimeTransactionRefer.getStoredCutoffState(targetYear, targetMonth, cutoffCode);
+		// 勤怠集計管理情報の締状態が確定である場合
+		if (cutoffState == TimeConst.CODE_CUTOFF_STATE_TIGHTENED) {
+			// 確定であると判断
 			return TimeConst.CODE_CUTOFF_STATE_TIGHTENED;
 		}
-		// 締状態取得
+		// 社員勤怠集計管理情報から締状態を取得
 		return totalTimeEmployeeDto.getCutoffState();
 	}
+	
 }

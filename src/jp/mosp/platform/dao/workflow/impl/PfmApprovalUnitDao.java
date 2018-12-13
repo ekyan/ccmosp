@@ -44,62 +44,72 @@ public class PfmApprovalUnitDao extends PlatformDao implements ApprovalUnitDaoIn
 	/**
 	 * 承認ユニットマスタ。
 	 */
-	public static final String	TABLE						= "pfm_approval_unit";
+	public static final String		TABLE						= "pfm_approval_unit";
 	
 	/**
 	 * レコード識別ID。
 	 */
-	public static final String	COL_PFM_APPROVAL_UNIT_ID	= "pfm_approval_unit_id";
+	public static final String		COL_PFM_APPROVAL_UNIT_ID	= "pfm_approval_unit_id";
 	
 	/**
 	 * ユニットコード。
 	 */
-	public static final String	COL_UNIT_CODE				= "unit_code";
+	public static final String		COL_UNIT_CODE				= "unit_code";
 	
 	/**
 	 * 有効日。
 	 */
-	public static final String	COL_ACTIVATE_DATE			= "activate_date";
+	public static final String		COL_ACTIVATE_DATE			= "activate_date";
 	
 	/**
 	 * ユニット名称。
 	 */
-	public static final String	COL_UNIT_NAME				= "unit_name";
+	public static final String		COL_UNIT_NAME				= "unit_name";
 	
 	/**
 	 * ユニット区分。
 	 */
-	public static final String	COL_UNIT_TYPE				= "unit_type";
+	public static final String		COL_UNIT_TYPE				= "unit_type";
 	
 	/**
 	 * 承認者個人ID。
 	 */
-	public static final String	COL_APPROVER_PERSONAL_ID	= "approver_personal_id";
+	public static final String		COL_APPROVER_PERSONAL_ID	= "approver_personal_id";
 	
 	/**
 	 * 承認者所属コード。
 	 */
-	public static final String	COL_APPROVER_SECTION_CODE	= "approver_section_code";
+	public static final String		COL_APPROVER_SECTION_CODE	= "approver_section_code";
 	
 	/**
-	 * 承認者所属コード。
+	 * 承認者職位コード。
 	 */
-	public static final String	COL_APPROVER_POSITION_CODE	= "approver_position_code";
+	public static final String		COL_APPROVER_POSITION_CODE	= "approver_position_code";
+	
+	/**
+	 * 承認者職位等級範囲。
+	 */
+	public static final String		COL_APPROVER_POSITION_GRADE	= "approver_position_grade";
 	
 	/**
 	 * 複数決済。
 	 */
-	public static final String	COL_ROUTE_STAGE				= "route_stage";
+	public static final String		COL_ROUTE_STAGE				= "route_stage";
 	
 	/**
 	 * 無効フラグ。
 	 */
-	public static final String	COL_INACTIVATE_FLAG			= "inactivate_flag";
+	public static final String		COL_INACTIVATE_FLAG			= "inactivate_flag";
 	
 	/**
 	 * キー。
 	 */
-	public static final String	KEY_1						= COL_PFM_APPROVAL_UNIT_ID;
+	public static final String		KEY_1						= COL_PFM_APPROVAL_UNIT_ID;
+	
+	/**
+	 * 職位マスタDAOクラス。
+	 */
+	protected PositionDaoInterface	positionDao;
 	
 	
 	/**
@@ -110,8 +120,8 @@ public class PfmApprovalUnitDao extends PlatformDao implements ApprovalUnitDaoIn
 	}
 	
 	@Override
-	public void initDao() {
-		// 処理無し
+	public void initDao() throws MospException {
+		positionDao = (PositionDaoInterface)loadDao(PositionDaoInterface.class);
 	}
 	
 	@Override
@@ -361,12 +371,38 @@ public class PfmApprovalUnitDao extends PlatformDao implements ApprovalUnitDaoIn
 			sb.append(and());
 			sb.append(equal(COL_APPROVER_SECTION_CODE));
 			sb.append(and());
+			sb.append(leftParenthesis());
 			sb.append(equal(COL_APPROVER_POSITION_CODE));
+			sb.append(or());
+			sb.append(leftParenthesis());
+			// 以上
+			sb.append(equal(COL_APPROVER_POSITION_GRADE, "1"));
+			sb.append(and());
+			sb.append(COL_APPROVER_POSITION_CODE);
+			sb.append(in());
+			sb.append(leftParenthesis());
+			sb.append(positionDao.getQueryForPositionGrade(false));
+			sb.append(rightParenthesis());
+			sb.append(rightParenthesis());
+			sb.append(or());
+			sb.append(leftParenthesis());
+			// 以下
+			sb.append(equal(COL_APPROVER_POSITION_GRADE, "2"));
+			sb.append(and());
+			sb.append(COL_APPROVER_POSITION_CODE);
+			sb.append(in());
+			sb.append(leftParenthesis());
+			sb.append(positionDao.getQueryForPositionGrade(true));
+			sb.append(rightParenthesis());
+			sb.append(rightParenthesis());
+			sb.append(rightParenthesis());
 			prepareStatement(sb.toString());
 			setParam(index++, activateDate);
 			setParam(index++, PlatformConst.UNIT_TYPE_SECTION);
 			setParam(index++, approverSectionCode);
 			setParam(index++, approverPositionCode);
+			index = positionDao.setParamsForPositionGrande(index, approverPositionCode, activateDate, ps);
+			index = positionDao.setParamsForPositionGrande(index, approverPositionCode, activateDate, ps);
 			executeQuery();
 			return mappingAll();
 		} catch (Throwable e) {
@@ -406,6 +442,7 @@ public class PfmApprovalUnitDao extends PlatformDao implements ApprovalUnitDaoIn
 		dto.setApproverPersonalId(getString(COL_APPROVER_PERSONAL_ID));
 		dto.setApproverSectionCode(getString(COL_APPROVER_SECTION_CODE));
 		dto.setApproverPositionCode(getString(COL_APPROVER_POSITION_CODE));
+		dto.setApproverPositionGrade(getString(COL_APPROVER_POSITION_GRADE));
 		dto.setRouteStage(getInt(COL_ROUTE_STAGE));
 		dto.setInactivateFlag(getInt(COL_INACTIVATE_FLAG));
 		mappingCommonInfo(dto);
@@ -432,6 +469,7 @@ public class PfmApprovalUnitDao extends PlatformDao implements ApprovalUnitDaoIn
 		setParam(index++, dto.getApproverPersonalId());
 		setParam(index++, dto.getApproverSectionCode());
 		setParam(index++, dto.getApproverPositionCode());
+		setParam(index++, dto.getApproverPositionGrade());
 		setParam(index++, dto.getRouteStage());
 		setParam(index++, dto.getInactivateFlag());
 		setCommonParams(baseDto, isInsert);

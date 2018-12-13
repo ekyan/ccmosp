@@ -19,7 +19,9 @@ package jp.mosp.platform.dao.human.impl;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import jp.mosp.framework.base.BaseDto;
 import jp.mosp.framework.base.BaseDtoInterface;
@@ -228,41 +230,105 @@ public class PfaHumanSuspensionDao extends PlatformDao implements SuspensionDaoI
 	}
 	
 	/**
-	 * 設定するパラメータは、以下の通り。<br>
-	 * <ul><li>
-	 * 対象日
-	 * </li><li>
-	 * 対象日
-	 * </li><li>
-	 * 対象日
-	 * </li></ul>
-	 */
-	@Override
-	public String getQueryForSuspendedPerson() {
-		StringBuffer sb = new StringBuffer();
-		sb.append(select());
-		sb.append(COL_PERSONAL_ID);
-		sb.append(from(TABLE));
-		sb.append(where());
-		sb.append(deleteFlagOff());
-		sb.append(and());
-		sb.append(lessEqual(COL_START_DATE));
-		sb.append(and());
-		sb.append(leftParenthesis());
-		sb.append(greaterEqual(COL_SCHEDULE_END_DATE));
-		sb.append(or());
-		sb.append(greaterEqual(COL_END_DATE));
-		sb.append(rightParenthesis());
-		return sb.toString();
-	}
-	
-	/**
 	 * DTOインスタンスのキャストを行う。<br>
 	 * @param baseDto 対象DTO
 	 * @return キャストされたDTO
 	 */
 	protected SuspensionDtoInterface castDto(BaseDtoInterface baseDto) {
 		return (SuspensionDtoInterface)baseDto;
+	}
+	
+	@Override
+	public List<SuspensionDtoInterface> findForList(Date targetDate, Date startDate, Date endDate)
+			throws MospException {
+		try {
+			index = 1;
+			StringBuffer sb = getSelectQuery(getClass());
+			sb.append(where());
+			sb.append(deleteFlagOff());
+			sb.append(and());
+			sb.append(lessEqual(COL_START_DATE));
+			sb.append(and());
+			sb.append(leftParenthesis());
+			sb.append(leftParenthesis());
+			sb.append(isNull(COL_END_DATE));
+			sb.append(and());
+			sb.append(greaterEqual(COL_SCHEDULE_END_DATE));
+			sb.append(rightParenthesis());
+			sb.append(or());
+			sb.append(leftParenthesis());
+			sb.append(isNotNull(COL_END_DATE));
+			sb.append(and());
+			sb.append(greaterEqual(COL_END_DATE));
+			sb.append(rightParenthesis());
+			sb.append(rightParenthesis());
+			sb.append(getOrderByColumn(COL_PERSONAL_ID, COL_START_DATE));
+			prepareStatement(sb.toString());
+			if (startDate != null && endDate != null) {
+				setParam(index++, endDate);
+				setParam(index++, startDate);
+				setParam(index++, startDate);
+			} else {
+				setParam(index++, targetDate);
+				setParam(index++, targetDate);
+				setParam(index++, targetDate);
+			}
+			executeQuery();
+			return mappingAll();
+		} catch (Throwable e) {
+			throw new MospException(e);
+		} finally {
+			releaseResultSet();
+			releasePreparedStatement();
+		}
+	}
+	
+	@Override
+	public Map<String, SuspensionDtoInterface> findForPersonalIds(String[] personalIds, Date suspensionDate)
+			throws MospException {
+		try {
+			// パラメータインデックス準備
+			index = 1;
+			// SQL作成
+			StringBuffer sb = getSelectQuery(getClass());
+			sb.append(where());
+			sb.append(deleteFlagOff());
+			sb.append(in(COL_PERSONAL_ID, personalIds.length));
+			sb.append(and());
+			sb.append(COL_START_DATE);
+			sb.append(" <= ?");
+			sb.append(and());
+			sb.append("((");
+			sb.append(COL_END_DATE);
+			sb.append(" IS NULL");
+			sb.append(and());
+			sb.append(COL_SCHEDULE_END_DATE);
+			sb.append(" >= ?) OR (");
+			sb.append(COL_END_DATE);
+			sb.append(" >= ?))");
+			
+			// ステートメント生成
+			prepareStatement(sb.toString());
+			setParamsIn(personalIds);
+			setParam(index++, suspensionDate);
+			setParam(index++, suspensionDate);
+			setParam(index++, suspensionDate);
+			// SQL実行
+			executeQuery();
+			// 結果取得
+			Map<String, SuspensionDtoInterface> allmap = new HashMap<String, SuspensionDtoInterface>();
+			while (next()) {
+				SuspensionDtoInterface dto = castDto(mapping());
+				allmap.put(dto.getPersonalId(), dto);
+				
+			}
+			return allmap;
+		} catch (Throwable e) {
+			throw new MospException(e);
+		} finally {
+			releaseResultSet();
+			releasePreparedStatement();
+		}
 	}
 	
 }

@@ -40,12 +40,12 @@ public class HumanRegistBean extends PlatformHumanBean implements HumanRegistBea
 	/**
 	 * 社員コード項目長。<br>
 	 */
-	protected static final int				LEN_EMPLOYEE_CODE	= 10;
+	public static final int					LEN_EMPLOYEE_CODE	= 10;
 	
 	/**
 	 * 社員名(姓、名、姓(カナ)、名(カナ))項目長。<br>
 	 */
-	protected static final int				LEN_EMPLOYEE_NAME	= 10;
+	public static final int					LEN_EMPLOYEE_NAME	= 10;
 	
 	/**
 	 * 人事マスタDAOクラス。<br>

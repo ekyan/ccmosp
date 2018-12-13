@@ -367,17 +367,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		</CodeItem>
 	</Code>
 	<Code key="MessageType">
-		<CodeItem key="1">
-			<ItemName>勤怠</ItemName>
-			<ViewIndex>1</ViewIndex>
-		</CodeItem>
-		<CodeItem key="2">
-			<ItemName>人事</ItemName>
-			<ViewIndex>2</ViewIndex>
-		</CodeItem>
 		<CodeItem key="0">
 			<ItemName>その他</ItemName>
-			<ViewIndex>3</ViewIndex>
+			<ViewIndex>9</ViewIndex>
 		</CodeItem>
 	</Code>
 	<Code key="MessageImportance">
@@ -443,13 +435,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 			<ItemName>所属情報</ItemName>
 			<ViewIndex>20</ViewIndex>
 		</CodeItem>
+		<CodeItem key="pfm_position">
+			<ItemName>職位情報</ItemName>
+			<ViewIndex>30</ViewIndex>
+		</CodeItem>
 		<CodeItem key="unit_section">
 			<ItemName>ユニット情報(所属)</ItemName>
-			<ViewIndex>30</ViewIndex>
+			<ViewIndex>40</ViewIndex>
 		</CodeItem>
 		<CodeItem key="unit_person">
 			<ItemName>ユニット情報(個人)</ItemName>
-			<ViewIndex>40</ViewIndex>
+			<ViewIndex>50</ViewIndex>
 		</CodeItem>
 	</Code>
 	<Code key="HumanExportTableType">
@@ -566,6 +562,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 			<ViewIndex>7</ViewIndex>
 		</CodeItem>
 	</Code>
+	<Code key="pfa_user_extra_role">
+		<CodeItem key="user_id">
+			<ItemName>ユーザID</ItemName>
+			<ViewIndex>1</ViewIndex>
+		</CodeItem>
+		<CodeItem key="activate_date">
+			<ItemName>有効日</ItemName>
+			<ViewIndex>2</ViewIndex>
+		</CodeItem>
+		<CodeItem key="role_type">
+			<ItemName>ロール区分</ItemName>
+			<ViewIndex>3</ViewIndex>
+		</CodeItem>
+		<CodeItem key="role_code">
+			<ItemName>ロールコード</ItemName>
+			<ViewIndex>4</ViewIndex>
+		</CodeItem>
+	</Code>
 	<Code key="pfm_section">
 		<CodeItem key="section_code">
 			<ItemName>所属コード</ItemName>
@@ -598,6 +612,32 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 			<ViewIndex>7</ViewIndex>
 		</CodeItem>
 	</Code>
+	<Code key="pfm_position">
+		<CodeItem key="position_code">
+			<ItemName>職位コード</ItemName>
+			<ViewIndex>1</ViewIndex>
+		</CodeItem>
+		<CodeItem key="activate_date">
+			<ItemName>有効日</ItemName>
+			<ViewIndex>2</ViewIndex>
+		</CodeItem>
+		<CodeItem key="position_name">
+			<ItemName>職位名称</ItemName>
+			<ViewIndex>3</ViewIndex>
+		</CodeItem>
+		<CodeItem key="position_abbr">
+			<ItemName>職位略称</ItemName>
+			<ViewIndex>4</ViewIndex>
+		</CodeItem>
+		<CodeItem key="position_grade">
+			<ItemName>職位ランク</ItemName>
+			<ViewIndex>5</ViewIndex>
+		</CodeItem>
+		<CodeItem key="close_flag">
+			<ItemName>有効/無効</ItemName>
+			<ViewIndex>6</ViewIndex>
+		</CodeItem>
+	</Code>
 	<Code key="unit_section">
 		<CodeItem key="unit_code">
 			<ItemName>ユニットコード</ItemName>
@@ -618,6 +658,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		<CodeItem key="approver_position_code">
 			<ItemName>承認者職位コード</ItemName>
 			<ViewIndex>5</ViewIndex>
+		</CodeItem>
+		<CodeItem key="approver_position_grade">
+			<ItemName>承認者職位等級範囲</ItemName>
+			<ViewIndex>6</ViewIndex>
 		</CodeItem>
 		<CodeItem key="inactivate_flag">
 			<ItemName>有効/無効</ItemName>
@@ -702,6 +746,32 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		<CodeItem key="2">
 			<ItemName>携帯電話</ItemName>
 			<ViewIndex>2</ViewIndex>
+		</CodeItem>
+	</Code>
+	<Code key="UnitPositionGradeRange">
+		<CodeItem key="1">
+			<ItemName>以上</ItemName>
+			<ViewIndex>1</ViewIndex>
+		</CodeItem>
+		<CodeItem key="2">
+			<ItemName>以下</ItemName>
+			<ViewIndex>2</ViewIndex>
+		</CodeItem>
+	</Code>
+	<Code key="AppPropertyNames">
+		<CodeItem key="PasswordPeriod">
+			<ItemName>パスワード有効期間</ItemName>
+			<ViewIndex>1</ViewIndex>
+		</CodeItem>
+	</Code>
+	<Code key="AppPropertyTypes">
+		<CodeItem key="PasswordPeriod">
+			<ItemName>Number4RequiredTextBox</ItemName>
+		</CodeItem>
+	</Code>
+	<Code key="AppPropertyDescriptions">
+		<CodeItem key="PasswordPeriod">
+			<ItemName>日　※無期限に設定したい場合、0を入力して下さい。</ItemName>
 		</CodeItem>
 	</Code>
 </MosP>

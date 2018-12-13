@@ -34,7 +34,7 @@ function onLoadExtra() {
 		setReadOnly("txtEditActivateDay", true);
 		setDisabled("txtUnitCode", true);
 		// 決定ボタン押下不可
-		setDisabled("btnActivateDate", true);
+		setReadOnly("btnActivateDate", true);
 		// ラジオボタン押下不可
 		setReadOnly("radioSectionPosition", true);
 		setReadOnly("radioEmployeeCode", true);
@@ -54,7 +54,7 @@ function onLoadExtra() {
 		setReadOnly("txtEditActivateDay", true);
 	} else {
 		// 登録ボタン利用不可
-		setDisabled("btnRegist", true);
+		setReadOnly("btnRegist", true);
 		// ラジオボタン押下不可
 		setReadOnly("radioSectionPosition", true);
 		setReadOnly("radioEmployeeCode", true);
@@ -67,6 +67,7 @@ function onLoadExtra() {
 	// ユニット承認者設定変更イベントハンドラ設定
 	setOnChangeHandler("pltSectionMaster", onChangeApploval);
 	setOnChangeHandler("pltPositionMaster", onChangeApploval);
+	setOnChangeHandler("pltPositionGradeRange", onChangeApploval);
 	setOnChangeHandler("txtEmployeeCode", onChangeApploval);
 }
 
@@ -114,16 +115,19 @@ function onChangeUnitType(event) {
 			// 所属の場合
 			setDisabled("pltSectionMaster" , false);
 			setDisabled("pltPositionMaster", false);
+			setDisabled("pltPositionGradeRange", false);
 			setDisabled("txtEmployeeCode", true);
 		} else {
 			// 個人の場合
 			setDisabled("pltSectionMaster" , true);
 			setDisabled("pltPositionMaster", true);
+			setDisabled("pltPositionGradeRange", true);
 			setDisabled("txtEmployeeCode", false);
 		}
 	} else {
 		setDisabled("pltSectionMaster" , true);
 		setDisabled("pltPositionMaster", true);
+		setDisabled("pltPositionGradeRange", true);
 		setDisabled("txtEmployeeCode", true);
 	}
 }
@@ -168,7 +172,6 @@ function inputCheckForPerson(target, aryMessage) {
  * @return チェック結果(true：有効データあり、false：有効データなし)
  */
 function checkPulldownItemExist() {
-
 	if (getSelectOptionLength("pltSectionMaster") == 1 || getSelectOptionLength("pltPositionMaster") == 1) {
 		return false;
 	} else {

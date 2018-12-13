@@ -19,11 +19,8 @@ package jp.mosp.time.bean;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import jp.mosp.framework.base.MospException;
-import jp.mosp.platform.dto.human.HumanDtoInterface;
 import jp.mosp.time.dto.settings.ApplicationDtoInterface;
 import jp.mosp.time.entity.ApplicationEntity;
 
@@ -74,6 +71,16 @@ public interface ApplicationReferenceBeanInterface {
 	ApplicationDtoInterface findForKey(String applicationCode, Date targetDate) throws MospException;
 	
 	/**
+	 * 設定適用コードにつき、有効日より前の情報を取得する。<br>
+	 * 有効無効は問わない。<br>
+	 * @param applicationCode 設定適用コード
+	 * @param activateDate 有効日
+	 * @return 設定適用マスタ
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	ApplicationDtoInterface findFormerInfo(String applicationCode, Date activateDate) throws MospException;
+	
+	/**
 	 * 個人ID及び対象日から、適用されている設定を取得する。<br>
 	 * @param personalId 個人ID
 	 * @param targetDate 対象日
@@ -81,17 +88,6 @@ public interface ApplicationReferenceBeanInterface {
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
 	ApplicationDtoInterface findForPerson(String personalId, Date targetDate) throws MospException;
-	
-	/**
-	 * 個人ID及び期間から、適用されている設定を日毎に取得する。<br>
-	 * @param personalId 個人ID
-	 * @param startDate  期間開始日
-	 * @param endDate    期間終了日
-	 * @return 設定適用マスタDTO群
-	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
-	 */
-	Map<Date, ApplicationDtoInterface> findForTerm(String personalId, Date startDate, Date endDate)
-			throws MospException;
 	
 	/**
 	 * 設定適用マスタの存在チェック。<br>
@@ -133,24 +129,5 @@ public interface ApplicationReferenceBeanInterface {
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
 	ApplicationEntity getApplicationEntity(String personalId, int targetYear, int targetMonth) throws MospException;
-	
-	/**
-	 * 個人ID及び対象日から、適用されている設定を取得する。<br>
-	 * (設定適用情報を事前取得している)<br>
-	 * @param humanDto       人事マスタDTO
-	 * @param applicationMap 設定適用情報MAP
-	 * @return 設定適用マスタDTO 
-	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
-	 */
-	ApplicationDtoInterface findForPerson(HumanDtoInterface humanDto,
-			Map<Integer, Set<ApplicationDtoInterface>> applicationMap) throws MospException;
-	
-	/**
-	 * 対象日からみて最新の設定適用情報群を取得する。<br>
-	 * @param targetDate 対象年月日
-	 * @return 設定適用情報群
-	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
-	 */
-	Map<Integer, Set<ApplicationDtoInterface>> getApplicationInfoForTargetDate(Date targetDate) throws MospException;
 	
 }

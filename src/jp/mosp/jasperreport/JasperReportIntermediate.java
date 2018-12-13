@@ -1,5 +1,19 @@
-/**
- *
+/*
+ * MosP - Mind Open Source Project    http://www.mosp.jp/
+ * Copyright (C) MIND Co., Ltd.       http://www.e-mind.co.jp/
+ * 
+ * This program is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU Affero General Public License
+ * as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package jp.mosp.jasperreport;
 
@@ -12,45 +26,41 @@ import java.util.List;
  */
 public class JasperReportIntermediate implements Serializable {
 	
-	private static final long							serialVersionUID	= -3719638470694011714L;
+	private static final long	serialVersionUID	= -3719638470694011714L;
 	
-	private final String								filePrefix;
+	/**
+	 * MosPアプリケーション設定キー(テンプレートファイルパス)。<br>
+	 * 出力ファイル名としても用いられる。<br>
+	 */
+	private final String		appReport;
 	
-	private final String								templatePath;
-	
-	private final List<? extends ReportDtoInterface>	list;
+	/**
+	 * データソース。<br>
+	 */
+	private final List<?>		list;
 	
 	
 	/**
 	 * コンストラクタ。
-	 * @param filePrefix .pdfの前の文字列。
-	 * @param templatePath 基底ディレクトリ配下のテンプレートファイルパス
+	 * @param appReport MosPアプリケーション設定キー(テンプレートファイルパス)
 	 * @param list 出力対象リスト
 	 */
-	public JasperReportIntermediate(String filePrefix, String templatePath, List<? extends ReportDtoInterface> list) {
-		this.filePrefix = filePrefix;
-		this.templatePath = templatePath;
-		this.list = list == null ? new ArrayList<ReportDtoInterface>() : list;
+	public JasperReportIntermediate(String appReport, List<?> list) {
+		this.appReport = appReport;
+		this.list = list == null ? new ArrayList<Object>() : list;
 	}
 	
 	/**
-	 * @return filePrefix .pdfの前の文字列。
+	 * @return MosPアプリケーション設定キー(テンプレートファイルパス)
 	 */
-	public String getFilePrefix() {
-		return filePrefix;
-	}
-	
-	/**
-	 * @return templatePath 基底ディレクトリ配下のテンプレートファイルパス
-	 */
-	public String getTemplatePath() {
-		return templatePath;
+	public String getAppReport() {
+		return appReport;
 	}
 	
 	/**
 	 * @return list 出力対象リスト
 	 */
-	public List<? extends ReportDtoInterface> getList() {
+	public List<?> getList() {
 		return list;
 	}
 	

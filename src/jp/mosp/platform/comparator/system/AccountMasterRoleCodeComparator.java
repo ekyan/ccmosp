@@ -21,20 +21,47 @@
 package jp.mosp.platform.comparator.system;
 
 import java.util.Comparator;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import jp.mosp.platform.dto.system.AccountInfoDtoInterface;
 
 /**
- * @author j_koike
- *
+ * ロールコードによる比較クラス。<br>
  */
-public class AccountMasterRoleCodeComparator implements Comparator<Object> {
+public class AccountMasterRoleCodeComparator implements Comparator<AccountInfoDtoInterface> {
 	
 	@Override
-	public int compare(Object o1, Object o2) {
-		AccountInfoDtoInterface dto1 = (AccountInfoDtoInterface)o1;
-		AccountInfoDtoInterface dto2 = (AccountInfoDtoInterface)o2;
-		return dto1.getRoleCode().compareTo(dto2.getRoleCode());
+	public int compare(AccountInfoDtoInterface dto1, AccountInfoDtoInterface dto2) {
+		// メインロールによる比較
+		int compare = dto1.getRoleCode().compareTo(dto2.getRoleCode());
+		// メインロールに差がある場合
+		if (compare != 0) {
+			// 比較結果を取得
+			return compare;
+		}
+		// ユーザ追加ロールコード群を取得
+		Map<String, String> extraRoles1 = dto1.getExtraRoles();
+		Map<String, String> extraRoles2 = dto2.getExtraRoles();
+		// ユーザ追加ロールコード1毎に処理
+		for (Entry<String, String> entry1 : extraRoles1.entrySet()) {
+			// ユーザ追加ロールコード2を取得
+			String extraRole2 = extraRoles2.get(entry1.getKey());
+			// ユーザ追加ロールコード2が設定されていない場合
+			if (extraRole2 == null) {
+				// 1の方が大きいと判断
+				return 1;
+			}
+			// ユーザ追加ロールコードによる比較
+			compare = entry1.getValue().compareTo(extraRole2);
+			// ユーザ追加ロールコードに差がある場合
+			if (compare != 0) {
+				// 比較結果を取得
+				return compare;
+			}
+		}
+		// 同じであると判断
+		return 0;
 	}
 	
 }

@@ -26,14 +26,14 @@ function onLoadExtra() {
 		setDisabled("txtActivateYear", true);
 		setDisabled("txtActivateMonth", true);
 		setDisabled("txtActivateDay", true);
-		setDisabled("btnActivateDate", true);
+		setReadOnly("btnActivateDate", true);
 		// 条件編集不可
 		setDisabled("pltWorkPlace", true);
 		setDisabled("pltEmployment", true);
 		setDisabled("pltSection", true);
 		setDisabled("pltPosition", true);
 		// 出力ボタン利用不可
-		setDisabled("btnExecute", true);
+		setReadOnly("btnExecute", true);
 	}
 	// 有効日決定状態
 	if (modeActivateDate == MODE_ACTIVATE_DATE_FIXED) {
@@ -45,6 +45,6 @@ function onLoadExtra() {
 	// 有効日変更状態
 	if (modeActivateDate == MODE_ACTIVATE_DATE_CHANGING) {
 		// 出力ボタン利用不可
-		setDisabled("btnExecute", true);
+		setReadOnly("btnExecute", true);
 	}
 }

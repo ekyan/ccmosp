@@ -227,7 +227,8 @@ public class GoOutRegistBean extends PlatformBean implements GoOutRegistBeanInte
 	}
 	
 	@Override
-	public int getCalcMinutelyHolidayAGoOutTime(Date goOutStart, Date goOutEnd, TimeSettingDtoInterface timeSettingDto) {
+	public int getCalcMinutelyHolidayAGoOutTime(Date goOutStart, Date goOutEnd,
+			TimeSettingDtoInterface timeSettingDto) {
 		// 外出開始時刻、外出終了時刻、勤怠設定情報がない場合
 		if (goOutStart == null || goOutEnd == null || timeSettingDto == null) {
 			return 0;
@@ -237,7 +238,8 @@ public class GoOutRegistBean extends PlatformBean implements GoOutRegistBeanInte
 	}
 	
 	@Override
-	public int getCalcMinutelyHolidayBGoOutTime(Date goOutStart, Date goOutEnd, TimeSettingDtoInterface timeSettingDto) {
+	public int getCalcMinutelyHolidayBGoOutTime(Date goOutStart, Date goOutEnd,
+			TimeSettingDtoInterface timeSettingDto) {
 		// 外出開始時刻、外出終了時刻、勤怠設定情報がない場合
 		if (goOutStart == null || goOutEnd == null || timeSettingDto == null) {
 			return 0;

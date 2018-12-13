@@ -25,6 +25,7 @@ errorPage    = "/jsp/common/error.jsp"
 import = "jp.mosp.framework.base.MospParams"
 import = "jp.mosp.framework.constant.MospConst"
 import = "jp.mosp.framework.utils.HtmlUtility"
+import = "jp.mosp.framework.utils.CalendarHtmlUtility"
 import = "jp.mosp.platform.constant.PlatformConst"
 import = "jp.mosp.platform.utils.PlatformUtility"
 import = "jp.mosp.time.comparator.settings.ManagementRequestApproverNameComparator"
@@ -47,7 +48,7 @@ CancellationRequestVo vo = (CancellationRequestVo)params.getVo();
 	</table>
 </div>
 <div class="List" id="divEdit">
-	<table id="tblEdit" class="InputTable">
+	<table id="cancellationRequest_tblEdit" class="InputTable">
 		<tr>
 			<th colspan="6" class="EditTableTh">
 				<span class="TitleTh"><%= params.getName("Application") %></span>
@@ -61,14 +62,15 @@ CancellationRequestVo vo = (CancellationRequestVo)params.getVo();
 		</tr>
 		<tr>
 			<td class="TitleTd"><%= params.getName("Application","Information","Detail") %></td>
-			<td class="InputTd" colspan="3"><%= HtmlUtility.escapeHTML(vo.getLblRequestInfo()) %></td>
+			<td class="InputTd" colspan="3"><%= vo.getLblRequestInfo() %></td>
 			<td class="TitleTd"><%= params.getName("State") %></td>
 			<td class="InputTd"><%= HtmlUtility.escapeHTML(vo.getLblState()) %></td>
 		</tr>
 		<tr>
-			<td class="TitleTd"><span class="RequiredLabel">*&nbsp;</span><label for="txtEditRequestReason"><%= params.getName("Reason") %></label></td>
+			<td class="TitleTd"><span class="RequiredLabel">*&nbsp;</span><label for="txtEditRequestReason"><%= params.getName("Approval", "Release", "Reason") %></label></td>
 			<td class="InputTd" colspan="5">
 				<input type="text" class="Name33RequiredTextBox" id="txtEditRequestReason" name="txtEditRequestReason" value="<%= HtmlUtility.escapeHTML(vo.getTxtEditRequestReason()) %>">
+				<input type="checkbox" class="CheckBox" id="ckbWithdrawn" name="ckbWithdrawn" value="<%= MospConst.CHECKBOX_ON %>" <%= HtmlUtility.getChecked(vo.getCkbWithdrawn()) %>>&nbsp;<%= params.getName("WithdrawnAppli") %>
 			</td>
 		</tr>
 	</table>
@@ -76,14 +78,14 @@ CancellationRequestVo vo = (CancellationRequestVo)params.getVo();
 		<tbody>
 			<tr>
 				<td class="ButtonTd">
-					<button type="button" class="Name2Button" id="btnRegist" onclick="submitRegist(event, 'divEdit', null, '<%= CancellationRequestAction.CMD_APPLI %>');"><%= params.getName("Application") %></button>
+					<button type="button" class="Name2Button" id="btnRegist" onclick="submitRegist(event, 'divEdit', null, '<%= CancellationRequestAction.CMD_APPLI %>');"><%= params.getName("Release") %></button>
 				</td>
 			</tr>
 		</tbody>
 	</table>
 </div>
 <div class="List">
-	<table class="InputTable SearchInputTable" id="tblSearch">
+	<table class="InputTable SearchInputTable" id="cancellationRequest_tblSearch">
 		<tr>
 			<th class="ListTableTh" colspan="4">
 				<span class="TitleTh"><%= params.getName("Search") %></span>
@@ -101,8 +103,9 @@ CancellationRequestVo vo = (CancellationRequestVo)params.getVo();
 			</td>
 			<td class="TitleTd"><%= params.getName("Display","Period") %></td>
 			<td class="InputTd">
+				<%= CalendarHtmlUtility.getCalendarDiv(CalendarHtmlUtility.TYPE_DAY, "pltSearchRequest", "", "", false, false, true) %>
 				<select class="Number4PullDown" id="pltSearchRequestYear" name="pltSearchRequestYear">
-					<%= HtmlUtility.getSelectOption(vo.getAryPltSearchRequestYear(), vo.getPltSearchRequestYear()) %>
+					<%= HtmlUtility.getSelectOption(vo.getAryPltSearchRequestYear(), vo.getPltSearchRequestYear(), true) %>
 				</select>
 				<%= params.getName("Year") %>&nbsp;
 				<select class="Number2PullDown" id="pltSearchRequestMonth" name="pltSearchRequestMonth">

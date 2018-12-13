@@ -40,7 +40,7 @@ public class SubHolidayRegistBean extends PlatformBean implements SubHolidayRegi
 	/**
 	 * 代休データDAOクラス。<br>
 	 */
-	protected SubHolidayDaoInterface	dao;
+	protected SubHolidayDaoInterface dao;
 	
 	
 	/**
@@ -110,7 +110,8 @@ public class SubHolidayRegistBean extends PlatformBean implements SubHolidayRegi
 	
 	@Override
 	public void regist(SubHolidayDtoInterface dto) throws MospException {
-		if (dao.findForKey(dto.getPersonalId(), dto.getWorkDate(), dto.getTimesWork(), dto.getSubHolidayType()) == null) {
+		if (dao.findForKey(dto.getPersonalId(), dto.getWorkDate(), dto.getTimesWork(),
+				dto.getSubHolidayType()) == null) {
 			// 新規登録
 			insert(dto);
 		} else {
@@ -157,8 +158,8 @@ public class SubHolidayRegistBean extends PlatformBean implements SubHolidayRegi
 	 */
 	protected void checkInsert(SubHolidayDtoInterface dto) throws MospException {
 		// 対象レコードが重複していないかを確認
-		checkDuplicateInsert(dao.findForKey(dto.getPersonalId(), dto.getWorkDate(), dto.getTimesWork(),
-				dto.getSubHolidayType()));
+		checkDuplicateInsert(
+				dao.findForKey(dto.getPersonalId(), dto.getWorkDate(), dto.getTimesWork(), dto.getSubHolidayType()));
 	}
 	
 	/**

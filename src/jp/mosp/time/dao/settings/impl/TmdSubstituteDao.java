@@ -178,8 +178,7 @@ public class TmdSubstituteDao extends PlatformDao implements SubstituteDaoInterf
 	}
 	
 	@Override
-	public List<SubstituteDtoInterface> findForList(String personalId, Date workDate, int timesWork)
-			throws MospException {
+	public List<SubstituteDtoInterface> findForWorkDate(String personalId, Date workDate) throws MospException {
 		try {
 			index = 1;
 			StringBuffer sb = getSelectQuery(getClass());
@@ -189,13 +188,10 @@ public class TmdSubstituteDao extends PlatformDao implements SubstituteDaoInterf
 			sb.append(equal(COL_PERSONAL_ID));
 			sb.append(and());
 			sb.append(equal(COL_WORK_DATE));
-			sb.append(and());
-			sb.append(equal(COL_TIMES_WORK));
 			sb.append(getOrderByColumn(COL_SUBSTITUTE_DATE, COL_SUBSTITUTE_RANGE));
 			prepareStatement(sb.toString());
 			setParam(index++, personalId);
 			setParam(index++, workDate);
-			setParam(index++, timesWork);
 			executeQuery();
 			return mappingAll();
 		} catch (Throwable e) {
@@ -357,4 +353,46 @@ public class TmdSubstituteDao extends PlatformDao implements SubstituteDaoInterf
 		setCommonParams(baseDto, isInsert);
 	}
 	
+	/**
+	 * DTOインスタンスのキャストを行う。<br>
+	 * @param baseDto 対象DTO
+	 * @return キャストされたDTO
+	 */
+	protected SubstituteDtoInterface castDto(BaseDtoInterface baseDto) {
+		return (SubstituteDtoInterface)baseDto;
+	}
+	
+	@Override
+	public SubstituteDtoInterface findForDate(String personalId, Date substituteDate) throws MospException {
+		try {
+			index = 1;
+			StringBuffer sb = getSelectQuery(getClass());
+			sb.append(where());
+			sb.append(deleteFlagOff());
+			sb.append(and());
+			sb.append(equal(COL_PERSONAL_ID));
+			sb.append(and());
+			sb.append(equal(COL_SUBSTITUTE_DATE));
+			sb.append(and());
+			sb.append(COL_WORKFLOW);
+			sb.append(in());
+			sb.append(leftParenthesis());
+			sb.append(workflowDao.getSubQueryForNotEqualWithdrawn());
+			sb.append(rightParenthesis());
+			prepareStatement(sb.toString());
+			setParam(index++, personalId);
+			setParam(index++, substituteDate);
+			executeQuery();
+			SubstituteDtoInterface dto = null;
+			if (next()) {
+				dto = (SubstituteDtoInterface)mapping();
+			}
+			return dto;
+		} catch (Throwable e) {
+			throw new MospException(e);
+		} finally {
+			releaseResultSet();
+			releasePreparedStatement();
+		}
+	}
 }

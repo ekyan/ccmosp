@@ -433,8 +433,8 @@ public class NamingMasterAction extends PlatformSystemAction {
 		// VO準備
 		NamingMasterVo vo = (NamingMasterVo)mospParams.getVo();
 		// 一括更新処理
-		platform().namingRegist().update(getIdArray(vo.getCkbSelect()), vo.getCodeNamingType(),
-				getUpdateActivateDate(), getInt(vo.getPltUpdateInactivate()));
+		platform().namingRegist().update(getIdArray(vo.getCkbSelect()), vo.getCodeNamingType(), getUpdateActivateDate(),
+				getInt(vo.getPltUpdateInactivate()));
 		// 一括更新結果確認
 		if (mospParams.hasErrorMessage()) {
 			// 更新失敗メッセージ設定
@@ -556,7 +556,7 @@ public class NamingMasterAction extends PlatformSystemAction {
 		dto.setActivateDate(getEditActivateDate());
 		dto.setNamingItemName(vo.getTxtEditNamingItemName());
 		dto.setNamingItemAbbr(vo.getTxtEditNamingItemAbbr());
-		dto.setInactivateFlag(Integer.valueOf(vo.getPltEditInactivate()));
+		dto.setInactivateFlag(getInt(vo.getPltEditInactivate()));
 	}
 	
 	/**

@@ -40,14 +40,14 @@ public class WorkTypePatternListVo extends TimeSettingVo {
 	 * @return aryLblActivateMonth
 	 */
 	public String[] getAryLblActivateMonth() {
-		return aryLblActivateMonth;
+		return getStringArrayClone(aryLblActivateMonth);
 	}
 	
 	/**
 	 * @param aryLblActivateMonth セットする aryLblActivateMonth
 	 */
 	public void setAryLblActivateMonth(String[] aryLblActivateMonth) {
-		this.aryLblActivateMonth = aryLblActivateMonth;
+		this.aryLblActivateMonth = getStringArrayClone(aryLblActivateMonth);
 	}
 	
 	/**
@@ -96,42 +96,42 @@ public class WorkTypePatternListVo extends TimeSettingVo {
 	 * @return aryLblPatternCode
 	 */
 	public String[] getAryLblPatternCode() {
-		return aryLblPatternCode;
+		return getStringArrayClone(aryLblPatternCode);
 	}
 	
 	/**
 	 * @param aryLblPatternCode セットする aryLblPatternCode
 	 */
 	public void setAryLblPatternCode(String[] aryLblPatternCode) {
-		this.aryLblPatternCode = aryLblPatternCode;
+		this.aryLblPatternCode = getStringArrayClone(aryLblPatternCode);
 	}
 	
 	/**
 	 * @return aryLblPatternName
 	 */
 	public String[] getAryLblPatternName() {
-		return aryLblPatternName;
+		return getStringArrayClone(aryLblPatternName);
 	}
 	
 	/**
 	 * @param aryLblPatternName セットする aryLblPatternName
 	 */
 	public void setAryLblPatternName(String[] aryLblPatternName) {
-		this.aryLblPatternName = aryLblPatternName;
+		this.aryLblPatternName = getStringArrayClone(aryLblPatternName);
 	}
 	
 	/**
 	 * @return aryLblPatternAbbr
 	 */
 	public String[] getAryLblPatternAbbr() {
-		return aryLblPatternAbbr;
+		return getStringArrayClone(aryLblPatternAbbr);
 	}
 	
 	/**
 	 * @param aryLblPatternAbbr セットする aryLblPatternAbbr
 	 */
 	public void setAryLblPatternAbbr(String[] aryLblPatternAbbr) {
-		this.aryLblPatternAbbr = aryLblPatternAbbr;
+		this.aryLblPatternAbbr = getStringArrayClone(aryLblPatternAbbr);
 	}
 	
 }

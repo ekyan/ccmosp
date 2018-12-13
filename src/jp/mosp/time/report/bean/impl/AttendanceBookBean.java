@@ -37,13 +37,14 @@ public class AttendanceBookBean extends PlatformBean implements AttendanceBookBe
 	/**
 	 * 勤怠一覧参照クラス。
 	 */
-	protected AttendanceListReferenceBeanInterface	attendanceListRefer;
+	protected AttendanceListReferenceBeanInterface attendanceListRefer;
 	
 	
 	@Override
 	public void initBean() throws MospException {
 		// 勤怠一覧参照クラス取得
-		attendanceListRefer = (AttendanceListReferenceBeanInterface)createBean(AttendanceListReferenceBeanInterface.class);
+		attendanceListRefer = (AttendanceListReferenceBeanInterface)createBean(
+				AttendanceListReferenceBeanInterface.class);
 	}
 	
 	@Override

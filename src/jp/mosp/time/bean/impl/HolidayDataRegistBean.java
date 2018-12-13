@@ -26,6 +26,8 @@ import java.util.Map;
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.base.MospParams;
 import jp.mosp.platform.base.PlatformBean;
+import jp.mosp.platform.bean.human.HumanReferenceBeanInterface;
+import jp.mosp.platform.dto.human.HumanDtoInterface;
 import jp.mosp.time.bean.HolidayDataRegistBeanInterface;
 import jp.mosp.time.bean.HolidayReferenceBeanInterface;
 import jp.mosp.time.bean.HolidayRequestReferenceBeanInterface;
@@ -56,6 +58,11 @@ public class HolidayDataRegistBean extends PlatformBean implements HolidayDataRe
 	 */
 	HolidayReferenceBeanInterface			holiday;
 	
+	/**
+	 * 人事情報参照インターフェース
+	 */
+	HumanReferenceBeanInterface				humanReference;
+	
 	
 	/**
 	 * {@link PlatformBean#PlatformBean()}を実行する。<br>
@@ -81,7 +88,7 @@ public class HolidayDataRegistBean extends PlatformBean implements HolidayDataRe
 		holidayRequest = (HolidayRequestReferenceBeanInterface)createBean(HolidayRequestReferenceBeanInterface.class);
 		
 		holiday = (HolidayReferenceBeanInterface)createBean(HolidayReferenceBeanInterface.class);
-		
+		humanReference = (HumanReferenceBeanInterface)createBean(HumanReferenceBeanInterface.class);
 	}
 	
 	@Override
@@ -136,8 +143,19 @@ public class HolidayDataRegistBean extends PlatformBean implements HolidayDataRe
 	 */
 	protected void checkInsert(HolidayDataDtoInterface dto) throws MospException {
 		// 対象レコードの有効日が重複していないかを確認
-		checkDuplicateInsert(dao.findForKey(dto.getPersonalId(), dto.getActivateDate(), dto.getHolidayCode(),
-				dto.getHolidayType()));
+		HolidayDataDtoInterface holidayDataDto = dao.findForKey(dto.getPersonalId(), dto.getActivateDate(),
+				dto.getHolidayCode(), dto.getHolidayType());
+		if (holidayDataDto != null) {
+			// 対象DTOが存在する場合
+			// 対象社員情報取得
+			HumanDtoInterface humanDto = humanReference.getHumanInfo(dto.getPersonalId(), dto.getActivateDate());
+			// 対象休暇情報取得
+			HolidayDtoInterface holidayDto = holiday.getHolidayInfo(dto.getHolidayCode(), dto.getActivateDate(),
+					dto.getHolidayType());
+			// エラーメッセージ追加
+			mospParams.addErrorMessage(TimeMessageConst.MSG_HOLIDAY_DUPLICATE, holidayDto.getHolidayName(),
+					humanDto.getEmployeeCode());
+		}
 	}
 	
 	/**
@@ -216,4 +234,16 @@ public class HolidayDataRegistBean extends PlatformBean implements HolidayDataRe
 			mospParams.addErrorMessage(TimeMessageConst.MSG_HOLIDAY_ITEM_ZERO, mes1, mes2);
 		}
 	}
+	
+	@Override
+	public void delete(HolidayDataDtoInterface dto) throws MospException {
+		// DTOの妥当性確認
+		validate(dto);
+		if (mospParams.hasErrorMessage()) {
+			return;
+		}
+		// 論理削除
+		logicalDelete(dao, dto.getTmdHolidayId());
+	}
+	
 }

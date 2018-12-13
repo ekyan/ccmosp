@@ -37,7 +37,7 @@ public class ApprovalRouteReferenceBean extends PlatformBean implements Approval
 	/**
 	 * 承認ルートマスタDAO
 	 */
-	private ApprovalRouteDaoInterface	dao;
+	private ApprovalRouteDaoInterface dao;
 	
 	
 	/**

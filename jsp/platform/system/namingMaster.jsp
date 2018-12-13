@@ -53,21 +53,21 @@ NamingMasterVo vo = (NamingMasterVo)params.getVo();
 				<input type="text" class="Number2RequiredTextBox" id="txtEditActivateMonth" name="txtEditActivateMonth" value="<%=HtmlUtility.escapeHTML(vo.getTxtEditActivateMonth())%>" />&nbsp;<label for="txtEditActivateMonth"><%=params.getName("Month")%></label>
 				<input type="text" class="Number2RequiredTextBox" id="txtEditActivateDay" name="txtEditActivateDay" value="<%=HtmlUtility.escapeHTML(vo.getTxtEditActivateDay())%>" />&nbsp;<label for="txtEditActivateDay"><%=params.getName("Day")%></label>
 			</td>
-			<td class="TitleTd"><span class="RequiredLabel">*&nbsp;</span><span><label for="txtEditNamingItemCode"><%=params.getName("Name") + params.getName("Item")%><%=params.getName("Code")%></label></span></td>
+			<td class="TitleTd"><span class="RequiredLabel">*&nbsp;</span><span><label for="txtEditNamingItemCode"><%=params.getName("Name","Item","Code")%></label></span></td>
 			<td class="InputTd" id="inputCode">
 				<input type="text" class="Code10RequiredTextBox" id="txtEditNamingItemCode" name="txtEditNamingItemCode" value="<%=HtmlUtility.escapeHTML(vo.getTxtEditNamingItemCode())%>" />
 			</td>
-			<td class="TitleTd"><span class="RequiredLabel">*&nbsp;</span><span><label for="txtEditNamingItemName"><%=params.getName("Name") + params.getName("Item")%><%=params.getName("Name")%></label></span></td>
+			<td class="TitleTd"><span class="RequiredLabel">*&nbsp;</span><span><label for="txtEditNamingItemName"><%=params.getName("Name","Item","Name")%></label></span></td>
 			<td class="InputTd">
 				<input type="text" class="Name15RequiredTextBox" id="txtEditNamingItemName" name="txtEditNamingItemName" value="<%=HtmlUtility.escapeHTML(vo.getTxtEditNamingItemName())%>" />
 			</td>
 		</tr>
 		<tr>
-			<td class="TitleTd"><span class="RequiredLabel">*&nbsp;</span><span><label for="txtEditNamingItemAbbr"><%=params.getName("Name") + params.getName("Item") + params.getName("Abbreviation") %></label></span></td>
+			<td class="TitleTd"><span class="RequiredLabel">*&nbsp;</span><span><label for="txtEditNamingItemAbbr"><%=params.getName("Name","Item","Abbreviation") %></label></span></td>
 			<td class="InputTd">
 				<input type="text" class="Byte6RequiredTextBox" id="txtEditNamingItemAbbr" name="txtEditNamingItemAbbr" value="<%=HtmlUtility.escapeHTML(vo.getTxtEditNamingItemAbbr())%>"/>
 			</td>
-			<td class="TitleTd"><span><label for="pltEditInactivate"><%=params.getName("Effectiveness")%><%=params.getName("Slash")%><%=params.getName("Inactivate")%></label></span></td>
+			<td class="TitleTd"><span><label for="pltEditInactivate"><%=params.getName("Effectiveness","Slash","Inactivate")%></label></span></td>
 			<td class="InputTd">
 				<select class="InactivateRequiredPullDown" id="pltEditInactivate" name="pltEditInactivate">
 					<%= HtmlUtility.getSelectOption(params, PlatformConst.CODE_KEY_INACTIVATE_FLAG, vo.getPltEditInactivate(), false) %>
@@ -96,21 +96,21 @@ NamingMasterVo vo = (NamingMasterVo)params.getVo();
 				<input type="text" class="Number2RequiredTextBox" id="txtSearchActivateMonth" name="txtSearchActivateMonth" value="<%=HtmlUtility.escapeHTML(vo.getTxtSearchActivateMonth())%>"/>&nbsp;<label for="txtSearchActivateMonth"><%=params.getName("Month")%></label>
 				<input type="text" class="Number2RequiredTextBox" id="txtSearchActivateDay" name="txtSearchActivateDay" value="<%=HtmlUtility.escapeHTML(vo.getTxtSearchActivateDay())%>"/>&nbsp;<label for="txtSearchActivateDay"><%=params.getName("Day")%></label>
 			</td>
-			<td class="TitleTd"><span><label for="txtSearchNamingItemCode"><%=params.getName("Name") + params.getName("Item")%><%=params.getName("Code")%></label></span></td>
+			<td class="TitleTd"><span><label for="txtSearchNamingItemCode"><%=params.getName("Name","Item","Code")%></label></span></td>
 			<td class="InputTd">
 				<input type="text" class="Code10TextBox" id="txtSearchNamingItemCode" name="txtSearchNamingItemCode" value="<%=HtmlUtility.escapeHTML(vo.getTxtSearchNamingItemCode())%>"/>
 			</td>
-			<td class="TitleTd"><span><label for="txtSearchNamingItemName"><%=params.getName("Name") + params.getName("Item")%><%=params.getName("Name")%></label></span></td>
+			<td class="TitleTd"><span><label for="txtSearchNamingItemName"><%=params.getName("Name","Item","Name")%></label></span></td>
 			<td class="InputTd">
 				<input type="text" class="Name15TextBox" id="txtSearchNamingItemName" name="txtSearchNamingItemName" value="<%=HtmlUtility.escapeHTML(vo.getTxtSearchNamingItemName())%>" />
 			</td>
 		</tr>
 		<tr>
-			<td class="TitleTd" ><span><label for="txtSearchNamingItemAbbr"><%=params.getName("Name") + params.getName("Item") + params.getName("Abbreviation") %></label></span></td>
+			<td class="TitleTd" ><span><label for="txtSearchNamingItemAbbr"><%=params.getName("Name","Item","Abbreviation") %></label></span></td>
 			<td class="InputTd" >
 				<input type="text" class="Byte6TextBox" id="txtSearchNamingItemAbbr" name="txtSearchNamingItemAbbr" value="<%=HtmlUtility.escapeHTML(vo.getTxtSearchNamingItemAbbr())%>" />
 			</td>
-			<td class="TitleTd"><span><label for="pltSearchInactivate"><%=params.getName("Effectiveness")%><%=params.getName("Slash")%><%=params.getName("Inactivate")%></label></span></td>
+			<td class="TitleTd"><span><label for="pltSearchInactivate"><%=params.getName("Effectiveness","Slash","Inactivate")%></label></span></td>
 			<td class="InputTd">
 				<select class="InactivatePullDown" id="pltSearchInactivate" name="pltSearchInactivate">
 					<%= HtmlUtility.getSelectOption(params, PlatformConst.CODE_KEY_INACTIVATE_FLAG, vo.getPltSearchInactivate(), true) %>
@@ -133,10 +133,10 @@ NamingMasterVo vo = (NamingMasterVo)params.getVo();
 		<tr>
 			<th class="ListSelectTh" id="thButton"></th>
 			<th class="ListSortTh" id="thActivateDate" onclick="submitTransfer(event, null, null, new Array('<%=PlatformConst.PRM_TRANSFERRED_SORT_KEY%>', '<%=ActivateDateComparator.class.getName()%>'), '<%=NamingMasterAction.CMD_SORT%>');"><%=params.getName("ActivateDate")%><%= PlatformUtility.getSortMark(ActivateDateComparator.class.getName(), params) %></th>
-			<th class="ListSortTh" id="thNamingItemCode" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= NamingItemCodeComparator.class.getName() %>'), '<%= NamingMasterAction.CMD_SORT %>');"><%= params.getName("Name") + params.getName("Item") %><%= params.getName("Code") %><%= PlatformUtility.getSortMark(NamingItemCodeComparator.class.getName(), params) %></th>
-			<th class="ListSortTh" id="thNamingItemName" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= NamingMasterNamingItemNameComparator.class.getName() %>'), '<%= NamingMasterAction.CMD_SORT %>');"><%= params.getName("Name") + params.getName("Item") %><%= params.getName("Name") %><%= PlatformUtility.getSortMark(NamingMasterNamingItemNameComparator.class.getName(), params) %></th>
-			<th class="ListSortTh" id="thNamingItemAbbr" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= NamingMasterNamingItemAbbrComparator.class.getName() %>'), '<%= NamingMasterAction.CMD_SORT %>');"><%=params.getName("Name") + params.getName("Item") + params.getName("Abbreviation") %><%= PlatformUtility.getSortMark(NamingMasterNamingItemAbbrComparator.class.getName(), params) %></th>
-			<th class="ListSortTh" id="thInactivate" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= InactivateComparator.class.getName() %>'), '<%= NamingMasterAction.CMD_SORT %>');"><%= params.getName("EffectivenessExistence") %><%= params.getName("Slash") %><%= params.getName("InactivateExistence") %><%= PlatformUtility.getSortMark(InactivateComparator.class.getName(), params) %></th>
+			<th class="ListSortTh" id="thNamingItemCode" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= NamingItemCodeComparator.class.getName() %>'), '<%= NamingMasterAction.CMD_SORT %>');"><%= params.getName("Name","Item","Code") %><%= PlatformUtility.getSortMark(NamingItemCodeComparator.class.getName(), params) %></th>
+			<th class="ListSortTh" id="thNamingItemName" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= NamingMasterNamingItemNameComparator.class.getName() %>'), '<%= NamingMasterAction.CMD_SORT %>');"><%= params.getName("Name","Item","Name") %><%= PlatformUtility.getSortMark(NamingMasterNamingItemNameComparator.class.getName(), params) %></th>
+			<th class="ListSortTh" id="thNamingItemAbbr" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= NamingMasterNamingItemAbbrComparator.class.getName() %>'), '<%= NamingMasterAction.CMD_SORT %>');"><%=params.getName("Name","Item","Abbreviation") %><%= PlatformUtility.getSortMark(NamingMasterNamingItemAbbrComparator.class.getName(), params) %></th>
+			<th class="ListSortTh" id="thInactivate" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= InactivateComparator.class.getName() %>'), '<%= NamingMasterAction.CMD_SORT %>');"><%= params.getName("EffectivenessExistence","Slash","InactivateExistence") %><%= PlatformUtility.getSortMark(InactivateComparator.class.getName(), params) %></th>
 			<th class="ListSelectTh" id="thSelect">
 <%
 if (vo.getList().size() > 0) {
@@ -172,7 +172,7 @@ if (vo.getList().size() > 0) {
 		<tr>
 			<th class=UnderTd colspan="7">
 				<span class="TableButtonSpan">
-					<button type="button" class="Name4Button" id="btnDelete" onclick="submitDelete(event, 'divList', checkExtra, '<%= NamingMasterAction.CMD_DELETE %>')"><%= params.getName("History") + params.getName("Delete") %></button>
+					<button type="button" class="Name4Button" id="btnDelete" onclick="submitDelete(event, 'divList', checkExtra, '<%= NamingMasterAction.CMD_DELETE %>')"><%= params.getName("History","Delete") %></button>
 				</span>
 			</th>
 		</tr>
@@ -186,10 +186,11 @@ if (vo.getList().size() == 0) {
 	return;
 }
 %>
+<%= HtmlUtility.getListInfoFlex(params, vo.getList(), vo.getPageCommand(), vo.getDataPerPage(), vo.getSelectIndex()) %>
 <div class="List" id="divUpdate">
 	<table class="InputTable">
 		<tr>
-			<th class="UpdateTableTh" colspan="4"><span class="TitleTh"><%= params.getName("Bulk") %><%= params.getName("Update") %></span></th>
+			<th class="UpdateTableTh" colspan="4"><span class="TitleTh"><%= params.getName("Bulk","Update") %></span></th>
 		</tr>
 		<tr>
 			<td class="TitleTd"><span><%= params.getName("ActivateDate") %></span></td>
@@ -198,7 +199,7 @@ if (vo.getList().size() == 0) {
 				<input type="text" class="Number2RequiredTextBox" id="txtUpdateActivateMonth" name="txtUpdateActivateMonth" value="<%= HtmlUtility.escapeHTML(vo.getTxtUpdateActivateMonth()) %>" />&nbsp;<label for="txtUpdateActivateMonth"><%= params.getName("Month") %></label>
 				<input type="text" class="Number2RequiredTextBox" id="txtUpdateActivateDay" name="txtUpdateActivateDay" value="<%= HtmlUtility.escapeHTML(vo.getTxtUpdateActivateDay()) %>" />&nbsp;<label for="txtUpdateActivateDay"><%= params.getName("Day") %></label>
 			</td>
-			<td class="TitleTd"><span><%= params.getName("Effectiveness") %><%= params.getName("Slash") %><%= params.getName("Inactivate") %></span></td>
+			<td class="TitleTd"><span><%= params.getName("Effectiveness","Slash","Inactivate") %></span></td>
 			<td class="InputTd">
 				<select id="pltUpdateInactivate" name="pltUpdateInactivate">
 					<%= HtmlUtility.getSelectOption(params, PlatformConst.CODE_KEY_INACTIVATE_FLAG, vo.getPltUpdateInactivate(), false) %>
@@ -215,5 +216,5 @@ if (vo.getList().size() == 0) {
 	</table>
 </div>
 <div class="MoveUpLink" id="divMoveUp">
-	<a onclick="pageToTop();"><%= params.getName("UpperTriangular") %><%= params.getName("TopOfPage") %></a>
+	<a onclick="pageToTop();"><%= params.getName("UpperTriangular","TopOfPage") %></a>
 </div>

@@ -17,11 +17,15 @@
  */
 package jp.mosp.platform.file.action;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import jp.mosp.framework.base.BaseVo;
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.constant.MospConst;
+import jp.mosp.framework.utils.MospUtility;
+import jp.mosp.framework.utils.RoleUtility;
 import jp.mosp.platform.bean.file.ExportBeanInterface;
 import jp.mosp.platform.constant.PlatformConst;
 import jp.mosp.platform.constant.PlatformFileConst;
@@ -207,6 +211,55 @@ public class HumanExportListAction extends ExportListAction {
 		initOutputCondition();
 	}
 	
+	@Override
+	protected void search() throws MospException {
+		// VO取得
+		ExportListVo vo = (ExportListVo)mospParams.getVo();
+		
+		// 継承元実行
+		super.search();
+		
+		// 対象が存在しない場合
+		if (vo.getList().isEmpty()) {
+			return;
+		}
+		
+		// 人事汎用管理区分配列（非表示となる管理区分）
+		String[] aryDivision = MospUtility.toArray(RoleUtility.getHiddenDivisionsList(mospParams));
+		
+		// ロール制御がないユーザーの場合
+		if (aryDivision.length == 0) {
+			return;
+			
+		}
+		
+		// 再設定用リスト
+		List<ExportDtoInterface> list = new ArrayList<ExportDtoInterface>();
+		
+		// 人事汎用管理区分にて参照権限妥当性チェック
+		for (int idx = 0; idx < vo.getList().size(); idx++) {
+			// エクスポート情報DTO取得
+			ExportDtoInterface dto = (ExportDtoInterface)vo.getList().get(idx);
+			
+			// データ区分:人事情報以外はチェック対象外
+			if (!dto.getExportTable().contains(PlatformFileConst.CODE_KEY_TABLE_TYPE_HUMAN)) {
+				list.add(dto);
+				continue;
+			}
+			
+			// 対象エクスポートコード内に非表示対象の人事管理汎用区分が存在するか確認
+			if (reference().humanExport().isExistLikeFieldName(dto.getExportCode(), aryDivision)) {
+				// 存在する場合、リスト設定をしない
+				continue;
+			}
+			
+			// リストに設定
+			list.add(dto);
+		}
+		// 再設定
+		setDtoToVoList(list);
+	}
+	
 	/**
 	 * 有効日設定処理を行う。<br>
 	 * 保持有効日モードを確認し、プルダウンの再設定を行う。<br>
@@ -246,16 +299,17 @@ public class HumanExportListAction extends ExportListAction {
 		// プルダウン対象日取得
 		Date targetDate = getPulldownTargetDate();
 		// 勤務地設定
-		vo.setAryPltWorkPlace(reference().workPlace().getCodedAbbrSelectArray(targetDate, true,
-				MospConst.OPERATION_TYPE_REFER));
+		vo.setAryPltWorkPlace(
+				reference().workPlace().getCodedAbbrSelectArray(targetDate, true, MospConst.OPERATION_TYPE_REFER));
 		// 雇用契約設定
 		vo.setAryPltEmployment(reference().employmentContract().getCodedAbbrSelectArray(targetDate, true,
 				MospConst.OPERATION_TYPE_REFER));
 		// 所属設定
-		vo.setAryPltSection(reference().section().getCodedSelectArray(targetDate, true, MospConst.OPERATION_TYPE_REFER));
+		vo.setAryPltSection(
+				reference().section().getCodedSelectArray(targetDate, true, MospConst.OPERATION_TYPE_REFER));
 		// 職位設定
-		vo.setAryPltPosition(reference().position().getCodedSelectArray(targetDate, true,
-				MospConst.OPERATION_TYPE_REFER));
+		vo.setAryPltPosition(
+				reference().position().getCodedSelectArray(targetDate, true, MospConst.OPERATION_TYPE_REFER));
 	}
 	
 	/**
@@ -312,6 +366,9 @@ public class HumanExportListAction extends ExportListAction {
 		} else if (exportDto.getExportTable().equals(PlatformFileConst.CODE_KEY_TABLE_TYPE_USER)) {
 			// ユーザマスタエクスポートクラス取得
 			exportBean = reference().userExport();
+		} else if (exportDto.getExportTable().equals(PlatformFileConst.CODE_KEY_TABLE_TYPE_USER_EXTRA_ROLE)) {
+			// ユーザ追加ロール情報エクスポート処理を取得
+			exportBean = reference().userExtraRoleExport();
 		} else if (exportDto.getExportTable().equals(PlatformFileConst.CODE_KEY_TABLE_TYPE_SECTION)) {
 			// 所属マスタエクスポートクラス取得
 			exportBean = reference().sectionExport();

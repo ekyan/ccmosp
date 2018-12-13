@@ -25,8 +25,8 @@ import jp.mosp.platform.dto.base.SectionCodeDtoInterface;
 /**
  * 有給休暇確認一覧DTOインターフェース。
  */
-public interface PaidHolidayManagementListDtoInterface extends PlatformDtoInterface, EmployeeCodeDtoInterface,
-		EmployeeNameDtoInterface, SectionCodeDtoInterface {
+public interface PaidHolidayManagementListDtoInterface
+		extends PlatformDtoInterface, EmployeeCodeDtoInterface, EmployeeNameDtoInterface, SectionCodeDtoInterface {
 	
 	/**
 	 * @return 個人ID

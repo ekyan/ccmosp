@@ -17,17 +17,13 @@
  */
 package jp.mosp.framework.utils;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import jp.mosp.framework.base.MospParams;
-import jp.mosp.framework.comparator.IndexComparator;
 import jp.mosp.framework.property.MainMenuProperty;
 import jp.mosp.framework.property.MenuProperty;
-import jp.mosp.framework.property.RoleMenuProperty;
 
 /**
  * メニューの操作に有用なメソッドを提供する。<br><br>
@@ -112,62 +108,102 @@ public class MenuUtility {
 	}
 	
 	/**
-	 * メニューが有効であるかを確認する。<br>
+	 * 対象メニューキーのメニューが有効であるかを確認する。<br>
+	 * メインメニューについては考慮しない。<br>
+	 * <br>
 	 * @param mospParams MosP処理情報
 	 * @param menuKey    メニューキー
 	 * @return 確認結果(true：有効、false：無効)
 	 */
-	public static boolean isMenuValid(MospParams mospParams, String menuKey) {
-		// メニュー設定情報取得
+	public static boolean isTheMenuValid(MospParams mospParams, String menuKey) {
+		// 対象メニューキーからメニュー設定情報を取得
 		MenuProperty menuProperty = getMenuProperty(mospParams, menuKey);
-		// メニュー設定情報確認
+		// メニュー設定情報が存在しない場合
 		if (menuProperty == null) {
+			// 無効であると判断
 			return false;
 		}
-		// メニュー有効フラグ取得
+		// メニュー有効フラグを確認
 		return menuProperty.isMenuValid();
 	}
 	
 	/**
-	 * ロールメニューとして設定されているメインメニュー設定情報リストを取得する。<br>
-	 * @param mospParams MosP処理情報
-	 * @return ロールメニューとして設定されているメインメニュー設定情報リスト
+	 * 対象メニューキーのメニューが有効であるかを確認する。<br>
+	 * MosP処理情報中のメインメニュー設定情報群にあるメニュー設定で、判断する。<br>
+	 * <br>
+	 * @param mospParams  MosP処理情報
+	 * @param mainMenuKey メインメニューキー
+	 * @param menuKey     メニューキー
+	 * @return 確認結果(true：有効、false：無効)
 	 */
-	public static List<MainMenuProperty> getRoleMainMenuList(MospParams mospParams) {
-		// ロールメニューリスト取得
-		List<RoleMenuProperty> menuList = getRoleMenuList(mospParams);
-		// メインメニューリスト準備
-		List<MainMenuProperty> mainMenuList = new ArrayList<MainMenuProperty>();
-		// ロールメニューリストからメインメニューリストを作成
-		for (RoleMenuProperty roleMenu : menuList) {
-			// メニューが無効ならメインメニュー設定不要
-			if (isMenuValid(mospParams, roleMenu.getKey()) == false) {
-				continue;
-			}
-			// メニューキーからメインメニューを取得
-			MainMenuProperty mainMenu = getMainMenu(mospParams, roleMenu.getKey());
-			// 未設定であればメインメニューを追加
-			if (mainMenuList.contains(mainMenu) == false) {
-				mainMenuList.add(mainMenu);
-			}
+	public static boolean isTheMenuValid(MospParams mospParams, String mainMenuKey, String menuKey) {
+		// メインメニューキーからメインメニュー情報を取得
+		MainMenuProperty mainMenu = mospParams.getProperties().getMainMenuProperties().get(mainMenuKey);
+		// メインメニュー情報が取得できなかった場合
+		if (mainMenu == null) {
+			// 無効であると判断
+			return false;
 		}
-		return mainMenuList;
+		// メインメニュー情報からメニュー情報を取得
+		MenuProperty menu = mainMenu.getMenuMap().get(menuKey);
+		// メインメニュー情報からメニュー情報を取得できなかった場合
+		if (menu == null) {
+			// 無効であると判断
+			return false;
+		}
+		// メニュー有効フラグを確認
+		return menu.isMenuValid();
 	}
 	
 	/**
-	 * ロールメニュー設定リストを取得する。<br>
-	 * ロールメニュー設定のインデックスでソートする。<br>
-	 * @param mospParams MosP処理情報
-	 * @return ロールメニュー設定リスト
+	 * 対象メニューキーのメニューが利用可能であるかを確認する。<br>
+	 * 対象メニューが有効であり、
+	 * ログインユーザが対象メニューを利用できるかで、判断する。<br>
+	 * <br>
+	 * @param mospParams  MosP処理情報
+	 * @param mainMenuKey メインメニューキー
+	 * @param menuKey     メニューキー
+	 * @return 確認結果(true：利用可能、false：利用不可)
 	 */
-	public static List<RoleMenuProperty> getRoleMenuList(MospParams mospParams) {
-		// ロールメニュー取得
-		Map<String, RoleMenuProperty> map = mospParams.getUserRole().getRoleMenuMap();
-		// ロールメニューをリストで取得
-		List<RoleMenuProperty> list = new ArrayList<RoleMenuProperty>(map.values());
-		// ロールメニューのインデックスでソート
-		Collections.sort(list, new IndexComparator());
-		return list;
+	public static boolean isTheMenuAvailable(MospParams mospParams, String mainMenuKey, String menuKey) {
+		// 対象メニューキーのメニューが有効でない場合
+		if (isTheMenuValid(mospParams, mainMenuKey, menuKey) == false) {
+			// 利用不可であると判断
+			return false;
+		}
+		// ログインユーザのメニューキー群(インデックス昇順)を取得
+		Set<String> menuKeys = RoleUtility.getUserMenuKeys(mospParams);
+		// 対象メニューキーがログインユーザのメニューキー群に含まれるかを確認
+		return menuKeys.contains(menuKey);
+	}
+	
+	/**
+	 * ログインユーザのメニューとして設定されている最初のメインメニューキーを取得する。<br>
+	 * @param mospParams MosP処理情報
+	 * @return 最初のメインメニューキー
+	 */
+	public static String getUserFirstMainMenu(MospParams mospParams) {
+		// ログインユーザのメニューキー群(インデックス昇順)を取得
+		Set<String> menuKeys = RoleUtility.getUserMenuKeys(mospParams);
+		// メニューキー毎に処理
+		for (String menuKey : menuKeys) {
+			// メニューが無効である場合
+			if (isTheMenuValid(mospParams, menuKey) == false) {
+				// 処理無し
+				continue;
+			}
+			// メニューキーからメインメニュー設定情報を取得
+			MainMenuProperty mainMenu = getMainMenu(mospParams, menuKey);
+			// メインメニューが取得できなかった場合
+			if (mainMenu == null) {
+				// 処理無し
+				continue;
+			}
+			// 最初に見つかったメインメニューのキーを取得
+			return mainMenu.getKey();
+		}
+		// 空文字を取得(メインメニューを取得できなかった場合)
+		return "";
 	}
 	
 }

@@ -20,6 +20,7 @@ package jp.mosp.platform.dto.human.impl;
 import java.util.Date;
 
 import jp.mosp.framework.base.BaseDto;
+import jp.mosp.framework.utils.CapsuleUtility;
 import jp.mosp.platform.dto.human.HumanBinaryHistoryDtoInterface;
 
 /**
@@ -98,12 +99,12 @@ public class PfaHumanBinaryHistoryDto extends BaseDto implements HumanBinaryHist
 	
 	@Override
 	public Date getActivateDate() {
-		return activateDate;
+		return getDateClone(activateDate);
 	}
 	
 	@Override
 	public byte[] getHumanItemBinary() {
-		return humanItemBinary;
+		return CapsuleUtility.getByteArrayClone(humanItemBinary);
 	}
 	
 	@Override
@@ -143,12 +144,12 @@ public class PfaHumanBinaryHistoryDto extends BaseDto implements HumanBinaryHist
 	
 	@Override
 	public void setActivateDate(Date activateDate) {
-		this.activateDate = activateDate;
+		this.activateDate = getDateClone(activateDate);
 	}
 	
 	@Override
 	public void setHumanItemBinary(byte[] humanItemBinary) {
-		this.humanItemBinary = humanItemBinary;
+		this.humanItemBinary = CapsuleUtility.getByteArrayClone(humanItemBinary);
 	}
 	
 	@Override

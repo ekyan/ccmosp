@@ -17,7 +17,12 @@
  */
 package jp.mosp.platform.file.action;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import jp.mosp.framework.base.MospException;
+import jp.mosp.framework.utils.MospUtility;
+import jp.mosp.framework.utils.RoleUtility;
 import jp.mosp.platform.bean.file.ImportBeanInterface;
 import jp.mosp.platform.constant.PlatformFileConst;
 import jp.mosp.platform.dto.file.ImportDtoInterface;
@@ -139,6 +144,10 @@ public class HumanImportListAction extends ImportListAction {
 			// ページ繰り
 			prepareVo();
 			page();
+		} else if (mospParams.getCommand().equals(CMD_TEMP_OUTPUT)) {
+			// テンプレート出力
+			prepareVo();
+			tempOutput();
 		}
 	}
 	
@@ -158,6 +167,8 @@ public class HumanImportListAction extends ImportListAction {
 		vo.setSortCommand(CMD_SORT);
 		// 実行コマンド設定
 		vo.setExecuteCommand(CMD_EXECUTION);
+		// テンプレート出力コマンド設定
+		vo.setTemplateOutputCommand(CMD_TEMP_OUTPUT);
 		// ページ繰り設定
 		setPageInfo(CMD_PAGE, getListLength());
 	}
@@ -171,6 +182,58 @@ public class HumanImportListAction extends ImportListAction {
 		setImportListInfo();
 		// エクスポート一覧共通VO初期値設定
 		initImportListVoFields();
+	}
+	
+	@Override
+	protected void search() throws MospException {
+		// VO取得
+		ImportListVo vo = (ImportListVo)mospParams.getVo();
+		
+		// 継承元実行
+		super.search();
+		
+		// 対象が存在しない場合
+		if (vo.getList().isEmpty()) {
+			return;
+		}
+		List<String> ary = new ArrayList<String>();
+		ary.addAll(RoleUtility.getHiddenDivisionsList(mospParams));
+		ary.addAll(RoleUtility.getReferenceDivisionsList(mospParams));
+		
+		// 人事汎用管理区分配列（非表示/参照となる管理区分）
+		String[] aryDivision = MospUtility.toArray(ary);
+		
+		// ロール制御がないユーザーの場合
+		if (aryDivision.length == 0) {
+			return;
+			
+		}
+		
+		// 再設定用リスト
+		List<ImportDtoInterface> list = new ArrayList<ImportDtoInterface>();
+		
+		// 人事汎用管理区分にて参照権限妥当性チェック
+		for (int idx = 0; idx < vo.getList().size(); idx++) {
+			// エクスポート情報DTO取得
+			ImportDtoInterface dto = (ImportDtoInterface)vo.getList().get(idx);
+			
+			// データ区分:人事情報以外はチェック対象外
+			if (!dto.getImportTable().contains(PlatformFileConst.CODE_KEY_TABLE_TYPE_HUMAN)) {
+				list.add(dto);
+				continue;
+			}
+			
+			// 対象エクスポートコード内に非表示対象の人事管理汎用区分が存在するか確認
+			if (reference().humanImport().isExistLikeFieldName(dto.getImportCode(), aryDivision)) {
+				// 存在する場合、リスト設定をしない
+				continue;
+			}
+			
+			// リストに設定
+			list.add(dto);
+		}
+		// 再設定
+		setDtoToVoList(list);
 	}
 	
 	/**
@@ -225,9 +288,15 @@ public class HumanImportListAction extends ImportListAction {
 		} else if (importDto.getImportTable().equals(PlatformFileConst.CODE_KEY_TABLE_TYPE_USER)) {
 			// ユーザマスタインポートクラス取得
 			importBean = platform().userImport();
+		} else if (importDto.getImportTable().equals(PlatformFileConst.CODE_KEY_TABLE_TYPE_USER_EXTRA_ROLE)) {
+			// ユーザ追加ロールインポート処理取得
+			importBean = platform().userExtraRoleImport();
 		} else if (importDto.getImportTable().equals(PlatformFileConst.CODE_KEY_TABLE_TYPE_SECTION)) {
 			// 所属マスタインポートクラス取得
 			importBean = platform().sectionImport();
+		} else if (importDto.getImportTable().equals(PlatformFileConst.CODE_KEY_TABLE_TYPE_POSITION)) {
+			// 職位マスタインポートクラス取得
+			importBean = platform().positionImport();
 		} else if (importDto.getImportTable().equals(PlatformFileConst.CODE_KEY_TABLE_TYPE_PASSWORD)) {
 			// ユーザパスワードテーブルインポートクラス取得
 			importBean = platform().userPasswordImport();

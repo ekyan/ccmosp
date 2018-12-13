@@ -208,4 +208,28 @@ public class PfaHumanNormalDao extends PlatformDao implements HumanNormalDaoInte
 		}
 	}
 	
+	@Override
+	public List<HumanNormalDtoInterface> findForInfoForValue(String itemName, String itemValue) throws MospException {
+		try {
+			index = 1;
+			StringBuffer sb = getSelectQuery(getClass());
+			sb.append(where());
+			sb.append(deleteFlagOff());
+			sb.append(and());
+			sb.append(equal(COL_HUMAN_ITEM_TYPE));
+			sb.append(and());
+			sb.append(equal(COL_HUMAN_ITEM_VALUE));
+			prepareStatement(sb.toString());
+			setParam(index++, itemName);
+			setParam(index++, itemValue);
+			executeQuery();
+			return mappingAll();
+		} catch (Throwable e) {
+			throw new MospException(e);
+		} finally {
+			releaseResultSet();
+			releasePreparedStatement();
+		}
+	}
+	
 }

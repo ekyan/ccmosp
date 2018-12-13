@@ -72,8 +72,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<Naming key="jp.mosp.time.management.vo.SubordinateListVo">
 		部下一覧
 	</Naming>
+	<Naming key="jp.mosp.time.management.vo.SubordinateFiscalListVo">
+		統計情報一覧
+	</Naming>
 	<Naming key="jp.mosp.time.management.vo.RequestListVo">
 		申請確認
+	</Naming>
+	<Naming key="jp.mosp.time.management.vo.SubordinateFiscalReferenceVo">
+		統計情報詳細
 	</Naming>
 	<Naming key="jp.mosp.time.management.vo.ApprovalListVo">
 		未承認管理一覧
@@ -219,11 +225,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<Naming key="HalfTime">
 		半休
 	</Naming>
+	<Naming key="HourTime">
+		時休
+	</Naming>
 	<Naming key="Moment">
 		時刻
-	</Naming>
-	<Naming key="Hour">
-		時
 	</Naming>
 	<Naming key="BeforeHalfHoliday">
 		前半休
@@ -297,14 +303,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<Naming key="DayOfTheWeek">
 		曜日
 	</Naming>
-	<Naming key="TimeSettingCardMessage">
-		システム上で利用するのは時間外限度時間(1週間/1ヶ月)と時間外注意時間(1ヶ月)、時間外警告時間(1ヶ月)のみとなります。
-	</Naming>
 	<Naming key="Week">
 		週間
 	</Naming>
-	<Naming key="CountingOfTheWeek">
-		週の起算
+	<Naming key="StartDayOfTheWeek">
+		週の起算曜日
 	</Naming>
 	<Naming key="Norm">
 		基準
@@ -380,9 +383,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	</Naming>
 	<Naming key="Acquisition">
 		取得
-	</Naming>
-	<Naming key="TimeLimit">
-		期限
 	</Naming>
 	<Naming key="Continuousness">
 		連続
@@ -549,6 +549,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<Naming key="In">
 		に
 	</Naming>
+	<Naming key="Until">
+		まで
+	</Naming>
 	<Naming key="Possession">
 		保有
 	</Naming>
@@ -599,6 +602,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	</Naming>
 	<Naming key="Legal">
 		法定
+	</Naming>
+	<Naming key="PrescribedHoliday">
+		所定休日
+	</Naming>
+	<Naming key="LegalHoliday">
+		法定休日
 	</Naming>
 	<Naming key="ClosedVibration">
 		振休
@@ -662,6 +671,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	</Naming>
 	<Naming key="Transfer">
 		振替
+	</Naming>
+	<Naming key="PrescribedTransferHoliday">
+		所定振替休日
+	</Naming>
+	<Naming key="LegalTransferHoliday">
+		法定振替休日
 	</Naming>
 	<Naming key="Step">
 		ステップ
@@ -786,11 +801,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<Naming key="InputCompensatoryLeave">
 		代休日を決定して下さい。
 	</Naming>
+	<Naming key="BeforeDay">
+		前日
+	</Naming>
 	<Naming key="ThisDay">
 		当日
 	</Naming>
 	<Naming key="NextDay">
 		翌日
+	</Naming>
+	<Naming key="Next">
+		翌
+	</Naming>
+	<Naming key="This">
+		当
 	</Naming>
 	<Naming key="Same">
 		同
@@ -830,6 +854,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	</Naming>
 	<Naming key="Calc">
 		計算
+	</Naming>
+	<Naming key="TrialCalc">
+		試算
 	</Naming>
 	<Naming key="Comma">
 		,
@@ -876,6 +903,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<Naming key="NoLegalPrescribedHoliday">
 		該当する期間に法定/所定休日が存在しません
 	</Naming>
+	<Naming key="StartAbbr">
+		始
+	</Naming>
 	<Naming key="GoingWorkAbbr">
 		出
 	</Naming>
@@ -908,9 +938,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	</Naming>
 	<Naming key="Generation">
 		代
-	</Naming>
-	<Naming key="LegalAbbreviation">
-		法
 	</Naming>
 	<Naming key="PrescribedAbbreviation">
 		所
@@ -1002,9 +1029,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<Naming key="And">
 		と
 	</Naming>
-	<Naming key="No0">
-		0
-	</Naming>
 	<Naming key="Subordinate">
 		部下
 	</Naming>
@@ -1022,6 +1046,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	</Naming>
 	<Naming key="Pattern">
 		パターン
+	</Naming>
+	
+	<Naming key="SubordinateCode">
+		コード
 	</Naming>
 	<Naming key="Unused">
 		未消化
@@ -1152,6 +1180,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<Naming key="Administrator">
 		管理者
 	</Naming>
+	<Naming key="SubstituteWorkAbbr">
+		振出
+	</Naming>
 	<Naming key="HalfSubstituteWorkAbbr">
 		半振出
 	</Naming>
@@ -1172,5 +1203,86 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	</Naming>
 	<Naming key="Accomplish">
 		達成
+	</Naming>
+	<Naming key="ContinuousServiceTermsCountingFromTheEmploymentDay">
+		雇入れの日から起算した継続勤務期間
+	</Naming>
+	<Naming key="LateAbbr">
+		遅
+	</Naming>
+	<Naming key="EarlyAbbr">
+		早
+	</Naming>
+	<Naming key="LessThan30Hours">
+		30時間未満
+	</Naming>
+	<Naming key="30HoursOrMore">
+		30時間以上
+	</Naming>
+	<Naming key="1Day">
+		1日
+	</Naming>
+	<Naming key="2Days">
+		2日
+	</Naming>
+	<Naming key="3Days">
+		3日
+	</Naming>
+	<Naming key="4Days">
+		4日
+	</Naming>
+	<Naming key="5DaysOrMore">
+		5日～
+	</Naming>
+	<Naming key="48To72Days">
+		48日～72日
+	</Naming>
+	<Naming key="73To120Days">
+		73日～120日
+	</Naming>
+	<Naming key="121To168Days">
+		121日～168日
+	</Naming>
+	<Naming key="169To216Days">
+		169日～216日
+	</Naming>
+	<Naming key="217DaysOrMore">
+		217日～
+	</Naming>
+	<Naming key="0.5Years">
+		6ヶ月
+	</Naming>
+	<Naming key="1.5Years">
+		1年6ヶ月
+	</Naming>
+	<Naming key="2.5Years">
+		2年6ヶ月
+	</Naming>
+	<Naming key="3.5Years">
+		3年6ヶ月
+	</Naming>
+	<Naming key="4.5Years">
+		4年6ヶ月
+	</Naming>
+	<Naming key="5.5Years">
+		5年6ヶ月
+	</Naming>
+	<Naming key="6.5YearsOrMore">
+		6年6ヶ月～
+	</Naming>
+	<Naming key="ListPaidHoliday">
+		有休
+	</Naming>
+	<Naming key="ListStockHoliday">
+		ス休
+	</Naming>
+	<Naming key="ListSeasonHoliday">
+		季休
+	</Naming>
+	<Naming key="WithdrawnAppli">
+		申請の取下を希望する(再申請しない)
+	</Naming>
+	<Naming key="OutOfTime">
+		時間外
 	</Naming>
 </MosP>

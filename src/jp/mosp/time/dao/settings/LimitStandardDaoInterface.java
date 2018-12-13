@@ -19,7 +19,6 @@ package jp.mosp.time.dao.settings;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 import jp.mosp.framework.base.BaseDaoInterface;
 import jp.mosp.framework.base.MospException;
@@ -66,19 +65,4 @@ public interface LimitStandardDaoInterface extends BaseDaoInterface {
 	 */
 	List<LimitStandardDtoInterface> findForSearch(String workSettingCode, Date activateDate) throws MospException;
 	
-	/**
-	 * 履歴一覧を取得する。<br>
-	 * 勤怠設定コードから限度基準管理リストを取得する。<br>
-	 * 取得したリストは、有効日の昇順で並べられる。<br>
-	 * @param workSettingCode 勤怠設定コード
-	 * @return 限度基準管理リスト
-	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
-	 */
-	List<LimitStandardDtoInterface> findForHistory(String workSettingCode) throws MospException;
-	
-	/**
-	 * 検索条件取得。
-	 * @return 限度基準管理検索条件マップ
-	 */
-	Map<String, Object> getParamsMap();
 }

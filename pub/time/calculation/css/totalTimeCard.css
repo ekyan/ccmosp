@@ -112,51 +112,20 @@
 	border-top: 1px solid black;
 }
 
-/* === 特別休暇情報表示欄 === */
-#tblSpecialHoliday .TitleTd {
+/* === 特別休暇、その他休暇、欠勤情報表示欄 === */
+.HolidayTitleTd {
 	width: 120px;
 }
 
-#tblSpecialHoliday .InputTd {
-	width: 57px;
-}
-
-/* === その他休暇情報表示欄 === */
-#tblOtherHoliday .TitleTd {
-	width: 120px;
-}
-#tblOtherHoliday .InputTd {
-	width: 57px;
-}
-
-/* === 欠勤情報表示欄 === */
-#tblAbsence .TitleTd {
-	width: 120px;
-}
-
-#tblAbsence .InputTd {
-	width: 57px;
+.HolidayInputTd {
+	width: 80px;
 }
 
 .LastTd {
 	width: 61px;
 }
 
-/* === 手当情報表示欄 === */
-#tblAllowance .TitleTd {
-	width: 80px;
-}
-
-#tblAllowance .InputTd {
-	width: 80px;
-}
-
 /* === 時間外(60時間)情報表示欄 === */
 #tbl .InputTd {
 	width: 150px;
-}
-
-/* === 遅刻早退回数欄後の空欄 === */
-.FixTable #tdLateBlank {
-	border-bottom: 1px solid black;
 }

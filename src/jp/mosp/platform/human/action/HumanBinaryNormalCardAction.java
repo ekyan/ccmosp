@@ -21,6 +21,7 @@ import jp.mosp.framework.base.BaseVo;
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.property.MospProperties;
 import jp.mosp.framework.utils.BinaryUtility;
+import jp.mosp.framework.utils.RoleUtility;
 import jp.mosp.framework.utils.TopicPathUtility;
 import jp.mosp.platform.base.PlatformAction;
 import jp.mosp.platform.bean.human.HumanBinaryNormalReferenceBeanInterface;
@@ -166,8 +167,8 @@ public class HumanBinaryNormalCardAction extends PlatformHumanAction {
 		// 人事汎用管理区分設定
 		vo.setDivision(getTransferredType());
 		// パンくず名設定
-		TopicPathUtility.setTopicPathName(mospParams, vo.getClassName(), mospParams.getName(vo.getDivision())
-				+ mospParams.getName("Information"));
+		TopicPathUtility.setTopicPathName(mospParams, vo.getClassName(),
+				mospParams.getName(vo.getDivision()) + mospParams.getName("Information"));
 		// 人事管理共通情報利用設定
 		setPlatformHumanSettings(CMD_SEARCH, PlatformHumanConst.MODE_HUMAN_NO_ACTIVATE_DATE);
 		// 人事管理共通情報設定
@@ -229,7 +230,7 @@ public class HumanBinaryNormalCardAction extends PlatformHumanAction {
 		// 参照クラス取得
 		HumanBinaryNormalReferenceBeanInterface reference = reference().humanBinaryNormal();
 		// 参照情報
-		HumanBinaryNormalDtoInterface dto = reference.findForInfo(vo.getPersonalId(), vo.getDivision());
+		HumanBinaryNormalDtoInterface dto = reference.findForKey(vo.getHidRecordId(), false);
 		dto.setFileName(vo.getFileBinaryNormal());
 		dto.setFileRemark(vo.getTxtFileRemark());
 		// 更新
@@ -269,7 +270,7 @@ public class HumanBinaryNormalCardAction extends PlatformHumanAction {
 	
 	/**
 	 * 削除処理を行う。<br>
-	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合 
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
 	protected void delete() throws MospException {
 		// VO取得
@@ -277,7 +278,7 @@ public class HumanBinaryNormalCardAction extends PlatformHumanAction {
 		// 登録クラス取得
 		HumanBinaryNormalRegistBeanInterface regist = platform().humanBinaryNormalRegist();
 		// 削除処理
-		regist.delete(reference().humanBinaryNormal().findForInfo(vo.getPersonalId(), vo.getDivision()));
+		regist.delete(reference().humanBinaryNormal().findForKey(vo.getHidRecordId(), false));
 		// 削除結果確認
 		if (mospParams.hasErrorMessage()) {
 			// 削除失敗メッセージ設定
@@ -324,13 +325,15 @@ public class HumanBinaryNormalCardAction extends PlatformHumanAction {
 		vo.setPltFileType("");
 		vo.setFileBinaryNormal("");
 		vo.setTxtFileRemark("");
+		// 人事汎用管理区分参照権限設定
+		vo.setJsIsReferenceDivision(RoleUtility.getReferenceDivisionsList(mospParams).contains(getTransferredType()));
 		// プルダウン設定
 		setPulldown();
 	}
 	
 	/**
 	 * 人事汎用通常情報を設定する。
-	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合 
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
 	protected void setBinaryNormalInfo() throws MospException {
 		// VO取得
@@ -366,6 +369,7 @@ public class HumanBinaryNormalCardAction extends PlatformHumanAction {
 		}
 		// VO取得
 		HumanBinaryNormalCardVo vo = (HumanBinaryNormalCardVo)mospParams.getVo();
+		vo.setHidRecordId(dto.getPfaHumanBinaryNormalId());
 		vo.setPltFileType(dto.getFileType());
 		vo.setFileBinaryNormal(dto.getFileName());
 		vo.setTxtFileRemark(dto.getFileRemark());

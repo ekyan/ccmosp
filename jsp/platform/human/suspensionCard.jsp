@@ -34,7 +34,7 @@ import = "jp.mosp.platform.human.vo.SuspensionCardVo"
 MospParams params = (MospParams)request.getAttribute(MospConst.ATT_MOSP_PARAMS);
 SuspensionCardVo vo = (SuspensionCardVo)params.getVo();
 %>
-<jsp:include page="<%= PlatformHumanConst.PATH_HUMAN_COMMON_INFO_JSP %>" flush="false" />
+<jsp:include page="<%= params.getApplicationProperty(PlatformHumanConst.APP_HUMAN_COMMON_INFO_JSP) %>" flush="false" />
 <div class="FixList">
 	<table class="ListTable" id="tblAddList">
 		<thead>

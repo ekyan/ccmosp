@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE MosP>
+<!--
+MosP - Mind Open Source Project    http://www.mosp.jp/
+Copyright (C) MIND Co., Ltd.       http://www.e-mind.co.jp/
+
+This program is free software: you can redistribute it and/or
+modify it under the terms of the GNU Affero General Public License
+as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<MosP>
+	<!-- naming -->
+	<Naming key="jp.mosp.addon.timeapplimail.vo.TaMailSendSettingListVo">
+		メール送信設定
+	</Naming>
+	
+
+		
+
+	<Naming key="SendBulkMail">
+		メール一括送信
+	</Naming>
+	<Naming key="SendSelectMail">
+		メール選択送信
+	</Naming>
+	<Naming key="WorkingHolidayMark">
+		※
+	</Naming>
+	<Naming key="Csv">
+		CSV
+	</Naming>
+	
+	<Naming key="MailSubject1">
+		残業基準時間超過のお知らせ
+	</Naming>
+	<Naming key="MailSubject2">
+		休日出勤申請のお知らせ
+	</Naming>
+	<Naming key="MailSubject3">
+		連続休日、休暇日数基準超過のお知らせ
+	</Naming>
+	<Naming key="MailSubjectUpperLimit">
+		通知数上限のお知らせ
+	</Naming>	
+	
+</MosP>

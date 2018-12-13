@@ -75,4 +75,13 @@ public interface ScheduleDateRegistBeanInterface {
 	 */
 	void delete(String scheduleCode, Date activateDate) throws MospException;
 	
+	/**
+	 * 登録を行う。<br>
+	 * 情報がないものは新規登録、情報があるものは履歴更新を行う。<br>
+	 * 年度反映で利用する。<br>
+	 * @param list 対象DTOリスト
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 */
+	void allReflectionRegist(List<ScheduleDateDtoInterface> list) throws MospException;
+	
 }

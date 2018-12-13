@@ -56,4 +56,13 @@ public interface HumanBinaryNormalReferenceBeanInterface {
 	 */
 	List<HumanBinaryNormalDtoInterface> findForList(String personalId) throws MospException;
 	
+	/**
+	 * 人事汎用バイナリ通常情報取得
+	 * @param pfaHumanBinaryNormalId レコード識別ID
+	 * @param isUpdate FOR UPDATE 使用有無
+	 * @return 人事汎用バイナリ通常DTO
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	HumanBinaryNormalDtoInterface findForKey(Long pfaHumanBinaryNormalId, boolean isUpdate) throws MospException;
+	
 }

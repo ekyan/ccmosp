@@ -27,8 +27,8 @@ import jp.mosp.platform.dto.base.SectionCodeDtoInterface;
 /**
  * 休暇確認一覧DTOインターフェース。
  */
-public interface HolidayManagementListDtoInterface extends PlatformDtoInterface, EmployeeCodeDtoInterface,
-		EmployeeNameDtoInterface, SectionCodeDtoInterface {
+public interface HolidayManagementListDtoInterface
+		extends PlatformDtoInterface, EmployeeCodeDtoInterface, EmployeeNameDtoInterface, SectionCodeDtoInterface {
 	
 	/**
 	 * @return 休暇種別。
@@ -49,6 +49,16 @@ public interface HolidayManagementListDtoInterface extends PlatformDtoInterface,
 	 * @param holidayRemainder セットする 残日数。
 	 */
 	void setHolidayRemainder(double holidayRemainder);
+	
+	/**
+	 * @return 残時間
+	 */
+	int getHolidayRemaindHours();
+	
+	/**
+	 * @param holidayRemaindHours 残時間
+	 */
+	void setHolidayRemaindHours(int holidayRemaindHours);
 	
 	/**
 	 * @return 取得期限。

@@ -21,9 +21,12 @@ import java.util.Calendar;
 import java.util.Date;
 
 import jp.mosp.framework.constant.MospConst;
+import jp.mosp.framework.utils.MospUtility;
+import jp.mosp.platform.utils.PlatformUtility;
 import jp.mosp.time.constant.TimeConst;
 import jp.mosp.time.dto.settings.ApplicationDtoInterface;
 import jp.mosp.time.dto.settings.CutoffDtoInterface;
+import jp.mosp.time.dto.settings.PaidHolidayDtoInterface;
 import jp.mosp.time.dto.settings.TimeSettingDtoInterface;
 
 /**
@@ -71,6 +74,11 @@ public class ApplicationEntity {
 	 */
 	protected CutoffDtoInterface		cutoffDto;
 	
+	/**
+	 * 有給休暇設定情報。<br>
+	 */
+	protected PaidHolidayDtoInterface	paidHolidayDto;
+	
 	
 	/**
 	 * コンストラクタ。<br>
@@ -82,6 +90,36 @@ public class ApplicationEntity {
 	}
 	
 	/**
+	 * 設定適用エンティティが有効であるかを確認する。<br>
+	 * <br>
+	 * @return 確認結果(true：有効である、false：無効である)
+	 */
+	public boolean isValid() {
+		// 設定適用情報が存在しない場合
+		if (applicationDto == null) {
+			// 無効であると判断
+			return false;
+		}
+		// 勤怠設定情報が存在しない場合
+		if (timeSettingDto == null) {
+			// 無効であると判断
+			return false;
+		}
+		// 締日情報が存在しない場合
+		if (cutoffDto == null) {
+			// 無効であると判断
+			return false;
+		}
+		// 有給休暇情報が存在しない場合
+		if (paidHolidayDto == null) {
+			// 無効であると判断
+			return false;
+		}
+		// 必要な情報が揃っている場合
+		return true;
+	}
+	
+	/**
 	 * 勤怠設定コードを取得する。<br>
 	 * 勤怠設定コードが取得できない場合は、空文字を返す。<br>
 	 * <br>
@@ -89,7 +127,7 @@ public class ApplicationEntity {
 	 */
 	public String getWorkSettingCode() {
 		// 設定適用情報確認
-		if (applicationDto == null || applicationDto.getWorkSettingCode() == null) {
+		if (applicationDto == null || MospUtility.isEmpty(applicationDto.getWorkSettingCode())) {
 			return "";
 		}
 		// 勤怠設定コード取得
@@ -104,11 +142,26 @@ public class ApplicationEntity {
 	 */
 	public String getScheduleCode() {
 		// 設定適用情報確認
-		if (applicationDto == null || applicationDto.getScheduleCode() == null) {
+		if (applicationDto == null || MospUtility.isEmpty(applicationDto.getScheduleCode())) {
 			return "";
 		}
 		// カレンダコード取得
 		return applicationDto.getScheduleCode();
+	}
+	
+	/**
+	 * 有給休暇設定コードを取得する。<br>
+	 * 有給休暇設定コードが取得できない場合は、空文字を返す。<br>
+	 * <br>
+	 * @return カレンダコード
+	 */
+	public String getPaidHolidayCode() {
+		// 設定適用情報確認
+		if (applicationDto == null || MospUtility.isEmpty(applicationDto.getPaidHolidayCode())) {
+			return "";
+		}
+		// 有給休暇設定コードを取得
+		return applicationDto.getPaidHolidayCode();
 	}
 	
 	/**
@@ -131,7 +184,7 @@ public class ApplicationEntity {
 	 * <br>
 	 * 締日が存在しない場合は、0(月末締)を返す。<br>
 	 * <br>
-	 * @return 勤務予定時間表示設定（true：勤務予定時間表示有効、false：無効)
+	 * @return 締日
 	 */
 	public int getCutoffDate() {
 		// 締日情報を確認
@@ -140,6 +193,22 @@ public class ApplicationEntity {
 		}
 		// 締日を取得
 		return cutoffDto.getCutoffDate();
+	}
+	
+	/**
+	 * 勤怠管理対象であるかを確認する。<br>
+	 * <br>
+	 * 勤怠設定情報が存在しない場合は、勤怠管理対象でないと判断する。<br>
+	 * <br>
+	 * @return 確認結果(true：勤怠管理対象である、false：そうでない)
+	 */
+	public boolean isTimeManaged() {
+		// 勤怠設定情報を確認
+		if (timeSettingDto == null) {
+			return false;
+		}
+		// 勤怠管理対象が有効であるかを確認
+		return PlatformUtility.isActivate(timeSettingDto.getTimeManagementFlag());
 	}
 	
 	/**
@@ -156,6 +225,22 @@ public class ApplicationEntity {
 		}
 		// 週の起算曜日を取得
 		return timeSettingDto.getStartWeek();
+	}
+	
+	/**
+	 * 未承認仮締を取得する。<br>
+	 * <br>
+	 * 締日が存在しない場合は、0(有効)を返す。<br>
+	 * <br>
+	 * @return 未承認仮締
+	 */
+	public int getNoApproval() {
+		// 締日情報を確認
+		if (cutoffDto == null) {
+			return TimeConst.CODE_NO_APPROVAL_VALID;
+		}
+		// 未承認仮締を取得
+		return cutoffDto.getNoApproval();
 	}
 	
 	/**
@@ -232,10 +317,30 @@ public class ApplicationEntity {
 	public Date getRoundedStartTime(Date targetTime) {
 		// 勤怠設定情報を確認
 		if (timeSettingDto == null) {
-			return targetTime;
+			return getRoundedTime(targetTime, 1, CODE_ROUND_TYPE_DOWN);
 		}
 		// 始業時刻(丸め)を取得
 		return getRoundedTime(targetTime, timeSettingDto.getRoundDailyStartUnit(), timeSettingDto.getRoundDailyStart());
+	}
+	
+	/**
+	 * 実始業時刻(丸め)を取得する。<br>
+	 * 対象時刻を、日出勤丸め設定で丸める。<br>
+	 * @param targetTime 対象時刻
+	 * @return 実始業時刻(丸め)
+	 */
+	public Date getRoundedActualStartTime(Date targetTime) {
+		// 勤怠設定情報を確認
+		if (timeSettingDto == null) {
+			return getRoundedTime(targetTime, 1, CODE_ROUND_TYPE_DOWN);
+		}
+		if (timeSettingDto.getRoundDailyStartUnit() == 1 && timeSettingDto.getRoundDailyStart() == CODE_ROUND_TYPE_UP) {
+			// 1分単位切上げの場合
+			return getRoundedTime(targetTime, timeSettingDto.getRoundDailyStartUnit(),
+					timeSettingDto.getRoundDailyStart());
+		}
+		// 実始業時刻(丸め)を取得
+		return getRoundedTime(targetTime, 1, CODE_ROUND_TYPE_DOWN);
 	}
 	
 	/**
@@ -247,10 +352,69 @@ public class ApplicationEntity {
 	public Date getRoundedEndTime(Date targetTime) {
 		// 勤怠設定情報を確認
 		if (timeSettingDto == null) {
-			return targetTime;
+			return getRoundedTime(targetTime, 1, CODE_ROUND_TYPE_DOWN);
 		}
 		// 終業時刻(丸め)を取得
 		return getRoundedTime(targetTime, timeSettingDto.getRoundDailyEndUnit(), timeSettingDto.getRoundDailyEnd());
+	}
+	
+	/**
+	 * 実終業時刻(丸め)を取得する。<br>
+	 * 対象時刻を、日退勤丸め設定で丸める。<br>
+	 * @param targetTime 対象時刻
+	 * @return 実終業時刻(丸め)
+	 */
+	public Date getRoundedActualEndTime(Date targetTime) {
+		// 勤怠設定情報を確認
+		if (timeSettingDto == null) {
+			return getRoundedTime(targetTime, 1, CODE_ROUND_TYPE_DOWN);
+		}
+		if (timeSettingDto.getRoundDailyEndUnit() == 1 && timeSettingDto.getRoundDailyEnd() == CODE_ROUND_TYPE_UP) {
+			// 1分単位切上げの場合
+			return getRoundedTime(targetTime, timeSettingDto.getRoundDailyEndUnit(), timeSettingDto.getRoundDailyEnd());
+		}
+		// 実終業時刻(丸め)を取得
+		return getRoundedTime(targetTime, 1, CODE_ROUND_TYPE_DOWN);
+	}
+	
+	/**
+	 * 休憩入時刻(丸め)を取得する。<br>
+	 * @param targetTime 対象時刻
+	 * @return 休憩入時刻(丸め)
+	 */
+	public Date getRoundedRestStartTime(Date targetTime) {
+		// 勤怠設定情報を確認
+		if (timeSettingDto == null) {
+			return getRoundedTime(targetTime, 1, CODE_ROUND_TYPE_DOWN);
+		}
+		if (timeSettingDto.getRoundDailyRestStartUnit() == 1
+				&& timeSettingDto.getRoundDailyRestStart() == CODE_ROUND_TYPE_UP) {
+			// 1分単位切上げの場合
+			return getRoundedTime(targetTime, timeSettingDto.getRoundDailyRestStartUnit(),
+					timeSettingDto.getRoundDailyRestStart());
+		}
+		// 休憩入時刻(丸め)を取得
+		return getRoundedTime(targetTime, 1, CODE_ROUND_TYPE_DOWN);
+	}
+	
+	/**
+	 * 休憩戻時刻(丸め)を取得する。<br>
+	 * @param targetTime 対象時刻
+	 * @return 休憩戻時刻(丸め)
+	 */
+	public Date getRoundedRestEndTime(Date targetTime) {
+		// 勤怠設定情報を確認
+		if (timeSettingDto == null) {
+			return getRoundedTime(targetTime, 1, CODE_ROUND_TYPE_DOWN);
+		}
+		if (timeSettingDto.getRoundDailyRestEndUnit() == 1
+				&& timeSettingDto.getRoundDailyRestEnd() == CODE_ROUND_TYPE_UP) {
+			// 1分単位切上げの場合
+			return getRoundedTime(targetTime, timeSettingDto.getRoundDailyRestEndUnit(),
+					timeSettingDto.getRoundDailyRestEnd());
+		}
+		// 休憩戻時刻(丸め)を取得
+		return getRoundedTime(targetTime, 1, CODE_ROUND_TYPE_DOWN);
 	}
 	
 	/**
@@ -265,8 +429,22 @@ public class ApplicationEntity {
 			return null;
 		}
 		long milliseconds = targetTime.getTime();
-		if (milliseconds == 0 || roundType == CODE_ROUND_TYPE_NONE || roundUnit <= 0) {
+		if (milliseconds <= 0) {
 			return targetTime;
+		}
+		// 0ミリ秒より大きい場合
+		int oneMinute = TimeConst.CODE_DEFINITION_HOUR * 1000;
+		// 1分未満の端数
+		long fraction = milliseconds % oneMinute;
+		// 端数を切り捨てる
+		milliseconds -= fraction;
+		if (fraction > 0 && roundType == CODE_ROUND_TYPE_UP && roundUnit == 1) {
+			// 端数が0ミリ秒より大きく且つ1分単位切上げの場合
+			milliseconds += oneMinute;
+		}
+		if (roundType == CODE_ROUND_TYPE_NONE || roundUnit <= 0) {
+			// 丸めた時刻を取得
+			return new Date(milliseconds);
 		}
 		// 丸め単位を分単位からミリ秒単位に変換
 		int millisecondsUnit = roundUnit * TimeConst.CODE_DEFINITION_HOUR * 1000;
@@ -282,6 +460,29 @@ public class ApplicationEntity {
 	}
 	
 	/**
+	 * ポータル出退勤ボタン表示設定を取得する。<br>
+	 * <br>
+	 * 勤怠設定情報が存在しない場合は、9(非表示)を返す。<br>
+	 * <br>
+	 * @return ポータル出退勤ボタン表示設定
+	 */
+	public String getProspectsMonths() {
+		// 勤怠設定情報を確認
+		if (timeSettingDto == null) {
+			return MospConst.CHECKBOX_OFF;
+		}
+		// 勤務予定時間表示設定を取得
+		return timeSettingDto.getProspectsMonths();
+	}
+	
+	/**
+	 * @return timeSettingDto
+	 */
+	public TimeSettingDtoInterface getTimeSettingDto() {
+		return timeSettingDto;
+	}
+	
+	/**
 	 * @param timeSettingDto セットする timeSettingDto
 	 */
 	public void setTimeSettingDto(TimeSettingDtoInterface timeSettingDto) {
@@ -289,10 +490,31 @@ public class ApplicationEntity {
 	}
 	
 	/**
+	 * @return cutoffDto
+	 */
+	public CutoffDtoInterface getCutoffDto() {
+		return cutoffDto;
+	}
+	
+	/**
 	 * @param cutoffDto セットする cutoffDto
 	 */
 	public void setCutoffDto(CutoffDtoInterface cutoffDto) {
 		this.cutoffDto = cutoffDto;
+	}
+	
+	/**
+	 * @return paidHolidayDto
+	 */
+	public PaidHolidayDtoInterface getPaidHolidayDto() {
+		return paidHolidayDto;
+	}
+	
+	/**
+	 * @param paidHolidayDto セットする paidHolidayDto
+	 */
+	public void setPaidHolidayDto(PaidHolidayDtoInterface paidHolidayDto) {
+		this.paidHolidayDto = paidHolidayDto;
 	}
 	
 }

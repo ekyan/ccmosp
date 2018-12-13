@@ -32,6 +32,47 @@ import = "jp.mosp.time.management.vo.ApprovalCardVo"
 MospParams params = (MospParams)request.getAttribute(MospConst.ATT_MOSP_PARAMS);
 ApprovalCardVo vo = (ApprovalCardVo)params.getVo();
 %>
+<%
+if (vo.getRollArray() != null) {
+%>
+<div class="List">
+	<table class="EmployeeCodeRollTable">
+		<tr>
+			<td class="RollTd" id="tdFormerCode">
+<% if (vo.getPrevCommand() != null && !vo.getPrevCommand().isEmpty()) { %>
+				<%= params.getName("Ahead", "To") %>
+			</td>
+			<td class="RollTd" id="tdFormerButton">
+				<a onclick="submitTransfer(event, null, null, new Array('<%= TimeConst.PRM_TRANSFER_SEARCH_MODE %>', '<%= TimeConst.SEARCH_BACK %>'), '<%= ApprovalCardAction.CMD_ROLL %>');">
+					<%= params.getName("UpperTriangular") %>
+				</a>
+<% } else { %>
+				<span Class="FontGray"><%= params.getName("Ahead", "To") %></span>
+			</td>
+			<td class="RollTd" id="tdFormerButton">
+				<span Class="FontGray"><%= params.getName("UpperTriangular") %></span>
+<% } %>
+			</td>
+			<td class="RollTd" id="tdNextButton">
+<% if (vo.getNextCommand() != null && !vo.getNextCommand().isEmpty()) { %>
+				<a onclick="submitTransfer(event, null, null, new Array('<%= TimeConst.PRM_TRANSFER_SEARCH_MODE %>', '<%= TimeConst.SEARCH_NEXT %>'), '<%= ApprovalCardAction.CMD_ROLL %>');">
+					<%= params.getName("LowerTriangular") %>
+				</a>
+			<td class="RollTd" id="tdNextCode">
+				<%= params.getName("Following", "To") %>
+<% } else { %>
+				<span Class="FontGray"><%= params.getName("LowerTriangular") %></span>
+			</td>
+			<td class="RollTd" id="tdNextCode">
+				<span Class="FontGray"><%= params.getName("Following", "To") %></span>
+<% } %>
+			</td>
+		</tr>
+	</table>
+</div>
+<%
+}
+%>
 <div class="ListHeader">
 	<table class="EmployeeLabelTable">
 		<tr>
@@ -51,229 +92,21 @@ ApprovalCardVo vo = (ApprovalCardVo)params.getVo();
 <div class="FixList">
 <%
 if (vo.getLblWorkType() != null) {
+// 出退勤情報・休憩情報・遅刻早退情報
+for (String applicationProperty : params.getApplicationProperties("ApprovalCardItemJsp")) {
 %>
-	<div id="divAttendance">
-		<table class="InputTable" id="tblCorrection">
-			<tr>
-				<th class="ListTableTh" colspan="2">
-					<span class="TitleTh"><%= params.getName("CorrectionInformation") %></span>
-				</th>
-			</tr>
-			<tr>
-				<td class="TitleTd"><%= params.getName("CorrectionSummary") %></td>
-				<td class="InputTd"><%= HtmlUtility.escapeHTML(vo.getLblCorrectionHistory()) %></td>
-			</tr>
-		</table>
-		<table class="InputTable" id="tblAttendance">
-			<tr>
-				<th class="ListTableTh" colspan="6">
-					<span class="TitleTh"><%= params.getName("AttendanceInformation") %></span>
-				</th>
-			</tr>
-			<tr>
-				<td class="TitleTd"><%= params.getName("Work","Form") %></td>
-				<td class="InputTd" id="lblWorkType">
-					<%= HtmlUtility.escapeHTML(vo.getLblWorkType()) %>
-				</td>
-				<td class="TitleTd"><%= params.getName("StartWork","Moment") %></td>
-				<td class="InputTd" id="lblStartTime">
-					<%= HtmlUtility.escapeHTML(vo.getLblStartTime()) %>
-				</td>
-				<td class="TitleTd"><%= params.getName("EndWork","Moment") %></td>
-				<td class="InputTd" id="lblEndTime">
-					<%= HtmlUtility.escapeHTML(vo.getLblEndTime()) %>
-				</td>
-			</tr>
-			<tr>
-				<td class="TitleTd"><%= params.getName("Work","Time") %></td>
-				<td class="InputTd" id="lblWorkType"><%= HtmlUtility.escapeHTML(vo.getLblWorkTime()) %></td>
-				<td class="TitleTd"><%= params.getName("DirectStart","Slash","DirectEnd") %></td>
-				<td class="InputTd" id="lblApprovalState"><%= HtmlUtility.escapeHTML(vo.getLblDirectWorkManage()) %></td>
-<%
-// 無給時短時間機能有効
-if(params.getApplicationPropertyBool(TimeConst.APP_ADD_USE_SHORT_UNPAID)){
-%>
-				<td class="TitleTd" id="tdUnpaidShortTime" ><%= params.getName("UnpaidShortTime") %></td>
-				<td class="InputTd" id="tdLblUnpaidShortTime" ><%= HtmlUtility.escapeHTML(vo.getLblUnpaidShortTime()) %></td>
-<%
-} else {
-%>
-				<td class="Blank" colspan="2"></td>
+	<jsp:include page="<%= applicationProperty %>" flush="false" />
 <%
 }
-%>
-			</tr>
-			<tr>
-				<td class="TitleTd"><%= params.getName("WorkManage","Comment") %></td>
-				<td class="InputTd" id="tdAttendanceComment" colspan="5"><%= HtmlUtility.escapeHTML(vo.getLblTimeComment()) %></td>
-			</tr>
-		</table>
-<%
 if (params.getGeneralParam(ApprovalCardAction.PRM_APPROVAL_EXTRA_JSP) != null) {
 %>
 	<jsp:include page="<%= (String)params.getGeneralParam(ApprovalCardAction.PRM_APPROVAL_EXTRA_JSP) %>" flush="false" />
 <%
 }
 %>
-		<table class="InputTable" id="tblRest">
-			<tr>
-				<th class="ListTableTh" colspan="6">
-					<span class="TitleTh"><%= params.getName("RestTimeInformation") %></span>
-				</th>
-			</tr>
-			<tr>
-				<td class="TitleTd" id="tdRestTitle"><%= params.getName("RestTime","Time") %></td>
-				<td class="InputTd" id="lblRestTimeIn"><%= HtmlUtility.escapeHTML(vo.getLblRestTime()) %></td>
-				<td class="TitleTd" id="tdRestTitle1"><%= params.getName("Rest1") %></td>
-				<td class="InputTd" id="lblRestTime1"><%= HtmlUtility.escapeHTML(vo.getLblRestTime1()) %></td>
-				<td class="TitleTd" id="tdRestTitle2"><%= params.getName("Rest2") %></td>
-				<td class="InputTd" id="lblRestTime2"><%= HtmlUtility.escapeHTML(vo.getLblRestTime2()) %></td>
-			</tr>
-			<tr>
-				<td class="TitleTd" id="tdMidnightRestTitle"><%= params.getName("Midnight","RestTime","Time") %></td>
-				<td class="InputTd" id="lblLateRestTime"><%= HtmlUtility.escapeHTML(vo.getLblNightRestTime()) %></td>
-				<td class="TitleTd" id="tdRestTitle3"><%= params.getName("Rest3") %></td>
-				<td class="InputTd" id="lblRestTime3"><%= HtmlUtility.escapeHTML(vo.getLblRestTime3()) %></td>
-				<td class="TitleTd" id="tdRestTitle4"><%= params.getName("Rest4") %></td>
-				<td class="InputTd" id="lblRestTime4"><%= HtmlUtility.escapeHTML(vo.getLblRestTime4()) %></td>
-			</tr>
-			<tr>
-				<td class="Blank" colspan="2"  id="blankRest"></td>
-				<td class="TitleTd" id="tdRestTitle5"><%= params.getName("Rest5") %></td>
-				<td class="InputTd" id="lblRestTime5"><%= HtmlUtility.escapeHTML(vo.getLblRestTime5()) %></td>
-				<td class="TitleTd" id="tdRestTitle6"><%= params.getName("Rest6") %></td>
-				<td class="InputTd" id="lblRestTime6"><%= HtmlUtility.escapeHTML(vo.getLblRestTime6()) %></td>
-			</tr>
-			<tr>
-				<td class="TitleTd"><%= params.getName("Official","GoingOut","Time") %></td>
-				<td class="InputTd" id="lblPublicTime"><%= HtmlUtility.escapeHTML(vo.getLblPublicTime()) %></td>
-				<td class="TitleTd"><%= params.getName("Official","GoingOut","No1") %></td>
-				<td class="InputTd" id="lblPublicTime1"><%= HtmlUtility.escapeHTML(vo.getLblPublicTime1()) %></td>
-				<td class="TitleTd"><%= params.getName("Official","GoingOut","No2") %></td>
-				<td class="InputTd" id="lblPublicTime2"><%= HtmlUtility.escapeHTML(vo.getLblPublicTime2()) %></td>
-			</tr>
-			<tr>
-				<td class="TitleTd"><%= params.getName("PrivateGoingOut","Time") %></td>
-				<td class="InputTd" id="lblPrivateTime"><%= HtmlUtility.escapeHTML(vo.getLblPrivateTime()) %></td>
-				<td class="TitleTd"><%= params.getName("PrivateGoingOut1") %></td>
-				<td class="InputTd" id="lblPrivateTime1"><%= HtmlUtility.escapeHTML(vo.getLblPrivateTime1()) %></td>
-				<td class="TitleTd"><%= params.getName("PrivateGoingOut2") %></td>
-				<td class="InputTd" id="lblPrivateTime2"><%= HtmlUtility.escapeHTML(vo.getLblPrivateTime2()) %></td>
-			</tr>
-		</table>
-		
-<%
-// 分単位休暇有効
-if(params.getApplicationPropertyBool(TimeConst.APP_ADD_USE_MINUTELY_HOLIDAY)){
-%>
-		
-		<table class="InputTable" id="tblMinutelyHolidayA">
-			<tr>
-				<th class="ListTableTh" colspan="6">
-					<span class="TitleTh"><%= params.getName("MinutelyHolidayAInformation") %></span>
-				</th>
-			</tr>
-			<tr>
-				<td class="TitleTd" id="tdMinutelyHolidayATitle"><%= params.getName("MinutelyHolidayA","Time") %>   </td>
-				<td class="InputTd" id="tdMinutelyHolidayAInput"><%= HtmlUtility.escapeHTML(vo.getLblMinutelyHolidayATime()) %></td>
-				<td class="TitleTd" id="tdMinutelyHolidayA1Title"><%= params.getName("MinutelyHolidayAAbbr","No1") %></td>
-				<td class="InputTd" id="tdMinutelyHolidayA1Time"><%= HtmlUtility.escapeHTML(vo.getLblMinutelyHolidayATime1()) %></td>
-				<td class="TitleTd" id="tdMinutelyHolidayA2Title"><%= params.getName("MinutelyHolidayAAbbr","No2") %></td>
-				<td class="InputTd" id="tdMinutelyHolidayA2Time"><%= HtmlUtility.escapeHTML(vo.getLblMinutelyHolidayATime2()) %></td>
-			</tr>
-			<tr>
-				<td class="TitleTd" id="tdAllMinutelyHolidayATitle"><%= params.getName("MinutelyHolidayA","AllTime") %>   </td>
-				<td class="InputTd" id="tdAllMinutelyHolidayAInput"><%= HtmlUtility.escapeHTML(vo.getLblAllMinutelyHolidayA()) %></td>
-				<td class="TitleTd" id="tdMinutelyHolidayA3Title"><%= params.getName("MinutelyHolidayAAbbr","No3") %></td>
-				<td class="InputTd" id="tdMinutelyHolidayA3Time"><%= HtmlUtility.escapeHTML(vo.getLblMinutelyHolidayATime3()) %></td>
-				<td class="TitleTd" id="tdMinutelyHolidayA4Title"><%= params.getName("MinutelyHolidayAAbbr","No4") %></td>
-				<td class="InputTd" id="tdMinutelyHolidayA4Time"><%= HtmlUtility.escapeHTML(vo.getLblMinutelyHolidayATime4()) %></td>
-			</tr>
-		</table>
-		<table class="InputTable" id="tblMinutelyHolidayB">
-			<tr>
-				<th class="ListTableTh" colspan="6">
-					<span class="TitleTh"><%= params.getName("MinutelyHolidayBInformation") %></span>
-				</th>
-			</tr>
-			<tr>
-				<td class="TitleTd" id="tdMinutelyHolidayBTitle"><%= params.getName("MinutelyHolidayB","Time") %>   </td>
-				<td class="InputTd" id="tdMinutelyHolidayBInput"><%= HtmlUtility.escapeHTML(vo.getLblMinutelyHolidayBTime()) %></td>
-				<td class="TitleTd" id="tdMinutelyHolidayB1Title"><%= params.getName("MinutelyHolidayBAbbr","No1") %></td>
-				<td class="InputTd" id="tdMinutelyHolidayB1Time"><%= HtmlUtility.escapeHTML(vo.getLblMinutelyHolidayBTime1()) %></td>
-				<td class="TitleTd" id="tdMinutelyHolidayB2Title"><%= params.getName("MinutelyHolidayBAbbr","No2") %></td>
-				<td class="InputTd" id="tdMinutelyHolidayB2Time"><%= HtmlUtility.escapeHTML(vo.getLblMinutelyHolidayBTime2()) %></td>
-			</tr>
-			<tr>
-				<td class="TitleTd" id="tdAllMinutelyHolidayBTitle"><%= params.getName("MinutelyHolidayB","AllTime") %>   </td>
-				<td class="InputTd" id="tdAllMinutelyHolidayBInput"><%= HtmlUtility.escapeHTML(vo.getLblAllMinutelyHolidayB()) %></td>
-				<td class="TitleTd" id="tdMinutelyHolidayB3Title"><%= params.getName("MinutelyHolidayBAbbr","No3") %></td>
-				<td class="InputTd" id="tdMinutelyHolidayB3Time"><%= HtmlUtility.escapeHTML(vo.getLblMinutelyHolidayBTime3()) %></td>
-				<td class="TitleTd" id="tdMinutelyHolidayB4Title"><%= params.getName("MinutelyHolidayBAbbr","No4") %></td>
-				<td class="InputTd" id="tdMinutelyHolidayB4Time"><%= HtmlUtility.escapeHTML(vo.getLblMinutelyHolidayBTime4()) %></td>
-			</tr>
-		</table>
-	
-<%
-}
-%>		
-		
-		<table class="InputTable" id="tblLateEarly">
-			<tr>
-				<th class="ListTableTh" colspan="6">
-					<span class="TitleTh"><%= params.getName("TardinessLeaveEarlyInformation") %></span>
-				</th>
-			</tr>
-			<tr>
-				<td class="TitleTd"><%= params.getName("Tardiness","Time") %></td>
-				<td class="InputTd" id="lblLateTime"><%= HtmlUtility.escapeHTML(vo.getLblLateTime()) %></td>
-				<td class="TitleTd"><%= params.getName("Tardiness","Reason") %></td>
-				<td class="InputTd" id="lblLateReason"><%= HtmlUtility.escapeHTML(vo.getLblLateReason()) %></td>
-				<td class="TitleTd"><%= params.getName("Certificates") %></td>
-				<td class="InputTd" id="lblLateCertificate"><%= HtmlUtility.escapeHTML(vo.getLblLateCertificate()) %></td>
-			</tr>
-			<tr>
-				<td class="TitleTd"><%= params.getName("Comment") %></td>
-				<td class="InputTd" id="lblLateComment" colspan="5"><%= HtmlUtility.escapeHTML(vo.getLblLateComment()) %></td>
-			</tr>
-			<tr>
-				<td class="TitleTd"><%= params.getName("LeaveEarly","Time") %></td>
-				<td class="InputTd" id="lblLeaveEarlyTime"><%= HtmlUtility.escapeHTML(vo.getLblLeaveEarlyTime()) %></td>
-				<td class="TitleTd"><%= params.getName("LeaveEarly","Reason") %></td>
-				<td class="InputTd" id="lblLeaveEarlyReason"><%= HtmlUtility.escapeHTML(vo.getLblLeaveEarlyReason()) %></td>
-				<td class="TitleTd"><%= params.getName("Certificates") %></td>
-				<td class="InputTd" id="lblLeaveEarlyCertificate"><%= HtmlUtility.escapeHTML(vo.getLblLeaveEarlyCertificate()) %></td>
-			</tr>
-			<tr>
-				<td class="TitleTd"><%= params.getName("Comment") %></td>
-				<td class="InputTd" id="lblLeaveEarlyComment" colspan="5"><%= HtmlUtility.escapeHTML(vo.getLblLeaveEarlyComment()) %></td>
-			</tr>
-		</table>
-		<table class="InputTable" id="tblOverTime">
-			<tr>
-				<th class="ListTableTh" colspan="6">
-					<span class="TitleTh"><%= params.getName("OvertimeWorkInformation") %></span>
-				</th>
-			</tr>
-			<tr>
-				<td class="TitleTd" id="tdOvertimeIn"><%= params.getName("OvertimeWork","Time") %></td>
-				<td class="InputTd" id="lblOverTimeIn"><%= HtmlUtility.escapeHTML(vo.getLblOverTimeIn()) %></td>
-				<td class="TitleTd" id="tdOvertimeOut"><%= params.getName("Legal","Outside","OvertimeWork","Time") %></td>
-				<td class="InputTd" id="lblOverTimeOut"><%= HtmlUtility.escapeHTML(vo.getLblOverTimeOut()) %></td>
-				<td class="TitleTd"><%= params.getName("Midnight","Time") %></td>
-				<td class="InputTd" id="lblLateNightTime"><%= HtmlUtility.escapeHTML(vo.getLblLateNightTime()) %></td>
-			</tr>
-			<tr>
-				<td class="TitleTd"><%= params.getName("Prescribed","Holiday","Work","Time") %></td>
-				<td class="InputTd" id="lblSpecificWorkTime"><%= HtmlUtility.escapeHTML(vo.getLblSpecificWorkTimeIn()) %></td>
-				<td class="TitleTd"><%= params.getName("Legal","Holiday","Work","Time") %></td>
-				<td class="InputTd" id="lblLegalWorkTime"><%= HtmlUtility.escapeHTML(vo.getLblLegalWorkTime()) %></td>
-				<td class="TitleTd"><%= params.getName("Reduced","Target","Time") %></td>
-				<td class="InputTd" id="lblDecreaseTime"><%= HtmlUtility.escapeHTML(vo.getLblDecreaseTime()) %></td>
-			</tr>
-		</table>
-	</div>
-	<table class="LeftListTable">
+</div>
+<div>
+	<table class="LeftListTable" id="approvalCard_tblAttendanceRequest">
 		<tr>
 <% if (vo.isAttendance()) { %>
 			<th class="EditTableTh" colspan="6">
@@ -307,7 +140,7 @@ if(params.getApplicationPropertyBool(TimeConst.APP_ADD_USE_MINUTELY_HOLIDAY)){
 }
 if (vo.getLblOvertimeType().length > 0) {
 %>
-	<table class="LeftListTable">
+	<table class="LeftListTable" id="approvalCard_tblOvertimeRequest">
 		<tr>
 <% if (vo.isOvertime()) { %>
 			<th class="EditTableTh" colspan="6">
@@ -352,7 +185,7 @@ if (vo.getLblOvertimeType().length > 0) {
 }
 if (vo.getLblHolidayType().length > 0) {
 %>
-	<table class="LeftListTable">
+	<table class="LeftListTable" id="approvalCard_tblHolidayRequest">
 		<tr>
 <% if (vo.isHoliday()) { %>
 			<th class="EditTableTh" colspan="6">
@@ -401,7 +234,7 @@ if (vo.getLblHolidayType().length > 0) {
 }
 if (vo.getLblWorkOnHolidayDate() != null) {
 %>
-	<table class="LeftListTable">
+	<table class="LeftListTable" id="approvalCard_tblWorkOnHolidayRequest">
 		<tr>
 <% if (vo.isWorkOnHoliday()) { %>
 			<th class="EditTableTh" colspan="6">
@@ -414,7 +247,7 @@ if (vo.getLblWorkOnHolidayDate() != null) {
 		<tr>
 			<td class="TitleTd"><%= params.getName("GoingWork","Day") %></td>
 			<td class="InputTd" id="lblWorkOnHolidayDate"><%= HtmlUtility.escapeHTML(vo.getLblWorkOnHolidayDate()) %></td>
-			<td class="TitleTd"><%= params.getName("GoingWork","Schedule","Moment") %></td>
+			<td class="TitleTd"><%= params.getName("Schedule") %></td>
 			<td class="InputTd" id="lblWorkOnHolidayTime"><%= HtmlUtility.escapeHTML(vo.getLblWorkOnHolidayTime()) %></td>
 			<td class="TitleTd"><%= params.getName("Transfer") %><%= params.getName("Day") %></td>
 			<td class="InputTd" id="lblWorkOnHolidayTransferDate"><%= HtmlUtility.escapeHTML(vo.getLblWorkOnHolidayTransferDate()) %></td>
@@ -444,7 +277,7 @@ if (vo.getLblWorkOnHolidayDate() != null) {
 }
 if (vo.getLblSubHolidayDate() != null) {
 %>
-	<table class="LeftListTable">
+	<table class="LeftListTable" id="approvalCard_tblSubHolidayRequest">
 		<tr>
 <% if (vo.isSubHoliday()) { %>
 			<th class="EditTableTh" colspan="6">
@@ -481,7 +314,7 @@ if (vo.getLblSubHolidayDate() != null) {
 }
 if (vo.getLblWorkTypeChangeDate() != null) {
 %>
-	<table class="LeftListTable">
+	<table class="LeftListTable" id="approvalCard_tblWorkTypeChangeRequest">
 		<tr>
 <% if (vo.isWorkTypeChange()) { %>
 			<th class="EditTableTh" colspan="6">
@@ -524,7 +357,7 @@ if (vo.getLblWorkTypeChangeDate() != null) {
 }
 if (vo.getLblDifferenceDate() != null) {
 %>
-	<table class="LeftListTable">
+	<table class="LeftListTable" id="approvalCard_tblDifferenceRequest">
 		<tr>
 <% if (vo.isDifference()) { %>
 			<th class="EditTableTh" colspan="6">
@@ -567,7 +400,7 @@ if (vo.getLblDifferenceDate() != null) {
 }
 if (vo.isNeedCancelApproveButton()) {
 %>
-	<table class="LeftListTable">
+	<table class="LeftListTable" id="approvalCard_tblCancellationRequest">
 		<tr>
 			<th class="EditTableTh" colspan="6">
 				<span class="TitleTh"><%= params.getName("Approval","Release","Situation") %></span>

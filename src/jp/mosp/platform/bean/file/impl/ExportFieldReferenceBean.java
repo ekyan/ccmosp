@@ -35,7 +35,7 @@ public class ExportFieldReferenceBean extends PlatformBean implements ExportFiel
 	/**
 	 * エクスポートフィールドマスタDAO。
 	 */
-	private ExportFieldDaoInterface	dao;
+	private ExportFieldDaoInterface dao;
 	
 	
 	/**

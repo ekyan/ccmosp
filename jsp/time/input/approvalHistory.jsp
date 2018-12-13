@@ -43,7 +43,7 @@ ApprovalHistoryVo vo = (ApprovalHistoryVo)params.getVo();
 if (params.getCommand().equals(ApprovalHistoryAction.CMD_TIME_APPROVAL_HISTORY_SELECT_SHOW) || params.getCommand().equals(ApprovalHistoryAction.CMD_TIME_APPROVAL_HISTORY_RE_SEARCH)) {
 %>
 <div class="FixList" id="divAttendance">
-	<table class="ListTable">
+	<table class="ListTable" id="approvalHistory_tblAttendance">
 		<thead>
 			<tr>
 				<th class="ListSelectTh" id="thDate"><%= params.getName("Work") %><%= params.getName("Day") %></th>
@@ -155,7 +155,7 @@ if (params.getCommand().equals(ApprovalHistoryAction.CMD_APPROVAL_HISTORY_HOLIDA
 		<thead>
 			<tr>
 				<th class="ListSelectTh" id="thDate"><%= params.getName("GoingWork") %><%= params.getName("Day") %></th>
-				<th class="ListSelectTh" id="thDate"><%= params.getName("Schedule") %><%= params.getName("Moment") %></th>
+				<th class="ListSelectTh" id="thDate"><%= params.getName("Schedule") %></th>
 				<th class="ListSelectTh" id="thSubstituteReason"><%= params.getName("Reason") %></th>
 				<th class="ListSelectTh" id="thSubstituteDate"><%= params.getName("Transfer") %><%= params.getName("Day") %></th>
 				<th class="ListSelectTh" id="th4"><%= params.getName("State") %></th>

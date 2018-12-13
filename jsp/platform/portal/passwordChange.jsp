@@ -25,6 +25,7 @@ errorPage    = "/jsp/common/error.jsp"
 import = "jp.mosp.framework.constant.MospConst"
 import = "jp.mosp.framework.utils.HtmlUtility"
 import = "jp.mosp.framework.base.MospParams"
+import = "jp.mosp.platform.utils.PlatformNamingUtility"
 import = "jp.mosp.platform.portal.action.PasswordChangeAction"
 import = "jp.mosp.platform.portal.vo.PasswordChangeVo"
 %><%
@@ -35,7 +36,7 @@ PasswordChangeVo vo = (PasswordChangeVo)params.getVo();
 	<table class="PassWordTable">
 		<tr>
 			<td class="TitleTd">
-				<span class="RequiredLabel">*&nbsp;</span><label for="txtOldPassword"><%= params.getName("PresentTime") %><%= params.getName("Of") %><%= params.getName("Password") %></label>
+				<span class="RequiredLabel">*&nbsp;</span><label for="txtOldPassword"><%= PlatformNamingUtility.currentPassrword(params) %></label>
 			</td>
 			<td class="InputTd">
 				<input type="password" class="LoginPassTextBox" id="txtOldPassword" value="" />
@@ -43,7 +44,7 @@ PasswordChangeVo vo = (PasswordChangeVo)params.getVo();
 		<tr>
 		<tr>
 			<td class="TitleTd">
-				<span class="RequiredLabel">*&nbsp;</span><label for="txtNewPassword"><%= params.getName("ItNew") %><%= params.getName("Password") %></label>
+				<span class="RequiredLabel">*&nbsp;</span><label for="txtNewPassword"><%= PlatformNamingUtility.newPassrword(params) %></label>
 			</td>
 			<td class="InputTd">
 				<input type="password" class="LoginPassTextBox" id="txtNewPassword" value="" />
@@ -51,7 +52,7 @@ PasswordChangeVo vo = (PasswordChangeVo)params.getVo();
 		<tr>
 		<tr>
 			<td class="TitleTd">
-				<span class="RequiredLabel">*&nbsp;</span><label for="txtConfirmPassword"><%= params.getName("Password") %><%= params.getName("Input") %><%= params.getName("Confirmation") %></label>
+				<span class="RequiredLabel">*&nbsp;</span><label for="txtConfirmPassword"><%= PlatformNamingUtility.confirmPassrword(params) %></label>
 			</td>
 			<td class="InputTd">
 				<input type="password" class="LoginPassTextBox" id="txtConfirmPassword" value="" />
@@ -76,5 +77,5 @@ for (String attention : vo.getAttentionList()) {
 <input type="hidden" id="hdnNewPassword"     name="hdnNewPassword"     value="" />
 <input type="hidden" id="hdnConfirmPassword" name="hdnConfirmPassword" value="" />
 <div class="Button">
-	<button type="button" class="Name4Button" id="btnPasswordChange" onclick="submitRegist(event, '', checkPassword, '<%=PasswordChangeAction.CMD_UPDATE%>')"><%= params.getName("Change") %></button>
+	<button type="button" class="Name4Button" id="btnPasswordChange" onclick="submitRegist(event, '', extraCheck, '<%= PasswordChangeAction.CMD_UPDATE %>')"><%= PlatformNamingUtility.change(params) %></button>
 </div>

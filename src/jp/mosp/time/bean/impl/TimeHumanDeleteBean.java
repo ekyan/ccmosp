@@ -96,9 +96,11 @@ public class TimeHumanDeleteBean extends TimeBean implements ExtraHumanDeleteBea
 		// MosPプラットフォーム用BeanHandler取得
 		workflowReference = (WorkflowReferenceBeanInterface)createBean(WorkflowReferenceBeanInterface.class);
 		applicationReference = (ApplicationReferenceBeanInterface)createBean(ApplicationReferenceBeanInterface.class);
-		paidHolidayTransaction = (PaidHolidayTransactionReferenceBeanInterface)createBean(PaidHolidayTransactionReferenceBeanInterface.class);
+		paidHolidayTransaction = (PaidHolidayTransactionReferenceBeanInterface)createBean(
+				PaidHolidayTransactionReferenceBeanInterface.class);
 		holidayInfoReference = (HolidayInfoReferenceBeanInterface)createBean(HolidayInfoReferenceBeanInterface.class);
-		totalTimeEmployeeReference = (TotalTimeEmployeeTransactionReferenceBeanInterface)createBean(TotalTimeEmployeeTransactionReferenceBeanInterface.class);
+		totalTimeEmployeeReference = (TotalTimeEmployeeTransactionReferenceBeanInterface)createBean(
+				TotalTimeEmployeeTransactionReferenceBeanInterface.class);
 	}
 	
 	@Override

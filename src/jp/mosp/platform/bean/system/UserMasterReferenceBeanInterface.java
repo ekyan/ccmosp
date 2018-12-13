@@ -54,7 +54,7 @@ public interface UserMasterReferenceBeanInterface {
 	 * ユーザマスタから履歴一覧を取得する。<br>
 	 * 対象ユーザIDの履歴を取得する。<br>
 	 * @param userId ユーザID
-	 * @return ユーザマスタリスト
+	 * @return ユーザマスタリスト(有効日昇順)
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
 	List<UserMasterDtoInterface> getUserHistory(String userId) throws MospException;

@@ -19,13 +19,14 @@ package jp.mosp.platform.dao.human;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import jp.mosp.framework.base.BaseDaoInterface;
 import jp.mosp.framework.base.MospException;
 import jp.mosp.platform.dto.human.SuspensionDtoInterface;
 
 /**
- * 人事休職情報DAOインターフェース
+ * 人事休職情報DAOインターフェース。<br>
  */
 public interface SuspensionDaoInterface extends BaseDaoInterface {
 	
@@ -53,9 +54,26 @@ public interface SuspensionDaoInterface extends BaseDaoInterface {
 	List<SuspensionDtoInterface> findForHistory(String personalId) throws MospException;
 	
 	/**
-	 * 対象日における休職者の個人IDを抽出するSQLを取得する。<br>
-	 * @return 休職者の個人IDを抽出するSQL
+	 * 対象期間に休職期間が含まれる休職情報リストを取得する。<br>
+	 * 期間の定めがある場合は
+	 * 対象期間に休職期間が含まれる休職情報リストを取得する。<br>
+	 * 期間の定めがない場合は
+	 * 対象日が休職期間に含まれる休職情報リストを取得する。<br>
+	 * @param targetDate 対象日
+	 * @param startDate 期間開始日
+	 * @param endDate 期間終了日
+	 * @return 期間内の存在する情報リスト
+	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
 	 */
-	String getQueryForSuspendedPerson();
+	List<SuspensionDtoInterface> findForList(Date targetDate, Date startDate, Date endDate) throws MospException;
 	
+	/**
+	 * 休職日に含まれる個人ID配列に該当する休暇情報マップを作成する。<br>
+	 * @param personalIds 個人ID配列
+	 * @param suspensionDate 休職日
+	 * @return 個人ID配列に該当する休暇情報マップ
+	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
+	 */
+	Map<String, SuspensionDtoInterface> findForPersonalIds(String[] personalIds, Date suspensionDate)
+			throws MospException;
 }

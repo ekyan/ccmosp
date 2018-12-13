@@ -65,4 +65,22 @@ public interface HumanBinaryHistoryReferenceBeanInterface {
 	 */
 	List<HumanBinaryHistoryDtoInterface> findForHistory(String personalId, String humanItemType) throws MospException;
 	
+	/**
+	 * 人事汎用バイナリ履歴情報取得
+	 * @param id レコード識別ID
+	 * @param isUpdate FORUPDATE 使用有無
+	 * @return 人事汎用バイナリ履歴情報
+	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
+	 */
+	HumanBinaryHistoryDtoInterface findForKey(Long id, boolean isUpdate) throws MospException;
+	
+	/**
+	 * 人事汎用バイナリ履歴リスト取得（有効日に合致するもの）
+	 * @param personalId 個人ID
+	 * @param activateDate 有効日
+	 * @return 人事汎用バイナリ履歴リスト
+	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
+	 */
+	List<HumanBinaryHistoryDtoInterface> findForActivateDate(String personalId, Date activateDate) throws MospException;
+	
 }

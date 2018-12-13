@@ -110,11 +110,11 @@ function setDeleteButtonDisabled() {
 		// 一行以上、或いは登録済データが存在している場合
 		if (getTagCount(EID_EDIT_TABLE_BODY, TAG_TR) > 1 || hasRegistedData()) {
 			// 削除ボタン利用可
-			setDisabled("btnDelete", false);
+			setReadOnly("btnDelete", false);
 			return true;
 		}
 	}
-	setDisabled("btnDelete", true);
+	setReadOnly("btnDelete", true);
 }
 
 /**
@@ -124,9 +124,9 @@ function setDeleteButtonDisabled() {
 function setAddRowButtonDisabled() {
 	// 行数確認(行追加ボタン利用可否設定)
 	if (getTagCount(EID_EDIT_TABLE_BODY, TAG_TR) < MAX_DETAILS_COUNT) {
-		setDisabled("btnAddRow", false);
+		setReadOnly("btnAddRow", false);
 	} else {
-		setDisabled("btnAddRow", true);
+		setReadOnly("btnAddRow", true);
 	}
 }
 

@@ -77,6 +77,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 			<Command>PF3400</Command>
 			<VoClass>jp.mosp.platform.workflow.vo.SubApproverSettingVo</VoClass>
 		</Menu>
+		<Menu key="SubordinateFiscalList">
+			<Command>TM2510</Command>
+			<VoClass>jp.mosp.time.management.vo.SubordinateFiscalListVo</VoClass>
+		</Menu>
 	</MainMenu>
 	<MainMenu key="menuTimeCalculation">
 		<Menu key="TotalTime">

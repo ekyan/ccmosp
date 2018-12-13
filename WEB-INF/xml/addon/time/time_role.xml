@@ -99,6 +99,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 				<Section>RangeMyself</Section>
 			</Range>
 		</Menu>
+		<Menu key="SubordinateFiscalList">
+			<Index>1245</Index>
+			<Range key="1">
+				<Position>RangeMyself</Position>
+				<Section>RangeMyself</Section>
+			</Range>
+		</Menu>
 		<Menu key="SubstitutionSetting">
 			<Index>1250</Index>
 		</Menu>
@@ -142,6 +149,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		</Menu>
 		<Menu key="AttendanceHumanList">
 			<Index>1240</Index>
+		</Menu>
+		<Menu key="SubordinateFiscalList">
+			<Index>1245</Index>
 		</Menu>
 		<Menu key="SubstitutionSetting">
 			<Index>1250</Index>
@@ -247,6 +257,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 				<Section>RangeMyself</Section>
 			</Range>
 		</Menu>
+		<Menu key="SubordinateFiscalList">
+			<Index>1245</Index>
+			<Range key="1">
+				<Position>RangeMyself</Position>
+				<Section>RangeMyself</Section>
+			</Range>
+		</Menu>
 		<Menu key="SubstitutionSetting">
 			<Index>1250</Index>
 		</Menu>
@@ -290,6 +307,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		</Menu>
 		<Menu key="AttendanceHumanList">
 			<Index>1240</Index>
+		</Menu>
+		<Menu key="SubordinateFiscalList">
+			<Index>1245</Index>
 		</Menu>
 		<Menu key="SubstitutionSetting">
 			<Index>1250</Index>
@@ -382,6 +402,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		</Menu>
 		<Menu key="AttendanceHumanList">
 			<Index>1240</Index>
+		</Menu>
+		<Menu key="SubordinateFiscalList">
+			<Index>1245</Index>
 		</Menu>
 		<Menu key="SubstitutionSetting">
 			<Index>1250</Index>

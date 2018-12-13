@@ -33,11 +33,11 @@ function onLoadExtra() {
 	// 編集モード確認
 	if (modeCardEdit == MODE_CARD_EDIT_EDIT){
 		// 有効日編集不可
-		setDisabled("btnActivateDate", true);
+		setReadOnly("btnActivateDate", true);
 	}
 	// 登録ボタン利用確認
 	if (modeActivateDate != MODE_ACTIVATE_DATE_FIXED) {
-		setDisabled("btnRegist", true);
+		setReadOnly("btnRegist", true);
 	}
 	// 社員コード
 	if (jsChangeEmployCode == false) {

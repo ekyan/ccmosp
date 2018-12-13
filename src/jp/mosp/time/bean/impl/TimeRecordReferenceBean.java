@@ -19,6 +19,7 @@ package jp.mosp.time.bean.impl;
 
 import java.sql.Connection;
 import java.util.Date;
+import java.util.List;
 
 import jp.mosp.framework.base.BaseBean;
 import jp.mosp.framework.base.MospException;
@@ -35,7 +36,7 @@ public class TimeRecordReferenceBean extends BaseBean implements TimeRecordRefer
 	/**
 	 * 打刻データDAOクラス。<br>
 	 */
-	TimeRecordDaoInterface	dao;
+	TimeRecordDaoInterface dao;
 	
 	
 	/**
@@ -63,6 +64,12 @@ public class TimeRecordReferenceBean extends BaseBean implements TimeRecordRefer
 	public TimeRecordDtoInterface findForKey(String personalId, Date workDate, int timesWork, String recordType)
 			throws MospException {
 		return dao.findForKey(personalId, workDate, timesWork, recordType);
+	}
+	
+	@Override
+	public List<TimeRecordDtoInterface> findForList(String personalId, Date startDate, Date endDate)
+			throws MospException {
+		return dao.findForList(personalId, startDate, endDate);
 	}
 	
 }

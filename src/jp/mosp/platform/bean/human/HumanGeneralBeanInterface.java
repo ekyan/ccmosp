@@ -99,8 +99,8 @@ public interface HumanGeneralBeanInterface {
 	 * @return 項目名の値を合体し、フォーマットに変換した項目値
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
-	String getSeparateTxtItemNormalValue(String personalId, String itemName, ItemProperty itemProperty,
-			Date targetDate, String labelKeys) throws MospException;
+	String getSeparateTxtItemNormalValue(String personalId, String itemName, ItemProperty itemProperty, Date targetDate,
+			String labelKeys) throws MospException;
 	
 	/**
 	 * 人事汎用履歴情報の項目が別々のデータの場合、
@@ -143,6 +143,15 @@ public interface HumanGeneralBeanInterface {
 	 * @return 項目配列(項目コード+表示項目キー)
 	 */
 	String[][] getPulldownForHumanExportImport(String division, String viewKey);
+	
+	/**
+	 * 項目名、個人IDから項目名の日付を取得する。
+	 * @param itemName 項目名
+	 * @param personalId 個人ID
+	 * @return 日付
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 */
+	Date humanNormalDate(String itemName, String personalId) throws MospException;
 	
 	/**
 	 * 対象個人基本情報がない場合のエラーメッセージ

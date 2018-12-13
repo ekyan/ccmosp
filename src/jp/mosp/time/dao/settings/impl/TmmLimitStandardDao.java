@@ -17,13 +17,9 @@
  */
 package jp.mosp.time.dao.settings.impl;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import jp.mosp.framework.base.BaseDto;
 import jp.mosp.framework.base.BaseDtoInterface;
@@ -79,11 +75,6 @@ public class TmmLimitStandardDao extends PlatformDao implements LimitStandardDao
 	public static final String	COL_WARNING_TIME			= "warning_time";
 	
 	/**
-	 * 無効フラグ。
-	 */
-	public static final String	COL_INACTIVATE_FLAG			= "inactivate_flag";
-	
-	/**
 	 * キー。
 	 */
 	public static final String	KEY_1						= COL_TMM_LIMIT_STANDARD_ID;
@@ -110,7 +101,6 @@ public class TmmLimitStandardDao extends PlatformDao implements LimitStandardDao
 		dto.setLimitTime(getInt(COL_LIMIT_TIME));
 		dto.setAttentionTime(getInt(COL_ATTENTION_TIME));
 		dto.setWarningTime(getInt(COL_WARNING_TIME));
-		dto.setInactivateFlag(getInt(COL_INACTIVATE_FLAG));
 		mappingCommonInfo(dto);
 		return dto;
 	}
@@ -187,7 +177,6 @@ public class TmmLimitStandardDao extends PlatformDao implements LimitStandardDao
 			releaseResultSet();
 			releasePreparedStatement();
 		}
-		
 	}
 	
 	@Override
@@ -213,30 +202,6 @@ public class TmmLimitStandardDao extends PlatformDao implements LimitStandardDao
 			releaseResultSet();
 			releasePreparedStatement();
 		}
-		
-	}
-	
-	@Override
-	public List<LimitStandardDtoInterface> findForHistory(String workSettingCode) throws MospException {
-		try {
-			index = 1;
-			StringBuffer sb = getSelectQuery(getClass());
-			sb.append(where());
-			sb.append(deleteFlagOff());
-			sb.append(and());
-			sb.append(equal(COL_WORK_SETTING_CODE));
-			sb.append(getOrderByColumn(COL_ACTIVATE_DATE));
-			prepareStatement(sb.toString());
-			setParam(index++, workSettingCode);
-			executeQuery();
-			return mappingAll();
-		} catch (Throwable e) {
-			throw new MospException(e);
-		} finally {
-			releaseResultSet();
-			releasePreparedStatement();
-		}
-		
 	}
 	
 	@Override
@@ -286,36 +251,7 @@ public class TmmLimitStandardDao extends PlatformDao implements LimitStandardDao
 		setParam(index++, dto.getLimitTime());
 		setParam(index++, dto.getAttentionTime());
 		setParam(index++, dto.getWarningTime());
-		setParam(index++, dto.getInactivateFlag());
 		setCommonParams(baseDto, isInsert);
 	}
 	
-	@Override
-	public Map<String, Object> getParamsMap() {
-		return new HashMap<String, Object>();
-	}
-	
-	/**
-	 * パラメータ設定(Date)。<br>
-	 * java.sql.Timeとして設定する。<br>
-	 * @param index インデックス
-	 * @param param パラメータ
-	 * @throws MospException SQL例外が発生した場合
-	 */
-	protected void setTime(int index, Date param) throws MospException {
-		try {
-			if (ps != null) {
-				if (param == null) {
-					ps.setTime(index, null);
-				} else {
-					Calendar cal = Calendar.getInstance();
-					cal.setTime(param);
-					ps.setTime(index, new java.sql.Time(cal.getTimeInMillis()));
-					
-				}
-			}
-		} catch (SQLException e) {
-			throw new MospException(e);
-		}
-	}
 }

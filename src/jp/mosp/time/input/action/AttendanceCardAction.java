@@ -46,6 +46,7 @@ import jp.mosp.time.bean.GoOutRegistBeanInterface;
 import jp.mosp.time.bean.RequestUtilBeanInterface;
 import jp.mosp.time.bean.RestRegistBeanInterface;
 import jp.mosp.time.bean.ScheduleReferenceBeanInterface;
+import jp.mosp.time.bean.ScheduleUtilBeanInterface;
 import jp.mosp.time.bean.WorkTypeChangeRequestReferenceBeanInterface;
 import jp.mosp.time.bean.WorkTypeReferenceBeanInterface;
 import jp.mosp.time.constant.TimeConst;
@@ -59,7 +60,6 @@ import jp.mosp.time.dto.settings.GoOutDtoInterface;
 import jp.mosp.time.dto.settings.HolidayRequestDtoInterface;
 import jp.mosp.time.dto.settings.OvertimeRequestDtoInterface;
 import jp.mosp.time.dto.settings.RestDtoInterface;
-import jp.mosp.time.dto.settings.ScheduleDateDtoInterface;
 import jp.mosp.time.dto.settings.ScheduleDtoInterface;
 import jp.mosp.time.dto.settings.SubHolidayRequestDtoInterface;
 import jp.mosp.time.dto.settings.SubstituteDtoInterface;
@@ -74,7 +74,9 @@ import jp.mosp.time.entity.RequestEntity;
 import jp.mosp.time.entity.WorkTypeEntity;
 import jp.mosp.time.input.vo.AttendanceCardVo;
 import jp.mosp.time.portal.bean.impl.PortalTimeCardBean;
+import jp.mosp.time.utils.HolidayUtility;
 import jp.mosp.time.utils.TimeMessageUtility;
+import jp.mosp.time.utils.TimeNamingUtility;
 import jp.mosp.time.utils.TimeUtility;
 
 /**
@@ -99,6 +101,8 @@ import jp.mosp.time.utils.TimeUtility;
  * {@link #CMD_DELETE}
  * </li><li>
  * {@link #CMD_TRANSFER}
+ * </li><li>
+ * {@link #CMD_CALC}
  * </li></ul>
  */
 public class AttendanceCardAction extends TimeAction {
@@ -169,6 +173,14 @@ public class AttendanceCardAction extends TimeAction {
 	public static final String	CMD_TRANSFER						= "TM1208";
 	
 	/**
+	 * 勤怠計算コマンド。<br>
+	 * <br>
+	 * 実行時点で勤怠詳細に入っている情報を元に勤怠を計算を行う。<br>
+	 * 計算結果を勤怠詳細に表示するが、データベースには反映されない。<br>
+	 */
+	public static final String	CMD_CALC							= "TM1226";
+	
+	/**
 	 * 勤怠詳細画面メニューキー。<br>
 	 * ポータル画面から遷移した場合に、範囲設定をするために用いる。<br>
 	 */
@@ -231,7 +243,7 @@ public class AttendanceCardAction extends TimeAction {
 		} else if (mospParams.getCommand().equals(CMD_APPLI)) {
 			// 申請
 			prepareVo();
-			appli();
+			appli(true);
 		} else if (mospParams.getCommand().equals(CMD_DELETE)) {
 			// 削除
 			prepareVo();
@@ -240,6 +252,10 @@ public class AttendanceCardAction extends TimeAction {
 			// 遷移
 			prepareVo(true, false);
 			transfer();
+		} else if (mospParams.getCommand().equals(CMD_CALC)) {
+			// 計算
+			prepareVo();
+			appli(false);
 		}
 	}
 	
@@ -327,8 +343,7 @@ public class AttendanceCardAction extends TimeAction {
 		Date targetDate = vo.getTargetDate();
 		// 日付操作確認
 		if (getTransferredGenericCode() == null) {
-			// VOから対象日取得
-			targetDate = vo.getTargetDate();
+			// 処理なし
 		} else if (getTransferredGenericCode().equals(TimeConst.CODE_DATE_DECREMENT)) {
 			// 対象日 - 1
 			targetDate = DateUtility.addDay(targetDate, -1);
@@ -338,6 +353,9 @@ public class AttendanceCardAction extends TimeAction {
 		} else if (getTransferredGenericCode().equals(TimeConst.CODE_DATE_RESET)) {
 			// システム日付
 			targetDate = DateUtility.getSystemDate();
+		} else if (getTransferredGenericCode().equals(TimeConst.CODE_DATE_CALENDAR)) {
+			// カレンダ日付
+			targetDate = getDate(getTransferredDay());
 		}
 		// 勤怠詳細情報設定
 		setAttendaneCardInfo(personalId, targetDate);
@@ -389,7 +407,7 @@ public class AttendanceCardAction extends TimeAction {
 		setRestFields(restList, dto);
 		// 公用
 		List<GoOutDtoInterface> goOutPublicList = new ArrayList<GoOutDtoInterface>();
-		// 私用 
+		// 私用
 		List<GoOutDtoInterface> goOutPrivateList = new ArrayList<GoOutDtoInterface>();
 		// 外出データ設定
 		setGoOutDtoFields(goOutPublicList, goOutPrivateList, dto.getStartTime(), dto.getEndTime());
@@ -408,7 +426,7 @@ public class AttendanceCardAction extends TimeAction {
 			return;
 		}
 		// 時間帯の重複チェック処理
-		chkDuplRest();
+		chkDuplRest(dto);
 		if (mospParams.hasErrorMessage()) {
 			// 登録失敗メッセージ設定
 			addInsertFailedMessage();
@@ -423,6 +441,44 @@ public class AttendanceCardAction extends TimeAction {
 		regist.checkValidate(dto);
 		// 申請の相関チェック
 		regist.checkDraft(dto);
+		regist.checkAttendanceCardDraft(dto);
+		// 下書き処理の実行
+		draft(dto, restList, goOutPublicList, goOutPrivateList, minutelyHolidayAList, minutelyHolidayBList);
+		// 登録結果確認
+		if (mospParams.hasErrorMessage()) {
+			// 登録失敗メッセージ設定
+			addInsertFailedMessage();
+			return;
+		}
+		// コミット
+		commit();
+		// 下書成功メッセージ設定
+		addDraftMessage();
+		// 勤怠詳細情報設定
+		setAttendaneCardInfo(vo.getPersonalId(), vo.getTargetDate());
+		// 編集モード設定
+		vo.setModeCardEdit(TimeConst.MODE_APPLICATION_DRAFT);
+	}
+	
+	/**
+	 * 下書き処理以降
+	 * @param dto 勤怠DTO
+	 * @param restList 休憩リスト
+	 * @param goOutPublicList 公用外出リスト
+	 * @param goOutPrivateList 私用外出リスト
+	 * @param minutelyHolidayAList 分単位休暇Aリスト
+	 * @param minutelyHolidayBList 分単位休暇Bリスト
+	 * @throws MospException インスタンスの生成或いはSQLの実行に失敗した場合
+	 */
+	protected void draft(AttendanceDtoInterface dto, List<RestDtoInterface> restList,
+			List<GoOutDtoInterface> goOutPublicList, List<GoOutDtoInterface> goOutPrivateList,
+			List<GoOutDtoInterface> minutelyHolidayAList, List<GoOutDtoInterface> minutelyHolidayBList)
+			throws MospException {
+		// VO準備
+		AttendanceCardVo vo = (AttendanceCardVo)mospParams.getVo();
+		
+		GoOutRegistBeanInterface goOutRegist = time().goOutRegist();
+		AttendanceRegistBeanInterface regist = time().attendanceRegist();
 		// 登録クラスの取得
 		WorkflowRegistBeanInterface workflowRegist = platform().workflowRegist();
 		// ワークフローの設定
@@ -437,9 +493,7 @@ public class AttendanceCardAction extends TimeAction {
 				PlatformConst.WORKFLOW_TYPE_TIME);
 		if (workflowDto != null) {
 			// ワークフローコメント登録
-			platform().workflowCommentRegist().addComment(
-					workflowDto,
-					mospParams.getUser().getPersonalId(),
+			platform().workflowCommentRegist().addComment(workflowDto, mospParams.getUser().getPersonalId(),
 					mospParams.getProperties().getMessage(PlatformMessageConst.MSG_PROCESS_SUCCEED,
 							new String[]{ mospParams.getName("WorkPaper") }));
 			// ワークフロー番号セット
@@ -466,27 +520,64 @@ public class AttendanceCardAction extends TimeAction {
 			// 勤怠データ登録
 			regist.regist(dto);
 		}
-		// 登録結果確認
-		if (mospParams.hasErrorMessage()) {
-			// 登録失敗メッセージ設定
-			addInsertFailedMessage();
-			return;
-		}
-		// コミット
-		commit();
-		// 下書成功メッセージ設定 
-		addDraftMessage();
-		// 勤怠詳細情報設定
-		setAttendaneCardInfo(vo.getPersonalId(), vo.getTargetDate());
-		// 編集モード設定
-		vo.setModeCardEdit(TimeConst.MODE_APPLICATION_DRAFT);
+		
 	}
 	
 	/**
-	 * 申請処理を行う。<br>
+	 * 申請処理、計算処理を行う。<br>
+	 * @param checkCommand 申請コマンドの場合true、計算コマンドの場合false
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
-	protected void appli() throws MospException {
+	protected void appli(boolean checkCommand) throws MospException {
+		// VO準備
+		AttendanceCardVo vo = (AttendanceCardVo)mospParams.getVo();
+		// 登録クラスの取得
+		AttendanceRegistBeanInterface regist = time().attendanceRegist();
+		AttendanceListRegistBeanInterface listRegist = time().attendanceListRegist(vo.getTargetDate());
+		WorkflowIntegrateBeanInterface workflowIntegrate = reference().workflowIntegrate();
+		// 個人ID、対象日、勤務回数取得
+		String personalId = vo.getPersonalId();
+		Date date = vo.getTargetDate();
+		// デフォルト勤務回数
+		int timesWork = TimeBean.TIMES_WORK_DEFAULT;
+		// 勤怠データ設定
+		AttendanceDtoInterface dto = timeReference().attendance().findForKey(personalId, date, timesWork);
+		if (dto == null) {
+			dto = regist.getInitDto();
+		}
+		// 申請処理
+		appli(dto, checkCommand);
+		if (mospParams.hasErrorMessage()) {
+			return;
+		}
+		if (checkCommand) {
+			// コミット
+			commit();
+			// 申請成功メッセージ設定
+			addAppliMessage();
+			// 残業申請督促確認
+			listRegist.checkOvertime(dto);
+			// 勤怠詳細情報設定
+			setAttendaneCardInfo(vo.getPersonalId(), vo.getTargetDate());
+			WorkflowDtoInterface workflowDto = workflowIntegrate.getLatestWorkflowInfo(dto.getWorkflow());
+			if (PlatformConst.CODE_STATUS_APPLY.equals(workflowDto.getWorkflowStatus())) {
+				// 未承認の場合
+				// 編集モード設定
+				vo.setModeCardEdit(TimeConst.MODE_APPLICATION_APPLY);
+				return;
+			}
+			// 編集モード設定
+			vo.setModeCardEdit(TimeConst.MODE_APPLICATION_APPLIED);
+		}
+	}
+	
+	/**
+	 * 申請処理、計算処理を行う。<br>
+	 * @param dto 対象DTO
+	 * @param checkCommand 申請コマンドの場合true、計算コマンドの場合false
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	protected void appli(AttendanceDtoInterface dto, boolean checkCommand) throws MospException {
 		// VO準備
 		AttendanceCardVo vo = (AttendanceCardVo)mospParams.getVo();
 		AttendanceCalcBeanInterface calc = time().attendanceCalc(vo.getTargetDate());
@@ -532,11 +623,6 @@ public class AttendanceCardAction extends TimeAction {
 		List<GoOutDtoInterface> oldGoOutMinutelyHolidayBList = goOut.getMinutelyHolidayBList(personalId, date);
 		if (oldGoOutMinutelyHolidayBList == null) {
 			oldGoOutMinutelyHolidayBList = new ArrayList<GoOutDtoInterface>();
-		}
-		// 勤怠データ設定
-		AttendanceDtoInterface dto = timeReference().attendance().findForKey(personalId, date, timesWork);
-		if (dto == null) {
-			dto = regist.getInitDto();
 		}
 		// VO(編集項目)の値をDTOに設定
 		setAttendanceDtoFields(dto);
@@ -584,7 +670,7 @@ public class AttendanceCardAction extends TimeAction {
 			return;
 		}
 		// 時間帯の重複チェック処理
-		chkDuplRest();
+		chkDuplRest(dto);
 		if (mospParams.hasErrorMessage()) {
 			// 登録失敗メッセージ設定
 			addInsertFailedMessage();
@@ -601,6 +687,7 @@ public class AttendanceCardAction extends TimeAction {
 		regist.checkValidate(dto);
 		// 申請の相関チェック
 		regist.checkAppli(dto);
+		regist.checkAttendanceCardAppli(dto);
 		// 私用外出時間チェック
 		regist.checkPrivateGoOut(dto, restList, goOutPrivateList);
 		if (mospParams.hasErrorMessage()) {
@@ -616,91 +703,85 @@ public class AttendanceCardAction extends TimeAction {
 			addInsertFailedMessage();
 			return;
 		}
-		// ワークフローの設定
-		WorkflowDtoInterface workflowDto = reference().workflow().getLatestWorkflowInfo(dto.getWorkflow());
-		if (workflowDto == null) {
-			workflowDto = workflowRegist.getInitDto();
-			workflowDto.setFunctionCode(TimeConst.CODE_FUNCTION_WORK_MANGE);
-			oldDto = regist.getInitDto();
-			oldRestList = new ArrayList<RestDtoInterface>();
-			oldGoOutPublicList = new ArrayList<GoOutDtoInterface>();
-			oldGoOutPrivateList = new ArrayList<GoOutDtoInterface>();
-			oldGoOutMinutelyHolidayAList = new ArrayList<GoOutDtoInterface>();
-			oldGoOutMinutelyHolidayBList = new ArrayList<GoOutDtoInterface>();
-		} else {
-			if (reference().workflowIntegrate().isDraft(workflowDto)) {
+		if (checkCommand) {
+			// ワークフローの設定
+			WorkflowDtoInterface workflowDto = reference().workflow().getLatestWorkflowInfo(dto.getWorkflow());
+			if (workflowDto == null) {
+				workflowDto = workflowRegist.getInitDto();
+				workflowDto.setFunctionCode(TimeConst.CODE_FUNCTION_WORK_MANGE);
 				oldDto = regist.getInitDto();
 				oldRestList = new ArrayList<RestDtoInterface>();
 				oldGoOutPublicList = new ArrayList<GoOutDtoInterface>();
 				oldGoOutPrivateList = new ArrayList<GoOutDtoInterface>();
 				oldGoOutMinutelyHolidayAList = new ArrayList<GoOutDtoInterface>();
 				oldGoOutMinutelyHolidayBList = new ArrayList<GoOutDtoInterface>();
+			} else {
+				if (reference().workflowIntegrate().isDraft(workflowDto)) {
+					oldDto = regist.getInitDto();
+					oldRestList = new ArrayList<RestDtoInterface>();
+					oldGoOutPublicList = new ArrayList<GoOutDtoInterface>();
+					oldGoOutPrivateList = new ArrayList<GoOutDtoInterface>();
+					oldGoOutMinutelyHolidayAList = new ArrayList<GoOutDtoInterface>();
+					oldGoOutMinutelyHolidayBList = new ArrayList<GoOutDtoInterface>();
+				}
 			}
+			// 承認者個人IDを設定
+			workflowRegist.setDtoApproverIds(workflowDto, getSelectApproverIds());
+			// 登録後ワークフローの取得
+			workflowDto = workflowRegist.appli(workflowDto, dto.getPersonalId(), dto.getWorkDate(),
+					PlatformConst.WORKFLOW_TYPE_TIME, null);
+			if (workflowDto != null) {
+				// 休憩データ登録
+				for (RestDtoInterface restDto : restList) {
+					time().restRegist().regist(restDto);
+				}
+				// 外出データ削除
+				goOutRegist.delete(vo.getPersonalId(), vo.getTargetDate(), TimeBean.TIMES_WORK_DEFAULT);
+				// 外出データ登録
+				for (GoOutDtoInterface goOutDto : goOutPublicList) {
+					goOutRegist.regist(goOutDto);
+				}
+				for (GoOutDtoInterface goOutDto : goOutPrivateList) {
+					goOutRegist.regist(goOutDto);
+				}
+				// 分単位休暇登録
+				for (GoOutDtoInterface goOutDto : minutelyHolidayAList) {
+					goOutRegist.regist(goOutDto);
+				}
+				for (GoOutDtoInterface goOutDto : minutelyHolidayBList) {
+					goOutRegist.regist(goOutDto);
+				}
+				// 修正履歴を登録
+				listRegist.registCorrection(dto, oldDto, oldRestList, oldGoOutPublicList, oldGoOutPrivateList,
+						oldGoOutMinutelyHolidayAList, oldGoOutMinutelyHolidayBList);
+				// 申請の相関チェック
+				regist.checkApprover(dto, workflowDto);
+				// ワークフロー番号セット
+				dto.setWorkflow(workflowDto.getWorkflow());
+				// 始業・終業必須チェック
+				regist.checkTimeExist(dto);
+				// 勤怠データ登録
+				regist.regist(dto);
+				// 代休データの設定
+				listRegist.registSubHoliday(dto);
+				// 勤怠トランザクション登録
+				attendanceTransactionRegist.regist(dto);
+			}
+			// 登録結果確認
+			if (mospParams.hasErrorMessage()) {
+				// 登録失敗メッセージ設定
+				addInsertFailedMessage();
+				return;
+			}
+			// 勤怠申請後処理群を実行
+			time().afterApplyAttendancesExecute().execute(dto);
+		} else {
+			// 計算成功メッセージ設定
+			addCalcMessage();
+			addUnregisteredNoticeMessage();
+			// 勤怠詳細情報設定
+			setAttendaneCardInfo(dto, restList, goOutPublicList, goOutPrivateList);
 		}
-		// 承認者個人IDを設定
-		workflowRegist.setDtoApproverIds(workflowDto, getSelectApproverIds());
-		// 登録後ワークフローの取得
-		workflowDto = workflowRegist.appli(workflowDto, dto.getPersonalId(), dto.getWorkDate(),
-				PlatformConst.WORKFLOW_TYPE_TIME, null);
-		if (workflowDto != null) {
-			// 休憩データ登録
-			for (RestDtoInterface restDto : restList) {
-				time().restRegist().regist(restDto);
-			}
-			// 外出データ削除
-			goOutRegist.delete(vo.getPersonalId(), vo.getTargetDate(), TimeBean.TIMES_WORK_DEFAULT);
-			// 外出データ登録
-			for (GoOutDtoInterface goOutDto : goOutPublicList) {
-				goOutRegist.regist(goOutDto);
-			}
-			for (GoOutDtoInterface goOutDto : goOutPrivateList) {
-				goOutRegist.regist(goOutDto);
-			}
-			// 分単位休暇登録
-			for (GoOutDtoInterface goOutDto : minutelyHolidayAList) {
-				goOutRegist.regist(goOutDto);
-			}
-			for (GoOutDtoInterface goOutDto : minutelyHolidayBList) {
-				goOutRegist.regist(goOutDto);
-			}
-			// 修正履歴を登録
-			listRegist.registCorrection(dto, oldDto, oldRestList, oldGoOutPublicList, oldGoOutPrivateList,
-					oldGoOutMinutelyHolidayAList, oldGoOutMinutelyHolidayBList);
-			// 申請の相関チェック
-			regist.checkApprover(dto, workflowDto);
-			// ワークフロー番号セット
-			dto.setWorkflow(workflowDto.getWorkflow());
-			// 始業・終業必須チェック
-			regist.checkTimeExist(dto);
-			// 勤怠データ登録
-			regist.regist(dto);
-			// 代休データの設定
-			listRegist.registSubHoliday(dto);
-			// 勤怠トランザクション登録
-			attendanceTransactionRegist.regist(dto);
-		}
-		// 登録結果確認
-		if (mospParams.hasErrorMessage()) {
-			// 登録失敗メッセージ設定
-			addInsertFailedMessage();
-			return;
-		}
-		// コミット
-		commit();
-		// 申請成功メッセージ設定
-		addAppliMessage();
-		// 残業申請督促確認
-		listRegist.checkOvertime(dto);
-		// 勤怠詳細情報設定
-		setAttendaneCardInfo(vo.getPersonalId(), vo.getTargetDate());
-		if (PlatformConst.CODE_STATUS_APPLY.equals(workflowDto.getWorkflowStatus())) {
-			// 未承認の場合
-			// 編集モード設定
-			vo.setModeCardEdit(TimeConst.MODE_APPLICATION_APPLY);
-			return;
-		}
-		// 編集モード設定
-		vo.setModeCardEdit(TimeConst.MODE_APPLICATION_APPLIED);
 	}
 	
 	/**
@@ -876,8 +957,8 @@ public class AttendanceCardAction extends TimeAction {
 		// 申請エンティティ取得
 		RequestEntity requestEntity = requestUtil.getRequestEntity(personalId, targetDate);
 		// 対象個人ID及び対象日の設定適用エンティティを取得
-		ApplicationEntity applicationEntity = timeReference().application()
-			.getApplicationEntity(personalId, targetDate);
+		ApplicationEntity applicationEntity = timeReference().application().getApplicationEntity(personalId,
+				targetDate);
 		// 出退勤情報
 		attendanceInfo();
 		// 打刻始業時刻
@@ -916,11 +997,191 @@ public class AttendanceCardAction extends TimeAction {
 	}
 	
 	/**
+	 * 勤怠詳細情報を取得し、VOに設定する。
+	 * 勤怠データDTOからVOに設定する。<br>
+	 * @param dto 勤怠データ
+	 * @param restList 休憩リスト
+	 * @param publicList 公用外出リスト
+	 * @param privateList 私用外出リスト
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	protected void setAttendaneCardInfo(AttendanceDtoInterface dto, List<RestDtoInterface> restList,
+			List<GoOutDtoInterface> publicList, List<GoOutDtoInterface> privateList) throws MospException {
+		// VO準備
+		AttendanceCardVo vo = (AttendanceCardVo)mospParams.getVo();
+		
+		vo.setPltWorkType(dto.getWorkTypeCode());
+		vo.setTxtStartTimeHour(DateUtility.getStringHour(dto.getStartTime(), dto.getWorkDate()));
+		vo.setTxtStartTimeMinute(DateUtility.getStringMinute(dto.getStartTime()));
+		vo.setTxtEndTimeHour(DateUtility.getStringHour(dto.getEndTime(), dto.getWorkDate()));
+		vo.setTxtEndTimeMinute(DateUtility.getStringMinute(dto.getEndTime()));
+		vo.setLblWorkTime(getTimeTimeFormat(dto.getWorkTime()));
+		vo.setLblGeneralWorkTime(getTimeTimeFormat(dto.getGeneralWorkTime()));
+		vo.setCkbDirectStart(String.valueOf(dto.getDirectStart()));
+		vo.setCkbDirectEnd(String.valueOf(dto.getDirectEnd()));
+		vo.setCkbForgotRecordWorkStart(String.valueOf(dto.getForgotRecordWorkStart()));
+		vo.setCkbNotRecordWorkStart(String.valueOf(dto.getNotRecordWorkStart()));
+		vo.setLblUnpaidShortTime(getTimeTimeFormat(dto.getShortUnpaid()));
+		vo.setTxtTimeComment(dto.getTimeComment());
+		if (MospConst.CHECKBOX_ON.equals(Integer.toString(dto.getDirectStart()))
+				|| MospConst.CHECKBOX_ON.equals(Integer.toString(dto.getDirectEnd()))
+				|| MospConst.CHECKBOX_ON.equals(Integer.toString(dto.getForgotRecordWorkStart()))
+				|| MospConst.CHECKBOX_ON.equals(Integer.toString(dto.getNotRecordWorkStart()))) {
+			vo.setTxtRemarks(dto.getRemarks());
+		}
+		vo.setTmdAttendanceId(String.valueOf(dto.getTmdAttendanceId()));
+		vo.setPltLateReason(dto.getLateReason());
+		vo.setPltLateCertificate(String.valueOf(dto.getLateCertificate()));
+		vo.setTxtLateComment(dto.getLateComment());
+		vo.setPltLeaveEarlyReason(dto.getLeaveEarlyReason());
+		vo.setPltLeaveEarlyCertificate(String.valueOf(dto.getLeaveEarlyCertificate()));
+		vo.setTxtLeaveEarlyComment(dto.getLeaveEarlyComment());
+		vo.setLblLateTime(getTimeTimeFormat(dto.getLateTime()));
+		vo.setLblLeaveEarlyTime(getTimeTimeFormat(dto.getLeaveEarlyTime()));
+		vo.setCkbAllMinutelyHolidayA(String.valueOf(dto.getMinutelyHolidayA()));
+		vo.setCkbAllMinutelyHolidayB(String.valueOf(dto.getMinutelyHolidayB()));
+		vo.setLblOvertime(getTimeTimeFormat(dto.getOvertime()));
+		vo.setLblOvertimeIn(getTimeTimeFormat(dto.getOvertimeIn()));
+		vo.setLblOvertimeOut(getTimeTimeFormat(dto.getOvertimeOut()));
+		vo.setLblLateNightTime(getTimeTimeFormat(dto.getLateNightTime()));
+		vo.setLblSpecificWorkTimeIn(getTimeTimeFormat(dto.getSpecificWorkTime()));
+		vo.setLblLegalWorkTime(getTimeTimeFormat(dto.getLegalWorkTime()));
+		vo.setLblHolidayWorkTime(getTimeTimeFormat(dto.getSpecificWorkTime() + dto.getLegalWorkTime()));
+		vo.setLblDecreaseTime(getTimeTimeFormat(dto.getDecreaseTime()));
+		
+		vo.setLblRestTime(getTimeTimeFormat(dto.getRestTime()));
+		vo.setLblOverRestTime(getTimeTimeFormat(dto.getOverRestTime()));
+		vo.setLblNightRestTime(getTimeTimeFormat(dto.getNightRestTime()));
+		
+		vo.setLblPublicTime(getTimeTimeFormat(dto.getPublicTime()));
+		vo.setLblPrivateTime(getTimeTimeFormat(dto.getPrivateTime()));
+		vo.setLblMinutelyHolidayAInput(getTimeTimeFormat(dto.getMinutelyHolidayATime()));
+		vo.setLblMinutelyHolidayBInput(getTimeTimeFormat(dto.getMinutelyHolidayBTime()));
+		
+		for (RestDtoInterface restDto : restList) {
+			// 始業終業時刻取得
+			String startHour = DateUtility.getStringHour(restDto.getRestStart(), vo.getTargetDate());
+			String startMinute = DateUtility.getStringMinute(restDto.getRestStart());
+			String endHour = DateUtility.getStringHour(restDto.getRestEnd(), vo.getTargetDate());
+			String endMinute = DateUtility.getStringMinute(restDto.getRestEnd());
+			if (restDto.getRest() == 1) {
+				vo.setTxtRestStartHour1(startHour);
+				vo.setTxtRestStartMinute1(startMinute);
+				vo.setTxtRestEndHour1(endHour);
+				vo.setTxtRestEndMinute1(endMinute);
+			}
+			if (restDto.getRest() == 2) {
+				vo.setTxtRestStartHour2(startHour);
+				vo.setTxtRestStartMinute2(startMinute);
+				vo.setTxtRestEndHour2(endHour);
+				vo.setTxtRestEndMinute2(endMinute);
+			}
+			if (restDto.getRest() == 3) {
+				vo.setTxtRestStartHour3(startHour);
+				vo.setTxtRestStartMinute3(startMinute);
+				vo.setTxtRestEndHour3(endHour);
+				vo.setTxtRestEndMinute3(endMinute);
+			}
+			if (restDto.getRest() == 4) {
+				vo.setTxtRestStartHour4(startHour);
+				vo.setTxtRestStartMinute4(startMinute);
+				vo.setTxtRestEndHour4(endHour);
+				vo.setTxtRestEndMinute4(endMinute);
+			}
+			if (restDto.getRest() == 5) {
+				vo.setTxtRestStartHour5(startHour);
+				vo.setTxtRestStartMinute5(startMinute);
+				vo.setTxtRestEndHour5(endHour);
+				vo.setTxtRestEndMinute5(endMinute);
+			}
+			if (restDto.getRest() == 6) {
+				vo.setTxtRestStartHour6(startHour);
+				vo.setTxtRestStartMinute6(startMinute);
+				vo.setTxtRestEndHour6(endHour);
+				vo.setTxtRestEndMinute6(endMinute);
+			}
+		}
+		
+		Date date = dto.getWorkDate();
+		for (GoOutDtoInterface publicDto : publicList) {
+			// 始業終業時刻取得
+			String startHour = DateUtility.getStringHour(publicDto.getGoOutStart(), date);
+			String startMinute = DateUtility.getStringMinute(publicDto.getGoOutStart());
+			String endHour = DateUtility.getStringHour(publicDto.getGoOutEnd(), date);
+			String endMinute = DateUtility.getStringMinute(publicDto.getGoOutEnd());
+			if (publicDto.getTimesGoOut() == 1) {
+				// 外出開始時刻。
+				vo.setTxtPublicStartHour1(startHour);
+				vo.setTxtPublicStartMinute1(startMinute);
+				// 外出終了時刻。
+				vo.setTxtPublicEndHour1(endHour);
+				vo.setTxtPublicEndMinute1(endMinute);
+			}
+			if (publicDto.getTimesGoOut() == 2) {
+				// 外出開始時刻。
+				vo.setTxtPublicStartHour2(DateUtility.getStringHour(publicDto.getGoOutStart(), dto.getWorkDate()));
+				vo.setTxtPublicStartMinute2(DateUtility.getStringMinute(publicDto.getGoOutStart()));
+				// 外出終了時刻。
+				vo.setTxtPublicEndHour2(DateUtility.getStringHour(publicDto.getGoOutEnd(), dto.getWorkDate()));
+				vo.setTxtPublicEndMinute2(DateUtility.getStringMinute(publicDto.getGoOutEnd()));
+			}
+		}
+		
+		// 私用外出情報リスト毎に処理
+		for (GoOutDtoInterface privateDto : privateList) {
+			// 始業終業時刻取得
+			String startHour = DateUtility.getStringHour(privateDto.getGoOutStart(), date);
+			String startMinute = DateUtility.getStringMinute(privateDto.getGoOutStart());
+			String endHour = DateUtility.getStringHour(privateDto.getGoOutEnd(), date);
+			String endMinute = DateUtility.getStringMinute(privateDto.getGoOutEnd());
+			if (privateDto.getTimesGoOut() == 1) {
+				// 外出開始時刻。
+				vo.setTxtPrivateStartHour1(startHour);
+				vo.setTxtPrivateStartMinute1(startMinute);
+				// 外出終了時刻。
+				vo.setTxtPrivateEndHour1(endHour);
+				vo.setTxtPrivateEndMinute1(endMinute);
+			}
+			if (privateDto.getTimesGoOut() == 2) {
+				// 外出開始時刻。
+				vo.setTxtPrivateStartHour2(startHour);
+				vo.setTxtPrivateStartMinute2(startMinute);
+				// 外出終了時刻。
+				vo.setTxtPrivateEndHour2(endHour);
+				vo.setTxtPrivateEndMinute2(endMinute);
+			}
+		}
+	}
+	
+	/**
+	 * 半日振休＋半日振休があるか判断する。<br>
+	 * 但し、半日振替の振替である場合は半日振休＋半日振休でないと判断する。
+	 * @param requestUtil 申請ユーティリティ
+	 * @return 確認結果(true：半日振休＋半日振休、false：そうでない)
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	protected boolean isAmPmHalfSubstitute(RequestUtilBeanInterface requestUtil) throws MospException {
+		// VO取得
+		AttendanceCardVo vo = (AttendanceCardVo)mospParams.getVo();
+		// 申請エンティティ取得
+		RequestEntity entity = requestUtil.getRequestEntity(vo.getPersonalId(), vo.getTargetDate());
+		// 半日振休+半日振休でない場合
+		if (entity.isAmPmHalfSubstitute(true) == false) {
+			return false;
+		}
+		// 半日振替の振替かどうか判断
+		return entity.isHalfPostpone(true) == false;
+	}
+	
+	/**
 	 * 勤務形態、勤務形態プルダウン、申請モードを設定する。<br>
 	 * @param requestUtil 申請ユーティリティ
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
 	protected void setWorkType(RequestUtilBeanInterface requestUtil) throws MospException {
+		// VO取得
+		AttendanceCardVo vo = (AttendanceCardVo)mospParams.getVo();
+		ScheduleUtilBeanInterface scheduleUtil = timeReference().scheduleUtil();
 		// 勤怠情報取得(取下、下書、1次戻以外)
 		AttendanceDtoInterface attendanceDto = requestUtil.getApplicatedAttendance();
 		// 時差出勤申請取得(承認済)
@@ -933,30 +1194,36 @@ public class AttendanceCardAction extends TimeAction {
 			return;
 		}
 		// 休暇申請取得(承認済、全休)及び確認
-		String workTypeCode = getScheduledWorkTypeCode(requestUtil);
+		// カレンダに登録されている勤務形態コードを取得(振替休日、振出・休出申請、勤務形態変更申請、時差出勤申請を考慮)
+		String workTypeCode = scheduleUtil.getScheduledWorkTypeCode(vo.getPersonalId(), vo.getTargetDate(),
+				requestUtil);
 		// 法定休日
-		boolean isLegalDaysOff = TimeConst.CODE_HOLIDAY_LEGAL_HOLIDAY.equals(workTypeCode);
+		boolean isLegalDaysOff = TimeUtility.isLegalHoliday(workTypeCode);
 		// 所定休日
-		boolean isPrescribedDaysOff = TimeConst.CODE_HOLIDAY_PRESCRIBED_HOLIDAY.equals(workTypeCode);
+		boolean isPrescribedDaysOff = TimeUtility.isPrescribedHoliday(workTypeCode);
 		// 法定休日労働
-		boolean isWorkOnLegalDaysOff = TimeConst.CODE_WORK_ON_LEGAL_HOLIDAY.equals(workTypeCode);
+		boolean isWorkOnLegalDaysOff = TimeUtility.isWorkOnLegalHoliday(workTypeCode);
 		// 所定休日労働
-		boolean isWorkOnPrescribedDaysOff = TimeConst.CODE_WORK_ON_PRESCRIBED_HOLIDAY.equals(workTypeCode);
-		if (!isLegalDaysOff && !isPrescribedDaysOff && !isWorkOnLegalDaysOff && !isWorkOnPrescribedDaysOff) {
-			// 法定休日・所定休日・法定休日労働・所定休日労働でない場合
-			HolidayRequestDtoInterface holidayRequestDto = requestUtil.getCompletedHolidayRangeAll();
-			if (holidayRequestDto != null) {
-				// 承認済休暇申請に対して、勤務形態、勤務形態プルダウン、申請モードを設定
-				setWorkTypeForHolidayRequest(holidayRequestDto);
-				// 処理終了
-				return;
-			}
+		boolean isWorkOnPrescribedDaysOff = TimeUtility.isWorkOnPrescribedHoliday(workTypeCode);
+		// 休暇申請(承認済み、全休)および確認
+		if (setWorkTypePulldownHoliday(requestUtil, isLegalDaysOff, isPrescribedDaysOff, isWorkOnLegalDaysOff,
+				isWorkOnPrescribedDaysOff)) {
+			
+			// 処理終了
+			return;
 		}
 		// 代休申請取得(承認済、全休)及び確認
 		SubHolidayRequestDtoInterface subHolidayRequestDto = requestUtil.getCompletedSubHolidayRangeAll();
 		if (subHolidayRequestDto != null) {
 			// 承認済代休申請に対して、勤務形態、勤務形態プルダウン、申請モードを設定
 			setWorkTypeForSubHolidayRequest(subHolidayRequestDto);
+			// 処理終了
+			return;
+		}
+		// 時差出勤申請確認(承認済)
+		if (differenceRequestDto != null) {
+			// 承認済時差出勤申請に対して、勤務形態、勤務形態プルダウン、申請モードを設定
+			setWorkTypeForDifferenceRequest(differenceRequestDto, requestUtil);
 			// 処理終了
 			return;
 		}
@@ -968,28 +1235,9 @@ public class AttendanceCardAction extends TimeAction {
 			// 処理終了
 			return;
 		}
-		// 振替休日取得(承認済、全休)及び確認
-		SubstituteDtoInterface subsutituteDto = requestUtil.getCompletedSubstituteRangeAll();
-		if (subsutituteDto != null) {
-			// 承認済振替休日情報に対して、勤務形態、勤務形態プルダウン、申請モードを設定
-			setWorkTypeForSubstitute(subsutituteDto, requestUtil);
-			// 処理終了
-			return;
-		}
-		// 全休(半休 + 半休)確認
-		if (!isLegalDaysOff && !isPrescribedDaysOff && !isWorkOnLegalDaysOff && !isWorkOnPrescribedDaysOff) {
-			// 法定休日・所定休日・法定休日労働・所定休日労働でない場合
-			if (requestUtil.isHolidayAllDay(true)) {
-				// 承認済全休(半休 + 半休)に対して、勤務形態、勤務形態プルダウン、申請モードを設定
-				setWorkTypeForHolidayAllDay();
-				// 処理終了
-				return;
-			}
-		}
-		// 時差出勤申請確認(承認済)
-		if (differenceRequestDto != null) {
-			// 承認済時差出勤申請に対して、勤務形態、勤務形態プルダウン、申請モードを設定
-			setWorkTypeForDifferenceRequest(differenceRequestDto, requestUtil);
+		//  振替休日取得(承認済、全休)及び確認
+		if (setWorkTypePulldownSubstitute(requestUtil, isLegalDaysOff, isPrescribedDaysOff, isWorkOnLegalDaysOff,
+				isWorkOnPrescribedDaysOff)) {
 			// 処理終了
 			return;
 		}
@@ -1000,6 +1248,77 @@ public class AttendanceCardAction extends TimeAction {
 		}
 		// カレンダに対して、勤務形態、勤務形態プルダウン、申請モードを設定
 		setWorkTypeForSchedule(requestUtil);
+	}
+	
+	/**
+	 * 勤務形態、勤務形態プルダウン、申請モード設定(振替休日)<br>
+	 * @param requestUtil 申請ユーティリティ
+	 * @param isLegalDaysOff 法定休日判定
+	 * @param isPrescribedDaysOff 所定休日判定
+	 * @param isWorkOnLegalDaysOff 法定休日労働判定
+	 * @param isWorkOnPrescribedDaysOff 所定休日労働判定
+	 * @return 処理終了判定(true:処理終了、false:処理継続)
+	 * @throws MospException インスタンスの生成或いはSQLの実行に失敗した場合
+	 */
+	protected boolean setWorkTypePulldownSubstitute(RequestUtilBeanInterface requestUtil, boolean isLegalDaysOff,
+			boolean isPrescribedDaysOff, boolean isWorkOnLegalDaysOff, boolean isWorkOnPrescribedDaysOff)
+			throws MospException {
+		// 振替休日取得(承認済、全休)及び確認
+		SubstituteDtoInterface subsutituteDto = requestUtil.getCompletedSubstituteRangeAll();
+		if (subsutituteDto != null) {
+			// 承認済振替休日情報に対して、勤務形態、勤務形態プルダウン、申請モードを設定
+			setWorkTypeForSubstitute(subsutituteDto, requestUtil);
+			// 処理終了
+			return true;
+		}
+		// 全休(半休 + 半休)確認
+		if (!isLegalDaysOff && !isPrescribedDaysOff && !isWorkOnLegalDaysOff && !isWorkOnPrescribedDaysOff) {
+			// 半日振休＋半日振休がある場合
+			if (isAmPmHalfSubstitute(requestUtil)) {
+				// 承認済全休(半休 + 半休)に対して、勤務形態、勤務形態プルダウン、申請モードを設定
+				setWorkTypeForHolidayAllDay();
+				// 処理終了
+				return true;
+			}
+		}
+		
+		return false;
+		
+	}
+	
+	/**
+	 * 勤務形態、勤務形態プルダウン、申請モード設定(休暇申請)<br>
+	 * @param requestUtil 申請ユーティリティ
+	 * @param isLegalDaysOff 法定休日判定
+	 * @param isPrescribedDaysOff 所定休日判定
+	 * @param isWorkOnLegalDaysOff 法定休日労働判定
+	 * @param isWorkOnPrescribedDaysOff 所定休日労働判定
+	 * @return 処理終了判定(true:処理終了、false:処理継続)
+	 * @throws MospException インスタンスの生成或いはSQLの実行に失敗した場合
+	 */
+	protected boolean setWorkTypePulldownHoliday(RequestUtilBeanInterface requestUtil, boolean isLegalDaysOff,
+			boolean isPrescribedDaysOff, boolean isWorkOnLegalDaysOff, boolean isWorkOnPrescribedDaysOff)
+			throws MospException {
+		// 法定休日・所定休日・法定休日労働・所定休日労働でない場合
+		if (!isLegalDaysOff && !isPrescribedDaysOff && !isWorkOnLegalDaysOff && !isWorkOnPrescribedDaysOff) {
+			// 全日の承認済休暇申請取得
+			HolidayRequestDtoInterface holidayRequestDto = requestUtil.getCompletedHolidayRangeAll();
+			if (holidayRequestDto != null) {
+				// 承認済休暇申請に対して、勤務形態、勤務形態プルダウン、申請モードを設定
+				setWorkTypeForHolidayRequest(holidayRequestDto);
+				// 処理終了
+				return true;
+			}
+			// 半休＋半休の場合
+			if (requestUtil.checkHolidayRangeHoliday(
+					requestUtil.getHolidayList(true)) == TimeConst.CODE_HOLIDAY_RANGE_HALF_AND_HALF) {
+				setWorkTypeForHolidayAllDay();
+				return true;
+				
+			}
+		}
+		
+		return false;
 	}
 	
 	/**
@@ -1085,12 +1404,14 @@ public class AttendanceCardAction extends TimeAction {
 		// VO準備
 		AttendanceCardVo vo = (AttendanceCardVo)mospParams.getVo();
 		WorkTypeReferenceBeanInterface workTypeReference = timeReference().workType();
+		ScheduleUtilBeanInterface scheduleUtil = timeReference().scheduleUtil();
 		if (!requestEntity.isAllHoliday(false)) {
 			// 全休でない場合
 			return;
 		}
 		// 全休の場合
-		String workTypeCode = getScheduledWorkTypeCode(requestUtil);
+		String workTypeCode = scheduleUtil.getScheduledWorkTypeCode(vo.getPersonalId(), vo.getTargetDate(),
+				requestUtil);
 		if (workTypeCode == null || workTypeCode.isEmpty()) {
 			return;
 		}
@@ -1123,6 +1444,9 @@ public class AttendanceCardAction extends TimeAction {
 			RequestUtilBeanInterface requestUtil, boolean isDifference) throws MospException {
 		// VO準備
 		AttendanceCardVo vo = (AttendanceCardVo)mospParams.getVo();
+		// 個人ID・対象日取得
+		String personalId = vo.getPersonalId();
+		Date targetDate = vo.getTargetDate();
 		// 勤務形態参照クラス準備
 		WorkTypeReferenceBeanInterface workTypeRefer = timeReference().workType();
 		// 勤務形態取得
@@ -1131,29 +1455,11 @@ public class AttendanceCardAction extends TimeAction {
 		String workTypeName = workTypeRefer.getParticularWorkTypeName(workTypeCode);
 		// 特殊な勤務形態でない場合
 		if (workTypeName == null) {
-			boolean amHoliday = false;
-			boolean pmHoliday = false;
-			WorkOnHolidayRequestDtoInterface workOnHolidayRequestDto = requestUtil.getWorkOnHolidayDto(true);
-			if (workOnHolidayRequestDto != null) {
-				int substitute = workOnHolidayRequestDto.getSubstitute();
-				amHoliday = substitute == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_PM;
-				pmHoliday = substitute == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_AM;
-			}
-			int rangeHoliday = requestUtil.checkHolidayRangeHoliday(requestUtil.getHolidayList(true));
-			int rangeSubHoliday = requestUtil.checkHolidayRangeSubHoliday(requestUtil.getSubHolidayList(true));
-			int rangeSubstitute = requestUtil.checkHolidayRangeSubstitute(requestUtil.getSubstituteList(true));
-			if (rangeHoliday == TimeConst.CODE_HOLIDAY_RANGE_AM || rangeSubHoliday == TimeConst.CODE_HOLIDAY_RANGE_AM
-					|| rangeSubstitute == TimeConst.CODE_HOLIDAY_RANGE_AM) {
-				// 午前休の場合
-				amHoliday = true;
-			}
-			if (rangeHoliday == TimeConst.CODE_HOLIDAY_RANGE_PM || rangeSubHoliday == TimeConst.CODE_HOLIDAY_RANGE_PM
-					|| rangeSubstitute == TimeConst.CODE_HOLIDAY_RANGE_PM) {
-				// 午後休の場合
-				pmHoliday = true;
-			}
+			// 申請エンティティ取得
+			RequestEntity entity = requestUtil.getRequestEntity(personalId, targetDate);
 			// 勤務形態プルダウン用配列取得(勤務形態略称【出勤時刻～退勤時刻】)
-			String[][] aryWorkType = workTypeRefer.getTimeSelectArray(vo.getTargetDate(), amHoliday, pmHoliday);
+			String[][] aryWorkType = workTypeRefer.getTimeSelectArray(targetDate, entity.isAmHoliday(true),
+					entity.isPmHoliday(true));
 			// 勤務形態プルダウン用配列から名称を取得
 			workTypeName = MospUtility.getCodeName(workTypeCode, aryWorkType);
 		}
@@ -1166,17 +1472,18 @@ public class AttendanceCardAction extends TimeAction {
 			// 勤務形態設定(時差出勤区分)
 			vo.setPltWorkType(differenceType);
 			// 勤務形態プルダウン設定(時差出勤のプルダウン)
-			vo.setAryPltWorkType(timeReference().differenceRequest(vo.getTargetDate()).getDifferenceSelectArray(
-					differenceType));
+			vo.setAryPltWorkType(
+					timeReference().differenceRequest(vo.getTargetDate()).getDifferenceSelectArray(differenceType));
 		}
-		if (PlatformConst.CODE_STATUS_APPLY.equals(reference().workflow()
-			.getLatestWorkflowInfo(attendanceDto.getWorkflow()).getWorkflowStatus())) {
-			// 未承認の場合
-			// 編集モード設定
+		// 最新のワークフロー情報を取得
+		WorkflowDtoInterface workflowDto = reference().workflow().getLatestWorkflowInfo(attendanceDto.getWorkflow());
+		// 最新のワークフロー情報が取得できないか未承認である場合
+		if (workflowDto == null || PlatformConst.CODE_STATUS_APPLY.equals(workflowDto.getWorkflowStatus())) {
+			// 編集モード(申請モード【未承認】)を設定
 			vo.setModeCardEdit(TimeConst.MODE_APPLICATION_APPLY);
 			return;
 		}
-		// 編集モード設定
+		// 編集モード(申請モード【申請済】)を設定
 		vo.setModeCardEdit(TimeConst.MODE_APPLICATION_APPLIED);
 	}
 	
@@ -1189,7 +1496,7 @@ public class AttendanceCardAction extends TimeAction {
 		AttendanceCardVo vo = (AttendanceCardVo)mospParams.getVo();
 		// 勤務形態及び勤務形態プルダウン用配列を設定(休暇種別確認)
 		switch (holidayRequestDto.getHolidayType1()) {
-		// 有給休暇の場合
+			// 有給休暇の場合
 			case TimeConst.CODE_HOLIDAYTYPE_HOLIDAY:
 				setPltWorkType(mospParams.getName("PaidVacation"));
 				break;
@@ -1221,7 +1528,7 @@ public class AttendanceCardAction extends TimeAction {
 		AttendanceCardVo vo = (AttendanceCardVo)mospParams.getVo();
 		// 勤務形態及び勤務形態プルダウン用配列を設定(代休種別確認)
 		switch (subHolidayRequestDto.getWorkDateSubHolidayType()) {
-		// 所定代休の場合
+			// 所定代休の場合
 			case TimeConst.CODE_PRESCRIBED_SUBHOLIDAY_CODE:
 				setPltWorkType(mospParams.getName("Prescribed", "Generation", "Rest"));
 				break;
@@ -1242,8 +1549,9 @@ public class AttendanceCardAction extends TimeAction {
 	
 	/**
 	 * 承認済全休(半休 + 半休)に対して、勤務形態、勤務形態プルダウン、申請モードを設定する。<br>
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
-	protected void setWorkTypeForHolidayAllDay() {
+	protected void setWorkTypeForHolidayAllDay() throws MospException {
 		// VO準備
 		AttendanceCardVo vo = (AttendanceCardVo)mospParams.getVo();
 		// 勤務形態及び勤務形態プルダウン用配列を設定
@@ -1305,61 +1613,60 @@ public class AttendanceCardAction extends TimeAction {
 			vo.setModeCardEdit(TimeConst.MODE_APPLICATION_NEW);
 			// 勤怠申請(下書或いは1次戻)が存在する場合、勤務形態、申請モードを設定(上書)
 			setWorkTypeForNotApplicatedAttendance(requestUtil);
+			return;
 		}
-		boolean substituteWorkAm = substitute == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_AM;
-		boolean substituteWorkPm = substitute == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_PM;
 		// 振替申請区分確認(振替出勤の場合)
-		if (substitute == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_ON || substituteWorkAm || substituteWorkPm) {
-			// 個人ID取得
-			String personalId = vo.getPersonalId();
-			// TODO 対象日(休日出勤の日)を取得
-			Date targetDate = vo.getTargetDate();
-			ApplicationDtoInterface applicationDto = application.findForPerson(personalId, targetDate);
-			application.chkExistApplication(applicationDto, targetDate);
-			if (mospParams.hasErrorMessage()) {
-				return;
-			}
-			ScheduleDtoInterface scheduleDto = schedule.getScheduleInfo(applicationDto.getScheduleCode(), targetDate);
-			schedule.chkExistSchedule(scheduleDto, targetDate);
-			if (mospParams.hasErrorMessage()) {
-				return;
-			}
-			int rangeHoliday = requestUtil.checkHolidayRangeHoliday(requestUtil.getHolidayList(true));
-			int rangeSubHoliday = requestUtil.checkHolidayRangeSubHoliday(requestUtil.getSubHolidayList(true));
-			int rangeSubstitute = requestUtil.checkHolidayRangeSubstitute(requestUtil.getSubstituteList(true));
-			boolean holidayAm = substituteWorkPm || rangeHoliday == TimeConst.CODE_HOLIDAY_RANGE_AM
-					|| rangeSubHoliday == TimeConst.CODE_HOLIDAY_RANGE_AM
-					|| rangeSubstitute == TimeConst.CODE_HOLIDAY_RANGE_AM;
-			boolean holidayPm = substituteWorkAm || rangeHoliday == TimeConst.CODE_HOLIDAY_RANGE_PM
-					|| rangeSubHoliday == TimeConst.CODE_HOLIDAY_RANGE_PM
-					|| rangeSubstitute == TimeConst.CODE_HOLIDAY_RANGE_PM;
-			// 対象日で勤務形態プルダウン用配列を取得(勤務形態略称【出勤時刻～退勤時刻】)
-			String[][] aryWorkType = getWorkTypeArray(scheduleDto.getPatternCode(), holidayAm, holidayPm);
+		// 個人ID取得
+		String personalId = vo.getPersonalId();
+		// TODO 対象日(休日出勤の日)を取得
+		Date targetDate = vo.getTargetDate();
+		// 設定適用情報取得
+		ApplicationDtoInterface applicationDto = application.findForPerson(personalId, targetDate);
+		application.chkExistApplication(applicationDto, targetDate);
+		if (mospParams.hasErrorMessage()) {
+			return;
+		}
+		// カレンダ情報取得
+		ScheduleDtoInterface scheduleDto = schedule.getScheduleInfo(applicationDto.getScheduleCode(), targetDate);
+		schedule.chkExistSchedule(scheduleDto, targetDate);
+		if (mospParams.hasErrorMessage()) {
+			return;
+		}
+		// 申請エンティティを取得
+		RequestEntity entity = requestUtil.getRequestEntity(personalId, targetDate);
+		// 対象日が前半休・後半休であるかを確認
+		boolean holidayAm = entity.isAmHoliday(true);
+		boolean holidayPm = entity.isPmHoliday(true);
+		// 対象日で勤務形態プルダウン用配列を取得(勤務形態略称【出勤時刻～退勤時刻】)
+		String[][] aryWorkType = getWorkTypeArray(scheduleDto.getPatternCode(), holidayAm, holidayPm);
+		String workTypeCode = workOnHolidayRequestDto.getWorkTypeCode();
+		if (substitute != TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_ON_WORK_TYPE_CHANGE) {
+			// 勤務形態変更ありでない場合
 			// 振替休日の日を取得
 			Date substituteDate = timeReference().substitute().getSubstituteDate(workOnHolidayRequestDto.getWorkflow());
 			// カレンダの勤務形態コード(振替休日の日)を取得
-			String workTypeCode = timeReference().scheduleUtil().getScheduledWorkTypeCode(personalId, substituteDate);
-			if (mospParams.hasErrorMessage()) {
-				// 申請モード設定
-				vo.setModeCardEdit(MODE_APPLICATION_COMPLETED_HOLIDAY);
-				return;
-			}
-			int workTypeChangeFlag = scheduleDto.getWorkTypeChangeFlag();
-			if (workTypeChangeFlag == MospConst.DELETE_FLAG_OFF) {
-				// 勤務形態変更可の場合
-				// VOに勤務形態コードを設定
-				vo.setPltWorkType(workTypeCode);
-				// 勤務形態プルダウン設定(勤務形態略称【出勤時刻～退勤時刻】)
-				vo.setAryPltWorkType(aryWorkType);
-			} else if (workTypeChangeFlag == MospConst.DELETE_FLAG_ON) {
-				// 勤務形態変更不可の場合
-				setPltWorkType(workTypeCode, MospUtility.getCodeName(workTypeCode, aryWorkType));
-			}
-			// 申請モード設定(新規)
-			vo.setModeCardEdit(TimeConst.MODE_APPLICATION_NEW);
-			// 勤怠申請(下書或いは1次戻)が存在する場合、勤務形態、申請モードを設定(上書)
-			setWorkTypeForNotApplicatedAttendance(requestUtil);
+			workTypeCode = timeReference().scheduleUtil().getScheduledWorkTypeCode(personalId, substituteDate);
 		}
+		if (mospParams.hasErrorMessage()) {
+			// 申請モード設定
+			vo.setModeCardEdit(MODE_APPLICATION_COMPLETED_HOLIDAY);
+			return;
+		}
+		int workTypeChangeFlag = scheduleDto.getWorkTypeChangeFlag();
+		if (workTypeChangeFlag == MospConst.DELETE_FLAG_OFF) {
+			// 勤務形態変更可の場合
+			// VOに勤務形態コードを設定
+			vo.setPltWorkType(workTypeCode);
+			// 勤務形態プルダウン設定(勤務形態略称【出勤時刻～退勤時刻】)
+			vo.setAryPltWorkType(aryWorkType);
+		} else if (workTypeChangeFlag == MospConst.DELETE_FLAG_ON) {
+			// 勤務形態変更不可の場合
+			setPltWorkType(workTypeCode, MospUtility.getCodeName(workTypeCode, aryWorkType));
+		}
+		// 申請モード設定(新規)
+		vo.setModeCardEdit(TimeConst.MODE_APPLICATION_NEW);
+		// 勤怠申請(下書或いは1次戻)が存在する場合、勤務形態、申請モードを設定(上書)
+		setWorkTypeForNotApplicatedAttendance(requestUtil);
 	}
 	
 	/**
@@ -1378,11 +1685,11 @@ public class AttendanceCardAction extends TimeAction {
 		String substituteType = subsutituteDto.getSubstituteType();
 		// 所定振替休日の場合
 		if (substituteType.equals(TimeConst.CODE_HOLIDAY_PRESCRIBED_HOLIDAY)) {
-			setPltWorkType(mospParams.getName("Prescribed", "Transfer", "Holiday"));
+			setPltWorkType(TimeNamingUtility.prescribedTransferHoliday(mospParams));
 		}
 		// 法定振替休日の場合
 		if (substituteType.equals(TimeConst.CODE_HOLIDAY_LEGAL_HOLIDAY)) {
-			setPltWorkType(mospParams.getName("Legal", "Transfer", "Holiday"));
+			setPltWorkType(TimeNamingUtility.legalTransferHoliday(mospParams));
 		}
 		// 申請モード設定(休日承認済)
 		vo.setModeCardEdit(MODE_APPLICATION_COMPLETED_HOLIDAY);
@@ -1401,38 +1708,47 @@ public class AttendanceCardAction extends TimeAction {
 			RequestUtilBeanInterface requestUtil) throws MospException {
 		// VO取得
 		AttendanceCardVo vo = (AttendanceCardVo)mospParams.getVo();
+		// クラス準備
 		ApplicationReferenceBeanInterface application = timeReference().application();
 		ScheduleReferenceBeanInterface schedule = timeReference().schedule();
+		// 適用情報取得
 		ApplicationDtoInterface applicationDto = application.findForPerson(vo.getPersonalId(), vo.getTargetDate());
 		application.chkExistApplication(applicationDto, vo.getTargetDate());
 		if (mospParams.hasErrorMessage()) {
 			return;
 		}
+		// カレンダマスタ取得
 		ScheduleDtoInterface scheduleDto = schedule.getScheduleInfo(applicationDto.getScheduleCode(),
 				vo.getTargetDate());
 		schedule.chkExistSchedule(scheduleDto, vo.getTargetDate());
 		if (mospParams.hasErrorMessage()) {
 			return;
 		}
+		// 午前休・午後休フラグ準備
 		boolean holidayAm = false;
 		boolean holidayPm = false;
+		// 承認済休日出勤申請情報取得
 		WorkOnHolidayRequestDtoInterface workOnHolidayRequestDto = requestUtil.getWorkOnHolidayDto(true);
 		if (workOnHolidayRequestDto != null) {
+			// 休暇範囲取得
 			int substitute = workOnHolidayRequestDto.getSubstitute();
 			holidayAm = substitute == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_PM;
 			holidayPm = substitute == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_AM;
 		}
+		// 承認済休暇申請情報の休暇範囲
 		int rangeHoliday = requestUtil.checkHolidayRangeHoliday(requestUtil.getHolidayList(true));
+		// 承認済代休申請情報の休暇範囲
 		int rangeSubHoliday = requestUtil.checkHolidayRangeSubHoliday(requestUtil.getSubHolidayList(true));
+		// 承認済振替休日申請情報の休暇範囲
 		int rangeSubstitute = requestUtil.checkHolidayRangeSubstitute(requestUtil.getSubstituteList(true));
+		// 午前休の場合
 		if (rangeHoliday == TimeConst.CODE_HOLIDAY_RANGE_AM || rangeSubHoliday == TimeConst.CODE_HOLIDAY_RANGE_AM
 				|| rangeSubstitute == TimeConst.CODE_HOLIDAY_RANGE_AM) {
-			// 午前休の場合
 			holidayAm = true;
 		}
+		// 午後休の場合
 		if (rangeHoliday == TimeConst.CODE_HOLIDAY_RANGE_PM || rangeSubHoliday == TimeConst.CODE_HOLIDAY_RANGE_PM
 				|| rangeSubstitute == TimeConst.CODE_HOLIDAY_RANGE_PM) {
-			// 午後休の場合
 			holidayPm = true;
 		}
 		// 勤務形態プルダウン用配列取得(勤務形態略称【出勤時刻～退勤時刻】)
@@ -1448,6 +1764,21 @@ public class AttendanceCardAction extends TimeAction {
 			// 勤務形態変更不可の場合
 			setPltWorkType(workTypeChangeRequestDto.getWorkTypeCode(),
 					MospUtility.getCodeName(workTypeChangeRequestDto.getWorkTypeCode(), aryWorkType));
+		}
+		// 変更済勤務形態エンティティを取得取得
+		WorkTypeEntity workTypeEntity = timeReference().workType()
+			.getWorkTypeEntity(workTypeChangeRequestDto.getWorkTypeCode(), vo.getTargetDate());
+		if (workTypeEntity != null) {
+			// 勤務形態の直行設定を確認
+			if (workTypeEntity.isDirectStart()) {
+				// 勤怠データに直行フラグを設定
+				vo.setCkbDirectStart(MospConst.CHECKBOX_ON);
+			}
+			// 勤務形態の直帰設定を確認
+			if (workTypeEntity.isDirectEnd()) {
+				// 勤怠データに直帰フラグを設定
+				vo.setCkbDirectEnd(MospConst.CHECKBOX_ON);
+			}
 		}
 		// 申請モード設定(新規)
 		vo.setModeCardEdit(TimeConst.MODE_APPLICATION_NEW);
@@ -1471,8 +1802,8 @@ public class AttendanceCardAction extends TimeAction {
 		// 勤務形態設定(時差出勤区分)
 		vo.setPltWorkType(differenceType);
 		// 勤務形態プルダウン設定(時差出勤のプルダウン)
-		vo.setAryPltWorkType(timeReference().differenceRequest(vo.getTargetDate()).getDifferenceSelectArray(
-				differenceType));
+		vo.setAryPltWorkType(
+				timeReference().differenceRequest(vo.getTargetDate()).getDifferenceSelectArray(differenceType));
 		// 申請モード設定(新規)
 		vo.setModeCardEdit(TimeConst.MODE_APPLICATION_NEW);
 		// 勤怠申請(下書或いは1次戻)が存在する場合、勤務形態、申請モードを設定(上書)
@@ -1526,6 +1857,12 @@ public class AttendanceCardAction extends TimeAction {
 			boolean holidayPm = rangeHoliday == TimeConst.CODE_HOLIDAY_RANGE_PM
 					|| rangeSubHoliday == TimeConst.CODE_HOLIDAY_RANGE_PM
 					|| rangeSubstitute == TimeConst.CODE_HOLIDAY_RANGE_PM;
+			// 全休の場合
+			if (rangeHoliday == 5 || rangeSubHoliday == 5 || rangeSubstitute == 5 || (holidayAm && holidayPm)) {
+				// 全休に設定
+				setWorkTypeForHolidayAllDay();
+				return;
+			}
 			// 勤務形態プルダウン用配列取得(勤務形態略称【出勤時刻～退勤時刻】)
 			String[][] aryWorkType = getWorkTypeArray(scheduleDto.getPatternCode(), holidayAm, holidayPm);
 			int workTypeChangeFlag = scheduleDto.getWorkTypeChangeFlag();
@@ -1580,96 +1917,6 @@ public class AttendanceCardAction extends TimeAction {
 	}
 	
 	/**
-	 * カレンダ勤務形態コードを取得する。<br>
-	 * 振替休日、振出・休出申請、勤務形態変更申請、時差出勤申請を考慮する。
-	 * @param requestUtil 申請ユーティリティ
-	 * @return カレンダ勤務形態コード
-	 * @throws MospException 例外発生時
-	 */
-	protected String getScheduledWorkTypeCode(RequestUtilBeanInterface requestUtil) throws MospException {
-		// VO取得
-		AttendanceCardVo vo = (AttendanceCardVo)mospParams.getVo();
-		DifferenceRequestDtoInterface differenceRequestDto = requestUtil.getDifferenceDto(true);
-		if (differenceRequestDto != null) {
-			// 時差出勤申請が承認済である場合
-			return differenceRequestDto.getDifferenceType();
-		}
-		Date date = vo.getTargetDate();
-		WorkOnHolidayRequestDtoInterface workOnHolidayRequestDto = requestUtil.getWorkOnHolidayDto(true);
-		if (workOnHolidayRequestDto == null) {
-			// 振出・休出申請が承認済でない場合
-			List<SubstituteDtoInterface> list = requestUtil.getSubstituteList(true);
-			for (SubstituteDtoInterface substituteDto : list) {
-				if (substituteDto.getSubstituteRange() == TimeConst.CODE_HOLIDAY_RANGE_ALL) {
-					// 全休の場合
-					return substituteDto.getSubstituteType();
-				}
-			}
-		} else {
-			// 振出・休出申請が承認済である場合
-			int substitute = workOnHolidayRequestDto.getSubstitute();
-			if (substitute == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_ON
-					|| substitute == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_AM
-					|| substitute == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_PM) {
-				// 振替出勤の場合
-				List<SubstituteDtoInterface> list = timeReference().substitute().getSubstituteList(
-						workOnHolidayRequestDto.getWorkflow());
-				for (SubstituteDtoInterface substituteDto : list) {
-					date = substituteDto.getSubstituteDate();
-					break;
-				}
-			} else if (substitute == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_OFF) {
-				// 休日出勤の場合
-				if (TimeConst.CODE_HOLIDAY_LEGAL_HOLIDAY.equals(workOnHolidayRequestDto.getWorkOnHolidayType())) {
-					// 法定休日出勤の場合
-					return TimeConst.CODE_WORK_ON_LEGAL_HOLIDAY;
-				} else if (TimeConst.CODE_HOLIDAY_PRESCRIBED_HOLIDAY.equals(workOnHolidayRequestDto
-					.getWorkOnHolidayType())) {
-					// 所定休日出勤の場合
-					return TimeConst.CODE_WORK_ON_PRESCRIBED_HOLIDAY;
-				}
-				return "";
-			} else {
-				return "";
-			}
-		}
-		String workTypeCode = "";
-		WorkTypeChangeRequestDtoInterface workTypeChangeRequestDto = requestUtil.getWorkTypeChangeDto(true);
-		if (workTypeChangeRequestDto == null) {
-			// 勤務形態変更申請が承認済でない場合
-			ApplicationDtoInterface applicationDto = timeReference().application().findForPerson(vo.getPersonalId(),
-					date);
-			if (applicationDto == null) {
-				return "";
-			}
-			ScheduleDtoInterface scheduleDto = timeReference().schedule().getScheduleInfo(
-					applicationDto.getScheduleCode(), date);
-			if (scheduleDto == null) {
-				return "";
-			}
-			ScheduleDateDtoInterface scheduleDateDto = timeReference().scheduleDate().getScheduleDateInfo(
-					scheduleDto.getScheduleCode(), scheduleDto.getActivateDate(), date);
-			if (scheduleDateDto == null || scheduleDateDto.getWorkTypeCode() == null) {
-				return "";
-			}
-			if (scheduleDateDto.getWorkTypeCode().isEmpty()
-					|| TimeConst.CODE_HOLIDAY_LEGAL_HOLIDAY.equals(scheduleDateDto.getWorkTypeCode())
-					|| TimeConst.CODE_HOLIDAY_PRESCRIBED_HOLIDAY.equals(scheduleDateDto.getWorkTypeCode())) {
-				return scheduleDateDto.getWorkTypeCode();
-			}
-			workTypeCode = scheduleDateDto.getWorkTypeCode();
-		} else {
-			// 勤務形態変更申請が承認済である場合
-			workTypeCode = workTypeChangeRequestDto.getWorkTypeCode();
-		}
-		WorkTypeDtoInterface workTypeDto = timeReference().workType().findForInfo(workTypeCode, date);
-		if (workTypeDto == null || workTypeDto.getWorkTypeCode() == null) {
-			return "";
-		}
-		return workTypeDto.getWorkTypeCode();
-	}
-	
-	/**
 	 * 勤怠情報をVOに設定する。
 	 * @throws MospException 例外発生時
 	 */
@@ -1696,8 +1943,16 @@ public class AttendanceCardAction extends TimeAction {
 		vo.setLblGeneralWorkTime(getTimeTimeFormat(dto.getGeneralWorkTime()));
 		vo.setCkbDirectStart(String.valueOf(dto.getDirectStart()));
 		vo.setCkbDirectEnd(String.valueOf(dto.getDirectEnd()));
+		vo.setCkbForgotRecordWorkStart(String.valueOf(dto.getForgotRecordWorkStart()));
+		vo.setCkbNotRecordWorkStart(String.valueOf(dto.getNotRecordWorkStart()));
 		vo.setLblUnpaidShortTime(getTimeTimeFormat(dto.getShortUnpaid()));
 		vo.setTxtTimeComment(dto.getTimeComment());
+		if (MospConst.CHECKBOX_ON.equals(Integer.toString(dto.getDirectStart()))
+				|| MospConst.CHECKBOX_ON.equals(Integer.toString(dto.getDirectEnd()))
+				|| MospConst.CHECKBOX_ON.equals(Integer.toString(dto.getForgotRecordWorkStart()))
+				|| MospConst.CHECKBOX_ON.equals(Integer.toString(dto.getNotRecordWorkStart()))) {
+			vo.setTxtRemarks(dto.getRemarks());
+		}
 		vo.setTmdAttendanceId(String.valueOf(dto.getTmdAttendanceId()));
 		vo.setPltLateReason(dto.getLateReason());
 		vo.setPltLateCertificate(String.valueOf(dto.getLateCertificate()));
@@ -1715,6 +1970,7 @@ public class AttendanceCardAction extends TimeAction {
 		vo.setLblLateNightTime(getTimeTimeFormat(dto.getLateNightTime()));
 		vo.setLblSpecificWorkTimeIn(getTimeTimeFormat(dto.getSpecificWorkTime()));
 		vo.setLblLegalWorkTime(getTimeTimeFormat(dto.getLegalWorkTime()));
+		vo.setLblHolidayWorkTime(getTimeTimeFormat(dto.getSpecificWorkTime() + dto.getLegalWorkTime()));
 		vo.setLblDecreaseTime(getTimeTimeFormat(dto.getDecreaseTime()));
 	}
 	
@@ -1735,7 +1991,7 @@ public class AttendanceCardAction extends TimeAction {
 		// 【】内に打刻始業時刻を設定
 		StringBuffer sb = new StringBuffer();
 		sb.append(mospParams.getName("FrontWithCornerParentheses"));
-		sb.append(DateUtility.getStringTime(dto.getRecordTime(), dto.getWorkDate()));
+		sb.append(DateUtility.getStringTimeAndSecond(dto.getRecordTime(), dto.getWorkDate()));
 		sb.append(mospParams.getName("BackWithCornerParentheses"));
 		vo.setLblStartTime(sb.toString());
 	}
@@ -1757,7 +2013,7 @@ public class AttendanceCardAction extends TimeAction {
 		// 【】内に打刻終業時刻を設定
 		StringBuffer sb = new StringBuffer();
 		sb.append(mospParams.getName("FrontWithCornerParentheses"));
-		sb.append(DateUtility.getStringTime(dto.getRecordTime(), dto.getWorkDate()));
+		sb.append(DateUtility.getStringTimeAndSecond(dto.getRecordTime(), dto.getWorkDate()));
 		sb.append(mospParams.getName("BackWithCornerParentheses"));
 		vo.setLblEndTime(sb.toString());
 	}
@@ -1814,10 +2070,12 @@ public class AttendanceCardAction extends TimeAction {
 		if (dto.getStartTime() == null || dto.getEndTime() == null) {
 			// 始業時刻又は終業時刻がない場合
 			long standardTime = DateUtility.getDateTime(DateUtility.getYear(vo.getTargetDate()),
-					DateUtility.getMonth(vo.getTargetDate()), DateUtility.getDay(vo.getTargetDate()), 0, 0).getTime();
+					DateUtility.getMonth(vo.getTargetDate()), DateUtility.getDay(vo.getTargetDate()), 0, 0)
+				.getTime();
 			List<RestDtoInterface> list = timeReference().rest().getRestList(vo.getPersonalId(), vo.getTargetDate(), 1);
 			for (RestDtoInterface restDto : list) {
-				if (restDto.getRestStart().getTime() != standardTime || restDto.getRestEnd().getTime() != standardTime) {
+				if (restDto.getRestStart().getTime() != standardTime
+						|| restDto.getRestEnd().getTime() != standardTime) {
 					// 登録されている休憩時間をセット
 					setRegisteredRest();
 					return;
@@ -1847,50 +2105,23 @@ public class AttendanceCardAction extends TimeAction {
 		// 対象個人ID及び対象日付準備
 		String personalId = vo.getPersonalId();
 		Date targetDate = vo.getTargetDate();
-		// カレンダに登録されている勤務形態コードを取得するための日付
-		Date scheduleDate = vo.getTargetDate();
 		// 申請モード確認(休日承認済の場合)
 		if (vo.getModeCardEdit().equals(MODE_APPLICATION_COMPLETED_HOLIDAY)) {
 			// 処理無し(休日承認済の場合)
 			return;
 		}
-		// 振出休出申請情報取得(承認済)及び確認
-		WorkOnHolidayRequestDtoInterface workOnHolidayRequestDto = requestUtil.getWorkOnHolidayDto(true);
-		if (workOnHolidayRequestDto != null) {
-			// 振替申請区分確認
-			if (workOnHolidayRequestDto.getSubstitute() == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_ON) {
-				// カレンダに登録されている勤務形態コードを取得するための日付を再設定(振替出勤の場合)
-				scheduleDate = timeReference().substitute().getSubstituteDate(workOnHolidayRequestDto.getWorkflow());
-			} else {
-				// 処理無し(振替出勤でない場合)
-				return;
-			}
-		}
-		// 休暇申請情報取得(承認済)及び確認
-		for (HolidayRequestDtoInterface holidayRequestDto : requestUtil.getHolidayList(true)) {
-			if (holidayRequestDto.getHolidayRange() == TimeConst.CODE_HOLIDAY_RANGE_TIME) {
-				// 時間休の場合
-				continue;
-			}
-			// 全休・半休の場合
-			// 処理無し(休暇承認済の場合)
-			return;
-		}
-		// 代休申請情報取得(承認済)及び確認
-		if (!requestUtil.getSubHolidayList(true).isEmpty()) {
-			// 処理無し(代休承認済の場合)
-			return;
-		}
-		// 振替休日情報取得(承認済)及び確認
-		if (!requestUtil.getSubstituteList(true).isEmpty()) {
-			// 処理無し(振替休日承認済の場合)
+		// 申請エンティティ取得
+		RequestEntity entity = requestUtil.getRequestEntity(personalId, targetDate);
+		// 全休または前休または後休の場合
+		if (entity.isAllHoliday(true) || entity.isAmHoliday(true) || entity.isPmHoliday(true)) {
+			// 処理なし
 			return;
 		}
 		// 時差出勤申請情報取得(承認済)及び確認
 		DifferenceRequestDtoInterface differenceRequestDto = requestUtil.getDifferenceDto(true);
 		if (differenceRequestDto != null) {
-			DifferenceRequestReferenceBeanInterface differenceRequest = timeReference().differenceRequest(
-					vo.getTargetDate());
+			DifferenceRequestReferenceBeanInterface differenceRequest = timeReference()
+				.differenceRequest(vo.getTargetDate());
 			Date restStartTime = null;
 			Date restEndTime = null;
 			Date startTime = null;
@@ -1934,17 +2165,7 @@ public class AttendanceCardAction extends TimeAction {
 			return;
 		}
 		// 勤務形態準備
-		String workTypeCode = null;
-		// 勤務形態変更申請取得
-		WorkTypeChangeRequestDtoInterface workTypeChangeRequestDto = requestUtil.getWorkTypeChangeDto(true);
-		// 勤務形態変更申請確認
-		if (workTypeChangeRequestDto != null) {
-			// 勤務形態変更申請に設定されている勤務形態コードを取得
-			workTypeCode = workTypeChangeRequestDto.getWorkTypeCode();
-		} else {
-			// カレンダに登録されている勤務形態コードを取得
-			workTypeCode = timeReference().scheduleUtil().getScheduledWorkTypeCode(personalId, scheduleDate);
-		}
+		String workTypeCode = entity.getWorkType(false);
 		if (mospParams.hasErrorMessage()) {
 			return;
 		}
@@ -2092,11 +2313,12 @@ public class AttendanceCardAction extends TimeAction {
 			}
 			if (publicDto.getTimesGoOut() == 2) {
 				// 外出開始時刻。
-				vo.setTxtPublicStartHour2(DateUtility.getStringHour(publicDto.getGoOutStart(),
-						attendanceDto.getWorkDate()));
+				vo.setTxtPublicStartHour2(
+						DateUtility.getStringHour(publicDto.getGoOutStart(), attendanceDto.getWorkDate()));
 				vo.setTxtPublicStartMinute2(DateUtility.getStringMinute(publicDto.getGoOutStart()));
 				// 外出終了時刻。
-				vo.setTxtPublicEndHour2(DateUtility.getStringHour(publicDto.getGoOutEnd(), attendanceDto.getWorkDate()));
+				vo.setTxtPublicEndHour2(
+						DateUtility.getStringHour(publicDto.getGoOutEnd(), attendanceDto.getWorkDate()));
 				vo.setTxtPublicEndMinute2(DateUtility.getStringMinute(publicDto.getGoOutEnd()));
 			}
 		}
@@ -2336,20 +2558,20 @@ public class AttendanceCardAction extends TimeAction {
 		}
 		// ワークフロー情報取得
 		WorkflowDtoInterface workflowDto = reference().workflow().getLatestWorkflowInfo(dto.getWorkflow());
-		WorkflowCommentDtoInterface commentDto = reference().workflowComment().getLatestWorkflowCommentInfo(
-				dto.getWorkflow());
+		WorkflowCommentDtoInterface commentDto = reference().workflowComment()
+			.getLatestWorkflowCommentInfo(dto.getWorkflow());
 		// ワークフロー情報確認
 		if (workflowDto == null) {
 			return;
 		}
 		// 勤怠情報承認状況設定
-		vo.setLblAttendanceState(getStatusStageValueView(workflowDto.getWorkflowStatus(),
-				workflowDto.getWorkflowStage()));
+		vo.setLblAttendanceState(
+				getStatusStageValueView(workflowDto.getWorkflowStatus(), workflowDto.getWorkflowStage()));
 		// ワークフローコメント情報設定がない場合
 		if (commentDto == null) {
 			// 申請者名前
-			vo.setLblAttendanceApprover(reference().human().getHumanName(workflowDto.getPersonalId(),
-					workflowDto.getWorkflowDate()));
+			vo.setLblAttendanceApprover(
+					reference().human().getHumanName(workflowDto.getPersonalId(), workflowDto.getWorkflowDate()));
 			return;
 		}
 		vo.setLblAttendanceComment(getWorkflowCommentDtoComment(workflowDto, commentDto));
@@ -2374,8 +2596,8 @@ public class AttendanceCardAction extends TimeAction {
 		// DTO準備
 		AttendanceDtoInterface attendanceDto = timeReference().attendance().findForKey(vo.getPersonalId(),
 				vo.getTargetDate(), 1);
-		List<OvertimeRequestDtoInterface> list = timeReference().overtimeRequest().getOvertimeRequestList(
-				vo.getPersonalId(), vo.getTargetDate(), vo.getTargetDate());
+		List<OvertimeRequestDtoInterface> list = timeReference().overtimeRequest()
+			.getOvertimeRequestList(vo.getPersonalId(), vo.getTargetDate(), vo.getTargetDate());
 		List<OvertimeRequestDtoInterface> overRequestList = new ArrayList<OvertimeRequestDtoInterface>();
 		for (OvertimeRequestDtoInterface dto : list) {
 			// ワークフロー情報の取得
@@ -2402,8 +2624,8 @@ public class AttendanceCardAction extends TimeAction {
 			long workflow = dto.getWorkflow();
 			// ワークフロー情報の取得
 			WorkflowDtoInterface workflowDto = reference().workflow().getLatestWorkflowInfo(workflow);
-			WorkflowCommentDtoInterface commentDto = reference().workflowComment().getLatestWorkflowCommentInfo(
-					workflow);
+			WorkflowCommentDtoInterface commentDto = reference().workflowComment()
+				.getLatestWorkflowCommentInfo(workflow);
 			int overtimeType = dto.getOvertimeType();
 			aryLblOvertimeType[i] = getOvertimeTypeName(overtimeType);
 			aryLblOvertimeSchedule[i] = getTimeTimeFormat(dto.getRequestTime());
@@ -2424,9 +2646,8 @@ public class AttendanceCardAction extends TimeAction {
 					workflowDto.getWorkflowStage());
 			aryLblOvertimeComment[i] = getWorkflowCommentDtoComment(workflowDto, commentDto);
 			aryLblOvertimeApprover[i] = getWorkflowCommentDtoLastFirstName(workflowDto, commentDto);
-			if (i == 0
-					&& (PlatformConst.CODE_STATUS_DRAFT.equals(workflowDto.getWorkflowStatus()) || PlatformConst.CODE_STATUS_REVERT
-						.equals(workflowDto.getWorkflowStatus()))) {
+			if (i == 0 && (PlatformConst.CODE_STATUS_DRAFT.equals(workflowDto.getWorkflowStatus())
+					|| PlatformConst.CODE_STATUS_REVERT.equals(workflowDto.getWorkflowStatus()))) {
 				// 下書又は差戻の場合
 				StringBuffer params = new StringBuffer();
 				params.append("'");
@@ -2464,6 +2685,7 @@ public class AttendanceCardAction extends TimeAction {
 	protected void vacationApplicationStatus(RequestUtilBeanInterface requestUtil) throws MospException {
 		// VO準備
 		AttendanceCardVo vo = (AttendanceCardVo)mospParams.getVo();
+		ScheduleUtilBeanInterface scheduleUtil = timeReference().scheduleUtil();
 		StringBuffer transferParams = new StringBuffer();
 		transferParams.append("'");
 		transferParams.append(PlatformConst.PRM_TRANSFERRED_ACTION);
@@ -2472,7 +2694,8 @@ public class AttendanceCardAction extends TimeAction {
 		transferParams.append("'");
 		vo.setLblHolidayTransferParams(transferParams.toString());
 		vo.setLblHolidayCmd(CMD_TRANSFER);
-		String workTypeCode = getScheduledWorkTypeCode(requestUtil);
+		String workTypeCode = scheduleUtil.getScheduledWorkTypeCode(vo.getPersonalId(), vo.getTargetDate(),
+				requestUtil);
 		if (TimeConst.CODE_HOLIDAY_LEGAL_HOLIDAY.equals(workTypeCode)
 				|| TimeConst.CODE_HOLIDAY_PRESCRIBED_HOLIDAY.equals(workTypeCode)
 				|| TimeConst.CODE_WORK_ON_LEGAL_HOLIDAY.equals(workTypeCode)
@@ -2482,8 +2705,8 @@ public class AttendanceCardAction extends TimeAction {
 		}
 		String workTypeAbbr = MospUtility.getCodeName(workTypeCode, getWorkTypeArray("", false, false));
 		// DTO準備
-		List<HolidayRequestDtoInterface> list = timeReference().holidayRequest().getHolidayRequestList(
-				vo.getPersonalId(), vo.getTargetDate());
+		List<HolidayRequestDtoInterface> list = timeReference().holidayRequest()
+			.getHolidayRequestList(vo.getPersonalId(), vo.getTargetDate());
 		List<HolidayRequestDtoInterface> holidayRequestList = new ArrayList<HolidayRequestDtoInterface>();
 		for (HolidayRequestDtoInterface dto : list) {
 			// ワークフロー情報の取得
@@ -2508,8 +2731,8 @@ public class AttendanceCardAction extends TimeAction {
 			long workflow = dto.getWorkflow();
 			// ワークフロー情報の取得
 			WorkflowDtoInterface workflowDto = reference().workflow().getLatestWorkflowInfo(workflow);
-			WorkflowCommentDtoInterface commentDto = reference().workflowComment().getLatestWorkflowCommentInfo(
-					workflow);
+			WorkflowCommentDtoInterface commentDto = reference().workflowComment()
+				.getLatestWorkflowCommentInfo(workflow);
 			aryLblHolidayType[i] = getHolidayTypeName(dto.getHolidayType1(), dto.getHolidayType2(),
 					dto.getRequestStartDate());
 			aryLblHolidayLength[i] = getHolidayRange(dto.getHolidayRange());
@@ -2520,9 +2743,8 @@ public class AttendanceCardAction extends TimeAction {
 					workflowDto.getWorkflowStage());
 			aryLblHolidayApprover[i] = getWorkflowCommentDtoLastFirstName(workflowDto, commentDto);
 			aryLblHolidayComment[i] = getWorkflowCommentDtoComment(workflowDto, commentDto);
-			if (i == 0
-					&& (PlatformConst.CODE_STATUS_DRAFT.equals(workflowDto.getWorkflowStatus()) || PlatformConst.CODE_STATUS_REVERT
-						.equals(workflowDto.getWorkflowStatus()))) {
+			if (i == 0 && (PlatformConst.CODE_STATUS_DRAFT.equals(workflowDto.getWorkflowStatus())
+					|| PlatformConst.CODE_STATUS_REVERT.equals(workflowDto.getWorkflowStatus()))) {
 				// 下書又は差戻の場合
 				StringBuffer params = new StringBuffer();
 				params.append("'");
@@ -2581,8 +2803,8 @@ public class AttendanceCardAction extends TimeAction {
 		vo.setLblWorkOnHolidayTransferParams(transferParams.toString());
 		vo.setLblWorkOnHolidayCmd(CMD_TRANSFER);
 		// 休日出勤申請からレコードを取得
-		WorkOnHolidayRequestDtoInterface dto = timeReference().workOnHolidayRequest().findForKeyOnWorkflow(
-				vo.getPersonalId(), vo.getTargetDate());
+		WorkOnHolidayRequestDtoInterface dto = timeReference().workOnHolidayRequest()
+			.findForKeyOnWorkflow(vo.getPersonalId(), vo.getTargetDate());
 		if (dto == null) {
 			return;
 		}
@@ -2597,8 +2819,8 @@ public class AttendanceCardAction extends TimeAction {
 			return;
 		}
 		// 最新のワークフローコメント取得
-		WorkflowCommentDtoInterface commentDto = reference().workflowComment().getLatestWorkflowCommentInfo(
-				dto.getWorkflow());
+		WorkflowCommentDtoInterface commentDto = reference().workflowComment()
+			.getLatestWorkflowCommentInfo(dto.getWorkflow());
 		// 振替休日情報の取得
 		List<SubstituteDtoInterface> list = timeReference().substitute().getSubstituteList(workflow);
 		// 休日出勤申請状況
@@ -2612,7 +2834,7 @@ public class AttendanceCardAction extends TimeAction {
 			workRange = mospParams.getName("PostMeridiem");
 		}
 		vo.setLblWorkOnHolidayDate(getStringDateAndDay(dto.getRequestDate()) + workRange);
-		vo.setLblWorkOnHolidayTime(getTimeWaveFormat(dto.getStartTime(), dto.getEndTime(), dto.getRequestDate()));
+		vo.setLblWorkOnHolidayTime(getWorkOnHolidaySchedule(dto));
 		vo.setLblSubStituteDate("");
 		for (SubstituteDtoInterface substituteDto : list) {
 			StringBuffer sb = new StringBuffer();
@@ -2630,8 +2852,8 @@ public class AttendanceCardAction extends TimeAction {
 		}
 		vo.setLblWorkOnHolidayReason(dto.getRequestReason());
 		// 状態
-		vo.setLblWorkOnHolidayState(getStatusStageValueView(workflowDto.getWorkflowStatus(),
-				workflowDto.getWorkflowStage()));
+		vo.setLblWorkOnHolidayState(
+				getStatusStageValueView(workflowDto.getWorkflowStatus(), workflowDto.getWorkflowStage()));
 		vo.setLblWorkOnHolidayComment(getWorkflowCommentDtoComment(workflowDto, commentDto));
 		vo.setLblWorkOnHolidayApprover(getWorkflowCommentDtoLastFirstName(workflowDto, commentDto));
 		if (PlatformConst.CODE_STATUS_DRAFT.equals(workflowDto.getWorkflowStatus())
@@ -2669,8 +2891,8 @@ public class AttendanceCardAction extends TimeAction {
 		vo.setLblSubHolidayCmd(CMD_TRANSFER);
 		// DTO準備
 		// 年月日は締め日
-		List<SubHolidayRequestDtoInterface> list = timeReference().subHolidayRequest().getSubHolidayRequestList(
-				vo.getPersonalId(), vo.getTargetDate());
+		List<SubHolidayRequestDtoInterface> list = timeReference().subHolidayRequest()
+			.getSubHolidayRequestList(vo.getPersonalId(), vo.getTargetDate());
 		List<SubHolidayRequestDtoInterface> subHolidayRequestList = new ArrayList<SubHolidayRequestDtoInterface>();
 		for (SubHolidayRequestDtoInterface dto : list) {
 			// ワークフロー情報の取得
@@ -2688,6 +2910,7 @@ public class AttendanceCardAction extends TimeAction {
 		String[] aryLblSubHolidayDate = new String[size];
 		String[] aryLblSubHolidayWorkDate = new String[size];
 		String[] aryLblSubHolidayState = new String[size];
+		String[] aryLblSubHolidayLength = new String[size];
 		String[] aryLblSubHolidayComment = new String[size];
 		String[] aryLblSubHolidayApprover = new String[size];
 		for (int i = 0; i < subHolidayRequestList.size(); i++) {
@@ -2695,17 +2918,17 @@ public class AttendanceCardAction extends TimeAction {
 			long workflow = dto.getWorkflow();
 			// ワークフロー情報の取得
 			WorkflowDtoInterface workflowDto = reference().workflow().getLatestWorkflowInfo(workflow);
-			WorkflowCommentDtoInterface commentDto = reference().workflowComment().getLatestWorkflowCommentInfo(
-					workflow);
+			WorkflowCommentDtoInterface commentDto = reference().workflowComment()
+				.getLatestWorkflowCommentInfo(workflow);
 			aryLblSubHolidayDate[i] = DateUtility.getStringDateAndDay(dto.getRequestDate());
+			aryLblSubHolidayLength[i] = getHolidayRange(dto.getHolidayRange());
 			aryLblSubHolidayWorkDate[i] = DateUtility.getStringDateAndDay(dto.getWorkDate());
 			aryLblSubHolidayState[i] = getStatusStageValueView(workflowDto.getWorkflowStatus(),
 					workflowDto.getWorkflowStage());
 			aryLblSubHolidayComment[i] = getWorkflowCommentDtoComment(workflowDto, commentDto);
 			aryLblSubHolidayApprover[i] = getWorkflowCommentDtoLastFirstName(workflowDto, commentDto);
-			if (i == 0
-					&& (PlatformConst.CODE_STATUS_DRAFT.equals(workflowDto.getWorkflowStatus()) || PlatformConst.CODE_STATUS_REVERT
-						.equals(workflowDto.getWorkflowStatus()))) {
+			if (i == 0 && (PlatformConst.CODE_STATUS_DRAFT.equals(workflowDto.getWorkflowStatus())
+					|| PlatformConst.CODE_STATUS_REVERT.equals(workflowDto.getWorkflowStatus()))) {
 				// 下書又は差戻の場合
 				StringBuffer params = new StringBuffer();
 				params.append("'");
@@ -2727,6 +2950,7 @@ public class AttendanceCardAction extends TimeAction {
 		}
 		// VOに項目を設定
 		vo.setLblSubHolidayDate(aryLblSubHolidayDate);
+		vo.setLblSubHolidayLength(aryLblSubHolidayLength);
 		vo.setLblSubHolidayWorkDate(aryLblSubHolidayWorkDate);
 		vo.setLblSubHolidayState(aryLblSubHolidayState);
 		vo.setLblSubHolidayComment(aryLblSubHolidayComment);
@@ -2741,8 +2965,8 @@ public class AttendanceCardAction extends TimeAction {
 		// VO取得
 		AttendanceCardVo vo = (AttendanceCardVo)mospParams.getVo();
 		WorkTypeChangeRequestReferenceBeanInterface workTypeChangeRequest = timeReference().workTypeChangeRequest();
-		WorkTypeChangeRequestDtoInterface workTypeChangeRequestDto = workTypeChangeRequest.findForKeyOnWorkflow(
-				vo.getPersonalId(), vo.getTargetDate());
+		WorkTypeChangeRequestDtoInterface workTypeChangeRequestDto = workTypeChangeRequest
+			.findForKeyOnWorkflow(vo.getPersonalId(), vo.getTargetDate());
 		if (workTypeChangeRequestDto == null) {
 			return;
 		}
@@ -2759,13 +2983,13 @@ public class AttendanceCardAction extends TimeAction {
 		WorkflowCommentDtoInterface commentDto = reference().workflowComment().getLatestWorkflowCommentInfo(workflow);
 		// 勤務形態変更申請状況
 		vo.setLblWorkTypeChangeDate(getStringDateAndDay(workTypeChangeRequestDto.getRequestDate()));
-		vo.setLblWorkTypeChangeBeforeWorkType(time().workTypeChangeRequestRegist().getScheduledWorkTypeName(
-				workTypeChangeRequestDto));
+		vo.setLblWorkTypeChangeBeforeWorkType(
+				time().workTypeChangeRequestRegist().getScheduledWorkTypeName(workTypeChangeRequestDto));
 		vo.setLblWorkTypeChangeAfterWorkType(timeReference().workType().getWorkTypeAbbrAndTime(
 				workTypeChangeRequestDto.getWorkTypeCode(), workTypeChangeRequestDto.getRequestDate()));
 		vo.setLblWorkTypeChangeReason(workTypeChangeRequestDto.getRequestReason());
-		vo.setLblWorkTypeChangeState(getStatusStageValueView(workflowDto.getWorkflowStatus(),
-				workflowDto.getWorkflowStage()));
+		vo.setLblWorkTypeChangeState(
+				getStatusStageValueView(workflowDto.getWorkflowStatus(), workflowDto.getWorkflowStage()));
 		vo.setLblWorkTypeChangeComment(getWorkflowCommentDtoComment(workflowDto, commentDto));
 		vo.setLblWorkTypeChangeApprover(getWorkflowCommentDtoLastFirstName(workflowDto, commentDto));
 	}
@@ -2810,8 +3034,8 @@ public class AttendanceCardAction extends TimeAction {
 		vo.setLblDifferenceWorkTime(differenceRequest.getDifferenceTime(dto));
 		vo.setLblDifferenceReason(dto.getRequestReason());
 		// 状態
-		vo.setLblDifferenceState(getStatusStageValueView(workflowDto.getWorkflowStatus(),
-				workflowDto.getWorkflowStage()));
+		vo.setLblDifferenceState(
+				getStatusStageValueView(workflowDto.getWorkflowStatus(), workflowDto.getWorkflowStage()));
 		vo.setLblDifferenceComment(getWorkflowCommentDtoComment(workflowDto, commentDto));
 		vo.setLblDifferenceApprover(getWorkflowCommentDtoLastFirstName(workflowDto, commentDto));
 		if (PlatformConst.CODE_STATUS_DRAFT.equals(workflowDto.getWorkflowStatus())
@@ -2834,16 +3058,23 @@ public class AttendanceCardAction extends TimeAction {
 	
 	/**
 	 * 勤怠詳細画面の初期値を設定する。<br>
+	 * @throws MospException 例外発生時
 	 */
-	protected void setDefaultValues() {
+	protected void setDefaultValues() throws MospException {
 		// VO準備
 		AttendanceCardVo vo = (AttendanceCardVo)mospParams.getVo();
 		vo.setModeCardEdit(TimeConst.MODE_APPLICATION_APPLIED);
-		vo.setLblYear(String.valueOf(DateUtility.getYear(vo.getTargetDate())));
-		vo.setLblMonth(String.valueOf(DateUtility.getMonth(vo.getTargetDate())));
-		vo.setLblDay(String.valueOf(DateUtility.getDay(vo.getTargetDate())));
+		// 対象日取得
+		Date targetDate = vo.getTargetDate();
+		vo.setLblYear(String.valueOf(DateUtility.getYear(targetDate)));
+		vo.setLblMonth(String.valueOf(DateUtility.getMonth(targetDate)));
+		vo.setLblDay(String.valueOf(DateUtility.getDay(targetDate)));
+		vo.setLblDayOfTheWeek(DateUtility.getStringDayOfWeek(targetDate));
+		vo.setLblWorkDayOfWeekStyle(HolidayUtility.getWorkDayOfWeekStyle(targetDate, mospParams));
 		vo.setCkbDirectStart("0");
 		vo.setCkbDirectEnd("0");
+		vo.setCkbForgotRecordWorkStart("0");
+		vo.setCkbNotRecordWorkStart("0");
 		vo.setTmdAttendanceId("0");
 		vo.setTxtCorrectionReason("");
 		vo.setLblCorrectionHistory("");
@@ -2953,6 +3184,7 @@ public class AttendanceCardAction extends TimeAction {
 		vo.setLblSpecificWorkTimeIn("");
 		vo.setLblSpecificWorkTimeOver("");
 		vo.setLblLegalWorkTime("");
+		vo.setLblHolidayWorkTime("");
 		vo.setLblDecreaseTime("");
 		vo.setLblAttendanceComment("");
 		vo.setLblAttendanceState("");
@@ -2980,6 +3212,7 @@ public class AttendanceCardAction extends TimeAction {
 		vo.setLblWorkOnHolidayComment("");
 		vo.setLblWorkOnHolidayApprover("");
 		vo.setLblSubHolidayDate(new String[0]);
+		vo.setLblSubHolidayLength(new String[0]);
 		vo.setLblSubHolidayWorkDate(new String[0]);
 		vo.setLblSubHolidayState(new String[0]);
 		vo.setLblSubHolidayComment(new String[0]);
@@ -3001,6 +3234,7 @@ public class AttendanceCardAction extends TimeAction {
 		vo.setLblDifferenceApprover("");
 		vo.setLblGeneralWorkTime("");
 		vo.setTxtTimeComment("");
+		vo.setTxtRemarks("");
 		vo.setPltAllowance1("0");
 		vo.setPltAllowance2("0");
 		vo.setPltAllowance3("0");
@@ -3067,10 +3301,16 @@ public class AttendanceCardAction extends TimeAction {
 		if (getTransferredDirectStart() != null) {
 			// 直行
 			vo.setCkbDirectStart(getTransferredDirectStart());
+		} else if (getTimeRecordDirectStart() != null) {
+			// 打刻から遷移した場合の直行
+			vo.setCkbDirectStart(getTimeRecordDirectStart());
 		}
 		if (getTransferredDirectEnd() != null) {
 			// 直帰
 			vo.setCkbDirectEnd(getTransferredDirectEnd());
+		} else if (getTimeRecordDirectEnd() != null) {
+			// 打刻から遷移した場合の直帰
+			vo.setCkbDirectEnd(getTimeRecordDirectEnd());
 		}
 		if (getTransferredTimeComment() != null) {
 			// 勤怠コメント
@@ -3088,8 +3328,8 @@ public class AttendanceCardAction extends TimeAction {
 		// プルダウン設定(勤務形態プルダウンは別途設定
 		vo.setAryPltAllowance(mospParams.getProperties().getCodeArray(TimeConst.CODE_ALLOWANCE, false));
 		vo.setAryPltLateReason(mospParams.getProperties().getCodeArray(TimeConst.CODE_REASON_OF_LATE, true));
-		vo.setAryPltLeaveEarlyReason(mospParams.getProperties()
-			.getCodeArray(TimeConst.CODE_REASON_OF_LEAVE_EARLY, true));
+		vo.setAryPltLeaveEarlyReason(
+				mospParams.getProperties().getCodeArray(TimeConst.CODE_REASON_OF_LEAVE_EARLY, true));
 		vo.setAryPltLateCertificate(mospParams.getProperties().getCodeArray(TimeConst.CODE_ALLOWANCE, true));
 	}
 	
@@ -3138,8 +3378,19 @@ public class AttendanceCardAction extends TimeAction {
 		dto.setDirectStart(getInt(vo.getCkbDirectStart()));
 		// 直帰
 		dto.setDirectEnd(getInt(vo.getCkbDirectEnd()));
+		// 始業忘れ
+		dto.setForgotRecordWorkStart(getInt(vo.getCkbForgotRecordWorkStart()));
+		// その他
+		dto.setNotRecordWorkStart(getInt(vo.getCkbNotRecordWorkStart()));
 		// 勤怠コメント
 		dto.setTimeComment(vo.getTxtTimeComment());
+		// 備考
+		dto.setRemarks("");
+		if (MospConst.CHECKBOX_ON.equals(vo.getCkbDirectStart()) || MospConst.CHECKBOX_ON.equals(vo.getCkbDirectEnd())
+				|| MospConst.CHECKBOX_ON.equals(vo.getCkbForgotRecordWorkStart())
+				|| MospConst.CHECKBOX_ON.equals(vo.getCkbNotRecordWorkStart())) {
+			dto.setRemarks(vo.getTxtRemarks());
+		}
 		// 遅刻理由
 		dto.setLateReason(vo.getPltLateReason());
 		// 遅刻証明書
@@ -3220,24 +3471,31 @@ public class AttendanceCardAction extends TimeAction {
 		AttendanceCardVo vo = (AttendanceCardVo)mospParams.getVo();
 		// 休憩登録クラス取得
 		RestRegistBeanInterface regist = time().restRegist();
+		
 		// 勤怠マスタ取得
 		TimeSettingDtoInterface timeSettingDto = timeReference().cutoffUtil().getTimeSetting(vo.getPersonalId(),
 				vo.getTargetDate());
 		if (mospParams.hasErrorMessage()) {
 			return;
 		}
+		// デフォルト時間取得
 		Date defaultTime = DateUtility.getDateTime(DateUtility.getYear(vo.getTargetDate()),
 				DateUtility.getMonth(vo.getTargetDate()), DateUtility.getDay(vo.getTargetDate()), 0, 0);
+		// 休憩開始時刻配列取得
 		Date[] startArray = new Date[]{ getRest1Start(), getRest2Start(), getRest3Start(), getRest4Start(),
 			getRest5Start(), getRest6Start() };
+		// 休憩終了時刻配列取得
 		Date[] endArray = new Date[]{ getRest1End(), getRest2End(), getRest3End(), getRest4End(), getRest5End(),
 			getRest6End() };
+		
 		for (int i = 0; i < startArray.length; i++) {
+			// 休憩DTO準備
 			RestDtoInterface restDto = regist.getInitDto();
+			// 登録済休憩情報取得
 			RestDtoInterface oldRestDto = timeReference().rest().findForKey(vo.getPersonalId(), vo.getTargetDate(),
 					TimeBean.TIMES_WORK_DEFAULT, i + 1);
 			if (oldRestDto != null) {
-				// レコード識別ID
+				// レコード識別ID設定
 				restDto.setTmdRestId(oldRestDto.getTmdRestId());
 			}
 			// 個人ID
@@ -3254,17 +3512,21 @@ public class AttendanceCardAction extends TimeAction {
 			restDto.setRestEnd(defaultTime);
 			Date restStartTime = startArray[i];
 			Date restEndTime = endArray[i];
+			// 休憩開始があり休憩終了がある場合
 			if (restStartTime != null && restEndTime != null) {
+				// 始業時刻が休憩開始時刻より後の場合
 				if (dto.getStartTime() != null && dto.getStartTime().after(restStartTime)) {
-					// 始業時刻が休憩開始時刻より後の場合は始業時刻を休憩開始時刻とする
+					// 始業時刻を休憩開始時刻とする
 					restStartTime = dto.getStartTime();
 				}
+				// 終業時刻が休憩終了時刻より前の場合
 				if (dto.getEndTime() != null && dto.getEndTime().before(restEndTime)) {
-					// 終業時刻が休憩終了時刻より前の場合は終業時刻を休憩終了時刻とする
+					// 終業時刻を休憩終了時刻とする
 					restEndTime = dto.getEndTime();
 				}
+				// 休憩終了時刻が休憩開始時刻より前の場合
 				if (restEndTime.before(restStartTime)) {
-					// 休憩終了時刻が休憩開始時刻より前の場合は休憩開始時刻を休憩終了時刻とする
+					// 休憩開始時刻を休憩終了時刻とする
 					restEndTime = restStartTime;
 				}
 				if (!restStartTime.equals(restEndTime)) {
@@ -3334,8 +3596,8 @@ public class AttendanceCardAction extends TimeAction {
 				}
 			}
 			// 外出時間
-			dto.setGoOutTime(regist.getCalcMinutelyHolidayAGoOutTime(dto.getGoOutStart(), dto.getGoOutEnd(),
-					timeSettingDto));
+			dto.setGoOutTime(
+					regist.getCalcMinutelyHolidayAGoOutTime(dto.getGoOutStart(), dto.getGoOutEnd(), timeSettingDto));
 			minutelyHolidayAList.add(dto);
 		}
 		// 分単位休暇B
@@ -3375,8 +3637,8 @@ public class AttendanceCardAction extends TimeAction {
 				}
 			}
 			// 外出時間
-			dto.setGoOutTime(regist.getCalcMinutelyHolidayBGoOutTime(dto.getGoOutStart(), dto.getGoOutEnd(),
-					timeSettingDto));
+			dto.setGoOutTime(
+					regist.getCalcMinutelyHolidayBGoOutTime(dto.getGoOutStart(), dto.getGoOutEnd(), timeSettingDto));
 			minutelyHolidayBList.add(dto);
 		}
 	}
@@ -3493,7 +3755,7 @@ public class AttendanceCardAction extends TimeAction {
 				}
 			}
 			// 外出時間
-			dto.setGoOutTime(regist.getCalcPublicGoOutTime(dto.getGoOutStart(), dto.getGoOutEnd(), timeSettingDto));
+			dto.setGoOutTime(regist.getCalcPrivateGoOutTime(dto.getGoOutStart(), dto.getGoOutEnd(), timeSettingDto));
 			privateList.add(dto);
 		}
 	}
@@ -3504,11 +3766,11 @@ public class AttendanceCardAction extends TimeAction {
 	 * @param requestEntity 申請エンティティ
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
-	private void chkPrivateGoOut(AttendanceDtoInterface dto, RequestEntity requestEntity) throws MospException {
+	protected void chkPrivateGoOut(AttendanceDtoInterface dto, RequestEntity requestEntity) throws MospException {
 		// VO取得
 		AttendanceCardVo vo = (AttendanceCardVo)mospParams.getVo();
-		DifferenceRequestReferenceBeanInterface differenceRequest = timeReference().differenceRequest(
-				vo.getTargetDate());
+		DifferenceRequestReferenceBeanInterface differenceRequest = timeReference()
+			.differenceRequest(vo.getTargetDate());
 		// 前半休或いは後半休であるかを取得
 		boolean isHolidayAm = requestEntity.isAmHoliday(true);
 		boolean isHolidayPm = requestEntity.isPmHoliday(true);
@@ -3571,13 +3833,13 @@ public class AttendanceCardAction extends TimeAction {
 				workEndTime = differenceRequestDto.getRequestEnd();
 				if (isHolidayAm) {
 					// 午前休の場合
-					workStartTime = differenceRequest.getDifferenceStartTimeMorningOff(differenceRequestDto
-						.getRequestStart());
+					workStartTime = differenceRequest
+						.getDifferenceStartTimeMorningOff(differenceRequestDto.getRequestStart());
 				}
 				if (isHolidayPm) {
 					// 午後休の場合
-					workEndTime = differenceRequest.getDifferenceEndTimeAfternoonOff(differenceRequestDto
-						.getRequestEnd());
+					workEndTime = differenceRequest
+						.getDifferenceEndTimeAfternoonOff(differenceRequestDto.getRequestEnd());
 				}
 			}
 		}
@@ -4109,132 +4371,148 @@ public class AttendanceCardAction extends TimeAction {
 	
 	/**
 	 * 休暇時間の重複チェック
+	 * @param dto 勤怠情報
 	 * @throws MospException 例外発生時
 	 */
-	protected void chkDuplRest() throws MospException {
+	protected void chkDuplRest(AttendanceDtoInterface dto) throws MospException {
 		Date baseDateStart = null;
 		Date baseDateEnd = null;
+		// VO取得
+		AttendanceCardVo vo = (AttendanceCardVo)mospParams.getVo();
+		// 直行・直帰確認
+		boolean isDirect = vo.getCkbDirectStart().equals(MospConst.CHECKBOX_ON)
+				|| vo.getCkbDirectEnd().equals(MospConst.CHECKBOX_ON);
+		// 始業、終業、勤務日取得
+		Date startTime = dto.getStartTime();
+		Date endTime = dto.getEndTime();
+		// 名称取得
+		String rest1 = mospParams.getName("Rest1");
+		String rest2 = mospParams.getName("Rest2");
+		String rest3 = mospParams.getName("Rest3");
+		String rest4 = mospParams.getName("Rest4");
+		String rest5 = mospParams.getName("Rest5");
+		String rest6 = mospParams.getName("Rest6");
+		String public1 = mospParams.getName("Official", "GoingOut", "No1");
+		String public2 = mospParams.getName("Official", "GoingOut", "No2");
+		String private1 = mospParams.getName("PrivateGoingOut1");
+		String private2 = mospParams.getName("PrivateGoingOut2");
+		String minutelyA1 = mospParams.getName("MinutelyHolidayAAbbr", "No1");
+		String minutelyA2 = mospParams.getName("MinutelyHolidayAAbbr", "No2");
+		String minutelyA3 = mospParams.getName("MinutelyHolidayAAbbr", "No3");
+		String minutelyA4 = mospParams.getName("MinutelyHolidayAAbbr", "No4");
+		String minutelyB1 = mospParams.getName("MinutelyHolidayBAbbr", "No1");
+		String minutelyB2 = mospParams.getName("MinutelyHolidayBAbbr", "No2");
+		String minutelyB3 = mospParams.getName("MinutelyHolidayBAbbr", "No3");
+		String minutelyB4 = mospParams.getName("MinutelyHolidayBAbbr", "No4");
 		// 昼休憩
 		baseDateStart = getRest1Start();
 		baseDateEnd = getRest1End();
 		if (baseDateStart != null && baseDateEnd != null) {
 			// 時間外休憩2
 			if (chkDuplTime(baseDateStart, baseDateEnd, getRest2Start(), getRest2End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest1"),
-					mospParams.getName("Rest2") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest1, rest2 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 時間外休憩3
 			if (chkDuplTime(baseDateStart, baseDateEnd, getRest3Start(), getRest3End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest1"),
-					mospParams.getName("Rest3") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest1, rest3 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 時間外休憩4
 			if (chkDuplTime(baseDateStart, baseDateEnd, getRest4Start(), getRest4End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest1"),
-					mospParams.getName("Rest4") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest1, rest4 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 時間外休憩5
 			if (chkDuplTime(baseDateStart, baseDateEnd, getRest5Start(), getRest5End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest1"),
-					mospParams.getName("Rest5") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest1, rest5 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 時間外休憩6
 			if (chkDuplTime(baseDateStart, baseDateEnd, getRest6Start(), getRest6End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest1"),
-					mospParams.getName("Rest6") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest1, rest6 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 公用外出1
 			if (chkDuplTime(baseDateStart, baseDateEnd, getPublic1Start(), getPublic1End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest1"),
-					mospParams.getName("Official", "GoingOut", "No1") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest1, public1 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 公用外出2
 			if (chkDuplTime(baseDateStart, baseDateEnd, getPublic2Start(), getPublic2End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest1"),
-					mospParams.getName("Official", "GoingOut", "No2") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest1, public2 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 私用外出1
 			if (chkDuplTime(baseDateStart, baseDateEnd, getPrivate1Start(), getPrivate1End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest1"),
-					mospParams.getName("PrivateGoingOut1") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest1, private1 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 私用外出2
 			if (chkDuplTime(baseDateStart, baseDateEnd, getPrivate2Start(), getPrivate2End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest1"),
-					mospParams.getName("PrivateGoingOut2") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest1, private2 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇A-1
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayA1Start(), getMinutelyHolidayA1End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest1"),
-					mospParams.getName("MinutelyHolidayAAbbr", "No1") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest1, minutelyA1 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇A-2
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayA2Start(), getMinutelyHolidayA2End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest1"),
-					mospParams.getName("MinutelyHolidayAAbbr", "No2") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest1, minutelyA2 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇A-3
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayA3Start(), getMinutelyHolidayA3End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest1"),
-					mospParams.getName("MinutelyHolidayAAbbr", "No3") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest1, minutelyA3 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇A-4
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayA4Start(), getMinutelyHolidayA4End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest1"),
-					mospParams.getName("MinutelyHolidayAAbbr", "No4") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest1, minutelyA4 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-1
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB1Start(), getMinutelyHolidayB1End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest1"),
-					mospParams.getName("MinutelyHolidayBAbbr", "No1") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest1, minutelyB1 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-2
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB2Start(), getMinutelyHolidayB2End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest1"),
-					mospParams.getName("MinutelyHolidayBAbbr", "No2") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest1, minutelyB2 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-3
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB3Start(), getMinutelyHolidayB3End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest1"),
-					mospParams.getName("MinutelyHolidayBAbbr", "No3") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest1, minutelyB3 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-4
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB4Start(), getMinutelyHolidayB4End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest1"),
-					mospParams.getName("MinutelyHolidayBAbbr", "No4") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest1, minutelyB4 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
+				return;
+			}
+			// 直行・直帰かつ整合性がとれない場合
+			if (isDirect && !chkTimeValidate(startTime, endTime, vo.getTxtRestStartHour1(), vo.getTxtRestStartMinute1(),
+					vo.getTxtRestEndHour1(), vo.getTxtRestEndMinute1(), rest1)) {
 				return;
 			}
 		}
@@ -4244,821 +4522,743 @@ public class AttendanceCardAction extends TimeAction {
 		if (baseDateStart != null && baseDateEnd != null) {
 			// 時間外休憩3
 			if (chkDuplTime(baseDateStart, baseDateEnd, getRest3Start(), getRest3End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest2"),
-					mospParams.getName("Rest3") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest2, rest3 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 時間外休憩4
 			if (chkDuplTime(baseDateStart, baseDateEnd, getRest4Start(), getRest4End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest2"),
-					mospParams.getName("Rest4") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest2, rest4 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 時間外休憩5
 			if (chkDuplTime(baseDateStart, baseDateEnd, getRest5Start(), getRest5End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest2"),
-					mospParams.getName("Rest5") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest2, rest5 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 時間外休憩6
 			if (chkDuplTime(baseDateStart, baseDateEnd, getRest6Start(), getRest6End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest2"),
-					mospParams.getName("Rest6") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest2, rest6 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 公用外出1
 			if (chkDuplTime(baseDateStart, baseDateEnd, getPublic1Start(), getPublic1End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest2"),
-					mospParams.getName("Official", "GoingOut", "No1") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest2, public1 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 公用外出2
 			if (chkDuplTime(baseDateStart, baseDateEnd, getPublic2Start(), getPublic2End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest2"),
-					mospParams.getName("Official", "GoingOut", "No2") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest2, public2 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 私用外出1
 			if (chkDuplTime(baseDateStart, baseDateEnd, getPrivate1Start(), getPrivate1End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest2"),
-					mospParams.getName("PrivateGoingOut1") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest2, private1 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 私用外出2
 			if (chkDuplTime(baseDateStart, baseDateEnd, getPrivate2Start(), getPrivate2End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest2"),
-					mospParams.getName("PrivateGoingOut2") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest2, private2 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇A-1
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayA1Start(), getMinutelyHolidayA1End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest2"),
-					mospParams.getName("MinutelyHolidayAAbbr", "No1") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest2, minutelyA1 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇A-2
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayA2Start(), getMinutelyHolidayA2End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest2"),
-					mospParams.getName("MinutelyHolidayAAbbr", "No2") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest2, minutelyA2 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇A-3
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayA3Start(), getMinutelyHolidayA3End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest2"),
-					mospParams.getName("MinutelyHolidayAAbbr", "No3") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest2, minutelyA3 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇A-4
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayA4Start(), getMinutelyHolidayA4End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest2"),
-					mospParams.getName("MinutelyHolidayAAbbr", "No4") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest2, minutelyA4 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-1
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB1Start(), getMinutelyHolidayB1End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest2"),
-					mospParams.getName("MinutelyHolidayBAbbr", "No1") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest2, minutelyB1 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-2
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB2Start(), getMinutelyHolidayB2End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest2"),
-					mospParams.getName("MinutelyHolidayBAbbr", "No2") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest2, minutelyB2 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-3
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB3Start(), getMinutelyHolidayB3End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest2"),
-					mospParams.getName("MinutelyHolidayBAbbr", "No3") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest2, minutelyB3 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-4
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB4Start(), getMinutelyHolidayB4End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest2"),
-					mospParams.getName("MinutelyHolidayBAbbr", "No4") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest2, minutelyB4 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
+				return;
+			}
+			// 直行・直帰かつ整合性がとれない場合
+			if (isDirect && !chkTimeValidate(startTime, endTime, vo.getTxtRestStartHour2(), vo.getTxtRestStartMinute2(),
+					vo.getTxtRestEndHour2(), vo.getTxtRestEndMinute2(), rest2)) {
 				return;
 			}
 		}
 		
-		// 時間外休憩3	
+		// 時間外休憩3
 		baseDateStart = getRest3Start();
 		baseDateEnd = getRest3End();
 		if (baseDateStart != null && baseDateEnd != null) {
 			// 時間外休憩4
 			if (chkDuplTime(baseDateStart, baseDateEnd, getRest4Start(), getRest4End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest3"),
-					mospParams.getName("Rest4") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest3, rest4 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 時間外休憩5
 			if (chkDuplTime(baseDateStart, baseDateEnd, getRest5Start(), getRest5End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest3"),
-					mospParams.getName("Rest5") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest3, rest5 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 時間外休憩6
 			if (chkDuplTime(baseDateStart, baseDateEnd, getRest6Start(), getRest6End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest3"),
-					mospParams.getName("Rest6") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest3, rest6 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 公用外出1
 			if (chkDuplTime(baseDateStart, baseDateEnd, getPublic1Start(), getPublic1End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest3"),
-					mospParams.getName("Official", "GoingOut", "No1") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest3, public1 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 公用外出2
 			if (chkDuplTime(baseDateStart, baseDateEnd, getPublic2Start(), getPublic2End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest3"),
-					mospParams.getName("Official", "GoingOut", "No2") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest3, public2 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 私用外出1
 			if (chkDuplTime(baseDateStart, baseDateEnd, getPrivate1Start(), getPrivate1End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest3"),
-					mospParams.getName("PrivateGoingOut1") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest3, private1 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 私用外出2
 			if (chkDuplTime(baseDateStart, baseDateEnd, getPrivate2Start(), getPrivate2End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest3"),
-					mospParams.getName("PrivateGoingOut2") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest3, private2 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇A-1
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayA1Start(), getMinutelyHolidayA1End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest3"),
-					mospParams.getName("MinutelyHolidayAAbbr", "No1") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest3, minutelyA1 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇A-2
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayA2Start(), getMinutelyHolidayA2End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest3"),
-					mospParams.getName("MinutelyHolidayAAbbr", "No2") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest3, minutelyA2 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇A-3
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayA3Start(), getMinutelyHolidayA3End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest3"),
-					mospParams.getName("MinutelyHolidayAAbbr", "No3") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest3, minutelyA3 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇A-4
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayA4Start(), getMinutelyHolidayA4End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest3"),
-					mospParams.getName("MinutelyHolidayAAbbr", "No4") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest3, minutelyA4 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-1
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB1Start(), getMinutelyHolidayB1End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest3"),
-					mospParams.getName("MinutelyHolidayBAbbr", "No1") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest3, minutelyB1 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-2
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB2Start(), getMinutelyHolidayB2End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest3"),
-					mospParams.getName("MinutelyHolidayBAbbr", "No2") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest3, minutelyB2 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-3
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB3Start(), getMinutelyHolidayB3End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest3"),
-					mospParams.getName("MinutelyHolidayBAbbr", "No3") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest3, minutelyB3 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-4
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB4Start(), getMinutelyHolidayB4End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest3"),
-					mospParams.getName("MinutelyHolidayBAbbr", "No4") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest3, minutelyB4 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
+				return;
+			}
+			// 直行・直帰かつ整合性がとれない場合
+			if (isDirect && !chkTimeValidate(startTime, endTime, vo.getTxtRestStartHour3(), vo.getTxtRestStartMinute3(),
+					vo.getTxtRestEndHour3(), vo.getTxtRestEndMinute3(), rest3)) {
 				return;
 			}
 		}
 		
-		// 時間外休憩4	
+		// 時間外休憩4
 		baseDateStart = getRest4Start();
 		baseDateEnd = getRest4End();
 		if (baseDateStart != null && baseDateEnd != null) {
 			// 時間外休憩5
 			if (chkDuplTime(baseDateStart, baseDateEnd, getRest5Start(), getRest5End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest4"),
-					mospParams.getName("Rest5") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest4, rest5 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 時間外休憩6
 			if (chkDuplTime(baseDateStart, baseDateEnd, getRest6Start(), getRest6End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest4"),
-					mospParams.getName("Rest6") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest4, rest6 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 公用外出1
 			if (chkDuplTime(baseDateStart, baseDateEnd, getPublic1Start(), getPublic1End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest4"),
-					mospParams.getName("Official", "GoingOut", "No1") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest4, public1 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 公用外出2
 			if (chkDuplTime(baseDateStart, baseDateEnd, getPublic2Start(), getPublic2End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest4"),
-					mospParams.getName("Official", "GoingOut", "No2") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest4, public2 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 私用外出1
 			if (chkDuplTime(baseDateStart, baseDateEnd, getPrivate1Start(), getPrivate1End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest4"),
-					mospParams.getName("PrivateGoingOut1") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest4, private1 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 私用外出2
 			if (chkDuplTime(baseDateStart, baseDateEnd, getPrivate2Start(), getPrivate2End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest4"),
-					mospParams.getName("PrivateGoingOut2") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest4, private2 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇A-1
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayA1Start(), getMinutelyHolidayA1End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest4"),
-					mospParams.getName("MinutelyHolidayAAbbr", "No1") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest4, minutelyA1 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇A-2
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayA2Start(), getMinutelyHolidayA2End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest4"),
-					mospParams.getName("MinutelyHolidayAAbbr", "No2") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest4, minutelyA2 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇A-3
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayA3Start(), getMinutelyHolidayA3End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest4"),
-					mospParams.getName("MinutelyHolidayAAbbr", "No3") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest4, minutelyA3 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇A-4
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayA4Start(), getMinutelyHolidayA4End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest4"),
-					mospParams.getName("MinutelyHolidayAAbbr", "No4") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest4, minutelyA4 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-1
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB1Start(), getMinutelyHolidayB1End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest4"),
-					mospParams.getName("MinutelyHolidayBAbbr", "No1") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest4, minutelyB1 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-2
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB2Start(), getMinutelyHolidayB2End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest4"),
-					mospParams.getName("MinutelyHolidayBAbbr", "No2") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest4, minutelyB2 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-3
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB3Start(), getMinutelyHolidayB3End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest4"),
-					mospParams.getName("MinutelyHolidayBAbbr", "No3") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest4, minutelyB3 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-4
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB4Start(), getMinutelyHolidayB4End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest4"),
-					mospParams.getName("MinutelyHolidayBAbbr", "No4") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest4, minutelyB4 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
+			// 直行・直帰かつ整合性がとれない場合
+			if (isDirect && !chkTimeValidate(startTime, endTime, vo.getTxtRestStartHour4(), vo.getTxtRestStartMinute4(),
+					vo.getTxtRestEndHour4(), vo.getTxtRestEndMinute4(), rest4)) {
+				return;
+			}
 		}
-		// 時間外休憩5	
+		// 時間外休憩5
 		baseDateStart = getRest5Start();
 		baseDateEnd = getRest5End();
 		if (baseDateStart != null && baseDateEnd != null) {
 			// 時間外休憩6
 			if (chkDuplTime(baseDateStart, baseDateEnd, getRest6Start(), getRest6End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest5"),
-					mospParams.getName("Rest6") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest5, rest6 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 公用外出1
 			if (chkDuplTime(baseDateStart, baseDateEnd, getPublic1Start(), getPublic1End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest5"),
-					mospParams.getName("Official", "GoingOut", "No1") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest5, public1 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 公用外出2
 			if (chkDuplTime(baseDateStart, baseDateEnd, getPublic2Start(), getPublic2End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest5"),
-					mospParams.getName("Official", "GoingOut", "No2") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest5, public2 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 私用外出1
 			if (chkDuplTime(baseDateStart, baseDateEnd, getPrivate1Start(), getPrivate1End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest5"),
-					mospParams.getName("PrivateGoingOut1") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest5, private1 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 私用外出2
 			if (chkDuplTime(baseDateStart, baseDateEnd, getPrivate2Start(), getPrivate2End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest5"),
-					mospParams.getName("PrivateGoingOut2") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest5, private2 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇A-1
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayA1Start(), getMinutelyHolidayA1End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest5"),
-					mospParams.getName("MinutelyHolidayAAbbr", "No1") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest5, minutelyA1 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇A-2
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayA2Start(), getMinutelyHolidayA2End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest5"),
-					mospParams.getName("MinutelyHolidayAAbbr", "No2") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest5, minutelyA2 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇A-3
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayA3Start(), getMinutelyHolidayA3End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest5"),
-					mospParams.getName("MinutelyHolidayAAbbr", "No3") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest5, minutelyA3 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇A-4
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayA4Start(), getMinutelyHolidayA4End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest5"),
-					mospParams.getName("MinutelyHolidayAAbbr", "No4") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest5, minutelyA4 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-1
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB1Start(), getMinutelyHolidayB1End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest5"),
-					mospParams.getName("MinutelyHolidayBAbbr", "No1") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest5, minutelyB1 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-2
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB2Start(), getMinutelyHolidayB2End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest5"),
-					mospParams.getName("MinutelyHolidayBAbbr", "No2") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest5, minutelyB2 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-3
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB3Start(), getMinutelyHolidayB3End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest5"),
-					mospParams.getName("MinutelyHolidayBAbbr", "No3") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest5, minutelyB3 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-4
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB4Start(), getMinutelyHolidayB4End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest5"),
-					mospParams.getName("MinutelyHolidayBAbbr", "No4") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest5, minutelyB4 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
+				return;
+			}
+			// 直行・直帰かつ整合性がとれない場合
+			if (isDirect && !chkTimeValidate(startTime, endTime, vo.getTxtRestStartHour5(), vo.getTxtRestStartMinute5(),
+					vo.getTxtRestEndHour5(), vo.getTxtRestEndMinute5(), rest5)) {
 				return;
 			}
 		}
 		
-		//	時間外休憩6	
+		//	時間外休憩6
 		baseDateStart = getRest6Start();
 		baseDateEnd = getRest6End();
 		if (baseDateStart != null && baseDateEnd != null) {
 			// 公用外出1
 			if (chkDuplTime(baseDateStart, baseDateEnd, getPublic1Start(), getPublic1End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest6"),
-					mospParams.getName("Official", "GoingOut", "No1") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest6, public1 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 公用外出2
 			if (chkDuplTime(baseDateStart, baseDateEnd, getPublic2Start(), getPublic2End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest6"),
-					mospParams.getName("Official", "GoingOut", "No2") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest6, public2 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 私用外出1
 			if (chkDuplTime(baseDateStart, baseDateEnd, getPrivate1Start(), getPrivate1End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest6"),
-					mospParams.getName("PrivateGoingOut1") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest6, private1 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 私用外出2
 			if (chkDuplTime(baseDateStart, baseDateEnd, getPrivate2Start(), getPrivate2End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest6"),
-					mospParams.getName("PrivateGoingOut2") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest6, private2 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇A-1
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayA1Start(), getMinutelyHolidayA1End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest6"),
-					mospParams.getName("MinutelyHolidayAAbbr", "No1") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest6, minutelyA1 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇A-2
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayA2Start(), getMinutelyHolidayA2End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest6"),
-					mospParams.getName("MinutelyHolidayAAbbr", "No2") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest6, minutelyA2 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇A-3
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayA3Start(), getMinutelyHolidayA3End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest6"),
-					mospParams.getName("MinutelyHolidayAAbbr", "No3") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest6, minutelyA3 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇A-4
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayA4Start(), getMinutelyHolidayA4End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest6"),
-					mospParams.getName("MinutelyHolidayAAbbr", "No4") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest6, minutelyA4 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-1
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB1Start(), getMinutelyHolidayB1End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest6"),
-					mospParams.getName("MinutelyHolidayBAbbr", "No1") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest6, minutelyB1 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-2
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB2Start(), getMinutelyHolidayB2End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest6"),
-					mospParams.getName("MinutelyHolidayBAbbr", "No2") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest6, minutelyB2 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-3
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB3Start(), getMinutelyHolidayB3End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest6"),
-					mospParams.getName("MinutelyHolidayBAbbr", "No3") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest6, minutelyB3 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-4
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB4Start(), getMinutelyHolidayB4End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), mospParams.getName("Rest6"),
-					mospParams.getName("MinutelyHolidayBAbbr", "No4") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), rest6, minutelyB4 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
+				return;
+			}
+			// 直行・直帰かつ整合性がとれない場合
+			if (isDirect && !chkTimeValidate(startTime, endTime, vo.getTxtRestStartHour6(), vo.getTxtRestStartMinute6(),
+					vo.getTxtRestEndHour6(), vo.getTxtRestEndMinute6(), rest6)) {
 				return;
 			}
 		}
 		
-		// 公用外出1	
+		// 公用外出1
 		baseDateStart = getPublic1Start();
 		baseDateEnd = getPublic1End();
 		if (baseDateStart != null && baseDateEnd != null) {
 			// 公用外出2
 			if (chkDuplTime(baseDateStart, baseDateEnd, getPublic2Start(), getPublic2End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("Official", "GoingOut", "No1"),
-					mospParams.getName("Official", "GoingOut", "No2") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), public1, public2 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 私用外出1
 			if (chkDuplTime(baseDateStart, baseDateEnd, getPrivate1Start(), getPrivate1End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("Official", "GoingOut", "No1"), mospParams.getName("PrivateGoingOut1") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), public1, private1 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 私用外出2
 			if (chkDuplTime(baseDateStart, baseDateEnd, getPrivate2Start(), getPrivate2End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("Official", "GoingOut", "No1"), mospParams.getName("PrivateGoingOut2") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), public1, private2 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇A-1
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayA1Start(), getMinutelyHolidayA1End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("Official", "GoingOut", "No1"),
-					mospParams.getName("MinutelyHolidayAAbbr", "No1") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), public1, minutelyA1 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇A-2
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayA2Start(), getMinutelyHolidayA2End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("Official", "GoingOut", "No1"),
-					mospParams.getName("MinutelyHolidayAAbbr", "No2") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), public1, minutelyA2 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇A-3
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayA3Start(), getMinutelyHolidayA3End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("Official", "GoingOut", "No1"),
-					mospParams.getName("MinutelyHolidayAAbbr", "No3") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), public1, minutelyA3 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇A-4
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayA4Start(), getMinutelyHolidayA4End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("Official", "GoingOut", "No1"),
-					mospParams.getName("MinutelyHolidayAAbbr", "No4") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), public1, minutelyA4 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-1
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB1Start(), getMinutelyHolidayB1End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("Official", "GoingOut", "No1"),
-					mospParams.getName("MinutelyHolidayBAbbr", "No1") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), public1, minutelyB1 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-2
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB2Start(), getMinutelyHolidayB2End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("Official", "GoingOut", "No1"),
-					mospParams.getName("MinutelyHolidayBAbbr", "No2") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), public1, minutelyB2 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-3
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB3Start(), getMinutelyHolidayB3End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("Official", "GoingOut", "No1"),
-					mospParams.getName("MinutelyHolidayBAbbr", "No3") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), public1, minutelyB3 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-4
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB4Start(), getMinutelyHolidayB4End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("Official", "GoingOut", "No1"),
-					mospParams.getName("MinutelyHolidayBAbbr", "No4") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), public1, minutelyB4 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
+				return;
+			}
+			// 直行・直帰かつ整合性がとれない場合
+			if (isDirect && !chkTimeValidate(startTime, endTime, vo.getTxtPublicStartHour1(),
+					vo.getTxtPublicStartMinute1(), vo.getTxtPublicEndHour1(), vo.getTxtPublicEndMinute1(), public1)) {
 				return;
 			}
 		}
 		
-		// 公用外出2	
+		// 公用外出2
 		baseDateStart = getPublic2Start();
 		baseDateEnd = getPublic2End();
 		if (baseDateStart != null && baseDateEnd != null) {
 			// 私用外出1
 			if (chkDuplTime(baseDateStart, baseDateEnd, getPrivate1Start(), getPrivate1End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("Official", "GoingOut", "No2"), mospParams.getName("PrivateGoingOut1") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), public2, private1 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 私用外出2
 			if (chkDuplTime(baseDateStart, baseDateEnd, getPrivate2Start(), getPrivate2End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("Official", "GoingOut", "No2"), mospParams.getName("PrivateGoingOut2") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), public2, private2 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇A-1
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayA1Start(), getMinutelyHolidayA1End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("Official", "GoingOut", "No2"),
-					mospParams.getName("MinutelyHolidayAAbbr", "No1") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), public2, minutelyA1 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇A-2
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayA2Start(), getMinutelyHolidayA2End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("Official", "GoingOut", "No2"),
-					mospParams.getName("MinutelyHolidayAAbbr", "No2") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), public2, minutelyA2 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇A-3
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayA3Start(), getMinutelyHolidayA3End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("Official", "GoingOut", "No2"),
-					mospParams.getName("MinutelyHolidayAAbbr", "No3") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), public2, minutelyA3 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇A-4
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayA4Start(), getMinutelyHolidayA4End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("Official", "GoingOut", "No2"),
-					mospParams.getName("MinutelyHolidayAAbbr", "No4") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), public2, minutelyA4 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-1
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB1Start(), getMinutelyHolidayB1End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("Official", "GoingOut", "No2"),
-					mospParams.getName("MinutelyHolidayBAbbr", "No1") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), public2, minutelyB1 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-2
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB2Start(), getMinutelyHolidayB2End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("Official", "GoingOut", "No2"),
-					mospParams.getName("MinutelyHolidayBAbbr", "No2") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), public2, minutelyB2 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-3
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB3Start(), getMinutelyHolidayB3End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("Official", "GoingOut", "No2"),
-					mospParams.getName("MinutelyHolidayBAbbr", "No3") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), public2, minutelyB3 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-4
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB4Start(), getMinutelyHolidayB4End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("Official", "GoingOut", "No2"),
-					mospParams.getName("MinutelyHolidayBAbbr", "No4") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), public2, minutelyB4 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
+				return;
+			}
+			// 直行・直帰かつ整合性がとれない場合
+			if (isDirect && !chkTimeValidate(startTime, endTime, vo.getTxtPublicStartHour2(),
+					vo.getTxtPublicStartMinute2(), vo.getTxtPublicEndHour2(), vo.getTxtPublicEndMinute2(), public2)) {
 				return;
 			}
 		}
 		
-		// 私用外出1	
+		// 私用外出1
 		baseDateStart = getPrivate1Start();
 		baseDateEnd = getPrivate1End();
 		if (baseDateStart != null && baseDateEnd != null) {
 			// 私用外出2
 			if (chkDuplTime(baseDateStart, baseDateEnd, getPrivate2Start(), getPrivate2End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("PrivateGoingOut1"), mospParams.getName("PrivateGoingOut2") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), private1, private2 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇A-1
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayA1Start(), getMinutelyHolidayA1End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("PrivateGoingOut1"), mospParams.getName("MinutelyHolidayAAbbr", "No1") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), private1, minutelyA1 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇A-2
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayA2Start(), getMinutelyHolidayA2End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("PrivateGoingOut1"), mospParams.getName("MinutelyHolidayAAbbr", "No2") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), private1, minutelyA2 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇A-3
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayA3Start(), getMinutelyHolidayA3End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("PrivateGoingOut1"), mospParams.getName("MinutelyHolidayAAbbr", "No3") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), private1, minutelyA3 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇A-4
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayA4Start(), getMinutelyHolidayA4End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("PrivateGoingOut1"), mospParams.getName("MinutelyHolidayAAbbr", "No4") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), private1, minutelyA4 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-1
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB1Start(), getMinutelyHolidayB1End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("PrivateGoingOut1"), mospParams.getName("MinutelyHolidayBAbbr", "No1") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), private1, minutelyB1 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-2
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB2Start(), getMinutelyHolidayB2End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("PrivateGoingOut1"), mospParams.getName("MinutelyHolidayBAbbr", "No2") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), private1, minutelyB2 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-3
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB3Start(), getMinutelyHolidayB3End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("PrivateGoingOut1"), mospParams.getName("MinutelyHolidayBAbbr", "No3") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), private1, minutelyB3 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-4
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB4Start(), getMinutelyHolidayB4End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("PrivateGoingOut1"), mospParams.getName("MinutelyHolidayBAbbr", "No4") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), private1, minutelyB4 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
+			// 直行・直帰かつ整合性がとれない場合
+			if (isDirect && !chkTimeValidate(startTime, endTime, vo.getTxtPrivateStartHour1(),
+					vo.getTxtPrivateStartMinute1(), vo.getTxtPrivateEndHour1(), vo.getTxtPrivateEndMinute1(),
+					private1)) {
+				return;
+			}
 		}
-		// 私用外出2	
+		// 私用外出2
 		baseDateStart = getPrivate2Start();
 		baseDateEnd = getPrivate2End();
 		if (baseDateStart != null && baseDateEnd != null) {
 			// 分単位休暇A-1
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayA1Start(), getMinutelyHolidayA1End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("PrivateGoingOut2"), mospParams.getName("MinutelyHolidayAAbbr", "No1") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), private2, minutelyA1 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇A-2
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayA2Start(), getMinutelyHolidayA2End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("PrivateGoingOut2"), mospParams.getName("MinutelyHolidayAAbbr", "No2") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), private2, minutelyA2 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇A-3
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayA3Start(), getMinutelyHolidayA3End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("PrivateGoingOut2"), mospParams.getName("MinutelyHolidayAAbbr", "No3") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), private2, minutelyA3 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇A-4
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayA4Start(), getMinutelyHolidayA4End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("PrivateGoingOut2"), mospParams.getName("MinutelyHolidayAAbbr", "No4") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), private2, minutelyA4 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-1
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB1Start(), getMinutelyHolidayB1End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("PrivateGoingOut2"), mospParams.getName("MinutelyHolidayBAbbr", "No1") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), private2, minutelyB1 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-2
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB2Start(), getMinutelyHolidayB2End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("PrivateGoingOut2"), mospParams.getName("MinutelyHolidayBAbbr", "No2") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), private2, minutelyB2 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-3
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB3Start(), getMinutelyHolidayB3End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("PrivateGoingOut2"), mospParams.getName("MinutelyHolidayBAbbr", "No3") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), private2, minutelyB3 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-4
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB4Start(), getMinutelyHolidayB4End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("PrivateGoingOut2"), mospParams.getName("MinutelyHolidayBAbbr", "No4") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), private2, minutelyB4 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
+				return;
+			}
+			// 直行・直帰かつ整合性がとれない場合
+			if (isDirect && !chkTimeValidate(startTime, endTime, vo.getTxtPrivateStartHour2(),
+					vo.getTxtPrivateStartMinute2(), vo.getTxtPrivateEndHour2(), vo.getTxtPrivateEndMinute2(),
+					private2)) {
 				return;
 			}
 		}
@@ -5068,58 +5268,50 @@ public class AttendanceCardAction extends TimeAction {
 		if (baseDateStart != null && baseDateEnd != null) {
 			// 分単位休暇A-2
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayA2Start(), getMinutelyHolidayA2End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("MinutelyHolidayAAbbr", "No1"),
-					mospParams.getName("MinutelyHolidayAAbbr", "No2") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), minutelyA1, minutelyA2 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇A-3
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayA3Start(), getMinutelyHolidayA3End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("MinutelyHolidayAAbbr", "No1"),
-					mospParams.getName("MinutelyHolidayAAbbr", "No3") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), minutelyA1, minutelyA3 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇A-4
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayA4Start(), getMinutelyHolidayA4End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("MinutelyHolidayAAbbr", "No1"),
-					mospParams.getName("MinutelyHolidayAAbbr", "No4") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), minutelyA1, minutelyA4 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-1
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB1Start(), getMinutelyHolidayB1End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("MinutelyHolidayAAbbr", "No1"),
-					mospParams.getName("MinutelyHolidayBAbbr", "No1") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), minutelyA1, minutelyB1 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-2
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB2Start(), getMinutelyHolidayB2End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("MinutelyHolidayAAbbr", "No1"),
-					mospParams.getName("MinutelyHolidayBAbbr", "No2") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), minutelyA1, minutelyB2 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-3
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB3Start(), getMinutelyHolidayB3End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("MinutelyHolidayAAbbr", "No1"),
-					mospParams.getName("MinutelyHolidayBAbbr", "No3") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), minutelyA1, minutelyB3 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-4
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB4Start(), getMinutelyHolidayB4End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("MinutelyHolidayAAbbr", "No1"),
-					mospParams.getName("MinutelyHolidayBAbbr", "No4") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), minutelyA1, minutelyB4 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
+				return;
+			}
+			// 直行・直帰かつ整合性がとれない場合
+			if (isDirect && !chkTimeValidate(startTime, endTime, vo.getTxtMinutelyHolidayAStartHour1(),
+					vo.getTxtMinutelyHolidayAStartMinute1(), vo.getTxtMinutelyHolidayAEndHour1(),
+					vo.getTxtMinutelyHolidayAEndMinute1(), minutelyA1)) {
 				return;
 			}
 		}
@@ -5129,50 +5321,44 @@ public class AttendanceCardAction extends TimeAction {
 		if (baseDateStart != null && baseDateEnd != null) {
 			// 分単位休暇A-3
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayA3Start(), getMinutelyHolidayA3End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("MinutelyHolidayAAbbr", "No2"),
-					mospParams.getName("MinutelyHolidayAAbbr", "No3") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), minutelyA2, minutelyA3 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇A-4
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayA4Start(), getMinutelyHolidayA4End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("MinutelyHolidayAAbbr", "No2"),
-					mospParams.getName("MinutelyHolidayAAbbr", "No4") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), minutelyA2, minutelyA4 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-1
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB1Start(), getMinutelyHolidayB1End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("MinutelyHolidayAAbbr", "No2"),
-					mospParams.getName("MinutelyHolidayBAbbr", "No1") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), minutelyA2, minutelyB1 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-2
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB2Start(), getMinutelyHolidayB2End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("MinutelyHolidayAAbbr", "No2"),
-					mospParams.getName("MinutelyHolidayBAbbr", "No2") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), minutelyA2, minutelyB2 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-3
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB3Start(), getMinutelyHolidayB3End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("MinutelyHolidayAAbbr", "No2"),
-					mospParams.getName("MinutelyHolidayBAbbr", "No3") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), minutelyA2, minutelyB3 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-4
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB4Start(), getMinutelyHolidayB4End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("MinutelyHolidayAAbbr", "No2"),
-					mospParams.getName("MinutelyHolidayBAbbr", "No4") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), minutelyA2, minutelyB4 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
+				return;
+			}
+			// 直行・直帰かつ整合性がとれない場合
+			if (isDirect && !chkTimeValidate(startTime, endTime, vo.getTxtMinutelyHolidayAStartHour2(),
+					vo.getTxtMinutelyHolidayAStartMinute2(), vo.getTxtMinutelyHolidayAEndHour2(),
+					vo.getTxtMinutelyHolidayAEndMinute2(), minutelyA2)) {
 				return;
 			}
 		}
@@ -5182,42 +5368,38 @@ public class AttendanceCardAction extends TimeAction {
 		if (baseDateStart != null && baseDateEnd != null) {
 			// 分単位休暇A-4
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayA4Start(), getMinutelyHolidayA4End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("MinutelyHolidayAAbbr", "No3"),
-					mospParams.getName("MinutelyHolidayAAbbr", "No4") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), minutelyA3, minutelyA4 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-1
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB1Start(), getMinutelyHolidayB1End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("MinutelyHolidayAAbbr", "No3"),
-					mospParams.getName("MinutelyHolidayBAbbr", "No1") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), minutelyA3, minutelyB1 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-2
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB2Start(), getMinutelyHolidayB2End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("MinutelyHolidayAAbbr", "No3"),
-					mospParams.getName("MinutelyHolidayBAbbr", "No2") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), minutelyA3, minutelyB2 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-3
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB3Start(), getMinutelyHolidayB3End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("MinutelyHolidayAAbbr", "No3"),
-					mospParams.getName("MinutelyHolidayBAbbr", "No3") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), minutelyA3, minutelyB3 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-4
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB4Start(), getMinutelyHolidayB4End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("MinutelyHolidayAAbbr", "No3"),
-					mospParams.getName("MinutelyHolidayBAbbr", "No4") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), minutelyA3, minutelyB4 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
+				return;
+			}
+			// 直行・直帰かつ整合性がとれない場合
+			if (isDirect && !chkTimeValidate(startTime, endTime, vo.getTxtMinutelyHolidayAStartHour3(),
+					vo.getTxtMinutelyHolidayAStartMinute3(), vo.getTxtMinutelyHolidayAEndHour3(),
+					vo.getTxtMinutelyHolidayAEndMinute3(), minutelyA3)) {
 				return;
 			}
 		}
@@ -5227,34 +5409,32 @@ public class AttendanceCardAction extends TimeAction {
 		if (baseDateStart != null && baseDateEnd != null) {
 			// 分単位休暇B-1
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB1Start(), getMinutelyHolidayB1End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("MinutelyHolidayAAbbr", "No4"),
-					mospParams.getName("MinutelyHolidayBAbbr", "No1") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), minutelyA4, minutelyB1 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-2
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB2Start(), getMinutelyHolidayB2End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("MinutelyHolidayAAbbr", "No4"),
-					mospParams.getName("MinutelyHolidayBAbbr", "No2") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), minutelyA4, minutelyB2 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-3
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB3Start(), getMinutelyHolidayB3End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("MinutelyHolidayAAbbr", "No4"),
-					mospParams.getName("MinutelyHolidayBAbbr", "No3") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), minutelyA4, minutelyB3 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-4
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB4Start(), getMinutelyHolidayB4End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("MinutelyHolidayAAbbr", "No4"),
-					mospParams.getName("MinutelyHolidayBAbbr", "No4") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), minutelyA4, minutelyB4 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
+				return;
+			}
+			// 直行・直帰かつ整合性がとれない場合
+			if (isDirect && !chkTimeValidate(startTime, endTime, vo.getTxtMinutelyHolidayAStartHour4(),
+					vo.getTxtMinutelyHolidayAStartMinute4(), vo.getTxtMinutelyHolidayAEndHour4(),
+					vo.getTxtMinutelyHolidayAEndMinute4(), minutelyA4)) {
 				return;
 			}
 		}
@@ -5264,25 +5444,27 @@ public class AttendanceCardAction extends TimeAction {
 		if (baseDateStart != null && baseDateEnd != null) {
 			// 分単位休暇B-2
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB2Start(), getMinutelyHolidayB2End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("MinutelyHolidayBAbbr", "No1"),
-					mospParams.getName("MinutelyHolidayBAbbr", "No2") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), minutelyB1, minutelyB2 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-3
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB3Start(), getMinutelyHolidayB3End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("MinutelyHolidayBAbbr", "No1"),
-					mospParams.getName("MinutelyHolidayBAbbr", "No3") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), minutelyB1, minutelyB3 };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-4
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB4Start(), getMinutelyHolidayB4End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("MinutelyHolidayBAbbr", "No1"), mospParams.getName("MinutelyHolidayB", "No4") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), minutelyB1,
+					mospParams.getName("MinutelyHolidayB", "No4") };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
+				return;
+			}
+			// 直行・直帰かつ整合性がとれない場合
+			if (isDirect && !chkTimeValidate(startTime, endTime, vo.getTxtMinutelyHolidayBStartHour1(),
+					vo.getTxtMinutelyHolidayBStartMinute1(), vo.getTxtMinutelyHolidayBEndHour1(),
+					vo.getTxtMinutelyHolidayBEndMinute1(), minutelyB1)) {
 				return;
 			}
 		}
@@ -5292,16 +5474,22 @@ public class AttendanceCardAction extends TimeAction {
 		if (baseDateStart != null && baseDateEnd != null) {
 			// 分単位休暇B-3
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB3Start(), getMinutelyHolidayB3End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("MinutelyHolidayBAbbr", "No2"), mospParams.getName("MinutelyHolidayB", "No3") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), minutelyB2,
+					mospParams.getName("MinutelyHolidayB", "No3") };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
 				return;
 			}
 			// 分単位休暇B-4
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB4Start(), getMinutelyHolidayB4End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("MinutelyHolidayBAbbr", "No2"), mospParams.getName("MinutelyHolidayB", "No4") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), minutelyB2,
+					mospParams.getName("MinutelyHolidayB", "No4") };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
+				return;
+			}
+			// 直行・直帰かつ整合性がとれない場合
+			if (isDirect && !chkTimeValidate(startTime, endTime, vo.getTxtMinutelyHolidayBStartHour2(),
+					vo.getTxtMinutelyHolidayBStartMinute2(), vo.getTxtMinutelyHolidayBEndHour2(),
+					vo.getTxtMinutelyHolidayBEndMinute2(), minutelyB1)) {
 				return;
 			}
 		}
@@ -5311,9 +5499,26 @@ public class AttendanceCardAction extends TimeAction {
 		if (baseDateStart != null && baseDateEnd != null) {
 			// 分単位休暇B-4
 			if (chkDuplTime(baseDateStart, baseDateEnd, getMinutelyHolidayB4Start(), getMinutelyHolidayB4End())) {
-				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart),
-					mospParams.getName("MinutelyHolidayBAbbr", "No3"), mospParams.getName("MinutelyHolidayB", "No4") };
+				String[] rep = { DateUtility.getStringDateAndDay(baseDateStart), minutelyB3,
+					mospParams.getName("MinutelyHolidayB", "No4") };
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK, rep);
+				return;
+			}
+			// 直行・直帰かつ整合性がとれない場合
+			if (isDirect && !chkTimeValidate(startTime, endTime, vo.getTxtMinutelyHolidayBStartHour3(),
+					vo.getTxtMinutelyHolidayBStartMinute3(), vo.getTxtMinutelyHolidayBEndHour3(),
+					vo.getTxtMinutelyHolidayBEndMinute3(), minutelyB1)) {
+				return;
+			}
+		}
+		// 分単位休暇B-4
+		baseDateStart = getMinutelyHolidayB4Start();
+		baseDateEnd = getMinutelyHolidayB4End();
+		if (baseDateStart != null && baseDateEnd != null) {
+			// 直行・直帰かつ整合性がとれない場合
+			if (isDirect && !chkTimeValidate(startTime, endTime, vo.getTxtMinutelyHolidayBStartHour4(),
+					vo.getTxtMinutelyHolidayBStartMinute4(), vo.getTxtMinutelyHolidayBEndHour4(),
+					vo.getTxtMinutelyHolidayBEndMinute4(), minutelyB1)) {
 				return;
 			}
 		}
@@ -5329,8 +5534,8 @@ public class AttendanceCardAction extends TimeAction {
 			throws MospException {
 		// VO準備
 		AttendanceCardVo vo = (AttendanceCardVo)mospParams.getVo();
-		DifferenceRequestReferenceBeanInterface differenceRequest = timeReference().differenceRequest(
-				vo.getTargetDate());
+		DifferenceRequestReferenceBeanInterface differenceRequest = timeReference()
+			.differenceRequest(vo.getTargetDate());
 		// 前半休或いは後半休であるかを取得
 		boolean isHolidayAm = requestEntity.isAmHoliday(true);
 		boolean isHolidayPm = requestEntity.isPmHoliday(true);
@@ -5467,13 +5672,13 @@ public class AttendanceCardAction extends TimeAction {
 				workEndTime = differenceRequestDto.getRequestEnd();
 				if (isHolidayAm) {
 					// 午前休の場合
-					workStartTime = differenceRequest.getDifferenceStartTimeMorningOff(differenceRequestDto
-						.getRequestStart());
+					workStartTime = differenceRequest
+						.getDifferenceStartTimeMorningOff(differenceRequestDto.getRequestStart());
 				}
 				if (isHolidayPm) {
 					// 午後休の場合
-					workEndTime = differenceRequest.getDifferenceEndTimeAfternoonOff(differenceRequestDto
-						.getRequestEnd());
+					workEndTime = differenceRequest
+						.getDifferenceEndTimeAfternoonOff(differenceRequestDto.getRequestEnd());
 				}
 			}
 		}
@@ -5554,5 +5759,85 @@ public class AttendanceCardAction extends TimeAction {
 			return bEnd.after(aStart) && bStart.before(aEnd);
 		}
 		return false;
+	}
+	
+	/**
+	 * 時刻のチェックを行う。
+	 * @param startTime 始業時刻
+	 * @param endTime 終業時刻
+	 * @param startHour 項目開始時
+	 * @param startMinute 項目開始分
+	 * @param endHour 項目終了時
+	 * @param endMinute 項目終了分
+	 * @param itemName 項目名
+	 * @return 確認結果(true：整合性がある、false：整合性がない)
+	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
+	 */
+	protected boolean chkTimeValidate(Date startTime, Date endTime, String startHour, String startMinute,
+			String endHour, String endMinute, String itemName) throws MospException {
+		// VO準備
+		AttendanceCardVo vo = (AttendanceCardVo)mospParams.getVo();
+		// 始業時間、終業時間取得
+		if (startTime == null || endTime == null) {
+			return false;
+		}
+		int startTimeHour = DateUtility.getHour(startTime, vo.getTargetDate());
+		int startTimeMinute = DateUtility.getMinute(startTime);
+		int endTimeHour = DateUtility.getHour(endTime, vo.getTargetDate());
+		int endTimeMinute = DateUtility.getMinute(endTime);
+		// 始業時間時間、終業時間時間取得
+		int startTimeTime = startTimeHour * 60 + startTimeMinute;
+		int endTimeTime = endTimeHour * 60 + endTimeMinute;
+		// 始業時間時間、終業時間時間取得
+		int startTimeTime2 = getInt(startHour) * 60 + getInt(startMinute);
+		int endTimeTime2 = getInt(endHour) * 60 + getInt(endMinute);
+		// 始業時間が0でない又は終業時間が0でない場合
+		if (startTimeTime2 != 0 || endTimeTime2 != 0) {
+			// 始業時間が各時刻より早い場合
+			if (startTimeTime2 < startTimeTime) {
+				// エラーメッセージ追加
+				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_OUT_EXCEPT, itemName);
+				return false;
+			}
+			// 終業時間が各時刻より早い場合
+			if (endTimeTime2 > endTimeTime) {
+				// エラーメッセージ追加
+				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_OUT_EXCEPT, itemName);
+				return false;
+			}
+			// 始業が終業より早い場合
+			if (startTimeTime2 > endTimeTime2) {
+				// エラーメッセージ追加
+				String[] rep = { itemName, itemName };
+				mospParams.addErrorMessage(TimeMessageConst.MSG_W_END_BEFORE_START, rep);
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	/**
+	 * リクエストされた直行を取得する。<br>
+	 * 定時終業打刻から遷移した場合に用いる。<br>
+	 * @return 直行
+	 */
+	protected String getTimeRecordDirectStart() {
+		return (String)mospParams.getGeneralParam(TimeConst.PRM_TRANSFERRED_DIRECT_START);
+	}
+	
+	/**
+	 * リクエストされた直帰を取得する。<br>
+	 * 定時終業打刻から遷移した場合に用いる。<br>
+	 * @return 直帰
+	 */
+	protected String getTimeRecordDirectEnd() {
+		return (String)mospParams.getGeneralParam(TimeConst.PRM_TRANSFERRED_DIRECT_END);
+	}
+	
+	/**
+	 * 試算成功後お知らせメッセージ設定。
+	 */
+	protected void addUnregisteredNoticeMessage() {
+		mospParams.addMessage(TimeMessageConst.MSG_UNREGISTERED_NOTIS);
 	}
 }

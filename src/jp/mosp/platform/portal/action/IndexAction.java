@@ -21,6 +21,7 @@ import jp.mosp.framework.base.BaseVo;
 import jp.mosp.framework.base.MospException;
 import jp.mosp.platform.base.PlatformAction;
 import jp.mosp.platform.portal.vo.LoginVo;
+import jp.mosp.platform.utils.IpAddressUtility;
 
 /**
  * 初期処理機能を提供する。<br><br>
@@ -34,7 +35,12 @@ public class IndexAction extends PlatformAction {
 	 * <br>
 	 * 初期表示を行う。<br>
 	 */
-	public static final String	CMD_SHOW	= "PF0010";
+	public static final String	CMD_SHOW			= "PF0010";
+	
+	/**
+	 * MosPアプリケーション設定キー(ログイン画面追加JSP)。
+	 */
+	public static final String	APP_LOGIN_EXTRA_JSP	= "LoginExtraJsp";
 	
 	
 	/**
@@ -55,6 +61,15 @@ public class IndexAction extends PlatformAction {
 		prepareVo(false, false);
 		// MosPセッション保持情報初期化
 		mospParams.getStoredInfo().initStoredInfo();
+		// VO取得
+		LoginVo vo = (LoginVo)mospParams.getVo();
+		// 追加JSP設定
+		vo.setLoginExtraButtoun(mospParams.getApplicationProperty(APP_LOGIN_EXTRA_JSP));
+		// IPアドレスが利用可能でない場合
+		if (IpAddressUtility.isAddressAvailable(mospParams) == false) {
+			// 追加JSP設定を初期化
+			vo.setLoginExtraButtoun("");
+		}
 	}
 	
 }

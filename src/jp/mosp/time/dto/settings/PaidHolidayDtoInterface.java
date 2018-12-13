@@ -15,9 +15,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-/**
- * 
- */
 package jp.mosp.time.dto.settings;
 
 import jp.mosp.platform.base.PlatformDtoInterface;
@@ -111,6 +108,11 @@ public interface PaidHolidayDtoInterface extends PlatformDtoInterface {
 	 * @return 半日単位取得。
 	 */
 	int getHalfDayUnit();
+	
+	/**
+	 * @return 休日出勤取扱。
+	 */
+	int getWorkOnHolidayCalc();
 	
 	/**
 	 * @return 基準日(月)。
@@ -221,6 +223,11 @@ public interface PaidHolidayDtoInterface extends PlatformDtoInterface {
 	 * @param halfDayUnit セットする 半日単位取得。
 	 */
 	void setHalfDayUnit(int halfDayUnit);
+	
+	/**
+	 * @param workOnHolidayCalc セットする 休日出勤取扱。
+	 */
+	void setWorkOnHolidayCalc(int workOnHolidayCalc);
 	
 	/**
 	 * @param pointDateMonth セットする 基準日(月)。

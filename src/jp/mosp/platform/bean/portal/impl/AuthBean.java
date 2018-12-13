@@ -21,9 +21,9 @@ import java.sql.Connection;
 
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.base.MospParams;
-import jp.mosp.framework.utils.SeUtility;
 import jp.mosp.platform.base.PlatformBean;
 import jp.mosp.platform.bean.portal.AuthBeanInterface;
+import jp.mosp.platform.bean.portal.PasswordCheckBeanInterface;
 import jp.mosp.platform.constant.PlatformMessageConst;
 import jp.mosp.platform.dao.system.UserPasswordDaoInterface;
 import jp.mosp.platform.dto.system.UserPasswordDtoInterface;
@@ -38,7 +38,12 @@ public class AuthBean extends PlatformBean implements AuthBeanInterface {
 	/**
 	 * ユーザパスワード情報DAO。<br>
 	 */
-	private UserPasswordDaoInterface	dao;
+	protected UserPasswordDaoInterface		dao;
+	
+	/**
+	 * パスワード確認処理。<br
+	 */
+	protected PasswordCheckBeanInterface	passwordCheck;
 	
 	
 	/**
@@ -59,12 +64,14 @@ public class AuthBean extends PlatformBean implements AuthBeanInterface {
 	
 	@Override
 	public void initBean() throws MospException {
-		// DAO準備
+		// DAOを準備
 		dao = (UserPasswordDaoInterface)createDao(UserPasswordDaoInterface.class);
+		// Beanを準備
+		passwordCheck = (PasswordCheckBeanInterface)createBean(PasswordCheckBeanInterface.class);
 	}
 	
 	@Override
-	public void authenticate(String userId, String password) throws MospException {
+	public void authenticate(String userId, String pass) throws MospException {
 		// ユーザIDでユーザパスワード情報を取得
 		UserPasswordDtoInterface dto = dao.findForInfo(userId);
 		// ユーザパスワード情報存在確認
@@ -73,12 +80,13 @@ public class AuthBean extends PlatformBean implements AuthBeanInterface {
 			mospParams.addErrorMessage(PlatformMessageConst.MSG_AUTH_FAILED);
 			return;
 		}
+		// パスワードを暗号化
+		String encrypted = passwordCheck.encrypt(pass);
 		// パスワード妥当性確認
-		if (SeUtility.encrypt(password).equals(dto.getPassword()) == false) {
+		if (encrypted.equals(dto.getPassword()) == false) {
 			// エラーメッセージ追加
 			mospParams.addErrorMessage(PlatformMessageConst.MSG_AUTH_FAILED);
 		}
-		return;
 	}
 	
 }

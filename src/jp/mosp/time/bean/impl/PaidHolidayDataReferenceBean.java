@@ -37,7 +37,7 @@ public class PaidHolidayDataReferenceBean extends PlatformBean implements PaidHo
 	/**
 	 * 有給休暇データ参照クラス。
 	 */
-	private PaidHolidayDataDaoInterface	dao;
+	private PaidHolidayDataDaoInterface dao;
 	
 	
 	/**
@@ -82,15 +82,21 @@ public class PaidHolidayDataReferenceBean extends PlatformBean implements PaidHo
 	}
 	
 	@Override
+	public List<PaidHolidayDataDtoInterface> getPaidHolidayDataInfoAllList(String personalId, Date targetDate)
+			throws MospException {
+		return dao.findForInfoAllList(personalId, targetDate);
+	}
+	
+	@Override
 	public PaidHolidayDataDtoInterface findForKey(String personalId, Date activateDate, Date acquisitionDate)
 			throws MospException {
 		return dao.findForKey(personalId, activateDate, acquisitionDate);
 	}
 	
 	@Override
-	public List<PaidHolidayDataDtoInterface> getPaidHolidayDataInfoList(String personalId, Date firstDate, Date lastDate)
+	public List<PaidHolidayDataDtoInterface> findForNextInfoList(String personalId, Date targetDate)
 			throws MospException {
-		return dao.findForInfoList(personalId, firstDate, lastDate);
+		return dao.findForNextInfoList(personalId, targetDate);
 	}
 	
 	@Override
@@ -105,4 +111,9 @@ public class PaidHolidayDataReferenceBean extends PlatformBean implements PaidHo
 		return dao.findForExpirationDateList(personalId, expirationDate);
 	}
 	
+	@Override
+	public List<PaidHolidayDataDtoInterface> findForAcquisitionList(String personalId, Date startDate, Date endDate)
+			throws MospException {
+		return dao.findForAcquisitionList(personalId, startDate, endDate);
+	}
 }

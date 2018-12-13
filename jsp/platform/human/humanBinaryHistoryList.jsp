@@ -25,6 +25,7 @@ errorPage="/jsp/common/error.jsp"
 import = "jp.mosp.framework.constant.MospConst"
 import = "jp.mosp.framework.base.MospParams"
 import = "jp.mosp.framework.utils.HtmlUtility"
+import = "jp.mosp.framework.utils.RoleUtility"
 import = "jp.mosp.platform.constant.PlatformConst"
 import = "jp.mosp.platform.human.constant.PlatformHumanConst"
 import = "jp.mosp.platform.human.vo.HumanBinaryHistoryListVo"
@@ -36,10 +37,12 @@ import = "jp.mosp.platform.human.action.HumanBinaryOutputFileAction"
 %><%
 MospParams params = (MospParams)request.getAttribute(MospConst.ATT_MOSP_PARAMS);
 HumanBinaryHistoryListVo vo = (HumanBinaryHistoryListVo)params.getVo();
+// 画面情報から人事汎用管理区分取得
+String division = vo.getDivision();
+// 人事汎用管理区分参照権限
+boolean isReferenceDivision = RoleUtility.getReferenceDivisionsList(params).contains(division);
 %>
-
-<jsp:include page="<%= PlatformHumanConst.PATH_HUMAN_COMMON_INFO_JSP %>" flush="false" />
-
+<jsp:include page="<%= params.getApplicationProperty(PlatformHumanConst.APP_HUMAN_COMMON_INFO_JSP) %>" flush="false" />
 <%
 for (int i = 0; i < vo.getAryActiveteDate().length; i++) {
 	// 拡張子取得
@@ -57,12 +60,17 @@ for (int i = 0; i < vo.getAryActiveteDate().length; i++) {
 				<button type="button" class="Name4Button" id="btnOutput" onclick="submitFile(event, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_ACTIVATE_DATE %>', '<%= vo.getAryActiveteDate(i) %>'), '<%= HumanBinaryOutputFileAction.CMD_HISTORY_LIST_FILE %>');"><%= params.getName("Output") %></button>
 <%
 	}
-%>			
+%>				<% // 更新権限がある場合 %>
+				<% if (!isReferenceDivision) { %>
 				<button type="button" id="btnHumenInfo" name="btnDelete" class="Name4Button" onclick="submitTransfer(event, null, checkExtra, new Array('<%= PlatformConst.PRM_TRANSFERRED_TYPE %>', '<%= vo.getDivision() %>','<%= PlatformConst.PRM_TRANSFERRED_ACTIVATE_DATE %>', '<%= vo.getAryActiveteDate(i) %>'), '<%= HumanBinaryHistoryListAction.CMD_DELETE %>');"
 					><%= params.getName("History","Delete") %></button>
+				<% } %>
 				<button type="button" id="btnHumenInfo" class="Name4Button"
 					onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_TYPE %>', '<%= vo.getDivision() %>','<%= PlatformConst.PRM_TRANSFERRED_ACTIVATE_DATE %>', '<%= vo.getAryActiveteDate(i) %>', '<%= PlatformConst.PRM_TRANSFERRED_ACTION %>',  '<%= HumanBinaryHistoryCardAction.CMD_EDIT_SELECT %>'), '<%= HumanBinaryHistoryListAction.CMD_TRANSFER %>');"
-					><%= params.getName("History","Edit") %></button>
+					>
+					<% // 更新権限がある場合%>
+					<%= isReferenceDivision ? params.getName("History","Reference") :params.getName("History","Edit")%>
+					</button>
 				</span>
 			</th>
 		</tr>
@@ -90,10 +98,14 @@ for (int i = 0; i < vo.getAryActiveteDate().length; i++) {
 %>
 </div>
 <div class="Button">
+	<% // 更新権限がある場合 %>
+	<% if (!isReferenceDivision) { %>
 		<button type="button" id="btnCmd01" class="Name4Button"
-		onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_TYPE %>',  '<%= vo.getDivision() %>','<%= PlatformConst.PRM_TRANSFERRED_ACTION %>',  '<%= HumanBinaryHistoryCardAction.CMD_ADD_SELECT %>'), '<%= HumanBinaryHistoryListAction.CMD_TRANSFER %>');"
-		><%= params.getName("History","Add") %></button>
-		<button type="button" id="btnCmd01" class="Name4Button"
-		onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_ACTION %>', '<%=HumanInfoAction.class.getName() %>'), '<%= HumanBinaryHistoryListAction.CMD_TRANSFER %>');"
-		><%= params.getName("Information","List") %></button>
+		onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_TYPE %>',  '<%= vo.getDivision() %>','<%= PlatformConst.PRM_TRANSFERRED_ACTION %>',  '<%= HumanBinaryHistoryCardAction.CMD_ADD_SELECT %>'), '<%= HumanBinaryHistoryListAction.CMD_TRANSFER %>');">
+			<%= params.getName("History","Add")%>
+		</button>
+	<% } %>
+	<button type="button" id="btnCmd01" class="Name4Button"
+	onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_ACTION %>', '<%=HumanInfoAction.class.getName() %>'), '<%= HumanBinaryHistoryListAction.CMD_TRANSFER %>');"
+	><%= params.getName("Information","List") %></button>
 </div>

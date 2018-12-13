@@ -24,12 +24,25 @@ import jp.mosp.time.dto.settings.PaidHolidayDataGrantListDtoInterface;
 /**
  * 
  */
-public class PaidHolidayDataGrantListAttendanceRateComparator implements
-		Comparator<PaidHolidayDataGrantListDtoInterface> {
+public class PaidHolidayDataGrantListAttendanceRateComparator
+		implements Comparator<PaidHolidayDataGrantListDtoInterface> {
 	
 	@Override
 	public int compare(PaidHolidayDataGrantListDtoInterface dto1, PaidHolidayDataGrantListDtoInterface dto2) {
-		return dto1.getAttendanceRate().compareTo(dto2.getAttendanceRate());
+		return compare(dto1.getAttendanceRate(), dto2.getAttendanceRate());
+	}
+	
+	private int compare(Double double1, Double double2) {
+		if (double1 == null && double2 == null) {
+			return 0;
+		}
+		if (double1 == null) {
+			return -1;
+		}
+		if (double2 == null) {
+			return 1;
+		}
+		return double1.compareTo(double2);
 	}
 	
 }

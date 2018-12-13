@@ -34,13 +34,13 @@ import jp.mosp.time.dto.settings.PaidHolidayEntranceDateDtoInterface;
 /**
  * 有給休暇自動付与(入社日)参照クラス。
  */
-public class PaidHolidayEntranceDateReferenceBean extends PlatformBean implements
-		PaidHolidayEntranceDateReferenceBeanInterface {
+public class PaidHolidayEntranceDateReferenceBean extends PlatformBean
+		implements PaidHolidayEntranceDateReferenceBeanInterface {
 	
 	/**
 	 * 有給休暇自動付与(入社日)DAO。
 	 */
-	private PaidHolidayEntranceDateDaoInterface	dao;
+	private PaidHolidayEntranceDateDaoInterface dao;
 	
 	
 	/**

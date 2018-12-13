@@ -1,11 +1,28 @@
-/**
- *
+/*
+ * MosP - Mind Open Source Project    http://www.mosp.jp/
+ * Copyright (C) MIND Co., Ltd.       http://www.e-mind.co.jp/
+ * 
+ * This program is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU Affero General Public License
+ * as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package jp.mosp.framework.xml;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import jp.mosp.framework.constant.MospConst;
 import jp.mosp.framework.property.BaseProperty;
@@ -14,101 +31,121 @@ import jp.mosp.framework.property.RoleMenuProperty;
 import jp.mosp.framework.property.RoleProperty;
 import jp.mosp.framework.utils.MospUtility;
 
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
 /**
- * @author yoshida
- *
+ * MosP設定情報(ロール)を作成する。<br>
  */
 public class RoleTagConverter implements TagConverterInterface {
 	
 	/**
 	 * ロール要素の下位要素名(ロール名称)。
 	 */
-	private static final String	TAG_ROLE_NAME			= "RoleName";
+	private static final String	TAG_ROLE_NAME					= "RoleName";
+	
+	/**
+	 * ロール要素の下位要素名(ロール区分)。
+	 */
+	private static final String	TAG_ROLE_TYPE					= "RoleType";
 	
 	/**
 	 * ロール要素の下位要素名(ロール追加情報)。
 	 */
-	private static final String	TAG_ROLE_EXTRA			= "RoleExtra";
+	private static final String	TAG_ROLE_EXTRA					= "RoleExtra";
 	
 	/**
-	 * 表示順要素名。
+	 * ロール要素の下位要素名(表示順)。<br>
 	 */
-	private static final String	TAG_VIEW_INDEX			= "ViewIndex";
+	private static final String	TAG_VIEW_INDEX					= "ViewIndex";
+	
+	/**
+	 * ロール要素の下位要素名(ロール拡張権限)。<br>
+	 */
+	private static final String	TAG_ROLE_AUTHORITY				= "RoleAuthority";
+	
+	/**
+	 * ロール要素の下位要素名(ロール拡張担当業務)。<br>
+	 */
+	private static final String	TAG_ROLE_CHARGE					= "RoleCharge";
 	
 	/**
 	 * ロール要素の下位要素名(ロール実行可能コマンド)。
 	 */
-	private static final String	TAG_ROLE_ACCEPT_COMMAND	= "RoleAcceptCommand";
+	private static final String	TAG_ROLE_ACCEPT_COMMAND			= "RoleAcceptCommand";
 	
 	/**
 	 * ロール要素の下位要素名(ロール実行不能コマンド)。
 	 */
-	private static final String	TAG_ROLE_REJECT_COMMAND	= "RoleRejectCommand";
+	private static final String	TAG_ROLE_REJECT_COMMAND			= "RoleRejectCommand";
 	
 	/**
 	 * ロール要素の下位要素名(ロール実行可能コマンド除去)。
 	 */
-	private static final String	TAG_ROLE_ACCEPT_REMOVE	= "RoleAcceptRemove";
+	private static final String	TAG_ROLE_ACCEPT_REMOVE			= "RoleAcceptRemove";
 	
 	/**
 	 * ロール要素の下位要素名(ロール実行不能コマンド除去)。
 	 */
-	private static final String	TAG_ROLE_REJECT_REMOVE	= "RoleRejectRemove";
+	private static final String	TAG_ROLE_REJECT_REMOVE			= "RoleRejectRemove";
 	
 	/**
 	 * ロール要素の下位要素名(メニュー要素)。
 	 */
-	private static final String	TAG_MENU				= "Menu";
+	private static final String	TAG_MENU						= "Menu";
 	
 	/**
 	 * ロール要素の下位要素名(ロールメニュー除去)。
 	 */
-	private static final String	TAG_ROLE_MENU_REMOVE	= "RoleMenuRemove";
+	private static final String	TAG_ROLE_MENU_REMOVE			= "RoleMenuRemove";
 	
 	/**
 	 * ロール要素の下位要素名(ロール無効フラグ)。
 	 */
-	private static final String	TAG_ROLE_INVALID		= "RoleInvalid";
+	private static final String	TAG_ROLE_INVALID				= "RoleInvalid";
 	
 	/**
 	 * インデックス要素名。
 	 */
-	private static final String	TAG_INDEX				= "Index";
+	private static final String	TAG_INDEX						= "Index";
 	
 	/**
 	 * ロールメニュー要素の下位要素名(レンジ要素)。
 	 */
-	private static final String	TAG_RANGE				= "Range";
+	private static final String	TAG_RANGE						= "Range";
 	
 	/**
 	 * レンジ要素の下位要素名(勤務地範囲要素)。
 	 */
-	private static final String	TAG_WORK_PLACE			= "WorkPlace";
+	private static final String	TAG_WORK_PLACE					= "WorkPlace";
 	
 	/**
 	 * レンジ要素の下位要素名(雇用契約範囲要素)。
 	 */
-	private static final String	TAG_EMPLOYMENT_CONTRACT	= "EmploymentContract";
+	private static final String	TAG_EMPLOYMENT_CONTRACT			= "EmploymentContract";
 	
 	/**
 	 * レンジ要素の下位要素名(所属範囲要素)。
 	 */
-	private static final String	TAG_SECTION				= "Section";
+	private static final String	TAG_SECTION						= "Section";
 	
 	/**
 	 * レンジ要素の下位要素名(職位範囲要素)。
 	 */
-	private static final String	TAG_POSITION			= "Position";
+	private static final String	TAG_POSITION					= "Position";
 	
 	/**
 	 * レンジ要素の下位要素名(社員範囲要素)。
 	 */
-	private static final String	TAG_EMPLOYEE			= "Employee";
+	private static final String	TAG_EMPLOYEE					= "Employee";
 	
 	private String				path;
+	
+	/**
+	 * ロール要素の下位要素名(人事汎用管理非表示)。
+	 */
+	private static final String	TAG_ROLE_HIDDEN_DIVISIONS		= "RoleHiddenDivisions";
+	/**
+	 * ロール要素の下位要素名(人事汎用管理参照権限)。
+	 */
+	private static final String	TAG_ROLE_REFERENCE_DIVISIONS	= "RoleReferenceDivisions";
 	
 	
 	@Override
@@ -148,6 +185,11 @@ public class RoleTagConverter implements TagConverterInterface {
 		List<String> acceptCmdList = property.getAcceptCmdList();
 		// ロール実行不能コマンドリスト取得
 		List<String> rejectCmdList = property.getRejectCmdList();
+		// 人事汎用管理区分非表示リスト取得
+		List<String> hiddenDivisionsList = property.getHiddenDivisionsList();
+		// 人事汎用管理区分参照リスト取得
+		List<String> referenceDivisionsList = property.getReferenceDivisionsList();
+		
 		// ロール無効フラグ準備
 		boolean roleInvalid = false;
 		NodeList list = node.getChildNodes();
@@ -161,6 +203,10 @@ public class RoleTagConverter implements TagConverterInterface {
 			if (TagUtility.isTag(item, TAG_ROLE_NAME)) {
 				property.setRoleName(TagUtility.trimText(item));
 			}
+			// ロール区分設定
+			if (TagUtility.isTag(item, TAG_ROLE_TYPE)) {
+				property.setRoleType(TagUtility.trimText(item));
+			}
 			// ロール追加情報設定
 			if (TagUtility.isTag(item, TAG_ROLE_EXTRA)) {
 				property.setRoleExtra(TagUtility.trimText(item));
@@ -173,6 +219,14 @@ public class RoleTagConverter implements TagConverterInterface {
 					// エラーログ出力
 					TagUtility.invalidItemMassage(path, node, TAG_VIEW_INDEX, index);
 				}
+			}
+			// ロール拡張権限設定
+			if (TagUtility.isTag(item, TAG_ROLE_AUTHORITY)) {
+				property.setRoleAuthority(TagUtility.trimText(item));
+			}
+			// ロール拡張担当業務設定
+			if (TagUtility.isTag(item, TAG_ROLE_CHARGE)) {
+				property.setRoleCharge(TagUtility.trimText(item));
 			}
 			// ロール無効フラグ設定
 			if (TagUtility.isTag(item, TAG_ROLE_INVALID)) {
@@ -195,9 +249,20 @@ public class RoleTagConverter implements TagConverterInterface {
 				// ロール実行可能コマンド除去
 				rejectCmdList.remove(TagUtility.trimText(item));
 			}
+			if (TagUtility.isTag(item, TAG_ROLE_HIDDEN_DIVISIONS)) {
+				// 人事汎用管理区分非表示リスト
+				hiddenDivisionsList.addAll(MospUtility
+					.asList(MospUtility.split(TagUtility.trimText(item), MospConst.APP_PROPERTY_SEPARATOR)));
+			}
+			if (TagUtility.isTag(item, TAG_ROLE_REFERENCE_DIVISIONS)) {
+				// 人事汎用管理区分参照リスト
+				referenceDivisionsList.addAll(MospUtility
+					.asList(MospUtility.split(TagUtility.trimText(item), MospConst.APP_PROPERTY_SEPARATOR)));
+			}
+			
 			// メニュー設定情報
 			if (TagUtility.isTag(item, TAG_MENU)) {
-				RoleMenuProperty menu = toRoleMenuProperty(item, index);
+				RoleMenuProperty menu = toRoleMenuProperty(item);
 				if (menu == null) {
 					// エラーログ出力
 					TagUtility.invalidItemMassage(path, node, TAG_MENU, itemIndex);
@@ -223,11 +288,11 @@ public class RoleTagConverter implements TagConverterInterface {
 	}
 	
 	/**
-	 * @param item
-	 * @param nodeIndex
-	 * @return
+	 * MosPロールメニュー設定情報を取得する。<br>
+	 * @param item      ノード
+	 * @return MosPロールメニュー設定情報
 	 */
-	protected RoleMenuProperty toRoleMenuProperty(Node item, int nodeIndex) {
+	protected RoleMenuProperty toRoleMenuProperty(Node item) {
 		// キー情報取得
 		String key = TagUtility.getKey(item);
 		// キー情報確認
@@ -287,8 +352,9 @@ public class RoleTagConverter implements TagConverterInterface {
 	}
 	
 	/**
-	 * @param item
-	 * @return
+	 * 範囲設定情報を取得する。<br>
+	 * @param item ノード
+	 * @return 範囲設定情報
 	 */
 	protected RangeProperty toRangeProperty(Node item) {
 		// キー情報取得

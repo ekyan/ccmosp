@@ -28,7 +28,7 @@ function onLoadExtra() {
 		// 無効フラグ編集不可
 		setReadOnly("pltEditInactivate", true);
 		// 削除ボタン利用不可
-		setDisabled("btnDelete", true);
+		setReadOnly("btnDelete", true);
 	}
 	// 履歴追加モード
 	if (modeCardEdit == MODE_CARD_EDIT_ADD) {
@@ -38,14 +38,14 @@ function onLoadExtra() {
 		setReadOnly("radMaster", true);
 		setReadOnly("radEmployeeCode", true);
 		// 削除ボタン利用不可
-		setDisabled("btnDelete", true);
+		setReadOnly("btnDelete", true);
 	}
 	// 履歴編集モード
 	if (modeCardEdit == MODE_CARD_EDIT_EDIT){
 		// コード編集不可
 		setDisabled("txtEditApplicationCode", true);
 		// 有効日編集不可
-		setDisabled("btnEditActivateDate", true);
+		setReadOnly("btnEditActivateDate", true);
 		// ラジオボタン編集不可
 		setReadOnly("radMaster", true);
 		setReadOnly("radEmployeeCode", true);
@@ -60,7 +60,7 @@ function onLoadExtra() {
 	// 有効日変更状態
 	if (modeActivateDate == MODE_ACTIVATE_DATE_CHANGING) {
 		// 登録ボタン利用不可
-		setDisabled("btnRegist", true);
+		setReadOnly("btnRegist", true);
 	}
 	// 個人テキストボックス変更イベント設定
 	setOnChangeHandler("txtEditEmployeeCode", onChangeEmployeeCode);

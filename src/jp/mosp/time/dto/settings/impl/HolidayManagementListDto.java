@@ -59,6 +59,12 @@ public class HolidayManagementListDto extends BaseDto implements HolidayManageme
 	 * 残日数。
 	 */
 	private double				holidayRemainder;
+	
+	/**
+	 * 残時間。<br>
+	 */
+	private int					holidayRemaindHours;
+	
 	/**
 	 * 取得期限。
 	 */
@@ -67,12 +73,12 @@ public class HolidayManagementListDto extends BaseDto implements HolidayManageme
 	
 	@Override
 	public Date getActivateDate() {
-		return activateDate;
+		return getDateClone(activateDate);
 	}
 	
 	@Override
 	public void setActivateDate(Date activateDate) {
-		this.activateDate = activateDate;
+		this.activateDate = getDateClone(activateDate);
 	}
 	
 	@Override
@@ -130,14 +136,25 @@ public class HolidayManagementListDto extends BaseDto implements HolidayManageme
 		this.holidayRemainder = holidayRemainder;
 	}
 	
+	
+	@Override
+	public int getHolidayRemaindHours() {
+		return holidayRemaindHours;
+	}
+
+	@Override
+	public void setHolidayRemaindHours(int holidayRemaindHours) {
+		this.holidayRemaindHours = holidayRemaindHours;
+	}
+
 	@Override
 	public Date getHolidayLimit() {
-		return holidayLimit;
+		return getDateClone(holidayLimit);
 	}
 	
 	@Override
 	public void setHolidayLimit(Date holidayLimit) {
-		this.holidayLimit = holidayLimit;
+		this.holidayLimit = getDateClone(holidayLimit);
 	}
 	
 	@Override

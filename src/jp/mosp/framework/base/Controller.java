@@ -37,13 +37,13 @@ import jp.mosp.framework.instance.InstanceFactory;
 import jp.mosp.framework.log.LoggerInterface;
 import jp.mosp.framework.property.CommandProperty;
 import jp.mosp.framework.property.MospProperties;
-import jp.mosp.framework.property.RoleProperty;
 import jp.mosp.framework.utils.LogUtility;
 import jp.mosp.framework.utils.MospUtility;
+import jp.mosp.framework.utils.RoleUtility;
 
 /**
  * MosPフレームワークのFrontController。<br><br>
- *  
+ * 
  * このサーブレットがMosPのコントローラとしての役割を果たす。<br>
  * 設定ファイル読込、例外処理の他に、以下の流れでアプリケーションを制御する機能を有する。<br>
  * <ul>
@@ -71,7 +71,7 @@ public class Controller extends HttpServlet {
 	/**
 	 * MosP設定情報。
 	 */
-	protected MospProperties				ppt;
+	protected transient MospProperties		ppt;
 	
 	/**
 	 * ログ出力クラス群。
@@ -139,6 +139,12 @@ public class Controller extends HttpServlet {
 	protected static final String			APP_EXPORTER_PREFIX			= "Exporter-";
 	
 	/**
+	 * HTTPセッション要否(要)。
+	 * 但し、ユーザ情報の確認は行わない。
+	 */
+	protected static final String			SESSION_NECESSARY			= "necessary";
+	
+	/**
 	 * HTTPセッション要否(不要)。
 	 */
 	protected static final String			SESSION_UNNECESSARY			= "unnecessary";
@@ -164,14 +170,14 @@ public class Controller extends HttpServlet {
 	protected static final String			PROC_SEQ_IGNORE				= "ignore";
 	
 	/**
-	 * 許可HTTPメソッド(GET)。
+	 * API用コマンド。
 	 */
-	protected static final String			HTTP_METHOD_GET				= "GET";
+	protected static final String			CMD_API						= "api";
 	
 	/**
-	 * 許可HTTPメソッド(POST)。
+	 * APIパラメータ区切文字。
 	 */
-	protected static final String			HTTP_METHOD_POST			= "POST";
+	protected static final String			API_SEPARATOR				= "/";
 	
 	
 	/**
@@ -205,13 +211,7 @@ public class Controller extends HttpServlet {
 	@Override
 	public void doGet(HttpServletRequest request, HttpServletResponse response) {
 		try {
-			// HTTPメソッドがGETでコマンドが設定されていない場合
-			if (request.getMethod().equals(HTTP_METHOD_GET) && request.getParameter(MospConst.PRM_CMD) == null) {
-				// 初期URLへフォワード
-				forward(request, response, ppt.getApplicationProperty(APP_URL_INDEX));
-				return;
-			}
-			// 通常の処理を実行
+			// リクエストに対する処理を実行
 			doProcess(request, response);
 		} catch (Exception e) {
 			handleException(e, request, response);
@@ -228,6 +228,7 @@ public class Controller extends HttpServlet {
 	@Override
 	public void doPost(HttpServletRequest request, HttpServletResponse response) {
 		try {
+			// リクエストに対する処理を実行
 			doProcess(request, response);
 		} catch (Exception e) {
 			handleException(e, request, response);
@@ -250,6 +251,14 @@ public class Controller extends HttpServlet {
 		MospParams mospParams = getMospParams(request);
 		// アクセスログ出力
 		LogUtility.access(mospParams);
+		// パラメータログ出力
+		LogUtility.parameter(mospParams);
+		// コマンドが取得できなかった場合
+		if (mospParams.getCommand() == null || mospParams.getCommand().isEmpty()) {
+			// 初期URLへフォワード(以降の処理が不能)
+			forward(request, response, ppt.getApplicationProperty(APP_URL_INDEX));
+			return;
+		}
 		// アクションクラス名取得
 		String actionClassName = mospParams.getCommandProperty().getActionClass();
 		// アクションクラスの取得及び初期化
@@ -292,6 +301,12 @@ public class Controller extends HttpServlet {
 			output(request, response);
 			return;
 		}
+		// リダイレクト確認
+		if (mospParams.getRedirect() != null) {
+			// リダイレクト
+			redirect(request, response);
+			return;
+		}
 		// レスポンスヘッダ情報設定
 		setResponseHeader(request, response);
 		// MosPパラメータからURLを取得しフォワード
@@ -332,6 +347,24 @@ public class Controller extends HttpServlet {
 		MospExporterInterface exporter = (MospExporterInterface)InstanceFactory.loadInstance(key);
 		// ファイル送出
 		exporter.export(mospParams, response);
+	}
+	
+	/**
+	 * リダイレクト処理を行う。<br><br>
+	 * @param request  リクエスト
+	 * @param response レスポンス
+	 * @throws MospException リダイレクト処理に失敗した場合
+	 */
+	protected void redirect(HttpServletRequest request, HttpServletResponse response) throws MospException {
+		// リダイレクトURLを取得
+		String redirect = getMospParams(request).getRedirect();
+		try {
+			// リダイレクト
+			response.sendRedirect(redirect);
+		} catch (IOException e) {
+			// 例外発行(エラー画面へ)
+			throw new MospException(e, ExceptionConst.EX_FAIL_FORWARD, redirect);
+		}
 	}
 	
 	/**
@@ -406,9 +439,20 @@ public class Controller extends HttpServlet {
 		if (mospParams.getCommand() == null) {
 			mospParams.setCommand(mospParams.getRequestParam(MospConst.PRM_CMD));
 		}
+		// APIパラメータ及びAPIコマンドを設定(APIが利用できる場合)
+		setApiParams(request);
+		// コマンドが取得できなかった場合
+		if (mospParams.getCommand() == null || mospParams.getCommand().isEmpty()) {
+			// 処理終了(doProcessで初期URLへフォワード)
+			return;
+		}
 		// リクエスト情報設定
-		mospParams.addGeneralParam(MospConst.ATT_USER_AGENT, request.getHeader("USER-AGENT"));
+		mospParams.addGeneralParam(MospConst.ATT_USER_AGENT, request.getHeader(MospConst.ATT_USER_AGENT));
+		mospParams.addGeneralParam(MospConst.REFERER, request.getHeader(MospConst.REFERER));
 		mospParams.addGeneralParam(MospConst.ATT_REMOTE_ADDR, request.getRemoteAddr());
+		mospParams.addGeneralParam(MospConst.ATT_HTTP_METHOD, request.getMethod());
+		mospParams.addGeneralParam(MospConst.ATT_REQUEST_URL, request.getRequestURL());
+		mospParams.addGeneralParam(MospConst.ATT_REQUEST_QUERY, request.getQueryString());
 		// HTTPメソッド確認
 		checkHttpMethod(request);
 		// セッション確認
@@ -547,40 +591,50 @@ public class Controller extends HttpServlet {
 	 * @throws MospException セッションが必要であるのに取得できなかった場合(セッションタイムアウト等)
 	 */
 	protected void checkHttpSession(HttpServletRequest request) throws MospException {
+		// リクエストからMosP処理情報を取得
+		MospParams mospParams = getMospParams(request);
 		// MosPコマンド設定情報取得
-		CommandProperty commandProperty = getMospParams(request).getCommandProperty();
+		CommandProperty commandProperty = mospParams.getCommandProperty();
 		// 現在のセッションを取得
 		HttpSession session = request.getSession(false);
 		// MosP処理情報からセッション保持情報取得
-		MospStoredInfo storedInfo = getMospParams(request).getStoredInfo();
+		MospStoredInfo storedInfo = mospParams.getStoredInfo();
 		// MosPコマンド設定情報からセッション要否を取得
 		if (commandProperty.getNeedSession() == null) {
 			// セッションが取得できなかった場合(セッションタイムアウト等)
 			if (session == null) {
 				// メッセージ設定
-				getMospParams(request).addErrorMessage(MessageConst.MSG_SESSION_TIMEOUT);
+				mospParams.addErrorMessage(MessageConst.MSG_SESSION_TIMEOUT);
 				// 連続実行コマンド設定
-				getMospParams(request).setNextCommand(ppt.getApplicationProperty(APP_COMMAND_INDEX));
+				mospParams.setNextCommand(ppt.getApplicationProperty(APP_COMMAND_INDEX));
 				// 例外発行
 				throw new MospException(ExceptionConst.EX_SESSION_TIMEOUT);
 			}
 			// セッション保持情報からユーザ情報を取得し確認
 			if (storedInfo.getUser() == null) {
 				// 連続実行コマンド設定
-				getMospParams(request).setNextCommand(ppt.getApplicationProperty(APP_COMMAND_INDEX));
+				mospParams.setNextCommand(ppt.getApplicationProperty(APP_COMMAND_INDEX));
 				// 例外発行
 				throw new MospException(ExceptionConst.EX_INVALID_SESSION);
 			}
-			// ロール情報取得
-			RoleProperty role = getMospParams(request).getProperties().getRoleProperties()
-				.get(storedInfo.getUser().getRole());
-			if (role == null || role.hasAuthority(getMospParams(request).getCommand()) == false) {
+			// ログインユーザのロール実行可能コマンドを確認
+			if (RoleUtility.hasAuthority(mospParams, commandProperty.getCommand()) == false) {
 				// メッセージ設定
-				getMospParams(request).addErrorMessage(ExceptionConst.EX_NO_AUTHORITY);
+				mospParams.addErrorMessage(ExceptionConst.EX_NO_AUTHORITY);
 				// 連続実行コマンド設定
-				getMospParams(request).setNextCommand(ppt.getApplicationProperty(APP_COMMAND_INDEX));
+				mospParams.setNextCommand(ppt.getApplicationProperty(APP_COMMAND_INDEX));
 				// 例外発行
 				throw new MospException(ExceptionConst.EX_NO_AUTHORITY);
+			}
+		} else if (commandProperty.getNeedSession().equals(SESSION_NECESSARY)) {
+			// セッションが取得できなかった場合(セッションタイムアウト等)
+			if (session == null) {
+				// メッセージ設定
+				mospParams.addErrorMessage(MessageConst.MSG_SESSION_TIMEOUT);
+				// 連続実行コマンド設定
+				mospParams.setNextCommand(ppt.getApplicationProperty(APP_COMMAND_INDEX));
+				// 例外発行
+				throw new MospException(ExceptionConst.EX_SESSION_TIMEOUT);
 			}
 		} else if (commandProperty.getNeedSession().equals(SESSION_UNNECESSARY)) {
 			// セッション確認
@@ -608,11 +662,11 @@ public class Controller extends HttpServlet {
 	 */
 	protected void checkHttpMethod(HttpServletRequest request) throws MospException {
 		// HTTPメソッド取得
-		String httpMethod = request.getMethod();
+		String httpMethod = (String)getMospParams(request).getGeneralParam(MospConst.ATT_HTTP_METHOD);
 		// 許可HTTPメソッド取得
 		String[] acceptMethods = getMospParams(request).getCommandProperty().getAcceptMethods();
 		// POST確認
-		if (acceptMethods.length == 0 && httpMethod.equals(HTTP_METHOD_POST)) {
+		if (acceptMethods.length == 0 && httpMethod.equals(MospConst.HTTP_METHOD_POST)) {
 			// 設定が無くHTTPメソッドがPOSTの場合
 			return;
 		}
@@ -769,6 +823,53 @@ public class Controller extends HttpServlet {
 	 */
 	protected MospProperties parseMospProperties(String docBase) throws MospException {
 		return MospPropertiesParser.parseMospProperties(docBase);
+	}
+	
+	/**
+	 * APIパラメータ及びAPIコマンドを設定(APIが利用できる場合)する。
+	 * @param request リクエスト
+	 * @throws MospException 実行時例外が発生した場合
+	 */
+	protected void setApiParams(HttpServletRequest request) throws MospException {
+		// MosP処理情報を取得
+		MospParams mospParams = getMospParams(request);
+		// MosP設定情報(APIコマンド)が取得できない場合
+		if (mospParams.getProperties().getCommandProperty(CMD_API) == null) {
+			// 処理無し(API利用不可)
+			return;
+		}
+		// URLからAPIパラメータを取得
+		List<String> apiParams = getApiParams(request);
+		// APIパラメータをMosP処理情報に設定
+		mospParams.addApiParams(apiParams);
+		// コマンドが設定されていない場合
+		if (mospParams.getCommand() == null) {
+			// APIBeanのモデルキーが取得できた場合
+			if (mospParams.getRequestParam(MospConst.PRM_API) != null || apiParams.isEmpty() == false) {
+				// APIコマンドを設定
+				mospParams.setCommand(CMD_API);
+			}
+		}
+	}
+	
+	/**
+	 * URLからAPIパラメータを取得する。<br>
+	 * <br>
+	 * APIパラメータは、URLの「/srv」より後ろを「/」で区切った
+	 * 文字列のリストとして取得する。<br>
+	 * <br>
+	 * @param request リクエスト
+	 * @return APIパラメータ
+	 */
+	protected List<String> getApiParams(HttpServletRequest request) {
+		// URIを取得
+		String uri = request.getRequestURI();
+		// サーブレットパスを取得
+		String srv = request.getServletPath() + API_SEPARATOR;
+		// サーブレットパスより後ろの文字列を取得
+		String strParams = uri.substring(uri.indexOf(srv) + srv.length());
+		// /で区切りリストに変換
+		return MospUtility.asList(MospUtility.split(strParams, API_SEPARATOR));
 	}
 	
 }

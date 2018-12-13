@@ -28,8 +28,11 @@ import java.util.List;
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.base.MospParams;
 import jp.mosp.platform.base.PlatformBean;
+import jp.mosp.platform.bean.file.PlatformFileBean;
+import jp.mosp.platform.bean.human.RetirementReferenceBeanInterface;
 import jp.mosp.platform.bean.system.PositionRegistBeanInterface;
 import jp.mosp.platform.dao.system.PositionDaoInterface;
+import jp.mosp.platform.dto.human.ConcurrentDtoInterface;
 import jp.mosp.platform.dto.human.HumanDtoInterface;
 import jp.mosp.platform.dto.system.PositionDtoInterface;
 import jp.mosp.platform.dto.system.impl.PfmPositionDto;
@@ -37,12 +40,32 @@ import jp.mosp.platform.dto.system.impl.PfmPositionDto;
 /**
  * 職位マスタ登録クラス。
  */
-public class PositionRegistBean extends PlatformBean implements PositionRegistBeanInterface {
+public class PositionRegistBean extends PlatformFileBean implements PositionRegistBeanInterface {
+	
+	/**
+	 * 職位コード項目長。<br>
+	 */
+	protected static final int		LEN_POSITION_CODE	= 10;
+	
+	/**
+	 * 職位名称項目長。<br>
+	 */
+	protected static final int		LEN_POSITION_NAME	= 30;
+	
+	/**
+	 * 職位略称項目長(バイト数)。<br>
+	 */
+	protected static final int		LEN_POSITION_ABBR	= 6;
+	
+	/**
+	 * 職位ランク項目長。<br>
+	 */
+	protected static final int		LEN_POSITION_GRADE	= 2;
 	
 	/**
 	 * 職位マスタDAOクラス。<br>
 	 */
-	PositionDaoInterface	dao;
+	protected PositionDaoInterface	dao;
 	
 	
 	/**
@@ -75,7 +98,7 @@ public class PositionRegistBean extends PlatformBean implements PositionRegistBe
 	@Override
 	public void insert(PositionDtoInterface dto) throws MospException {
 		// DTO妥当性確認
-		validate(dto);
+		validate(dto, null);
 		if (mospParams.hasErrorMessage()) {
 			return;
 		}
@@ -93,7 +116,7 @@ public class PositionRegistBean extends PlatformBean implements PositionRegistBe
 	@Override
 	public void add(PositionDtoInterface dto) throws MospException {
 		// DTO妥当性確認
-		validate(dto);
+		validate(dto, null);
 		if (mospParams.hasErrorMessage()) {
 			return;
 		}
@@ -111,7 +134,7 @@ public class PositionRegistBean extends PlatformBean implements PositionRegistBe
 	@Override
 	public void update(PositionDtoInterface dto) throws MospException {
 		// DTO妥当性確認
-		validate(dto);
+		validate(dto, null);
 		if (mospParams.hasErrorMessage()) {
 			return;
 		}
@@ -153,7 +176,7 @@ public class PositionRegistBean extends PlatformBean implements PositionRegistBe
 				dto.setActivateDate(activateDate);
 				dto.setInactivateFlag(inactivateFlag);
 				// DTO妥当性確認
-				validate(dto);
+				validate(dto, null);
 				// 履歴追加情報の検証
 				checkAdd(dto);
 				if (mospParams.hasErrorMessage()) {
@@ -168,7 +191,7 @@ public class PositionRegistBean extends PlatformBean implements PositionRegistBe
 				// DTOに無効フラグを設定
 				dto.setInactivateFlag(inactivateFlag);
 				// DTO妥当性確認
-				validate(dto);
+				validate(dto, null);
 				// 履歴更新情報の検証
 				checkUpdate(dto);
 				if (mospParams.hasErrorMessage()) {
@@ -236,8 +259,12 @@ public class PositionRegistBean extends PlatformBean implements PositionRegistBe
 		}
 		// 確認するべき人事マスタリストを取得
 		List<HumanDtoInterface> humanList = getHumanListForCheck(dto, list);
+		// 確認するべき兼務情報を取得
+		List<ConcurrentDtoInterface> concurrentList = getConcurrentListForCheck(dto, list);
 		// コード使用確認
-		checkCodeIsUsed(dto.getPositionCode(), humanList);
+		checkCodeIsUsed(dto, humanList);
+		// コード使用確認(兼務情報)
+		checkConcurrentCodeIsUsed(dto.getPositionCode(), concurrentList);
 	}
 	
 	/**
@@ -261,8 +288,12 @@ public class PositionRegistBean extends PlatformBean implements PositionRegistBe
 		List<PositionDtoInterface> list = dao.findForHistory(dto.getPositionCode());
 		// 確認するべき人事マスタリストを取得
 		List<HumanDtoInterface> humanList = getHumanListForCheck(dto, list);
+		// 確認するべき兼務情報を取得
+		List<ConcurrentDtoInterface> concurrentList = getConcurrentListForCheck(dto, list);
 		// コード使用確認
-		checkCodeIsUsed(dto.getPositionCode(), humanList);
+		checkCodeIsUsed(dto, humanList);
+		// コード使用確認(兼務情報)
+		checkConcurrentCodeIsUsed(dto.getPositionCode(), concurrentList);
 	}
 	
 	/**
@@ -288,8 +319,12 @@ public class PositionRegistBean extends PlatformBean implements PositionRegistBe
 		}
 		// 確認するべき人事マスタリストを取得
 		List<HumanDtoInterface> humanList = getHumanListForCheck(dto, list);
+		// 確認するべき兼務情報を取得
+		List<ConcurrentDtoInterface> concurrentList = getConcurrentListForCheck(dto, list);
 		// コード使用確認
-		checkCodeIsUsed(dto.getPositionCode(), humanList);
+		checkCodeIsUsed(dto, humanList);
+		// コード使用確認(兼務情報)
+		checkConcurrentCodeIsUsed(dto.getPositionCode(), concurrentList);
 	}
 	
 	/**
@@ -313,16 +348,40 @@ public class PositionRegistBean extends PlatformBean implements PositionRegistBe
 	
 	/**
 	 * 人事マスタリスト内に対象コードが使用されている情報がないかの確認を行う。<br>
-	 * @param code 対象コード
-	 * @param list 人事マスタリスト
+	 * @param positionDto 職位情報
+	 * @param list 人事情報リスト	
+	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
 	 */
-	protected void checkCodeIsUsed(String code, List<HumanDtoInterface> list) {
+	protected void checkCodeIsUsed(PositionDtoInterface positionDto, List<HumanDtoInterface> list)
+			throws MospException {
+		// 人事・退職情報参照クラスを取得
+		RetirementReferenceBeanInterface refer = (RetirementReferenceBeanInterface)createBean(
+				RetirementReferenceBeanInterface.class);
 		// 人事マスタリストの中身を確認
-		for (HumanDtoInterface dto : list) {
+		for (HumanDtoInterface humanDto : list) {
 			// 対象コード確認
-			if (code.equals(dto.getPositionCode())) {
+			if (humanDto.getPositionCode().equals(positionDto.getPositionCode())
+					&& refer.isRetired(humanDto.getPersonalId(), positionDto.getActivateDate()) == false) {
 				// メッセージ設定
-				addCodeIsUsedMessage(code, dto);
+				addCodeIsUsedMessage(positionDto.getPositionCode(), humanDto);
+			}
+		}
+	}
+	
+	/**
+	 * 兼務情報内に職位コードが使用されている情報がないかの確認をする。<br>
+	 * @param code 職位コード
+	 * @param list 人事マスタリスト
+	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
+	 */
+	protected void checkConcurrentCodeIsUsed(String code, List<ConcurrentDtoInterface> list) throws MospException {
+		// 兼務情報を確認
+		for (ConcurrentDtoInterface concurrentDto : list) {
+			// 職位コード確認
+			if (code.equals(concurrentDto.getPositionCode())) {
+				HumanDtoInterface humanDto = getHumanInfo(concurrentDto.getPersonalId(), concurrentDto.getStartDate());
+				// メッセージ設定
+				addCodeIsUsedMessage(code, humanDto);
 			}
 		}
 	}
@@ -330,9 +389,71 @@ public class PositionRegistBean extends PlatformBean implements PositionRegistBe
 	/**
 	 * 登録情報の妥当性を確認する。
 	 * @param dto 対象DTO
+	 * @param row 行インデックス
+	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
 	 */
-	protected void validate(PositionDtoInterface dto) {
-		// TODO 妥当性確認
+	protected void validate(PositionDtoInterface dto, Integer row) throws MospException {
+		// 必須確認(職位コード)
+		checkRequired(dto.getPositionCode(), getNamePositionCode(), row);
+		// 必須確認(有効日)
+		checkRequired(dto.getActivateDate(), getNameActivateDate(), row);
+		// 必須確認(職位名称)
+		checkRequired(dto.getPositionName(), getNamePositionName(), row);
+		// 必須確認(職位ランク)
+		checkRequired(dto.getPositionGrade(), getNamePositionGrade(), row);
+		// 必須確認(職位略称)
+		checkRequired(dto.getPositionAbbr(), getNamePositionAbbr(), row);
+		// 桁数確認(職位コード)
+		checkLength(dto.getPositionCode(), LEN_POSITION_CODE, getNamePositionCode(), row);
+		// 桁数確認(職位名称)
+		checkLength(dto.getPositionName(), LEN_POSITION_NAME, getNamePositionName(), row);
+		// 桁数確認(職位ランク)
+		checkLength(String.valueOf(dto.getPositionGrade()), LEN_POSITION_GRADE, getNamePositionGrade(), row);
+		// バイト数(表示上)確認(職位略称)
+		checkByteLength(dto.getPositionAbbr(), LEN_POSITION_ABBR, getNamePositionAbbr(), row);
+		// 型確認(職位コード)
+		checkTypeCode(dto.getPositionCode(), getNamePositionCode(), row);
+		// 型確認(職位ランク)
+		checkTypeNumber(String.valueOf(dto.getPositionGrade()), getNamePositionGrade(), row);
+		// 型確認(有効/無効フラグ)
+		checkInactivateFlag(dto.getInactivateFlag(), row);
+		// 無効フラグ確認
+		if (isDtoActivate(dto) == false) {
+			// 妥当性確認終了
+			return;
+		}
+	}
+	
+	/**
+	 * 職位コード名称を取得する。<br>
+	 * @return 職位コード名称
+	 */
+	protected String getNamePositionCode() {
+		return mospParams.getName("Position", "Code");
+	}
+	
+	/**
+	 * 職位名称名称を取得する。<br>
+	 * @return 職位名称名称
+	 */
+	protected String getNamePositionName() {
+		return mospParams.getName("Position", "Name");
+	}
+	
+	/**
+	 * 職位略称名称を取得する。<br>
+	 * @return 職位略称名称
+	 */
+	protected String getNamePositionAbbr() {
+		return mospParams.getName("Position", "Abbreviation");
+	}
+	
+	/**
+	 * 職位ランク名称を取得する。<br>
+	 * @return 職位ランク名称
+	 */
+	protected String getNamePositionGrade() {
+		return mospParams.getName("Position", "Grade");
 	}
 	
 }

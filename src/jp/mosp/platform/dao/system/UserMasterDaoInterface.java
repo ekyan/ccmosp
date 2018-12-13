@@ -82,17 +82,6 @@ public interface UserMasterDaoInterface extends BaseDaoInterface {
 	List<UserMasterDtoInterface> findForPersonalId(String personalId) throws MospException;
 	
 	/**
-	 * ロールコードと有効日からユーザリストを取得する。<br>
-	 * 有効日の時点で、ロールコードが設定されている有効なユーザが存在するかの
-	 * 確認を行う際に用いる。<br>
-	 * @param roleCode     ロールコード
-	 * @param activateDate 有効日
-	 * @return ユーザマスタDTOリスト
-	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
-	 */
-	List<UserMasterDtoInterface> findForRole(String roleCode, Date activateDate) throws MospException;
-	
-	/**
 	 * 条件による検索を行う。<br>
 	 * @param param 検索条件
 	 * @return ユーザマスタDTOリスト
@@ -117,8 +106,9 @@ public interface UserMasterDaoInterface extends BaseDaoInterface {
 	 * 承認ロール条件SQLを作成する。<br>
 	 * @param targetColumn 検索対象個人ID列
 	 * @return 承認ロール条件SQL
+	 * @throws MospException インスタンスの生成に失敗した場合
 	 */
-	String getQueryForApprover(String targetColumn);
+	String getQueryForApprover(String targetColumn) throws MospException;
 	
 	/**
 	 * 承認ロール条件パラメータを設定する。<br>

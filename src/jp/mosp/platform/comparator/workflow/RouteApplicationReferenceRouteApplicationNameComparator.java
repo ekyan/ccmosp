@@ -24,8 +24,8 @@ import jp.mosp.platform.dto.workflow.RouteApplicationReferenceDtoInterface;
 /**
  * ルート適用参照クラスをルート適用名称で比較するクラス。
  */
-public class RouteApplicationReferenceRouteApplicationNameComparator implements
-		Comparator<RouteApplicationReferenceDtoInterface> {
+public class RouteApplicationReferenceRouteApplicationNameComparator
+		implements Comparator<RouteApplicationReferenceDtoInterface> {
 	
 	@Override
 	public int compare(RouteApplicationReferenceDtoInterface dto1, RouteApplicationReferenceDtoInterface dto2) {

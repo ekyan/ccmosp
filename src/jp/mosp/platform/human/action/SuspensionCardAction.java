@@ -457,39 +457,39 @@ public class SuspensionCardAction extends PlatformHumanAction {
 		for (int i = 0; i < vo.getAryTxtSuspensionStartYear().length; i++) {
 			// 休職開始日項目確認
 			// 必須項目チェック
-			InputCheckUtility.checkRequired(vo.getAryTxtSuspensionStartYear()[i], aryLeaveStartDay, mospParams);
-			InputCheckUtility.checkRequired(vo.getAryTxtSuspensionStartMonth()[i], aryLeaveStartDay, mospParams);
-			InputCheckUtility.checkRequired(vo.getAryTxtSuspensionStartDay()[i], aryLeaveStartDay, mospParams);
+			InputCheckUtility.checkRequired(mospParams, vo.getAryTxtSuspensionStartYear()[i], aryLeaveStartDay);
+			InputCheckUtility.checkRequired(mospParams, vo.getAryTxtSuspensionStartMonth()[i], aryLeaveStartDay);
+			InputCheckUtility.checkRequired(mospParams, vo.getAryTxtSuspensionStartDay()[i], aryLeaveStartDay);
 			// 数字型チェック
-			InputCheckUtility.checkNumber(vo.getAryTxtSuspensionStartYear()[i], aryLeaveStartDay, mospParams);
-			InputCheckUtility.checkNumber(vo.getAryTxtSuspensionStartMonth()[i], aryLeaveStartDay, mospParams);
-			InputCheckUtility.checkNumber(vo.getAryTxtSuspensionStartDay()[i], aryLeaveStartDay, mospParams);
+			InputCheckUtility.checkNumber(mospParams, vo.getAryTxtSuspensionStartYear()[i], aryLeaveStartDay);
+			InputCheckUtility.checkNumber(mospParams, vo.getAryTxtSuspensionStartMonth()[i], aryLeaveStartDay);
+			InputCheckUtility.checkNumber(mospParams, vo.getAryTxtSuspensionStartDay()[i], aryLeaveStartDay);
 			// 項目長チェック
-			InputCheckUtility.checkLength(vo.getAryTxtSuspensionStartYear()[i], 4, leaveStartDay, mospParams);
-			InputCheckUtility.checkLength(vo.getAryTxtSuspensionStartMonth()[i], 2, leaveStartDay, mospParams);
-			InputCheckUtility.checkLength(vo.getAryTxtSuspensionStartDay()[i], 2, leaveStartDay, mospParams);
+			InputCheckUtility.checkLength(mospParams, vo.getAryTxtSuspensionStartYear()[i], 4, leaveStartDay);
+			InputCheckUtility.checkLength(mospParams, vo.getAryTxtSuspensionStartMonth()[i], 2, leaveStartDay);
+			InputCheckUtility.checkLength(mospParams, vo.getAryTxtSuspensionStartDay()[i], 2, leaveStartDay);
 			// 休職終了予定日項目確認
 			// 必須項目チェック
-			InputCheckUtility.checkRequired(vo.getAryTxtSuspensionScheduleEndYear()[i], aryLeaveEndScheduleDay,
-					mospParams);
-			InputCheckUtility.checkRequired(vo.getAryTxtSuspensionScheduleEndYear()[i], aryLeaveEndScheduleDay,
-					mospParams);
-			InputCheckUtility.checkRequired(vo.getAryTxtSuspensionScheduleEndDay()[i], aryLeaveEndScheduleDay,
-					mospParams);
+			InputCheckUtility.checkRequired(mospParams, vo.getAryTxtSuspensionScheduleEndYear()[i],
+					aryLeaveEndScheduleDay);
+			InputCheckUtility.checkRequired(mospParams, vo.getAryTxtSuspensionScheduleEndYear()[i],
+					aryLeaveEndScheduleDay);
+			InputCheckUtility.checkRequired(mospParams, vo.getAryTxtSuspensionScheduleEndDay()[i],
+					aryLeaveEndScheduleDay);
 			// 数字型チェック
-			InputCheckUtility.checkNumber(vo.getAryTxtSuspensionScheduleEndYear()[i], aryLeaveEndScheduleDay,
-					mospParams);
-			InputCheckUtility.checkNumber(vo.getAryTxtSuspensionScheduleEndYear()[i], aryLeaveEndScheduleDay,
-					mospParams);
-			InputCheckUtility
-				.checkNumber(vo.getAryTxtSuspensionScheduleEndDay()[i], aryLeaveEndScheduleDay, mospParams);
+			InputCheckUtility.checkNumber(mospParams, vo.getAryTxtSuspensionScheduleEndYear()[i],
+					aryLeaveEndScheduleDay);
+			InputCheckUtility.checkNumber(mospParams, vo.getAryTxtSuspensionScheduleEndYear()[i],
+					aryLeaveEndScheduleDay);
+			InputCheckUtility.checkNumber(mospParams, vo.getAryTxtSuspensionScheduleEndDay()[i],
+					aryLeaveEndScheduleDay);
 			// 項目長チェック
-			InputCheckUtility.checkLength(vo.getAryTxtSuspensionScheduleEndYear()[i], 4, leaveEndScheduleDay,
-					mospParams);
-			InputCheckUtility.checkLength(vo.getAryTxtSuspensionScheduleEndMonth()[i], 2, leaveEndScheduleDay,
-					mospParams);
-			InputCheckUtility
-				.checkLength(vo.getAryTxtSuspensionScheduleEndDay()[i], 2, leaveEndScheduleDay, mospParams);
+			InputCheckUtility.checkLength(mospParams, vo.getAryTxtSuspensionScheduleEndYear()[i], 4,
+					leaveEndScheduleDay);
+			InputCheckUtility.checkLength(mospParams, vo.getAryTxtSuspensionScheduleEndMonth()[i], 2,
+					leaveEndScheduleDay);
+			InputCheckUtility.checkLength(mospParams, vo.getAryTxtSuspensionScheduleEndDay()[i], 2,
+					leaveEndScheduleDay);
 			
 			// 終了予定日
 			Date endScheduleDate = getDate(vo.getAryTxtSuspensionScheduleEndYear()[i],
@@ -500,29 +500,29 @@ public class SuspensionCardAction extends PlatformHumanAction {
 			
 			aryErrDateMessage = new String[]{ leaveEndScheduleDay, leaveStartDay + mospParams.getName("Since") };
 			// 終了予定日妥当性チェック
-			InputCheckUtility.checkTerm(endScheduleDate, startDate, endScheduleDate, aryErrDateMessage, mospParams);
+			InputCheckUtility.checkTerm(mospParams, endScheduleDate, startDate, endScheduleDate, aryErrDateMessage);
 			
 			// 終了日が入っていた場合
 			if (vo.getAryTxtSuspensionEndYear()[i] != null && !vo.getAryTxtSuspensionEndYear()[i].isEmpty()) {
 				// 休職終了日項目確認
 				// 必須項目チェック
-				InputCheckUtility.checkRequired(vo.getAryTxtSuspensionEndYear()[i], aryLeaveEndDay, mospParams);
-				InputCheckUtility.checkRequired(vo.getAryTxtSuspensionEndMonth()[i], aryLeaveEndDay, mospParams);
-				InputCheckUtility.checkRequired(vo.getAryTxtSuspensionEndDay()[i], aryLeaveEndDay, mospParams);
+				InputCheckUtility.checkRequired(mospParams, vo.getAryTxtSuspensionEndYear()[i], aryLeaveEndDay);
+				InputCheckUtility.checkRequired(mospParams, vo.getAryTxtSuspensionEndMonth()[i], aryLeaveEndDay);
+				InputCheckUtility.checkRequired(mospParams, vo.getAryTxtSuspensionEndDay()[i], aryLeaveEndDay);
 				
 				// 数字型チェック
-				InputCheckUtility.checkNumber(vo.getAryTxtSuspensionEndYear()[i], aryLeaveEndDay, mospParams);
-				InputCheckUtility.checkNumber(vo.getAryTxtSuspensionEndMonth()[i], aryLeaveEndDay, mospParams);
-				InputCheckUtility.checkNumber(vo.getAryTxtSuspensionEndDay()[i], aryLeaveEndDay, mospParams);
+				InputCheckUtility.checkNumber(mospParams, vo.getAryTxtSuspensionEndYear()[i], aryLeaveEndDay);
+				InputCheckUtility.checkNumber(mospParams, vo.getAryTxtSuspensionEndMonth()[i], aryLeaveEndDay);
+				InputCheckUtility.checkNumber(mospParams, vo.getAryTxtSuspensionEndDay()[i], aryLeaveEndDay);
 				// 項目長チェック
-				InputCheckUtility.checkLength(vo.getAryTxtSuspensionEndYear()[i], 4, leaveEndDay, mospParams);
-				InputCheckUtility.checkLength(vo.getAryTxtSuspensionEndMonth()[i], 2, leaveEndDay, mospParams);
-				InputCheckUtility.checkLength(vo.getAryTxtSuspensionEndDay()[i], 2, leaveEndDay, mospParams);
+				InputCheckUtility.checkLength(mospParams, vo.getAryTxtSuspensionEndYear()[i], 4, leaveEndDay);
+				InputCheckUtility.checkLength(mospParams, vo.getAryTxtSuspensionEndMonth()[i], 2, leaveEndDay);
+				InputCheckUtility.checkLength(mospParams, vo.getAryTxtSuspensionEndDay()[i], 2, leaveEndDay);
 				Date endDate = getDate(vo.getAryTxtSuspensionEndYear()[i], vo.getAryTxtSuspensionEndMonth()[i],
 						vo.getAryTxtSuspensionEndDay()[i]);
 				aryErrDateMessage = new String[]{ leaveEndDay, leaveStartDay + mospParams.getName("Since") };
 				// 終了日期間妥当性チェック
-				InputCheckUtility.checkTerm(endDate, startDate, endDate, aryErrDateMessage, mospParams);
+				InputCheckUtility.checkTerm(mospParams, endDate, startDate, endDate, aryErrDateMessage);
 			}
 		}
 	}

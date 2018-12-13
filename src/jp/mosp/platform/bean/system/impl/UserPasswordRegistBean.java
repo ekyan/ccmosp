@@ -19,19 +19,18 @@ package jp.mosp.platform.bean.system.impl;
 
 import java.sql.Connection;
 import java.util.Date;
-import java.util.List;
+import java.util.Set;
 
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.base.MospParams;
-import jp.mosp.framework.utils.SeUtility;
 import jp.mosp.platform.base.PlatformBean;
 import jp.mosp.platform.bean.portal.PasswordCheckBeanInterface;
-import jp.mosp.platform.bean.system.UserMasterReferenceBeanInterface;
+import jp.mosp.platform.bean.portal.UserCheckBeanInterface;
 import jp.mosp.platform.bean.system.UserPasswordRegistBeanInterface;
 import jp.mosp.platform.dao.system.UserPasswordDaoInterface;
 import jp.mosp.platform.dto.system.UserPasswordDtoInterface;
 import jp.mosp.platform.dto.system.impl.PfaUserPasswordDto;
-import jp.mosp.platform.utils.PlatformMessageUtility;
+import jp.mosp.platform.utils.PlatformNamingUtility;
 
 /**
  * ユーザパスワード情報登録クラス。
@@ -41,17 +40,22 @@ public class UserPasswordRegistBean extends PlatformBean implements UserPassword
 	/**
 	 * パスワード項目長(DBフィールド)。<br>
 	 */
-	protected static final int					LEN_PASSWORD	= 50;
+	protected static final int				LEN_PASSWORD	= 50;
 	
 	/**
 	 * ユーザパスワード情報DAOクラス。<br>
 	 */
-	protected UserPasswordDaoInterface			dao;
+	protected UserPasswordDaoInterface		dao;
 	
 	/**
-	 * ユーザマスタ参照クラス。<br>
+	 * ユーザ確認処理。<br>
 	 */
-	protected UserMasterReferenceBeanInterface	userRefer;
+	protected UserCheckBeanInterface		userCheck;
+	
+	/**
+	 * パスワード確認処理。<br>
+	 */
+	protected PasswordCheckBeanInterface	passwordCheck;
 	
 	
 	/**
@@ -74,8 +78,9 @@ public class UserPasswordRegistBean extends PlatformBean implements UserPassword
 	public void initBean() throws MospException {
 		// DAO準備
 		dao = (UserPasswordDaoInterface)createDao(UserPasswordDaoInterface.class);
-		// Bean準備
-		userRefer = (UserMasterReferenceBeanInterface)createBean(UserMasterReferenceBeanInterface.class);
+		// Beanを準備
+		userCheck = (UserCheckBeanInterface)createBean(UserCheckBeanInterface.class);
+		passwordCheck = (PasswordCheckBeanInterface)createBean(PasswordCheckBeanInterface.class);
 	}
 	
 	@Override
@@ -85,13 +90,8 @@ public class UserPasswordRegistBean extends PlatformBean implements UserPassword
 	
 	@Override
 	public void regist(UserPasswordDtoInterface dto) throws MospException {
-		// 現在のユーザパスワード情報取得
-		UserPasswordDtoInterface currentDto = dao.findForInfo(dto.getUserId());
-		// 存在確認
-		if (currentDto != null) {
-			// 論理削除
-			delete(currentDto);
-		}
+		// 論理削除
+		delete(dto.getUserId());
 		// レコード識別ID最大値をインクリメントしてDTOに設定
 		dto.setPfaUserPasswordId(dao.nextRecordId());
 		// 登録
@@ -99,93 +99,79 @@ public class UserPasswordRegistBean extends PlatformBean implements UserPassword
 	}
 	
 	@Override
-	public void delete(UserPasswordDtoInterface dto) throws MospException {
-		// 論理削除
-		logicalDelete(dao, dto.getPfaUserPasswordId());
+	public void regist(String userId, Date changeDate, String password) throws MospException {
+		// ユーザパスワード情報を準備
+		UserPasswordDtoInterface dto = getInitDto();
+		// ユーザパスワード情報に値を設定
+		dto.setUserId(userId);
+		dto.setChangeDate(changeDate);
+		dto.setPassword(password);
+		// 登録
+		regist(dto);
 	}
 	
 	@Override
-	public void initPassword(List<String> userIdList) throws MospException {
-		// システム日付取得
-		Date systemDate = getSystemDate();
-		// パスワード確認クラス取得
-		PasswordCheckBeanInterface passwordCheck = (PasswordCheckBeanInterface)createBean(PasswordCheckBeanInterface.class);
+	public void delete(String userId) throws MospException {
+		// 現在のユーザパスワード情報取得
+		UserPasswordDtoInterface dto = dao.findForInfo(userId);
+		// 存在確認
+		if (dto != null) {
+			// 論理削除
+			logicalDelete(dao, dto.getPfaUserPasswordId());
+		}
+	}
+	
+	@Override
+	public void initPassword(Set<String> userIdList) throws MospException {
+		// 変更日(システム日付)を準備
+		Date changeDate = getSystemDate();
 		// 更新処理
 		for (String userId : userIdList) {
-			// 初期パスワード取得
-			String initialPassword = passwordCheck.getInitialPassword(userId);
-			// パスワード作成
-			String password = SeUtility.encrypt(SeUtility.encrypt(initialPassword));
-			// 対象ユーザにおけるシステム日付の情報を取得
-			UserPasswordDtoInterface dto = dao.findForInfo(userId);
-			// 存在確認(存在しなければ新規登録、存在すれば更新)
-			if (dto != null) {
-				// 論理削除
-				delete(dto);
-			}
-			// DTO作成
-			dto = getInitDto();
-			dto.setUserId(userId);
-			dto.setChangeDate(systemDate);
-			dto.setPassword(password);
-			// レコード識別ID最大値をインクリメントしてDTOに設定
-			dto.setPfaUserPasswordId(dao.nextRecordId());
-			// 登録
-			dao.insert(dto);
+			// パスワードを初期化
+			initPassword(userId, changeDate);
 		}
+	}
+	
+	@Override
+	public void initPassword(String userId, Date changeDate) throws MospException {
+		// ユーザパスワード情報を準備
+		UserPasswordDtoInterface dto = getInitDto();
+		// ユーザID及び変更日を設定
+		dto.setUserId(userId);
+		dto.setChangeDate(changeDate);
+		// 初期パスワードを設定
+		dto.setPassword(getInitialPassword(userId));
+		// 登録
+		regist(dto);
+	}
+	
+	/**
+	 * 初期パスワードを取得する。<br>
+	 * @param userId ユーザID
+	 * @return 初期パスワード
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	protected String getInitialPassword(String userId) throws MospException {
+		// 初期パスワードを取得
+		return passwordCheck.getEncryptedInitialPassword(userId);
 	}
 	
 	@Override
 	public void validate(UserPasswordDtoInterface dto, Integer row) throws MospException {
+		// エラーメッセージ用の名称を取得
+		String nameUserId = PlatformNamingUtility.userId(mospParams);
+		String nameChangeDate = PlatformNamingUtility.changeDate(mospParams);
+		String namePassword = PlatformNamingUtility.password(mospParams);
 		// 必須確認(ユーザID)
-		checkRequired(dto.getUserId(), getNameUserId(), row);
+		checkRequired(dto.getUserId(), nameUserId, row);
 		// 必須確認(変更日)
-		checkRequired(dto.getChangeDate(), getNameChangeDate(), row);
+		checkRequired(dto.getChangeDate(), nameChangeDate, row);
 		// 必須確認(パスワード)
-		checkRequired(dto.getPassword(), getNamePassword(), row);
+		checkRequired(dto.getPassword(), namePassword, row);
 		// 桁数確認(パスワード)
-		checkLength(dto.getPassword(), LEN_PASSWORD, getNamePassword(), row);
+		checkLength(dto.getPassword(), LEN_PASSWORD, namePassword, row);
 		// ユーザ存在確認
-		checkUser(dto.getUserId(), row);
-	}
-	
-	/**
-	 * ユーザ存在確認を行う。<br>
-	 * 有効日及び有効/無効は不問とし、対象ユーザIDが存在するかのみを確認する。<br>
-	 * @param userId ユーザID
-	 * @param row 行インデックス
-	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
-	 */
-	protected void checkUser(String userId, Integer row) throws MospException {
-		// ユーザ履歴一覧を取得し件数を確認
-		if (userRefer.getUserHistory(userId).size() == 0) {
-			// エラーメッセージ追加
-			PlatformMessageUtility.addErrorSelectedUserIdNotExist(mospParams, userId, row);
-		}
-	}
-	
-	/**
-	 * ユーザID名称を取得する。<br>
-	 * @return ユーザID名称
-	 */
-	protected String getNameUserId() {
-		return mospParams.getName("User", "Id");
-	}
-	
-	/**
-	 * 変更日名称を取得する。<br>
-	 * @return 変更日名称
-	 */
-	protected String getNameChangeDate() {
-		return mospParams.getName("Change", "Day");
-	}
-	
-	/**
-	 * パスワード名称を取得する。<br>
-	 * @return パスワード名称
-	 */
-	protected String getNamePassword() {
-		return mospParams.getName("Password");
+		userCheck.checkUserExist(dto.getUserId(), row);
 	}
 	
 }

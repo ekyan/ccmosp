@@ -20,21 +20,17 @@ package jp.mosp.platform.dto.human;
 import java.util.Date;
 
 import jp.mosp.framework.base.BaseDtoInterface;
+import jp.mosp.platform.dto.base.PersonalIdDtoInterface;
 
 /**
  * 人事休職情報DTOインターフェース
  */
-public interface SuspensionDtoInterface extends BaseDtoInterface {
+public interface SuspensionDtoInterface extends BaseDtoInterface, PersonalIdDtoInterface {
 	
 	/**
 	 * @return レコード識別ID。
 	 */
 	long getPfaHumanSuspensionId();
-	
-	/**
-	 * @return 個人ID。
-	 */
-	String getPersonalId();
 	
 	/**
 	 * @return 開始日。
@@ -65,11 +61,6 @@ public interface SuspensionDtoInterface extends BaseDtoInterface {
 	 * @param pfaHumanSuspensionId セットする レコード識別ID。
 	 */
 	void setPfaHumanSuspensionId(long pfaHumanSuspensionId);
-	
-	/**
-	 * @param personalId セットする 個人ID。
-	 */
-	void setPersonalId(String personalId);
 	
 	/**
 	 * @param startDate セットする 開始日。

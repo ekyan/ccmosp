@@ -23,6 +23,7 @@ import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.base.MospParams;
 import jp.mosp.platform.bean.human.RetirementRegistBeanInterface;
 import jp.mosp.platform.bean.human.base.PlatformHumanBean;
+import jp.mosp.platform.bean.system.UserAccountRegistBeanInterface;
 import jp.mosp.platform.constant.PlatformConst;
 import jp.mosp.platform.constant.PlatformMessageConst;
 import jp.mosp.platform.dao.human.EntranceDaoInterface;
@@ -30,6 +31,7 @@ import jp.mosp.platform.dao.human.RetirementDaoInterface;
 import jp.mosp.platform.dto.human.EntranceDtoInterface;
 import jp.mosp.platform.dto.human.RetirementDtoInterface;
 import jp.mosp.platform.dto.human.impl.PfaHumanRetirementDto;
+import jp.mosp.platform.utils.PlatformMessageUtility;
 
 /**
  * 人事退職情報登録クラス。
@@ -39,12 +41,17 @@ public class RetirementRegistBean extends PlatformHumanBean implements Retiremen
 	/**
 	 * 退職理由詳細項目長。<br>
 	 */
-	protected static final int	LEN_RETIREMENT_DETAIL	= 120;
+	protected static final int		LEN_RETIREMENT_DETAIL	= 120;
 	
 	/**
 	 * 人事退職情報DAOクラス。<br>
 	 */
-	RetirementDaoInterface		dao;
+	RetirementDaoInterface			dao;
+	
+	/**
+	 * ユーザアカウント情報登録処理。<br>
+	 */
+	UserAccountRegistBeanInterface	accountRegist;
 	
 	
 	/**
@@ -66,8 +73,10 @@ public class RetirementRegistBean extends PlatformHumanBean implements Retiremen
 	@Override
 	public void initBean() throws MospException {
 		super.initBean();
-		// DAO準備
+		// DAOを準備
 		dao = (RetirementDaoInterface)createDao(RetirementDaoInterface.class);
+		// Beanを準備
+		accountRegist = (UserAccountRegistBeanInterface)createBean(UserAccountRegistBeanInterface.class);
 	}
 	
 	@Override
@@ -85,6 +94,8 @@ public class RetirementRegistBean extends PlatformHumanBean implements Retiremen
 			// 更新
 			update(dto);
 		}
+		// ユーザアカウント情報登録後の確認
+		accountRegist.checkAfterRegist();
 	}
 	
 	@Override
@@ -96,6 +107,8 @@ public class RetirementRegistBean extends PlatformHumanBean implements Retiremen
 		}
 		// 論理削除
 		logicalDelete(dao, dto.getPfaHumanRetirementId());
+		// ユーザアカウント情報登録後の確認
+		accountRegist.checkAfterRegist();
 	}
 	
 	@Override
@@ -196,7 +209,7 @@ public class RetirementRegistBean extends PlatformHumanBean implements Retiremen
 		// 入社情報確認(入社情報が存在しない、或いは退職より後に入社)
 		if (entranceDto == null || entranceDto.getEntranceDate().after(dto.getRetirementDate())) {
 			// 社員が入社していない場合のメッセージを追加
-			addEmployeeNotEnteredMessage();
+			PlatformMessageUtility.addErrorEmployeeNotJoin(mospParams);
 		}
 	}
 	

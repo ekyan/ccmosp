@@ -22,7 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * モデル設定情報を扱う。<br>
+ * MosP設定情報(モデル)。<br>
  */
 public class ModelProperty implements BaseProperty {
 	
@@ -55,10 +55,7 @@ public class ModelProperty implements BaseProperty {
 		modelClassMap = new HashMap<Date, String>();
 	}
 	
-	/**
-	 * キーを取得する。
-	 * @return キー
-	 */
+	@Override
 	public String getKey() {
 		return key;
 	}

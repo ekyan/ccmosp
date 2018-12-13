@@ -142,7 +142,7 @@ public class TmmApplicationDto extends BaseDto implements ApplicationDtoInterfac
 	}
 	
 	@Override
-	public String getPersonalId() {
+	public String getPersonalIds() {
 		return personalIds;
 	}
 	
@@ -237,7 +237,7 @@ public class TmmApplicationDto extends BaseDto implements ApplicationDtoInterfac
 	}
 	
 	@Override
-	public void setPersonalId(String personalIds) {
+	public void setPersonalIds(String personalIds) {
 		this.personalIds = personalIds;
 	}
 	

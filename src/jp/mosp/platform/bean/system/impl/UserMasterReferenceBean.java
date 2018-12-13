@@ -37,7 +37,7 @@ public class UserMasterReferenceBean extends PlatformBean implements UserMasterR
 	/**
 	 * ユーザマスタDAO。<br>
 	 */
-	private UserMasterDaoInterface	dao;
+	private UserMasterDaoInterface dao;
 	
 	
 	/**
@@ -96,4 +96,5 @@ public class UserMasterReferenceBean extends PlatformBean implements UserMasterR
 		}
 		return null;
 	}
+	
 }

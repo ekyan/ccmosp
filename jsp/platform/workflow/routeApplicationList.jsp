@@ -33,6 +33,7 @@ import = "jp.mosp.platform.comparator.workflow.RouteApplicationMasterApplication
 import = "jp.mosp.platform.comparator.workflow.RouteApplicationMasterRouteCodeComparator"
 import = "jp.mosp.platform.constant.PlatformConst"
 import = "jp.mosp.platform.utils.PlatformUtility"
+import = "jp.mosp.platform.utils.PlatformNamingUtility"
 import = "jp.mosp.platform.workflow.action.RouteApplicationCardAction"
 import = "jp.mosp.platform.workflow.action.RouteApplicationListAction"
 import = "jp.mosp.platform.workflow.vo.RouteApplicationListVo"
@@ -74,7 +75,7 @@ RouteApplicationListVo vo = (RouteApplicationListVo)params.getVo();
 				<td class="InputTd"><input type="text" class="Code10TextBox" id="txtSearchApplicationCode" name="txtSearchApplicationCode" value="<%= HtmlUtility.escapeHTML(vo.getTxtSearchApplicationCode()) %>"/></td>
 				<td class="TitleTd"><label for="txtSearchApplicationName"><%= params.getName("Route","Apply","Name") %></label></td>
 				<td class="InputTd"><input type="text" class="Name15TextBox" id="txtSearchApplicationName" name="txtSearchApplicationName" value="<%= HtmlUtility.escapeHTML(vo.getTxtSearchApplicationName()) %>"/></td>
-				<td class="TitleTd"><label for="txtSearchApplicationEmployee"><%= params.getName("Suffer","Approver","Employee","Code") %></label></td>
+				<td class="TitleTd"><label for="txtSearchApplicationEmployee"><%= params.getName("Suffer","Approver") + PlatformNamingUtility.employeeCode(params) %></label></td>
 				<td class="InputTd"><input type="text" class="Code10TextBox" id="txtSearchApplicationEmployee" name="txtSearchApplicationEmployee" value="<%= HtmlUtility.escapeHTML(vo.getTxtSearchApplicationEmployee()) %>"/></td>
 			</tr>
 			<tr>
@@ -82,7 +83,7 @@ RouteApplicationListVo vo = (RouteApplicationListVo)params.getVo();
 				<td class="InputTd"><input type="text" class="Code10TextBox" id="txtSearchRouteCode" name="txtSearchRouteCode" value="<%= HtmlUtility.escapeHTML(vo.getTxtSearchRouteCode()) %>"/></td>
 				<td class="TitleTd"><label for="txtSearchRouteName"><%= params.getName("Route","Name") %></label></td>
 				<td class="InputTd"><input type="text" class="Name15TextBox" id="txtSearchRouteName" name="txtSearchRouteName" value="<%= HtmlUtility.escapeHTML(vo.getTxtSearchRouteName()) %>"/></td>
-				<td class="TitleTd"><label for="txtSearchRouteEmployee"><%= params.getName("Approver","Employee","Code") %></label></td>
+				<td class="TitleTd"><label for="txtSearchRouteEmployee"><%= params.getName("Approver") + PlatformNamingUtility.employeeCode(params) %></label></td>
 				<td class="InputTd"><input type="text" class="Code10TextBox" id="txtSearchRouteEmployee" name="txtSearchRouteEmployee" value="<%= HtmlUtility.escapeHTML(vo.getTxtSearchRouteEmployee()) %>"/></td>
 			</tr>
 		</table>
@@ -132,7 +133,7 @@ for (int i = 0; i < vo.getAryLblActivateDate().length; i++) {
 				<td class="ListInputTd" id=""><%= HtmlUtility.escapeHTML(vo.getAryLblApplicationName(i)) 		%></td>
 				<td class="ListInputTd" id="">
 				<% if(!PlatformConst.APPROVAL_ROUTE_SELF.equals(vo.getAryLblRouteCode()[i])){ %>
-					<a class="Link" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_ACTIVATE_DATE %>', '<%= HtmlUtility.escapeHTML(vo.getAryLblActivateDate()[i]) %>', '<%= PlatformConst.PRM_TRANSFERRED_CODE %>' , '<%= HtmlUtility.escapeHTML(vo.getAryLblRouteCode(i)) %>'), '<%= RouteCardAction.CMD_SELECT_SHOW %>');">
+					<a class="Link" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_ACTIVATE_DATE %>', '<%= HtmlUtility.escapeHTML(vo.getAryLblRouteActivateDate(i)) %>', '<%= PlatformConst.PRM_TRANSFERRED_CODE %>' , '<%= HtmlUtility.escapeHTML(vo.getAryLblRouteCode(i)) %>'), '<%= RouteCardAction.CMD_SELECT_SHOW %>');">
 				<% } %>
 					<%= HtmlUtility.escapeHTML(vo.getAryLblRouteName()[i]) %>
 				<% if(!PlatformConst.APPROVAL_ROUTE_SELF.equals(vo.getAryLblRouteCode()[i])){ %>

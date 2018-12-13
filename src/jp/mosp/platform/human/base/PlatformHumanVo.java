@@ -29,7 +29,7 @@ import jp.mosp.platform.base.PlatformVo;
  */
 public abstract class PlatformHumanVo extends PlatformVo {
 	
-	private static final long	serialVersionUID	= -8491195829751058929L;
+	private static final long serialVersionUID = -8491195829751058929L;
 	
 	
 	/**
@@ -48,6 +48,7 @@ public abstract class PlatformHumanVo extends PlatformVo {
 		aryBinaryFileTypeMap = new HashMap<String, String[]>();
 		aryBinaryFileNameMap = new HashMap<String, String[]>();
 		aryBinaryFileRemarkMap = new HashMap<String, String[]>();
+		aryRecordIdMap = new LinkedHashMap<String, Long>();
 	}
 	
 	
@@ -55,92 +56,100 @@ public abstract class PlatformHumanVo extends PlatformVo {
 	 * 対象社員コード。<br>
 	 * 各画面では、この社員コードを用いて情報の検索を行う。<br>
 	 */
-	private String					employeeCode;
+	private String						employeeCode;
 	
 	/**
 	 * 対象日。<br>
 	 * 各画面では、この対象日を用いて情報の検索を行う。<br>
 	 */
-	private Date					targetDate;
+	private Date						targetDate;
 	
 	/**
 	 * 対象個人ID。<br>
 	 * 対象社員コード及び対象有効日で取得した個人IDを格納する。<br>
 	 */
-	private String					personalId;
+	private String						personalId;
 	
 	/**
 	 * 社員名。<br>
 	 */
-	private String					lblEmployeeName;
+	private String						lblEmployeeName;
 	
 	/**
 	 * 次個人ID。<br>
 	 */
-	private String					nextPersonalId;
+	private String						nextPersonalId;
 	/**
 	 * 前個人ID。<br>
 	 */
-	private String					backPersonalId;
+	private String						backPersonalId;
 	
 	/**
 	 * 次社員コード。<br>
 	 */
-	private String					lblNextEmployeeCode;
+	private String						lblNextEmployeeCode;
 	/**
 	 * 前社員コード。<br>
 	 */
-	private String					lblBackEmployeeCode;
+	private String						lblBackEmployeeCode;
 	
 	/**
 	 * 再表示有効日(年)。<br>
 	 */
-	private String					txtSearchActivateYear;
+	private String						txtSearchActivateYear;
 	/**
 	 * 再表示有効日(月)。<br>
 	 */
-	private String					txtSearchActivateMonth;
+	private String						txtSearchActivateMonth;
 	/**
 	 * 再表示有効日(日)。<br>
 	 */
-	private String					txtSearchActivateDay;
+	private String						txtSearchActivateDay;
 	
 	/**
 	 * 検索社員コード<br>
 	 */
-	private String					txtSearchEmployeeCode;
+	private String						txtSearchEmployeeCode;
 	
 	/**
 	 * 人事管理共通情報表示モード。<br>
 	 */
-	private String					modeHumanLayout;
+	private String						modeHumanLayout;
 	
 	/**
 	 * 検索時コマンド<br>
 	 */
-	private String					cmdSaerch;
+	private String						cmdSaerch;
 	
 	//// 人事汎用バイナリ /////
 	/**
 	 * 行ID(バイナリ)。
 	 */
-	private Map<String, String[]>	aryBinaryRowIdMap;
+	private Map<String, String[]>		aryBinaryRowIdMap;
 	/**
 	 * 有効日(バイナリ)。
 	 */
-	private Map<String, String[]>	aryBinaryActivateDateMap;
+	private Map<String, String[]>		aryBinaryActivateDateMap;
 	/**
 	 * ファイル区分(バイナリ)。
 	 */
-	private Map<String, String[]>	aryBinaryFileTypeMap;
+	private Map<String, String[]>		aryBinaryFileTypeMap;
 	/**
 	 * ファイル名(バイナリ)。
 	 */
-	private Map<String, String[]>	aryBinaryFileNameMap;
+	private Map<String, String[]>		aryBinaryFileNameMap;
 	/**
 	 * ファイル備考(バイナリ)。
 	 */
-	private Map<String, String[]>	aryBinaryFileRemarkMap;
+	private Map<String, String[]>		aryBinaryFileRemarkMap;
+	/**
+	 * 人事汎用管理機能参照確認
+	 */
+	private boolean						jsIsReferenceDivision;
+	/**
+	 * 識別IDマップ
+	 */
+	private LinkedHashMap<String, Long>	aryRecordIdMap;
 	
 	
 	/**
@@ -343,7 +352,7 @@ public abstract class PlatformHumanVo extends PlatformVo {
 	/**
 	 * 通常人事汎用情報確認フラグ
 	 */
-	private boolean	isHumanNormalInfo;
+	private boolean isHumanNormalInfo;
 	
 	
 	/**
@@ -364,7 +373,7 @@ public abstract class PlatformHumanVo extends PlatformVo {
 	/**
 	 * 通常人事汎用項目値
 	 */
-	private Map<String, Map<String, String>>	humanNormalMap;
+	private Map<String, Map<String, String>> humanNormalMap;
 	
 	
 	/**
@@ -439,7 +448,7 @@ public abstract class PlatformHumanVo extends PlatformVo {
 	/**
 	 * 履歴人事汎用情報確認フラグ
 	 */
-	private boolean	isHumanHistoryInfo;
+	private boolean isHumanHistoryInfo;
 	
 	
 	/**
@@ -460,7 +469,7 @@ public abstract class PlatformHumanVo extends PlatformVo {
 	/**
 	 * 履歴人事汎用項目値
 	 */
-	private LinkedHashMap<String, LinkedHashMap<String, Map<String, String>>>	humanHistoryMap;
+	private LinkedHashMap<String, LinkedHashMap<String, Map<String, String>>> humanHistoryMap;
 	
 	
 	/**
@@ -546,7 +555,7 @@ public abstract class PlatformHumanVo extends PlatformVo {
 	/**
 	 * 一覧人事汎用項目値
 	 */
-	private LinkedHashMap<String, LinkedHashMap<String, Map<String, String>>>	humanArrayMap;
+	private LinkedHashMap<String, LinkedHashMap<String, Map<String, String>>> humanArrayMap;
 	
 	
 	/**
@@ -630,7 +639,7 @@ public abstract class PlatformHumanVo extends PlatformVo {
 	
 	
 	// 人事汎用管理区分
-	private String	division;
+	private String division;
 	
 	
 	/**
@@ -649,7 +658,7 @@ public abstract class PlatformHumanVo extends PlatformVo {
 	
 	
 	// 人事汎用プルダウン
-	private Map<String, String[][]>	pltHumanGeneralMap;
+	private Map<String, String[][]> pltHumanGeneralMap;
 	
 	
 	/**
@@ -766,6 +775,54 @@ public abstract class PlatformHumanVo extends PlatformVo {
 	 */
 	public String[] getAryBinaryFileRemarkMap(String division) {
 		return aryBinaryFileRemarkMap.get(division);
+	}
+	
+	/**
+	 * @return jsIsReferenceDivision
+	 */
+	public boolean getJsIsReferenceDivision() {
+		return jsIsReferenceDivision;
+	}
+	
+	/**
+	 * @param jsIsReferenceDivision セットする jsIsReferenceDivision
+	 */
+	public void setJsIsReferenceDivision(boolean jsIsReferenceDivision) {
+		this.jsIsReferenceDivision = jsIsReferenceDivision;
+	}
+	
+	/**
+	 * レコード識別IDマップを設定<br>
+	 * @param itemKey 人事汎用管項目
+	 * @param recordId 識別ID
+	 */
+	public void putAryRecordIdMap(String itemKey, Long recordId) {
+		aryRecordIdMap.put(itemKey, recordId);
+	}
+	
+	/**
+	 * レコード識別IDマップを設定<br>
+	 * @param aryRecordIdMap レコード識別IDマップ
+	 */
+	public void setAryRecordIdMap(LinkedHashMap<String, Long> aryRecordIdMap) {
+		this.aryRecordIdMap.putAll(aryRecordIdMap);
+	}
+	
+	/**
+	 * レコード識別IDを取得<br>
+	 * @param itemKey 人事汎用管理項目 
+	 * @return 識別ID 
+	 */
+	public Long getAryRecordIdMap(String itemKey) {
+		return aryRecordIdMap.get(itemKey);
+	}
+	
+	/**
+	 * 識別IDマップを取得<br>
+	 * @return 識別IDマップ 
+	 */
+	public LinkedHashMap<String, Long> getAryRecordIdMap() {
+		return aryRecordIdMap;
 	}
 	
 }

@@ -158,7 +158,7 @@ public class PfgGeneralDao extends PlatformDao implements GeneralDaoInterface {
 		setParam(index++, dto.getGeneralChar1());
 		setParam(index++, dto.getGeneralChar2());
 		setParam(index++, dto.getGeneralNumeric());
-		setParam(index++, dto.getGeneralTime());
+		setParam(index++, dto.getGeneralTime(), true);
 		setParam(index++, dto.getGeneralBinary());
 		setCommonParams(baseDto, isInsert);
 	}
@@ -270,6 +270,38 @@ public class PfgGeneralDao extends PlatformDao implements GeneralDaoInterface {
 			setParam(index++, generalDate);
 			executeQuery();
 			return mappingAll();
+		} catch (Throwable e) {
+			throw new MospException(e);
+		} finally {
+			releaseResultSet();
+			releasePreparedStatement();
+		}
+	}
+	
+	@Override
+	public GeneralDtoInterface findForInfo(String generalType, String generalCode, Date generalDate)
+			throws MospException {
+		try {
+			index = 1;
+			StringBuffer sb = getSelectQuery(getClass());
+			sb.append(where());
+			sb.append(deleteFlagOff());
+			sb.append(and());
+			sb.append(equal(COL_GENERAL_TYPE));
+			sb.append(and());
+			sb.append(equal(COL_GENERAL_CODE));
+			sb.append(and());
+			sb.append(lessEqual(COL_GENERAL_DATE));
+			prepareStatement(sb.toString());
+			setParam(index++, generalType);
+			setParam(index++, generalCode);
+			setParam(index++, generalDate);
+			executeQuery();
+			GeneralDtoInterface dto = null;
+			if (rs.next()) {
+				dto = (GeneralDtoInterface)mapping();
+			}
+			return dto;
 		} catch (Throwable e) {
 			throw new MospException(e);
 		} finally {

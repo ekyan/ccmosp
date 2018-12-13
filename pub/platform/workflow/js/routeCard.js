@@ -43,7 +43,7 @@ function onLoadExtra() {
 		// 階層数選択不可
 		setReadOnly("pltRouteStage", true);
 		// 決定ボタン押下不可
-		setDisabled("btnActivateDate", true);
+		setReadOnly("btnActivateDate", true);
 	}
 	// 履歴追加
 	if (modeCardEdit == MODE_CARD_EDIT_ADD){
@@ -59,7 +59,7 @@ function onLoadExtra() {
 		setReadOnly("pltRouteStage", true);
 	} else {
 		// 登録ボタン利用不可
-		setDisabled("btnRegist", true);
+		setReadOnly("btnRegist", true);
 	}
 	// ユニット承認者設定変更イベントハンドラ設定
 	var routeStage = getObject("pltRouteStage");

@@ -26,12 +26,41 @@
 	text-align: left;
 }
 
+.Search .EmployeeCodeRollTable {
+	float: none;
+}
+
 /* ************************************************************************** */
 /* === 勤怠一覧画面のスタイル === */
 /* ************************************************************************** */
 /* === 勤怠情報一覧(table) === */
 #list {
 	table-layout: fixed;
+}
+
+/* === 一覧表示順送り欄 === */
+.EmployeeCodeRollTable .RollTd {
+	border: none;
+}
+
+.EmployeeCodeRollTable #tdFormerCode {
+	border: none;
+	text-align: right;
+}
+
+.EmployeeCodeRollTable #tdFormerButton {
+	border: none;
+	text-align: left;
+}
+
+.EmployeeCodeRollTable #tdNextCode {
+	border: none;
+	text-align: left;
+}
+
+.EmployeeCodeRollTable #tdNextButton {
+	border: none;
+	text-align: right;
 }
 
 /* === 一覧ボタン欄幅 === */
@@ -80,6 +109,7 @@
 }
 
 /* === 合計値表示欄 === */
+
 #thSumTotalTime {
 	width: 50px;
 }
@@ -236,6 +266,11 @@
 
 /* === 合計値表示欄 === */
 #thTotalMidnight {
+	width: 50px;
+}
+
+/* === 合計値表示欄 === */
+#thShortUnpaidTotal {
 	width: 50px;
 }
 

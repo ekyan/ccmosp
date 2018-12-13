@@ -18,7 +18,9 @@
 package jp.mosp.time.bean.impl;
 
 import java.sql.Connection;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -27,28 +29,37 @@ import java.util.Map;
 import jp.mosp.framework.base.BaseDto;
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.base.MospParams;
+import jp.mosp.framework.utils.MospUtility;
 import jp.mosp.platform.base.PlatformBean;
 import jp.mosp.platform.bean.workflow.WorkflowIntegrateBeanInterface;
+import jp.mosp.platform.dao.workflow.WorkflowDaoInterface;
+import jp.mosp.platform.utils.WorkflowUtility;
 import jp.mosp.time.base.TimeBean;
 import jp.mosp.time.bean.HolidayRequestReferenceBeanInterface;
 import jp.mosp.time.constant.TimeConst;
 import jp.mosp.time.dao.settings.HolidayRequestDaoInterface;
 import jp.mosp.time.dto.settings.HolidayRequestDtoInterface;
+import jp.mosp.time.entity.HolidayRequestEntityInterface;
 
 /**
- * 休暇申請参照クラス。
+ * 休暇申請参照処理。<br>
  */
 public class HolidayRequestReferenceBean extends TimeBean implements HolidayRequestReferenceBeanInterface {
 	
 	/**
 	 * 休暇申請DAO。
 	 */
-	private HolidayRequestDaoInterface		dao;
+	protected HolidayRequestDaoInterface		dao;
+	
+	/**
+	 * ワークフローDAO。
+	 */
+	protected WorkflowDaoInterface				workflowDao;
 	
 	/**
 	 * ワークフロー参照クラス。
 	 */
-	private WorkflowIntegrateBeanInterface	workflowIntegerBean;
+	protected WorkflowIntegrateBeanInterface	workflowIntegerBean;
 	
 	
 	/**
@@ -69,8 +80,10 @@ public class HolidayRequestReferenceBean extends TimeBean implements HolidayRequ
 	
 	@Override
 	public void initBean() throws MospException {
-		// 休暇申請DAOクラス取得
+		// DAOを準備
 		dao = (HolidayRequestDaoInterface)createDao(HolidayRequestDaoInterface.class);
+		workflowDao = (WorkflowDaoInterface)createDao(WorkflowDaoInterface.class);
+		// Beanを準備
 		workflowIntegerBean = (WorkflowIntegrateBeanInterface)createBean(WorkflowIntegrateBeanInterface.class);
 	}
 	
@@ -162,7 +175,8 @@ public class HolidayRequestReferenceBean extends TimeBean implements HolidayRequ
 					approvedDay++;
 				}
 				// 半休の場合
-				if (holidayRange == TimeConst.CODE_HOLIDAY_RANGE_AM || holidayRange == TimeConst.CODE_HOLIDAY_RANGE_PM) {
+				if (holidayRange == TimeConst.CODE_HOLIDAY_RANGE_AM
+						|| holidayRange == TimeConst.CODE_HOLIDAY_RANGE_PM) {
 					approvedDay += TimeConst.HOLIDAY_TIMES_HALF;
 				}
 				// 時間休の場合
@@ -177,33 +191,40 @@ public class HolidayRequestReferenceBean extends TimeBean implements HolidayRequ
 		return map;
 	}
 	
-	/*
-	public Map<String, Object> getRequestDayHour(String personalId, Date acquisitionDate, int holidayType1,
-			String holidayType2, Date requestStartDate, Date requestEndDate) throws MospException {
+	@Override
+	public Map<String, Object> getApprovedPaidHolidayReqeust(String personalId, Date acquisitionDate,
+			Date requestStartDate, Date requestEndDate) throws MospException {
+		// マップ準備
 		Map<String, Object> map = new HashMap<String, Object>();
-		double requestDay = 0;
-		int requestHour = 0;
-		Date countDate = requestStartDate;
-		while (!countDate.after(requestEndDate)) {
-			List<HolidayRequestDtoInterface> list = dao.findForRequestList(personalId, acquisitionDate, holidayType1,
-					holidayType2, countDate);
-			for (HolidayRequestDtoInterface dto : list) {
-				int holidayRange = dto.getHolidayRange();
-				if (holidayRange == 1) {
-					requestDay++;
-				} else if (holidayRange == 2 || holidayRange == 3) {
-					requestDay += 0.5;
-				} else if (holidayRange == 4) {
-					requestHour += Integer.parseInt(DateUtility.getStringHour(new Date(dto.getEndTime().getTime()
-							- dto.getStartTime().getTime())));
-				}
+		// 承認済使用日数と時間数準備
+		double approvedDay = 0;
+		int approvedHour = 0;
+		// 承認完了休暇申請リストを取得
+		List<HolidayRequestDtoInterface> list = dao.findForApprovedList(personalId, acquisitionDate,
+				TimeConst.CODE_HOLIDAYTYPE_HOLIDAY, Integer.toString(TimeConst.CODE_HOLIDAYTYPE_HOLIDAY),
+				requestStartDate, requestEndDate);
+		// 承認完了休暇申請リスト毎に処理
+		for (HolidayRequestDtoInterface dto : list) {
+			// 休暇範囲取得
+			int holidayRange = dto.getHolidayRange();
+			// 全休の場合
+			if (holidayRange == TimeConst.CODE_HOLIDAY_RANGE_ALL) {
+				approvedDay++;
 			}
-			countDate = addDay(countDate, 1);
+			// 半休の場合
+			if (holidayRange == TimeConst.CODE_HOLIDAY_RANGE_AM || holidayRange == TimeConst.CODE_HOLIDAY_RANGE_PM) {
+				approvedDay += TimeConst.HOLIDAY_TIMES_HALF;
+			}
+			// 時間休の場合
+			if (holidayRange == TimeConst.CODE_HOLIDAY_RANGE_TIME) {
+				approvedHour += dto.getUseHour();
+			}
 		}
-		map.put(TimeConst.CODE_REQUEST_DAY, requestDay);
-		map.put(TimeConst.CODE_REQUEST_HOUR, requestHour);
+		map.put(TimeConst.CODE_APPROVED_DAY, approvedDay);
+		map.put(TimeConst.CODE_APPROVED_HOUR, approvedHour);
 		return map;
-	}*/
+	}
+	
 	@Override
 	public Map<String, Object> getRequestDayHour(String personalId, Date acquisitionDate, int holidayType1,
 			String holidayType2, Date requestStartDate, Date requestEndDate) throws MospException {
@@ -222,8 +243,47 @@ public class HolidayRequestReferenceBean extends TimeBean implements HolidayRequ
 	}
 	
 	@Override
+	public SimpleEntry<Double, Integer> getHolidayUses(String personalId, Date firstDate, Date lastDate,
+			int holidayType1, String holidayType2, Collection<Date> acquisitionDates) throws MospException {
+		// 利用日数及び利用時間数を準備
+		double useDays = 0D;
+		int useHours = 0;
+		// 休暇申請情報リスト(取下以外)を取得
+		List<HolidayRequestDtoInterface> list = getHolidayRequestListOnWorkflow(personalId, firstDate, lastDate);
+		// 休暇申請情報毎に処理
+		for (HolidayRequestDtoInterface dto : list) {
+			// 休暇種別1が異なる場合
+			if (dto.getHolidayType1() != holidayType1) {
+				// 次の休暇申請情報へ
+				continue;
+			}
+			// 休暇種別2が異なる場合
+			if (MospUtility.isEqual(holidayType2, dto.getHolidayType2()) == false) {
+				// 次の休暇申請情報へ
+				continue;
+			}
+			// 休暇取得日が含まれない場合
+			if (acquisitionDates.contains(dto.getHolidayAcquisitionDate()) == false) {
+				// 次の休暇申請情報へ
+				continue;
+			}
+			// 利用日数及び利用時間数を加算
+			useDays += dto.getUseDay();
+			useHours += dto.getUseHour();
+		}
+		// 休暇の利用日数及び利用時間数を取得
+		return new SimpleEntry<Double, Integer>(useDays, useHours);
+	}
+	
+	@Override
+	public boolean isPaidHolidayReasonRequired() {
+		return mospParams.getApplicationPropertyBool(TimeConst.APP_PAID_HOLIDAY_REASON_REQUIRED);
+	}
+	
+	@Override
 	public void chkBasicInfo(String personalId, Date targetDate) throws MospException {
-		initial(personalId, targetDate);
+		// 勤怠基本情報確認
+		initial(personalId, targetDate, TimeConst.CODE_FUNCTION_VACATION);
 	}
 	
 	@Override
@@ -248,7 +308,8 @@ public class HolidayRequestReferenceBean extends TimeBean implements HolidayRequ
 					|| workflowIntegerBean.isWithDrawn(dto.getWorkflow())) {
 				continue;
 			}
-			if (holidayRequestDto != null && holidayRequestDto.getTmdHolidayRequestId() == dto.getTmdHolidayRequestId()) {
+			if (holidayRequestDto != null
+					&& holidayRequestDto.getTmdHolidayRequestId() == dto.getTmdHolidayRequestId()) {
 				// レコード識別IDが同じ場合
 				continue;
 			}
@@ -276,4 +337,47 @@ public class HolidayRequestReferenceBean extends TimeBean implements HolidayRequ
 		timeHolidayMap.put(mospParams.getName("Back"), revert);
 		return timeHolidayMap;
 	}
+	
+	@Override
+	public List<HolidayRequestDtoInterface> getUsePaidHolidayDataList(String personalId, Date acquisitionDate)
+			throws MospException {
+		// 対象休暇取得日の休暇申請リストを取得
+		List<HolidayRequestDtoInterface> list = dao.findForAcquisitionList(personalId, acquisitionDate);
+		// 申請以上休暇取得日の休暇申請リスト準備
+		List<HolidayRequestDtoInterface> holidayList = new ArrayList<HolidayRequestDtoInterface>();
+		// 対象休暇取得日の休暇申請リスト毎に処理
+		for (HolidayRequestDtoInterface dto : list) {
+			// 下書の場合
+			if (workflowIntegerBean.isDraft(dto.getWorkflow())) {
+				continue;
+			}
+			// 取下の場合
+			if (workflowIntegerBean.isWithDrawn(dto.getWorkflow())) {
+				continue;
+			}
+			// 一次戻の場合
+			if (workflowIntegerBean.isFirstReverted(dto.getWorkflow())) {
+				continue;
+			}
+			// リスト追加
+			holidayList.add(dto);
+		}
+		return holidayList;
+	}
+	
+	@Override
+	public HolidayRequestEntityInterface getHolidayRequestEntity(String personalId, Date firstDate, Date lastDate)
+			throws MospException {
+		// 休暇申請エンティティを準備
+		HolidayRequestEntityInterface entity = createObject(HolidayRequestEntityInterface.class);
+		// 個人IDと対象期間から休暇申請情報リストを取得
+		List<HolidayRequestDtoInterface> holidayList = dao.findForTerm(personalId, firstDate, lastDate);
+		// 休暇申請情報群(キー：レコード識別ID)を設定
+		entity.setHolidays(holidayList);
+		// ワークフロー情報群(キー：ワークフロー番号)を設定
+		entity.setWorkflows(workflowDao.findForInKey(WorkflowUtility.getWorkflowSet(holidayList)));
+		// 休暇申請エンティティを取得
+		return entity;
+	}
+	
 }

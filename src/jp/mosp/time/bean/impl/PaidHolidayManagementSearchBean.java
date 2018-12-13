@@ -86,9 +86,11 @@ public class PaidHolidayManagementSearchBean extends PlatformBean implements Pai
 		// 人事情報検索クラス取得
 		humanSearch = (HumanSearchBeanInterface)createBean(HumanSearchBeanInterface.class);
 		// 有給休暇情報参照クラス取得
-		paidHolidayInfo = (PaidHolidayInfoReferenceBeanInterface)createBean(PaidHolidayInfoReferenceBeanInterface.class);
+		paidHolidayInfo = (PaidHolidayInfoReferenceBeanInterface)createBean(
+				PaidHolidayInfoReferenceBeanInterface.class);
 		// ストック休暇情報参照クラス取得
-		stockHolidayInfo = (StockHolidayInfoReferenceBeanInterface)createBean(StockHolidayInfoReferenceBeanInterface.class);
+		stockHolidayInfo = (StockHolidayInfoReferenceBeanInterface)createBean(
+				StockHolidayInfoReferenceBeanInterface.class);
 	}
 	
 	@Override

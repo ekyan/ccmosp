@@ -18,80 +18,74 @@
 package jp.mosp.time.bean.impl;
 
 import java.sql.Connection;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.base.MospParams;
-import jp.mosp.framework.constant.MospConst;
 import jp.mosp.platform.base.PlatformBean;
 import jp.mosp.platform.bean.human.HumanSearchBeanInterface;
 import jp.mosp.platform.constant.PlatformConst;
 import jp.mosp.platform.dto.human.HumanDtoInterface;
+import jp.mosp.time.bean.HolidayInfoReferenceBeanInterface;
 import jp.mosp.time.bean.HolidayManagementSearchBeanInterface;
-import jp.mosp.time.bean.HolidayRequestReferenceBeanInterface;
-import jp.mosp.time.constant.TimeConst;
-import jp.mosp.time.dao.settings.HolidayDataDaoInterface;
 import jp.mosp.time.dto.settings.HolidayDataDtoInterface;
 import jp.mosp.time.dto.settings.HolidayManagementListDtoInterface;
 import jp.mosp.time.dto.settings.impl.HolidayManagementListDto;
 
 /**
- * 休暇確認検索クラス。
+ * 休暇確認一覧検索処理。<br>
  */
 public class HolidayManagementSearchBean extends PlatformBean implements HolidayManagementSearchBeanInterface {
 	
 	/**
-	 * 人事情報検索クラス。
+	 * 人事情報検索処理。<br>
 	 */
-	private HumanSearchBeanInterface				humanSearch;
+	private HumanSearchBeanInterface			humanSearch;
 	
 	/**
-	 * 休暇データDAO。
+	 * 休暇数参照処理。<br>
 	 */
-	private HolidayDataDaoInterface					holidayDataDao;
-	
-	/**
-	 * 休暇申請参照。
-	 */
-	private HolidayRequestReferenceBeanInterface	holidayRequest;
+	protected HolidayInfoReferenceBeanInterface	refer;
 	
 	/**
 	 * 有効日。
 	 */
-	private Date									activateDate;
+	private Date								activateDate;
 	
 	/**
 	 * 社員コード。
 	 */
-	private String									employeeCode;
+	private String								employeeCode;
 	
 	/**
 	 * 社員名。
 	 */
-	private String									employeeName;
+	private String								employeeName;
 	
 	/**
 	 * 勤務地コード。
 	 */
-	private String									workPlaceCode;
+	private String								workPlaceCode;
 	
 	/**
 	 * 雇用契約コード。
 	 */
-	private String									employmentCode;
+	private String								employmentCode;
 	
 	/**
 	 * 所属コード。
 	 */
-	private String									sectionCode;
+	private String								sectionCode;
 	
 	/**
 	 * 職位コード。
 	 */
-	private String									positionCode;
+	private String								positionCode;
 	
 	
 	/**
@@ -112,15 +106,15 @@ public class HolidayManagementSearchBean extends PlatformBean implements Holiday
 	
 	@Override
 	public void initBean() throws MospException {
-		// 人事情報検索クラス取得
+		// Beanを準備
 		humanSearch = (HumanSearchBeanInterface)createBean(HumanSearchBeanInterface.class);
-		// 休暇データDAO取得
-		holidayDataDao = (HolidayDataDaoInterface)createDao(HolidayDataDaoInterface.class);
-		holidayRequest = (HolidayRequestReferenceBeanInterface)createBean(HolidayRequestReferenceBeanInterface.class);
+		refer = (HolidayInfoReferenceBeanInterface)createBean(HolidayInfoReferenceBeanInterface.class);
 	}
 	
 	@Override
 	public List<HolidayManagementListDtoInterface> getSearchList(int holidayType) throws MospException {
+		// 休暇確認一覧情報リスト準備
+		List<HolidayManagementListDtoInterface> list = new ArrayList<HolidayManagementListDtoInterface>();
 		// 人事情報検索クラスに検索条件を設定
 		humanSearch.setTargetDate(activateDate);
 		humanSearch.setEmployeeCode(employeeCode);
@@ -131,33 +125,51 @@ public class HolidayManagementSearchBean extends PlatformBean implements Holiday
 		humanSearch.setPositionCode(positionCode);
 		humanSearch.setSectionCode(sectionCode);
 		humanSearch.setStateType(PlatformConst.EMPLOYEE_STATE_PRESENCE);
-		// 人事情報検索
-		List<HumanDtoInterface> list = humanSearch.search();
-		// 休暇確認リスト準備
-		List<HolidayManagementListDtoInterface> holidayManagementList = new ArrayList<HolidayManagementListDtoInterface>();
-		for (HumanDtoInterface dto : list) {
-			String personalId = dto.getPersonalId();
-			List<HolidayDataDtoInterface> holidayDataList = holidayDataDao.findForInfoList(personalId, activateDate,
-					String.valueOf(MospConst.DELETE_FLAG_OFF), holidayType);
-			for (HolidayDataDtoInterface holidayDataDto : holidayDataList) {
-				// 初期化
-				HolidayManagementListDtoInterface holidayManagementListDto = new HolidayManagementListDto();
-				holidayManagementListDto.setEmployeeCode(dto.getEmployeeCode());
-				holidayManagementListDto.setActivateDate(holidayDataDto.getActivateDate());
-				holidayManagementListDto.setLastName(dto.getLastName());
-				holidayManagementListDto.setFirstName(dto.getFirstName());
-				holidayManagementListDto.setSectionCode(dto.getSectionCode());
-				holidayManagementListDto.setHolidayCode(holidayDataDto.getHolidayCode());
-				Map<String, Object> map = holidayRequest.getRequestDayHour(personalId,
-						holidayDataDto.getActivateDate(), holidayType, holidayDataDto.getHolidayCode(),
-						holidayDataDto.getActivateDate(), activateDate);
-				holidayManagementListDto.setHolidayRemainder(holidayDataDto.getGivingDay()
-						- holidayDataDto.getCancelDay() - ((Double)map.get(TimeConst.CODE_REQUEST_DAY)).doubleValue());
-				holidayManagementListDto.setHolidayLimit(holidayDataDto.getHolidayLimitDate());
-				holidayManagementList.add(holidayManagementListDto);
-			}
+		// 人事情報毎に処理
+		for (HumanDtoInterface humanDto : humanSearch.search()) {
+			// 休暇確認一覧情報リスト(個人別)を作成し設定
+			list.addAll(makeDtos(humanDto, activateDate, holidayType));
 		}
-		return holidayManagementList;
+		// 休暇確認一覧情報リスト準備
+		return list;
+	}
+	
+	/**
+	 * 休暇確認一覧情報リスト(個人別)を作成する。<br>
+	 * @param humanDto    人事情報
+	 * @param targetDate  対象日
+	 * @param holidayType 休暇区分(休暇種別1：特別休暇orその他休暇)
+	 * @return 休暇確認一覧情報
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	protected List<HolidayManagementListDtoInterface> makeDtos(HumanDtoInterface humanDto, Date targetDate,
+			int holidayType) throws MospException {
+		// 休暇確認一覧情報リスト(個人別)を準備
+		List<HolidayManagementListDtoInterface> list = new ArrayList<HolidayManagementListDtoInterface>();
+		// 休暇の残日数及び残時間数群を取得
+		Map<HolidayDataDtoInterface, SimpleEntry<Double, Integer>> holidayRemains = refer.getHolidayRemains(humanDto,
+				targetDate, holidayType);
+		// 休暇の残日数及び残時間数毎に処理
+		for (Entry<HolidayDataDtoInterface, SimpleEntry<Double, Integer>> entry : holidayRemains.entrySet()) {
+			// 休暇付与情報を取得
+			HolidayDataDtoInterface holidayDataDto = entry.getKey();
+			SimpleEntry<Double, Integer> remains = entry.getValue();
+			// 休暇確認一覧情報を作成
+			HolidayManagementListDtoInterface dto = new HolidayManagementListDto();
+			dto.setEmployeeCode(humanDto.getEmployeeCode());
+			dto.setActivateDate(holidayDataDto.getActivateDate());
+			dto.setLastName(humanDto.getLastName());
+			dto.setFirstName(humanDto.getFirstName());
+			dto.setSectionCode(humanDto.getSectionCode());
+			dto.setHolidayCode(holidayDataDto.getHolidayCode());
+			dto.setHolidayRemainder(remains.getKey());
+			dto.setHolidayRemaindHours(remains.getValue());
+			dto.setHolidayLimit(holidayDataDto.getHolidayLimitDate());
+			// 休暇確認一覧情報リスト(個人別)に追加
+			list.add(dto);
+		}
+		// 休暇確認一覧情報リスト(個人別)を取得
+		return list;
 	}
 	
 	@Override

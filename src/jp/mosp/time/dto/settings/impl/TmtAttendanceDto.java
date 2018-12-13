@@ -72,7 +72,7 @@ public class TmtAttendanceDto extends BaseDto implements AttendanceTransactionDt
 	
 	@Override
 	public Date getWorkDate() {
-		return workDate;
+		return getDateClone(workDate);
 	}
 	
 	@Override
@@ -102,7 +102,7 @@ public class TmtAttendanceDto extends BaseDto implements AttendanceTransactionDt
 	
 	@Override
 	public void setWorkDate(Date workDate) {
-		this.workDate = workDate;
+		this.workDate = getDateClone(workDate);
 	}
 	
 	@Override

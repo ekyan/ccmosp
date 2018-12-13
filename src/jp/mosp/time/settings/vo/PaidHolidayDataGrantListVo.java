@@ -51,11 +51,15 @@ public class PaidHolidayDataGrantListVo extends TimeVo {
 	private String[]			aryLblGrant;
 	private String[]			aryLblGrantDate;
 	private String[]			aryLblGrantDays;
+	private String[]			aryLblNumberOfAttendance;
+	private String[]			aryStyle;
 	
 	private String[]			aryPersonalId;
 	
 	// 出勤率計算確認フラグ
 	private String				jsCalcAttendanceRate;
+	
+	private boolean				jsSearchConditionRequired;
 	
 	
 	/**
@@ -381,6 +385,34 @@ public class PaidHolidayDataGrantListVo extends TimeVo {
 	}
 	
 	/**
+	 * @return aryLblNumberOfAttendance
+	 */
+	public String[] getAryLblNumberOfAttendance() {
+		return getStringArrayClone(aryLblNumberOfAttendance);
+	}
+	
+	/**
+	 * @param aryLblNumberOfAttendance セットする aryLblNumberOfAttendance
+	 */
+	public void setAryLblNumberOfAttendance(String[] aryLblNumberOfAttendance) {
+		this.aryLblNumberOfAttendance = getStringArrayClone(aryLblNumberOfAttendance);
+	}
+	
+	/**
+	 * @return aryStyle
+	 */
+	public String[] getAryStyle() {
+		return getStringArrayClone(aryStyle);
+	}
+	
+	/**
+	 * @param aryStyle セットする aryStyle
+	 */
+	public void setAryStyle(String[] aryStyle) {
+		this.aryStyle = getStringArrayClone(aryStyle);
+	}
+	
+	/**
 	 * @return aryPersonalId
 	 */
 	public String[] getAryPersonalId() {
@@ -406,6 +438,20 @@ public class PaidHolidayDataGrantListVo extends TimeVo {
 	 */
 	public void setJsCalcAttendanceRate(String jsCalcAttendanceRate) {
 		this.jsCalcAttendanceRate = jsCalcAttendanceRate;
+	}
+	
+	/**
+	 * @return jsSearchConditionRequired
+	 */
+	public boolean isJsSearchConditionRequired() {
+		return jsSearchConditionRequired;
+	}
+	
+	/**
+	 * @param jsSearchConditionRequired セットする jsSearchConditionRequired
+	 */
+	public void setJsSearchConditionRequired(boolean jsSearchConditionRequired) {
+		this.jsSearchConditionRequired = jsSearchConditionRequired;
 	}
 	
 }

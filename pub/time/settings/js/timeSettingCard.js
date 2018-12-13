@@ -53,7 +53,7 @@ function onLoadExtra() {
 		// コード編集不可
 		setReadOnly("txtSettingCode", true);
 		// 決定ボタン押下不可
-		setDisabled("btnActivateDate", true);
+		setReadOnly("btnActivateDate", true);
 	}
 	// 有効日(編集)モード確認
 	if (modeActivateDate == MODE_ACTIVATE_DATE_FIXED) {
@@ -63,7 +63,7 @@ function onLoadExtra() {
 		setReadOnly("txtEditActivateDay", true);
 	} else {
 		// 登録ボタン利用不可
-		setDisabled("btnRegist", true);
+		setReadOnly("btnRegist", true);
 	}
 	// 所定休日取扱
 	setFormValue("pltSpecificHoliday", 1);

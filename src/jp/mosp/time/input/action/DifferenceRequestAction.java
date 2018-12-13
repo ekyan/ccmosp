@@ -30,6 +30,7 @@ import jp.mosp.platform.bean.workflow.WorkflowRegistBeanInterface;
 import jp.mosp.platform.constant.PlatformConst;
 import jp.mosp.platform.constant.PlatformMessageConst;
 import jp.mosp.platform.dto.workflow.WorkflowDtoInterface;
+import jp.mosp.platform.utils.WorkflowUtility;
 import jp.mosp.time.base.TimeAction;
 import jp.mosp.time.base.TimeBean;
 import jp.mosp.time.bean.ApplicationReferenceBeanInterface;
@@ -455,9 +456,7 @@ public class DifferenceRequestAction extends TimeAction {
 					PlatformConst.WORKFLOW_TYPE_TIME);
 			if (workflowDto != null) {
 				// ワークフローコメント登録
-				platform().workflowCommentRegist().addComment(
-						workflowDto,
-						mospParams.getUser().getPersonalId(),
+				platform().workflowCommentRegist().addComment(workflowDto, mospParams.getUser().getPersonalId(),
 						mospParams.getProperties().getMessage(PlatformMessageConst.MSG_PROCESS_SUCCEED,
 								new String[]{ mospParams.getName("WorkPaper") }));
 				// ワークフロー番号セット
@@ -649,8 +648,8 @@ public class DifferenceRequestAction extends TimeAction {
 			Date endTime = null;
 			if (vo.getJsEditDifferenceTypeMode().equals(PlatformConst.MODE_ACTIVATE_DATE_CHANGING)) {
 				// 始業時刻
-				WorkTypeItemDtoInterface workStartDto = timeReference().workTypeItem().getWorkTypeItemInfo(
-						vo.getLblWorkType(), getEditRequestDate(), TimeConst.CODE_WORKSTART);
+				WorkTypeItemDtoInterface workStartDto = timeReference().workTypeItem()
+					.getWorkTypeItemInfo(vo.getLblWorkType(), getEditRequestDate(), TimeConst.CODE_WORKSTART);
 				if (workStartDto == null) {
 					// エラーメッセージ設定
 					addErrorMessageNoItem();
@@ -696,8 +695,8 @@ public class DifferenceRequestAction extends TimeAction {
 		if (isDraft) {
 			// 下書の場合は削除する
 			workflowRegist.delete(workflowDto);
-			workflowCommentRegist.deleteList(reference().workflowComment().getWorkflowCommentList(
-					workflowDto.getWorkflow()));
+			workflowCommentRegist
+				.deleteList(reference().workflowComment().getWorkflowCommentList(workflowDto.getWorkflow()));
 			regist.delete(dto);
 		} else {
 			// 下書でない場合は取下する
@@ -705,9 +704,7 @@ public class DifferenceRequestAction extends TimeAction {
 			workflowDto = workflowRegist.withdrawn(workflowDto);
 			if (workflowDto != null) {
 				// ワークフローコメント登録
-				workflowCommentRegist.addComment(
-						workflowDto,
-						mospParams.getUser().getPersonalId(),
+				workflowCommentRegist.addComment(workflowDto, mospParams.getUser().getPersonalId(),
 						mospParams.getProperties().getMessage(PlatformMessageConst.MSG_PROCESS_SUCCEED,
 								new String[]{ mospParams.getName("TakeDown") }));
 			}
@@ -800,7 +797,8 @@ public class DifferenceRequestAction extends TimeAction {
 				addEmployeeSuspendedMessage();
 				return;
 			}
-			if (setApproverPullDown(vo.getPersonalId(), getEditRequestDate(), PlatformConst.WORKFLOW_TYPE_TIME) == false) {
+			if (setApproverPullDown(vo.getPersonalId(), getEditRequestDate(),
+					PlatformConst.WORKFLOW_TYPE_TIME) == false) {
 				return;
 			}
 			DifferenceRequestRegistBeanInterface regist = time().differenceRequestRegist();
@@ -833,6 +831,8 @@ public class DifferenceRequestAction extends TimeAction {
 			vo.setPltEditRequestMinute("0");
 			vo.setLblEndTimeHour("16");
 			vo.setLblEndTimeMinute("00");
+			// 期間指定チェックボックスを初期化
+			vo.setCkbEndDate(MospConst.CHECKBOX_OFF);
 			// 有効日モード設定
 			vo.setModeActivateDate(PlatformConst.MODE_ACTIVATE_DATE_CHANGING);
 			vo.setJsEditDifferenceTypeMode(PlatformConst.MODE_ACTIVATE_DATE_CHANGING);
@@ -852,16 +852,17 @@ public class DifferenceRequestAction extends TimeAction {
 		// 有効日フラグ確認
 		if (vo.getModeActivateDate().equals(PlatformConst.MODE_ACTIVATE_DATE_FIXED)) {
 			Date date = getEditRequestDate();
-			List<SubstituteDtoInterface> list = timeReference().substitute().getSubstituteList(vo.getPersonalId(),
-					getEditRequestDate(), TimeBean.TIMES_WORK_DEFAULT);
-			for (SubstituteDtoInterface substituteDto : list) {
-				WorkflowDtoInterface workflowDto = reference().workflow().getLatestWorkflowInfo(
-						substituteDto.getWorkflow());
-				if (workflowDto == null || !PlatformConst.CODE_STATUS_COMPLETE.equals(workflowDto.getWorkflowStatus())) {
-					continue;
+			// 振替休日データを取得
+			SubstituteDtoInterface substituteDto = timeReference().substitute().getSubstituteDto(vo.getPersonalId(),
+					getEditRequestDate());
+			if (substituteDto != null) {
+				// ワークフロー情報
+				WorkflowDtoInterface workflowDto = reference().workflow()
+					.getLatestWorkflowInfo(substituteDto.getWorkflow());
+				// 承認済の場合
+				if (WorkflowUtility.isCompleted(workflowDto)) {
+					date = substituteDto.getSubstituteDate();
 				}
-				date = substituteDto.getSubstituteDate();
-				break;
 			}
 			ApplicationReferenceBeanInterface application = timeReference().application();
 			ApplicationDtoInterface applicationDto = application.findForPerson(vo.getPersonalId(), date);
@@ -881,15 +882,15 @@ public class DifferenceRequestAction extends TimeAction {
 			}
 			ScheduleDateReferenceBeanInterface scheduleDate = timeReference().scheduleDate();
 			ScheduleDateDtoInterface scheduleDateDto = scheduleDate.getScheduleDateInfo(scheduleDto.getScheduleCode(),
-					scheduleDto.getActivateDate(), date);
+					date);
 			scheduleDate.chkExistScheduleDate(scheduleDateDto, date);
 			if (mospParams.hasErrorMessage()) {
 				// 有効日モード設定
 				vo.setModeActivateDate(PlatformConst.MODE_ACTIVATE_DATE_CHANGING);
 				return;
 			}
-			WorkTypeDtoInterface workTypeDto = timeReference().workType().getWorkTypeInfo(
-					scheduleDateDto.getWorkTypeCode(), getEditRequestDate());
+			WorkTypeDtoInterface workTypeDto = timeReference().workType()
+				.getWorkTypeInfo(scheduleDateDto.getWorkTypeCode(), getEditRequestDate());
 			if (workTypeDto == null) {
 				mospParams.addErrorMessage(PlatformMessageConst.MSG_NO_ITEM, mospParams.getName("Work", "Form"));
 				// 有効日モード設定
@@ -898,8 +899,8 @@ public class DifferenceRequestAction extends TimeAction {
 			}
 			// 勤怠形態の取得
 			vo.setLblWorkType(workTypeDto.getWorkTypeCode());
-			vo.setLblWorkTypeName(timeReference().workType()
-				.getWorkTypeAbbrAndTime(workTypeDto.getWorkTypeCode(), date));
+			vo.setLblWorkTypeName(
+					timeReference().workType().getWorkTypeAbbrAndTime(workTypeDto.getWorkTypeCode(), date));
 			// 開始/終了時刻の設定
 			workTimeCalc();
 			return;
@@ -1052,6 +1053,9 @@ public class DifferenceRequestAction extends TimeAction {
 		search.setPersonalId(vo.getPersonalId());
 		search.setWorkflowStatus(vo.getPltSearchState());
 		search.setWorkTypeCode(vo.getPltSearchWorkType());
+		if (vo.getPltSearchWorkType() == null) {
+			search.setWorkTypeCode(vo.getAryPltSearchWorkType()[0][0]);
+		}
 		int year = Integer.parseInt(vo.getPltSearchRequestYear());
 		int startMonth = 1;
 		int endMonth = 12;
@@ -1062,8 +1066,8 @@ public class DifferenceRequestAction extends TimeAction {
 		// 締日ユーティリティー取得
 		CutoffUtilBeanInterface cutoffUtil = timeReference().cutoffUtil();
 		// 締日情報取得
-		CutoffDtoInterface startMonthCutoffDto = cutoffUtil
-			.getCutoffForPersonalId(vo.getPersonalId(), year, startMonth);
+		CutoffDtoInterface startMonthCutoffDto = cutoffUtil.getCutoffForPersonalId(vo.getPersonalId(), year,
+				startMonth);
 		if (mospParams.hasErrorMessage()) {
 			// 検索結果無しメッセージ設定
 			addNoSearchResultMessage();
@@ -1095,7 +1099,7 @@ public class DifferenceRequestAction extends TimeAction {
 		// ソート
 		sort();
 		// 検索結果確認
-		if (list.isEmpty()) {
+		if (list.isEmpty() && mospParams.getCommand().equals(CMD_SEARCH)) {
 			// 検索結果無しメッセージ設定
 			addNoSearchResultMessage();
 		}
@@ -1323,8 +1327,8 @@ public class DifferenceRequestAction extends TimeAction {
 		// VO取得
 		DifferenceRequestVo vo = (DifferenceRequestVo)mospParams.getVo();
 		// 履歴編集対象取得
-		DifferenceRequestDtoInterface dto = timeReference().differenceRequest().findForKeyOnWorkflow(
-				vo.getPersonalId(), requestDate);
+		DifferenceRequestDtoInterface dto = timeReference().differenceRequest().findForKeyOnWorkflow(vo.getPersonalId(),
+				requestDate);
 		// 存在確認
 		checkSelectedDataExist(dto);
 		// VOにセット
@@ -1409,8 +1413,8 @@ public class DifferenceRequestAction extends TimeAction {
 		if (workOnHolidayRequestDto != null
 				&& workOnHolidayRequestDto.getSubstitute() == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_ON) {
 			// 振替の場合
-			List<SubstituteDtoInterface> list = timeReference().substitute().getSubstituteList(
-					workOnHolidayRequestDto.getWorkflow());
+			List<SubstituteDtoInterface> list = timeReference().substitute()
+				.getSubstituteList(workOnHolidayRequestDto.getWorkflow());
 			if (list.isEmpty()) {
 				return "";
 			}

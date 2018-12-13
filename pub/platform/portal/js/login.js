@@ -25,6 +25,8 @@ function onLoadExtra(){
 	} else {
 		setFocus("txtPassWord");
 	}
+	// 非表示設定
+	hidePassword();
 }
 
 /**
@@ -43,4 +45,47 @@ function login(cmd) {
 		return prepareSubmit(document.form, cmd);
 	}
 	return false;
+}
+
+/**
+ * 追加チェックを行う。
+ * @param aryMessage エラーメッセージ格納配列
+ * @param event イベント
+ * @return 無し
+ */
+function checkPasswordChange(aryMessage, event) {
+	checkRequired("txtPassChangeUserId", aryMessage);
+	checkRequired("txtMailAddress", aryMessage);
+}
+
+/**
+ * 非表示設定。
+ */
+function hidePassword() {
+	if (document.getElementById("divPasswordChange") == null) {
+		return;
+	}
+	document.getElementById("divPasswordChange").style.display = "none";
+	document.getElementById("divPasswordChangeButton").style.display = "none";
+}
+
+/**
+ * 表示/非表示設定。
+ */
+function changePassword() {
+	changeDisplay("divPasswordChange");
+	changeDisplay("divPasswordChangeButton");
+}
+
+/**
+ * 表示/非表示設定。
+ * @param target 対象
+ */
+function changeDisplay(target) {
+	var targetDisplay = document.getElementById(target).style.display;
+	if (targetDisplay == "block") {
+		document.getElementById(target).style.display = "none";
+	} else if (targetDisplay == "none") {
+		document.getElementById(target).style.display = "block";
+	}
 }

@@ -17,6 +17,8 @@
  */
 package jp.mosp.platform.system.vo;
 
+import java.util.Map;
+
 import jp.mosp.platform.system.base.PlatformSystemVo;
 
 /**
@@ -24,68 +26,82 @@ import jp.mosp.platform.system.base.PlatformSystemVo;
  */
 public class AccountMasterVo extends PlatformSystemVo {
 	
-	private static final long	serialVersionUID	= -6874451723281652141L;
+	private static final long		serialVersionUID	= -6874451723281652141L;
 	
-	private String				pltEditRoleCode;
-	private String				txtEditUserId;
-	private String				txtEditEmployeeCode;
+	private String					pltEditRoleCode;
+	private String					txtEditUserId;
+	private String					txtEditEmployeeCode;
 	
 	/**
 	 * 選択社員個人ID。
 	 */
-	private String				personalId;
+	private String					personalId;
 	
 	/**
 	 * 選択社員名。
 	 */
-	private String				lblEditEmployeeName;
+	private String					lblEditEmployeeName;
 	
 	/**
-	 * ユーザロール情報レコードID。<br>
-	 * 履歴編集対象のレコードIDを保持しておく。<br>
+	 * 追加ロール。<br>
 	 */
-	private long				userRoleRecordId;
+	private String[]				pltExtraRoles;
 	
-	private String				txtSearchUserId;
-	private String				pltSearchEmployeeCode;
-	private String				pltSearchEmployeeName;
+	private String					txtSearchUserId;
+	private String					pltSearchEmployeeCode;
+	private String					pltSearchEmployeeName;
 	
 	/**
 	 * 一括更新ロールコード。<br>
 	 */
-	private String				pltUpdateRoleCode;
+	private String					pltUpdateRoleCode;
 	
 	/**
 	 * 一括更新区分(ロール or 有効/無効)。<br>
 	 */
-	private String				radBatchUpdateType;
+	private String					radBatchUpdateType;
 	
-	private String[]			aryCkbSelect;
-	private String[]			aryLblActivateDate;
-	private String[]			aryLblEmployeeCode;
-	private String[]			aryLblEmployeeName;
-	private String[]			aryLblUserId;
-	private String[]			aryLblRoleCode;
+	private String[]				aryCkbSelect;
+	private String[]				aryLblActivateDate;
+	private String[]				aryLblEmployeeCode;
+	private String[]				aryLblEmployeeName;
+	private String[]				aryLblUserId;
+	private String[]				aryLblRoleCode;
 	
 	/**
-	 * 編集の上位所属プルダウンリスト
+	 * プルダウンリスト(メインロール：編集)。<br>
 	 */
-	private String[][]			aryPltEditRoleCode;
+	private String[][]				aryPltEditRoleCode;
 	
-	private String[][]			aryPltUpdateRoleCode;
+	/**
+	 * プルダウンリスト(ロール区分：追加ロール項目名表示用)。<br>
+	 * 追加ロール(入力値)のロール区分を判断するのにも用いる。<br>
+	 */
+	private String[][]				aryRoleType;
 	
-	private String				radUpdateSelectRadio;
+	/**
+	 * プルダウンリスト(追加ロール：編集)。<br>
+	 * キー：ロール区分、値：プルダウンリスト。<br>
+	 */
+	private Map<String, String[][]>	aryPltExtraRoles;
+	
+	/**
+	 * プルダウンリスト(一括更新：ロール)。<br>
+	 */
+	private String[][]				aryPltUpdateRoleCode;
+	
+	private String					radUpdateSelectRadio;
 	
 	/**
 	 * 有効日(一括更新)モード。<br>
 	 */
-	private String				modeUpdateActivateDate;
+	private String					modeUpdateActivateDate;
 	
 	/**
 	 * 社員編集モード。<br>
 	 * 設定値は、有効日モードを用いる。<br>
 	 */
-	private String				modeEditEmployee;
+	private String					modeEditEmployee;
 	
 	
 	/**
@@ -159,17 +175,18 @@ public class AccountMasterVo extends PlatformSystemVo {
 	}
 	
 	/**
-	 * @return userRoleRecordId
+	 * @param idx インデックス
+	 * @return pltExtraRoles
 	 */
-	public long getUserRoleRecordId() {
-		return userRoleRecordId;
+	public String getPltExtraRoles(int idx) {
+		return pltExtraRoles[idx];
 	}
 	
 	/**
-	 * @param userRoleRecordId セットする userRoleRecordId
+	 * @param pltExtraRoles セットする pltExtraRoles
 	 */
-	public void setUserRoleRecordId(long userRoleRecordId) {
-		this.userRoleRecordId = userRoleRecordId;
+	public void setPltExtraRoles(String[] pltExtraRoles) {
+		this.pltExtraRoles = getStringArrayClone(pltExtraRoles);
 	}
 	
 	/**
@@ -372,6 +389,51 @@ public class AccountMasterVo extends PlatformSystemVo {
 	 */
 	public String[][] getAryPltEditRoleCode() {
 		return getStringArrayClone(aryPltEditRoleCode);
+	}
+	
+	/**
+	 * @return aryRoleType
+	 */
+	public String[][] getAryRoleType() {
+		return getStringArrayClone(aryRoleType);
+	}
+	
+	/**
+	 * @param idx インデックス
+	 * @return ロール区分
+	 */
+	public String getAryRoleType(int idx) {
+		return aryRoleType[idx][0];
+	}
+	
+	/**
+	 * @param idx インデックス
+	 * @return ロール区分名称
+	 */
+	public String getAryRoleTypeName(int idx) {
+		return aryRoleType[idx][1];
+	}
+	
+	/**
+	 * @param aryRoleType セットする aryRoleType
+	 */
+	public void setAryRoleType(String[][] aryRoleType) {
+		this.aryRoleType = getStringArrayClone(aryRoleType);
+	}
+	
+	/**
+	 * @param roleType ロール区分
+	 * @return aryPltExtraRoles
+	 */
+	public String[][] getAryPltExtraRoles(String roleType) {
+		return getStringArrayClone(aryPltExtraRoles.get(roleType));
+	}
+	
+	/**
+	 * @param aryPltExtraRoles セットする aryPltExtraRoles
+	 */
+	public void setAryPltExtraRoles(Map<String, String[][]> aryPltExtraRoles) {
+		this.aryPltExtraRoles = aryPltExtraRoles;
 	}
 	
 	/**

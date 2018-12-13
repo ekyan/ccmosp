@@ -21,7 +21,9 @@ import java.util.List;
 
 import jp.mosp.framework.base.BaseDtoInterface;
 import jp.mosp.framework.base.MospParams;
+import jp.mosp.framework.base.TopicPath;
 import jp.mosp.framework.constant.MospConst;
+import jp.mosp.platform.utils.PlatformNamingUtility;
 
 /**
  * HTML作成に有用なメソッドを提供する。<br><br>
@@ -60,10 +62,29 @@ public class HtmlUtility {
 	 * @return HTMLセレクトオプション文字列
 	 */
 	public static String getSelectOption(String[][] array, String value) {
-		StringBuffer sb = new StringBuffer();
+		// セレクトオプションを出力
+		return getSelectOption(array, value, false);
+	}
+	
+	/**
+	 * セレクトオプションを出力する。<br>
+	 * 任意のセレクトオプションを出力する。<br>
+	 * <br>
+	 * 初期選択値追加がtrueで初期選択値がセレクトオプション内容に存在しない場合、
+	 * セレクトオプションの末尾に初期選択値のオプションを追加する。<br>
+	 * <br>
+	 * @param array    セレクトオプション内容
+	 * @param value    初期選択値
+	 * @param isAppend 初期選択値追加(true：追加する、false：追加しない)
+	 * @return HTMLセレクトオプション文字列
+	 */
+	public static String getSelectOption(String[][] array, String value, boolean isAppend) {
+		// セレクトオプションを準備
+		StringBuilder sb = new StringBuilder();
+		// セレクトオプション内容毎に処理
 		for (String[] element : array) {
 			String selected = "";
-			if (element[0].equals(value)) {
+			if (MospUtility.isEqual(element[0], value)) {
 				selected = " selected=\"selected\"";
 			}
 			sb.append("<option value=\"");
@@ -74,6 +95,16 @@ public class HtmlUtility {
 			sb.append(escapeHTML(element[1]));
 			sb.append("</option>");
 		}
+		// 初期選択値追加がtrueで初期選択値がセレクトオプション内容に存在しない場合
+		if (isAppend && MospUtility.isCodeExist(value, array) == false) {
+			// セレクトオプションの末尾に初期選択値のオプションを追加
+			sb.append("<option value=\"");
+			sb.append(escapeHTML(value));
+			sb.append("\" selected=\"selected\">");
+			sb.append(escapeHTML(value));
+			sb.append("</option>");
+		}
+		// セレクトオプションを取得
 		return sb.toString();
 	}
 	
@@ -81,7 +112,7 @@ public class HtmlUtility {
 	 * セレクトオプションを出力する。<br>
 	 * MosPコード情報から対象コードキーの情報を取得して、
 	 * セレクトオプションを作成する。<br>
-	 * @param mospParams MosPパラメータ
+	 * @param mospParams MosP処理情報
 	 * @param codeKey    対象コードキー
 	 * @param value      初期選択値
 	 * @param needBlank  空白行要否(true：空白行要、false：空白行不要)
@@ -92,6 +123,96 @@ public class HtmlUtility {
 		String[][] array = mospParams.getProperties().getCodeArray(codeKey, needBlank);
 		// セレクトオプション出力
 		return getSelectOption(array, value);
+	}
+	
+	/**
+	 * ラジオボタンのHTMLタグ(複数)を取得する。<br>
+	 * @param mospParams MosP処理情報
+	 * @param cls        class
+	 * @param name       name
+	 * @param codeKey    コードキー
+	 * @param value      value
+	 * @return ラジオボタンのHTMLタグ(複数)
+	 */
+	public static String getRadioButonInput(MospParams mospParams, String cls, String name, String codeKey,
+			String value) {
+		// MosP処理情報からコード配列を取得
+		String[][] array = mospParams.getProperties().getCodeArray(codeKey, false);
+		// ラジオボタンのHTMLタグ(複数)を取得
+		return getRadioButonInput(cls, name, array, value);
+	}
+	
+	/**
+	 * ラジオボタンのHTMLタグ(複数)を取得する。<br>
+	 * @param cls     class
+	 * @param array   array
+	 * @param name    name
+	 * @param value   value
+	 * @return ラジオボタンのHTMLタグ(複数)
+	 */
+	public static String getRadioButonInput(String cls, String name, String[][] array, String value) {
+		// HTML生成
+		StringBuffer sb = new StringBuffer();
+		if (array == null) {
+			return sb.toString();
+		}
+		for (String[] element : array) {
+			String checked = "";
+			// 選択状態取得
+			if (element[0].equals(value)) {
+				checked = "checked=\"checked\"";
+			}
+			// ラジオボタンを作成
+			sb.append("<label>");
+			sb.append("<input type=\"radio\" ");
+			if (cls != null && !cls.isEmpty()) {
+				sb.append("class=\"" + cls + "\" ");
+			}
+			if (name != null && !name.isEmpty()) {
+				sb.append("name=\"" + name + "\" ");
+			}
+			sb.append("value=\"" + escapeHTML(element[0]) + "\"" + escapeHTML(checked) + "\" />");
+			sb.append(escapeHTML(element[1]));
+			sb.append("</label>");
+		}
+		return sb.toString();
+	}
+	
+	/**
+	 * ラジオボタンのHTMLタグを取得する。<br>
+	 * @param mospParams MosP処理情報
+	 * @param cls        class
+	 * @param name       name
+	 * @param value      ラジオボタンの値
+	 * @param selected   選択値
+	 * @param isLabel    ラベル(spanタグ)表示(true：ラベル、false：ラジオボタン)
+	 * @return ラジオボタンのHTMLタグ
+	 */
+	public static String getRadioTag(MospParams mospParams, String cls, String name, String value, String selected,
+			boolean isLabel) {
+		// HTML生成
+		StringBuilder sb = new StringBuilder();
+		// チェックボックスがチェックされているかを確認
+		boolean isChecked = isChecked(value, selected);
+		// ラベルの場合
+		if (isLabel) {
+			sb.append("<span>");
+			sb.append(escapeHTML(isChecked ? PlatformNamingUtility.selected(mospParams) : ""));
+			sb.append("</span>");
+			return sb.toString();
+		}
+		// ラジオボタンを作成
+		sb.append("<input type=\"radio\" ");
+		if (MospUtility.isEmpty(cls) == false) {
+			sb.append("class=\"" + cls + "\" ");
+		}
+		if (MospUtility.isEmpty(name) == false) {
+			sb.append("name=\"" + name + "\" ");
+		}
+		sb.append("value=\"" + escapeHTML(value) + "\" ");
+		sb.append(getChecked(isChecked));
+		sb.append(" />");
+		return sb.toString();
 	}
 	
 	/**
@@ -133,7 +254,7 @@ public class HtmlUtility {
 	}
 	
 	/**
-	 * ボタンタグ取得。<br>
+	 * ボタンタグを取得する。<br>
 	 * @param id   id
 	 * @param cmd  コマンドNo.
 	 * @param name ボタン名称
@@ -156,7 +277,53 @@ public class HtmlUtility {
 	}
 	
 	/**
-	 * テキストボックスのHTMLタグを取得する。
+	 * 戻るボタンタグを取得する。<br>
+	 * platform.jsのsubmitTransferを実行する。<br>
+	 * @param mospParams  MosP処理情報
+	 * @param checkTarget 変更チェック対象(null：チェックを行わない、""：全体をチェック)
+	 * @param extraFunc   追加処理関数文字列(null：追加処理無し)
+	 * @return 戻るボタンタグHTML文字列
+	 */
+	public static String getBackButtonTag(MospParams mospParams, String checkTarget, String extraFunc) {
+		// パンくずリストを取得
+		List<TopicPath> topicPathList = mospParams.getTopicPathList();
+		// パンくずが二つ以下である場合
+		if (topicPathList.size() <= 2) {
+			// 前の画面がトップになるため空文字を取得
+			return "";
+		}
+		// 一つ前のパンくずを取得
+		TopicPath topicPath = topicPathList.get(topicPathList.size() - 2);
+		// パンくずからコマンド及び画面名を取得
+		String cmd = topicPath.getCommand();
+		String name = topicPath.getName();
+		// 戻るボタンタグHTML文字列を作成
+		StringBuffer sb = new StringBuffer();
+		sb.append("<button type=\"button\" style=\"width: auto;\"");
+		sb.append(" onclick=\"submitTransfer(event, ");
+		// 変更チェック対象を設定
+		if (checkTarget == null) {
+			sb.append("null");
+		} else {
+			sb.append("'").append(checkTarget).append("'");
+		}
+		sb.append(", ");
+		// 追加処理関数を設定
+		if (extraFunc == null) {
+			sb.append("null");
+		} else {
+			sb.append(extraFunc);
+		}
+		sb.append(", null, '");
+		sb.append(cmd);
+		sb.append("')\">");
+		sb.append(escapeHTML(name)).append(PlatformNamingUtility.to(mospParams));
+		sb.append("</button>");
+		return sb.toString();
+	}
+	
+	/**
+	 * テキストボックスのHTMLタグを取得する。<br>
 	 * @param cls     class
 	 * @param id      id
 	 * @param name    name
@@ -194,6 +361,58 @@ public class HtmlUtility {
 	}
 	
 	/**
+	 * テキストボックスのHTMLタグを取得する。<br>
+	 * nameには、idを入れる。<br>
+	 * @param cls     class
+	 * @param id      id
+	 * @param value   value
+	 * @param isLabel ラベル(spanタグ)表示(true：ラベル、false：テキストボックス)
+	 * @return テキストボックスHTMLタグ
+	 */
+	public static String getTextboxTag(String cls, String id, String value, boolean isLabel) {
+		// nameにidを入れテキストボックスを作成
+		return getTextboxTag(cls, id, id, value, isLabel);
+	}
+	
+	/**
+	 * テキストエリアのHTMLタグを取得する。<br>
+	 * @param cls     class
+	 * @param id      id
+	 * @param name    name
+	 * @param value   value
+	 * @param isLabel ラベル(spanタグ)表示(true：ラベル、false：テキストボックス)
+	 * @return テキストボックスHTMLタグ
+	 */
+	public static String getTextAreaTag(String cls, String id, String name, String value, boolean isLabel) {
+		// HTML生成
+		StringBuffer sb = new StringBuffer();
+		if (isLabel) {
+			// ラベルの場合
+			sb.append("<span ");
+			if (id != null && !id.isEmpty()) {
+				sb.append("id=\"" + id + "\"");
+			}
+			sb.append(">");
+			sb.append(escapeHTML(value));
+			sb.append("</span>");
+			return sb.toString();
+		}
+		// テキストエリアの場合
+		sb.append("<textarea ");
+		if (cls != null && !cls.isEmpty()) {
+			sb.append("class=\"" + cls + "\" ");
+		}
+		if (id != null && !id.isEmpty()) {
+			sb.append("id=\"" + id + "\" ");
+		}
+		if (name != null && !name.isEmpty()) {
+			sb.append("name=\"" + name + "\" ");
+		}
+		sb.append(">" + escapeHTML(value) + "</textarea>");
+		return sb.toString();
+	}
+	
+	/**
 	 * プルダウンのHTMLタグを取得する。
 	 * @param cls     class
 	 * @param id      id
@@ -205,6 +424,23 @@ public class HtmlUtility {
 	 */
 	public static String getSelectTag(String cls, String id, String name, String value, String[][] array,
 			boolean isLabel) {
+		return getSelectTag(cls, id, name, value, array, false, isLabel);
+	}
+	
+	/**
+	 * プルダウンのHTMLタグを取得する。
+	 * @param cls       class
+	 * @param id        id
+	 * @param name      name
+	 * @param value     value
+	 * @param option    プルダウンオプション文字列
+	 * @param needBlank 空白行要否(true：空白行要、false：空白行不要)
+	 * @param isLabel   ラベル(spanタグ)表示(true：ラベル、false：プルダウン)
+	 * @param label     ラベル用文字列
+	 * @return プルダウンHTMLタグ
+	 */
+	public static String getSelectTag(String cls, String id, String name, String value, String option,
+			boolean needBlank, boolean isLabel, String label) {
 		// HTML生成
 		StringBuffer sb = new StringBuffer();
 		if (isLabel) {
@@ -214,7 +450,7 @@ public class HtmlUtility {
 				sb.append("id=\"" + id + "\"");
 			}
 			sb.append(">");
-			sb.append(escapeHTML(MospUtility.getCodeName(value, array)));
+			sb.append(escapeHTML(label));
 			sb.append("</span>");
 			return sb.toString();
 		}
@@ -230,9 +466,56 @@ public class HtmlUtility {
 			sb.append("name=\"" + name + "\" ");
 		}
 		sb.append(">");
-		sb.append(getSelectOption(array, value));
+		// 空白行要の場合
+		if (needBlank) {
+			sb.append("<option value=\"\"></option>");
+		}
+		sb.append(option);
 		sb.append("</select>");
 		return sb.toString();
+	}
+	
+	/**
+	 * プルダウンのHTMLタグを取得する。<br>
+	 * @param cls       class
+	 * @param id        id
+	 * @param name      name
+	 * @param value     value
+	 * @param array     プルダウンオプション配列
+	 * @param needBlank 空白行要否(true：空白行要、false：空白行不要)
+	 * @param isLabel   ラベル(spanタグ)表示(true：ラベル、false：プルダウン)
+	 * @return プルダウンHTMLタグ
+	 */
+	public static String getSelectTag(String cls, String id, String name, String value, String[][] array,
+			boolean needBlank, boolean isLabel) {
+		// ラベル用文字列取得
+		String label = MospUtility.getCodeName(value, array);
+		// オプション文字列取得
+		String option = getSelectOption(array, value);
+		// プルダウンのHTMLタグを取得
+		return getSelectTag(cls, id, name, value, option, needBlank, isLabel, label);
+	}
+	
+	/**
+	 * プルダウンのHTMLタグを取得する。<br>
+	 * @param mospParams MosP処理情報
+	 * @param cls        class
+	 * @param id         id
+	 * @param name       name
+	 * @param value      value
+	 * @param codeKey    対象コードキー
+	 * @param needBlank  空白行要否(true：空白行要、false：空白行不要)
+	 * @param isLabel    ラベル(spanタグ)表示(true：ラベル、false：プルダウン)
+	 * @return プルダウンHTML文字列
+	 */
+	public static String getSelectTag(MospParams mospParams, String cls, String id, String name, String value,
+			String codeKey, boolean needBlank, boolean isLabel) {
+		// ラベル用文字列取得
+		String label = MospUtility.getCodeName(mospParams, value, codeKey);
+		// オプション文字列取得
+		String option = getSelectOption(mospParams, codeKey, value, false);
+		// プルダウンのHTMLタグを取得
+		return getSelectTag(cls, id, name, value, option, needBlank, isLabel, label);
 	}
 	
 	/**
@@ -252,6 +535,138 @@ public class HtmlUtility {
 	}
 	
 	/**
+	 * チェックボックスのHTMLタグを取得する。<br>
+	 * @param mospParams    MosP処理情報
+	 * @param cls           class
+	 * @param id            id
+	 * @param name          name
+	 * @param value         value
+	 * @param isLabel       ラベル(spanタグ)表示(true：ラベル、false：プルダウン)
+	 * @param selectedArray チェックボックス選択値配列
+	 * @return チェックボックスHTML文字列
+	 */
+	public static String getCheckTag(MospParams mospParams, String cls, String id, String name, String value,
+			boolean isLabel, String... selectedArray) {
+		// チェックボックスがチェックされているかを確認
+		boolean isChecked = isChecked(value, selectedArray);
+		// HTML生成
+		StringBuffer sb = new StringBuffer();
+		if (isLabel) {
+			// ラベルの場合
+			sb.append("<span ");
+			if (MospUtility.isEmpty(id) == false) {
+				sb.append("id=\"" + id + "\"");
+			}
+			sb.append(">");
+			sb.append(escapeHTML(isChecked ? PlatformNamingUtility.checked(mospParams) : ""));
+			sb.append("</span>");
+			return sb.toString();
+		}
+		// チェックボックスの場合
+		sb.append("<input type=\"checkbox\" ");
+		if (MospUtility.isEmpty(cls) == false) {
+			sb.append("class=\"" + cls + "\" ");
+		}
+		if (MospUtility.isEmpty(id) == false) {
+			sb.append("id=\"" + id + "\" ");
+		}
+		if (MospUtility.isEmpty(name) == false) {
+			sb.append("name=\"" + name + "\" ");
+		}
+		sb.append("value=\"" + escapeHTML(value) + "\" ");
+		sb.append(getChecked(isChecked));
+		sb.append("/>");
+		return sb.toString();
+	}
+	
+	/**
+	 * チェックボックスのHTMLタグを取得する。<br>
+	 * @param mospParams    MosP処理情報
+	 * @param cls           class
+	 * @param id            id
+	 * @param name          name
+	 * @param value         value
+	 * @param isLabel       ラベル(spanタグ)表示(true：ラベル、false：プルダウン)
+	 * @param selectedArray チェックボックス選択値配列
+	 * @return チェックボックスHTML文字列
+	 */
+	public static String getCheckTag(MospParams mospParams, String cls, String id, String name, long value,
+			boolean isLabel, String... selectedArray) {
+		return getCheckTag(mospParams, cls, id, name, String.valueOf(value), isLabel, selectedArray);
+	}
+	
+	/**
+	 * チェックボックスのHTMLタグ(複数)を取得する。<br>
+	 * @param mospParams    MosP処理情報
+	 * @param cls           class
+	 * @param name          name
+	 * @param codeKey       コードキー
+	 * @param isLabel       ラベル(spanタグ)表示(true：ラベル、false：プルダウン)
+	 * @param selectedArray チェックボックス選択値配列
+	 * @return チェックボックスHTML文字列
+	 */
+	public static String getCheckTags(MospParams mospParams, String cls, String name, String codeKey, boolean isLabel,
+			String... selectedArray) {
+		// MosP処理情報からコード配列を取得
+		String[][] array = mospParams.getProperties().getCodeArray(codeKey, false);
+		// ラジオボタンのHTMLタグ(複数)を取得
+		return getCheckTags(mospParams, cls, name, array, isLabel, selectedArray);
+	}
+	
+	/**
+	 * チェックボックスのHTMLタグ(複数)を取得する。<br>
+	 * @param mospParams    MosP処理情報
+	 * @param cls           class
+	 * @param name          name
+	 * @param array         オプション配列
+	 * @param isLabel       ラベル(spanタグ)表示(true：ラベル、false：プルダウン)
+	 * @param selectedArray チェックボックス選択値配列
+	 * @return チェックボックスHTML文字列
+	 */
+	public static String getCheckTags(MospParams mospParams, String cls, String name, String[][] array, boolean isLabel,
+			String... selectedArray) {
+		// HTML生成
+		StringBuffer sb = new StringBuffer();
+		if (array == null) {
+			return sb.toString();
+		}
+		// オプション毎に処理
+		for (String[] element : array) {
+			// チェックボックスを作成
+			sb.append("<label>");
+			sb.append(getCheckTag(mospParams, cls, "", name, element[0], isLabel, selectedArray));
+			// 名称を作成
+			sb.append(element[1]);
+			sb.append("</label>");
+		}
+		return sb.toString();
+	}
+	
+	/**
+	 * チェックボックスがチェックされているかを確認する。<br>
+	 * @param value         チェックボックス値
+	 * @param selectedArray チェックボックス選択値配列
+	 * @return 確認結果(true：チェックされている、false：チェックされていない)
+	 */
+	public static boolean isChecked(String value, String... selectedArray) {
+		// 値が無い場合
+		if (value == null || selectedArray == null) {
+			// チェックされていないと判断
+			return false;
+		}
+		// チェックボックス選択値毎に処理
+		for (String selected : selectedArray) {
+			// チェックボックス値と同じである場合
+			if (value.equals(selected)) {
+				// チェックされていると判断
+				return true;
+			}
+		}
+		// チェックされていないと判断
+		return false;
+	}
+	
+	/**
 	 * チェック文字列を取得する。<br>
 	 * @param value         チェックボックス値
 	 * @param selectedArray チェックボックス選択値配列
@@ -268,15 +683,7 @@ public class HtmlUtility {
 	 * @return 文字列(checked="checked" or 空白)
 	 */
 	public static String getChecked(String value, String... selectedArray) {
-		if (selectedArray == null) {
-			return getChecked(false);
-		}
-		for (String selected : selectedArray) {
-			if (selected.equals(value)) {
-				return getChecked(true);
-			}
-		}
-		return getChecked(false);
+		return getChecked(isChecked(value, selectedArray));
 	}
 	
 	/**
@@ -302,6 +709,26 @@ public class HtmlUtility {
 			return "checked=\"checked\"";
 		}
 		return "";
+	}
+	
+	/**
+	 * SAPNのHTMLタグを取得する。<br>
+	 * @param cls    クラス
+	 * @param value  表示文字列
+	 * @param isSpan SPANフラグ(true：SAPNのHTMLタグ、false：タグ無し(文字列のみ))
+	 * @return SAPNのHTMLタグ
+	 */
+	public static String getSpanTag(String cls, String value, boolean isSpan) {
+		// 文字列を準備
+		StringBuilder sb = new StringBuilder(escapeHTML(value));
+		// SAPNのHTMLタグである場合
+		if (isSpan) {
+			// SAPNのHTMLタグを追加
+			sb.insert(0, "<span class=\"" + cls + "\">");
+			sb.append("</span>");
+		}
+		// 文字列を取得
+		return sb.toString();
 	}
 	
 	/**
@@ -496,32 +923,6 @@ public class HtmlUtility {
 	}
 	
 	/**
-	 * 選択メニュー(大項目)を取得する。<br>
-	 * 画面遷移時に選択しているメニュー(大項目)の配列名を取得する。<br>
-	 * @param mospParams MosP処理情報
-	 * @return 選択メニュー
-	 */
-	@Deprecated
-	public static String getSelectMenu(MospParams mospParams) {
-		return MenuJsUtility.getSelectMenu(mospParams);
-	}
-	
-	/**
-	 * メニュー用JS文字列を取得する。<br>
-	 * @param mospParams MosP処理情報
-	 * @return メニュー用JS文字列
-	 */
-	@Deprecated
-	public static String getMenuJs(MospParams mospParams) {
-		// 出力文字列準備
-		StringBuffer sb = new StringBuffer();
-		sb.append("ARY_MENU = ");
-		sb.append(MenuJsUtility.getMenuJs(mospParams));
-		sb.append(";");
-		return sb.toString();
-	}
-	
-	/**
 	 * JS配列宣言取得。<br>
 	 * @param variableName 変数名
 	 * @return JS配列宣言
@@ -572,6 +973,18 @@ public class HtmlUtility {
 	public static String getDisabled(boolean disabled) {
 		if (disabled) {
 			return " disabled=\"disabled\" ";
+		}
+		return "";
+	}
+	
+	/**
+	 * read only属性文字列を取得する。<br>
+	 * @param isReadOnly read only設定(true；read only、read onlyでない)
+	 * @return read only属性文字列
+	 */
+	public static String getReadOnly(boolean isReadOnly) {
+		if (isReadOnly) {
+			return " readonly=\"readonly\" ";
 		}
 		return "";
 	}

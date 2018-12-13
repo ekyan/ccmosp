@@ -32,7 +32,6 @@ import jp.mosp.platform.base.PlatformBean;
 import jp.mosp.platform.bean.human.HumanSearchBeanInterface;
 import jp.mosp.platform.bean.system.SectionReferenceBeanInterface;
 import jp.mosp.platform.bean.workflow.WorkflowIntegrateBeanInterface;
-import jp.mosp.platform.constant.PlatformConst;
 import jp.mosp.platform.constant.PlatformFileConst;
 import jp.mosp.platform.constant.PlatformMessageConst;
 import jp.mosp.platform.dao.file.ExportDaoInterface;
@@ -117,6 +116,11 @@ public class SubHolidayExportBean extends PlatformBean implements SubHolidayExpo
 	 */
 	protected List<HumanDtoInterface>			humanList;
 	
+	/**
+	 * 下位所属含むチェックボックス。
+	 */
+	private int									ckbNeedLowerSection	= 0;
+	
 	
 	/**
 	 * {@link PlatformBean#PlatformBean()}を実行する。<br>
@@ -151,8 +155,10 @@ public class SubHolidayExportBean extends PlatformBean implements SubHolidayExpo
 	
 	@Override
 	public void export(String exportCode, int startYear, int startMonth, int endYear, int endMonth, String cutoffCode,
-			String workPlaceCode, String employmentContractCode, String sectionCode, String positionCode)
-			throws MospException {
+			String workPlaceCode, String employmentContractCode, String sectionCode, int ckbNeedLowerSection,
+			String positionCode) throws MospException {
+		// 下位所属含むチェックボックスの設定
+		this.ckbNeedLowerSection = ckbNeedLowerSection;
 		// エクスポート情報取得
 		ExportDtoInterface dto = exportDao.findForKey(exportCode);
 		if (dto == null) {
@@ -169,8 +175,8 @@ public class SubHolidayExportBean extends PlatformBean implements SubHolidayExpo
 		Date startDate = TimeUtility.getCutoffFirstDate(cutoffDto.getCutoffDate(), startYear, startMonth);
 		Date endDate = TimeUtility.getCutoffLastDate(cutoffDto.getCutoffDate(), endYear, endMonth);
 		// CSVデータリストを作成
-		List<String[]> list = getCsvDataList(dto, startDate, endDate, cutoffCode, workPlaceCode,
-				employmentContractCode, sectionCode, positionCode);
+		List<String[]> list = getCsvDataList(dto, startDate, endDate, cutoffCode, workPlaceCode, employmentContractCode,
+				sectionCode, positionCode);
 		// CSVデータリスト確認
 		if (list.isEmpty()) {
 			// 該当するエクスポート情報が存在しない場合
@@ -257,9 +263,13 @@ public class SubHolidayExportBean extends PlatformBean implements SubHolidayExpo
 		humanSearch.setSectionCode(sectionCode);
 		humanSearch.setPositionCode(positionCode);
 		// 検索条件設定(状態)
-		humanSearch.setStateType(PlatformConst.EMPLOYEE_STATE_PRESENCE);
-		// 検索条件設定(下位所属要否)
-		humanSearch.setNeedLowerSection(true);
+		humanSearch.setStateType("");
+		// 検索条件設定(下位所属要否) 下位所属含むチェックボックスで判定
+		if (ckbNeedLowerSection == 1) {
+			humanSearch.setNeedLowerSection(true);
+		} else {
+			humanSearch.setNeedLowerSection(false);
+		}
 		// 検索条件設定(兼務要否)
 		humanSearch.setNeedConcurrent(true);
 		// 検索条件設定(操作区分)
@@ -277,8 +287,8 @@ public class SubHolidayExportBean extends PlatformBean implements SubHolidayExpo
 			if (applicationDto == null) {
 				continue;
 			}
-			TimeSettingDtoInterface timeSettingDto = timeSettingReference.getTimeSettingInfo(
-					applicationDto.getWorkSettingCode(), endDate);
+			TimeSettingDtoInterface timeSettingDto = timeSettingReference
+				.getTimeSettingInfo(applicationDto.getWorkSettingCode(), endDate);
 			if (timeSettingDto == null) {
 				continue;
 			}
@@ -341,7 +351,7 @@ public class SubHolidayExportBean extends PlatformBean implements SubHolidayExpo
 		for (HumanDtoInterface humanDto : humanList) {
 			// 代休情報取得及び確認
 			List<SubHolidayDtoInterface> list = subHolidayReference.getSubHolidayList(humanDto.getPersonalId(),
-					startDate, endDate);
+					startDate, endDate, TimeConst.HOLIDAY_TIMES_HALF);
 			for (SubHolidayDtoInterface subHolidayDto : list) {
 				Date[] requestDateArray = getRequestDateArray(subHolidayDto.getPersonalId(),
 						subHolidayDto.getWorkDate(), subHolidayDto.getTimesWork(), subHolidayDto.getSubHolidayType());
@@ -360,8 +370,8 @@ public class SubHolidayExportBean extends PlatformBean implements SubHolidayExpo
 							subHolidayDto.getWorkDate());
 				}
 				if (sectionDisplayIndex != null) {
-					csvData[sectionDisplayIndex.intValue()] = sectionReference.getSectionDisplay(
-							humanDto.getSectionCode(), subHolidayDto.getWorkDate());
+					csvData[sectionDisplayIndex.intValue()] = sectionReference
+						.getSectionDisplay(humanDto.getSectionCode(), subHolidayDto.getWorkDate());
 				}
 				if (workDateIndex != null) {
 					csvData[workDateIndex.intValue()] = getStringDate(subHolidayDto.getWorkDate());

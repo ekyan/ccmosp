@@ -161,7 +161,8 @@ public class ApplicationSearchBean extends PlatformBean implements ApplicationSe
 			param.put("positionCode", positionCode);
 		} else {
 			// 人事情報参照クラス準備
-			HumanReferenceBeanInterface human = (HumanReferenceBeanInterface)createBean(HumanReferenceBeanInterface.class);
+			HumanReferenceBeanInterface human = (HumanReferenceBeanInterface)createBean(
+					HumanReferenceBeanInterface.class);
 			// 検索条件設定(個人ID)
 			param.put("personalId", human.getPersonalIdList(employeeCode, activateDate));
 			// エラー確認

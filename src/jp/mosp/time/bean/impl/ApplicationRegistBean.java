@@ -232,6 +232,22 @@ public class ApplicationRegistBean extends PlatformBean implements ApplicationRe
 	 */
 	protected void validate(ApplicationDtoInterface dto) {
 		// TODO 妥当性確認
+		// 個人IDの重複を修正
+		revisionPersonalIds(dto);
+	}
+	
+	/**
+	 * 個人IDの重複を削除する。<br>
+	 * @param dto 対象設定適用情報
+	 */
+	protected void revisionPersonalIds(ApplicationDtoInterface dto) {
+		// マスタ組み合わせの場合
+		if (dto.getApplicationType() == Integer.parseInt(PlatformConst.APPLICATION_TYPE_MASTER)) {
+			// 処理なし
+			return;
+		}
+		// 個人ID再設定
+		dto.setPersonalIds(overlapValue(dto.getPersonalIds(), SEPARATOR_DATA));
 	}
 	
 	/**
@@ -269,7 +285,7 @@ public class ApplicationRegistBean extends PlatformBean implements ApplicationRe
 			checkMasterDuplicate(targetDto, endDate);
 		} else {
 			// 個人ID毎に確認
-			for (String personalId : asList(targetDto.getPersonalId(), SEPARATOR_DATA)) {
+			for (String personalId : asList(targetDto.getPersonalIds(), SEPARATOR_DATA)) {
 				// 個人設定の重複を確認
 				checkPersonDuplicate(targetDto.getApplicationCode(), targetDto.getActivateDate(), personalId, endDate);
 			}
@@ -356,8 +372,8 @@ public class ApplicationRegistBean extends PlatformBean implements ApplicationRe
 		// 社員コード取得
 		String employeeCode = human.getEmployeeCode(personalId, activateDate);
 		// メッセージ設定
-		mospParams
-			.addErrorMessage(PlatformMessageConst.MSG_APPLICATION_PERSON_DUPLICATE, employeeCode, applicationCode);
+		mospParams.addErrorMessage(PlatformMessageConst.MSG_APPLICATION_PERSON_DUPLICATE, employeeCode,
+				applicationCode);
 	}
 	
 	/**

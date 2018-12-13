@@ -29,8 +29,8 @@ function onLoadExtra() {
 		setDisabled("txtEditActivateMonth", true);
 		setDisabled("txtEditActivateDay", true);
 		setDisabled("txtEditEmployeeCode", true);
-		setDisabled("btnEmployeeCode", true);
-		setDisabled("btnRegist", false);
+		setReadOnly("btnEmployeeCode", true);
+		setReadOnly("btnRegist", false);
 	} else {
 		// 社員コードモード確認
 		if (jsModeEmployeeCode == MODE_ACTIVATE_DATE_FIXED) {
@@ -39,15 +39,15 @@ function onLoadExtra() {
 			setDisabled("txtEditActivateMonth", true);
 			setDisabled("txtEditActivateDay", true);
 			setDisabled("txtEditEmployeeCode", true);
-			setDisabled("btnEmployeeCode", false);
-			setDisabled("btnRegist", false);
+			setReadOnly("btnEmployeeCode", false);
+			setReadOnly("btnRegist", false);
 		} else {
 			setDisabled("txtEditActivateYear", false);
 			setDisabled("txtEditActivateMonth", false);
 			setDisabled("txtEditActivateDay", false);
 			setDisabled("txtEditEmployeeCode", false);
-			setDisabled("btnEmployeeCode", false);
-			setDisabled("btnRegist", true);
+			setReadOnly("btnEmployeeCode", false);
+			setReadOnly("btnRegist", true);
 		}
 	}
 	// 有効日(検索)モード確認
@@ -56,12 +56,12 @@ function onLoadExtra() {
 		setDisabled("txtSearchActivateYear", true);
 		setDisabled("txtSearchActivateMonth", true);
 		setDisabled("txtSearchActivateDay", true);
-		setDisabled("btnSearch", false);
+		setReadOnly("btnSearch", false);
 	} else {
 		setDisabled("txtSearchActivateYear", false);
 		setDisabled("txtSearchActivateMonth", false);
 		setDisabled("txtSearchActivateDay", false);
-		setDisabled("btnSearch", true);
+		setReadOnly("btnSearch", true);
 	}
 	// 付与時間有効無効判定
 	if(jsModeGivingtime == false) {

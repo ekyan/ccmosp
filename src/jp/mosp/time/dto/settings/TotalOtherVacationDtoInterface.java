@@ -58,6 +58,11 @@ public interface TotalOtherVacationDtoInterface extends BaseDtoInterface {
 	double getTimes();
 	
 	/**
+	 * @return その他休暇時間数。
+	 */
+	int getHours();
+	
+	/**
 	 * @param tmdTotalOtherVacationId セットする レコード識別ID。
 	 */
 	void setTmdTotalOtherVacationId(long tmdTotalOtherVacationId);
@@ -86,4 +91,9 @@ public interface TotalOtherVacationDtoInterface extends BaseDtoInterface {
 	 * @param times セットする その他休暇日数。
 	 */
 	void setTimes(double times);
+	
+	/**
+	 * @param hours セットする その他休暇時間数。
+	 */
+	void setHours(int hours);
 }

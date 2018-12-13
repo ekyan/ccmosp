@@ -29,6 +29,12 @@ import jp.mosp.framework.constant.MospConst;
 public final class ValidateUtility {
 	
 	/**
+	 * 正規表現(小数)。<br>
+	 */
+	protected static final String REG_DECIMAL = "[0-9]{0,%1%}(\\.([0-9]{1,%2%}))?";
+	
+	
+	/**
 	 * 他クラスからのインスタンス化を防止する。<br>
 	 */
 	private ValidateUtility() {
@@ -38,7 +44,7 @@ public final class ValidateUtility {
 	/**
 	 * 必須確認。<br>
 	 * @param value 確認対象
-	 * @return true/false
+	 * @return 確認結果（true：入力がある、false：入力がない）
 	 */
 	public static boolean chkRequired(Object value) {
 		if (value instanceof String) {
@@ -51,7 +57,7 @@ public final class ValidateUtility {
 	 * 正規表現による文字列パターン確認。<br>
 	 * @param regex 正規表現
 	 * @param value 確認対象
-	 * @return true/false
+	 * @return 確認結果（true：同じである、false：同じでない）
 	 */
 	public static boolean chkRegex(String regex, String value) {
 		if (value.matches(regex)) {
@@ -63,7 +69,7 @@ public final class ValidateUtility {
 	/**
 	 * 数値(double)確認。<br>
 	 * @param value 確認対象
-	 * @return true/false
+	 * @return 確認結果（true：doubleにできる、false：doubleにできない）
 	 */
 	public static boolean chkNumeric(String value) {
 		try {
@@ -75,11 +81,51 @@ public final class ValidateUtility {
 	}
 	
 	/**
+	 * 小数を確認する。<br>
+	 * @param value        確認対象
+	 * @param integerDigit 整数部桁数
+	 * @param decimalDigit 小数部桁数
+	 * @return 確認結果（true：超えていない、false：超えている）
+	 */
+	public static boolean chkDecimal(String value, int integerDigit, int decimalDigit) {
+		// 正規表現取得
+		String regex = getReplacedString(REG_DECIMAL, String.valueOf(integerDigit), String.valueOf(decimalDigit));
+		// 正規表現による文字列パターン確認
+		return chkRegex(regex, value);
+	}
+	
+	/**
+	 * 置換した文字列を取得する。<br>
+	 * <br>
+	 * %i%(iは置換文字列の数)を置換文字列に置き換える。<br>
+	 * <br>
+	 * @param value 文字列
+	 * @param rep   置換文字列
+	 * @return 置換した文字列
+	 */
+	public static String getReplacedString(String value, String... rep) {
+		// 文字列準備
+		String replaced = value;
+		// 置換文字列が無い場合
+		if (rep == null) {
+			// 文字列をそのまま取得
+			return value;
+		}
+		// 置換文字列毎に処理
+		for (int i = 0; i < rep.length; i++) {
+			// 置換
+			replaced = replaced.replaceAll("%" + String.valueOf(i + 1) + "%", rep[i]);
+		}
+		// 置換した文字列を取得
+		return replaced;
+	}
+	
+	/**
 	 * 日付妥当性確認。<br>
 	 * @param year   年
 	 * @param month  月(0～11)
 	 * @param day    日
-	 * @return true/false
+	 * @return 確認結果（true：日付である、false：日付でない）
 	 */
 	public static boolean chkDate(int year, int month, int day) {
 		Calendar calendar = Calendar.getInstance();
@@ -98,7 +144,7 @@ public final class ValidateUtility {
 	 * @param hour   時
 	 * @param minute 分
 	 * @param second 秒
-	 * @return true/false
+	 * @return 確認結果（true：時間である、false：時間でない）
 	 */
 	public static boolean chkTime(int hour, int minute, int second) {
 		Calendar calendar = Calendar.getInstance();
@@ -117,7 +163,7 @@ public final class ValidateUtility {
 	 * @param date      確認対象日
 	 * @param startDate 開始日
 	 * @param endDate   終了日
-	 * @return true/false
+	 * @return 確認結果（true：期間である、false：期間でない）
 	 */
 	public static boolean chkTerm(Date date, Date startDate, Date endDate) {
 		if (startDate.compareTo(date) > 0 || endDate.compareTo(date) < 0) {
@@ -127,10 +173,24 @@ public final class ValidateUtility {
 	}
 	
 	/**
+	 * 文字列長確認(合致)。<br>
+	 * @param value     確認対象文字列
+	 * @param length 入力文字数
+	 * @return 確認結果（true：合致する、false：合致しない）
+	 */
+	public static boolean chkInputLength(String value, int length) {
+		int valueLength = value.length();
+		if (valueLength == length) {
+			return true;
+		}
+		return false;
+	}
+	
+	/**
 	 * 文字列長確認(最大文字数)。<br>
 	 * @param value     確認対象文字列
 	 * @param maxLength 最大文字数
-	 * @return true/false
+	 * @return 確認結果（true：超えていない、false：超えている）
 	 */
 	public static boolean chkLength(String value, int maxLength) {
 		String regex = "(?s).{0," + String.valueOf(maxLength) + "}";
@@ -144,7 +204,7 @@ public final class ValidateUtility {
 	 * バイト数(表示上)確認。<br>
 	 * @param value     確認対象文字列
 	 * @param maxLength 最大バイト数(表示上)
-	 * @return true/false
+	 * @return 確認結果（true：超えていない、false：超えている）
 	 */
 	public static boolean chkByteLength(String value, int maxLength) {
 		// 値確認
@@ -155,8 +215,48 @@ public final class ValidateUtility {
 		try {
 			return value.getBytes("Shift-JIS").length <= maxLength;
 		} catch (UnsupportedEncodingException e) {
-			return value.getBytes().length <= maxLength;
+			return MospUtility.getBytes(value).length <= maxLength;
 		}
 	}
 	
+	/**
+	 * 時間の重複チェック
+	 * @param bStart 対象の開始時間
+	 * @param bEnd 対象の終了時間
+	 * @param aStart 比べる先の開始時間
+	 * @param aEnd 比べる先の終了時間
+	 * @return 確認結果（true：時間の重複あり、false：時間の重複無し）
+	 */
+	public static boolean chkDuplTime(Date bStart, Date bEnd, Date aStart, Date aEnd) {
+		if (bStart == null || bEnd == null) {
+			return false;
+		}
+		if (aStart != null && aEnd != null) {
+			return bEnd.after(aStart) && bStart.before(aEnd);
+		}
+		return false;
+	}
+	
+	/**
+	 * 休憩が勤務時間内に取得しているか確認を行う。
+	 * @param startTime 始業時刻
+	 * @param endTime 終業時刻
+	 * @param restStartTime 休憩開始時間
+	 * @param restEndTime 休憩終了時間
+	 * @return 確認結果(true：勤務時間内でない、false：勤務時間内)
+	 */
+	public static boolean chkRestTime(Date startTime, Date endTime, Date restStartTime, Date restEndTime) {
+		// 休憩時刻がある場合
+		if (restStartTime != null && restEndTime != null) {
+			// 始業時刻が休憩開始時刻より後の場合
+			if (startTime != null && startTime.after(restStartTime)) {
+				return true;
+			}
+			// 終業時刻が休憩終了時刻より前の場合
+			if (endTime != null && endTime.before(restEndTime)) {
+				return true;
+			}
+		}
+		return false;
+	}
 }

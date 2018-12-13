@@ -33,7 +33,6 @@ import jp.mosp.framework.utils.DateUtility;
 import jp.mosp.framework.utils.MospUtility;
 import jp.mosp.platform.base.PlatformBean;
 import jp.mosp.platform.bean.human.HumanReferenceBeanInterface;
-import jp.mosp.platform.bean.system.SectionReferenceBeanInterface;
 import jp.mosp.platform.bean.workflow.WorkflowCommentReferenceBeanInterface;
 import jp.mosp.platform.bean.workflow.WorkflowIntegrateBeanInterface;
 import jp.mosp.platform.constant.PlatformConst;
@@ -87,11 +86,6 @@ public class ApprovalInfoReferenceBean extends PlatformBean implements ApprovalI
 	 * 人事マスタ参照
 	 */
 	protected HumanReferenceBeanInterface					humanReference;
-	
-	/**
-	 * 所属マスタ参照
-	 */
-	protected SectionReferenceBeanInterface					sectionReference;
 	
 	/**
 	 * 勤務形態マスタ参照
@@ -178,16 +172,21 @@ public class ApprovalInfoReferenceBean extends PlatformBean implements ApprovalI
 	@Override
 	public void initBean() throws MospException {
 		humanReference = (HumanReferenceBeanInterface)createBean(HumanReferenceBeanInterface.class);
-		sectionReference = (SectionReferenceBeanInterface)createBean(SectionReferenceBeanInterface.class);
 		workTypeReference = (WorkTypeReferenceBeanInterface)createBean(WorkTypeReferenceBeanInterface.class);
 		attendanceReference = (AttendanceReferenceBeanInterface)createBean(AttendanceReferenceBeanInterface.class);
-		overtimeRequest = (OvertimeRequestReferenceBeanInterface)createBean(OvertimeRequestReferenceBeanInterface.class);
+		overtimeRequest = (OvertimeRequestReferenceBeanInterface)createBean(
+				OvertimeRequestReferenceBeanInterface.class);
 		holidayRequest = (HolidayRequestReferenceBeanInterface)createBean(HolidayRequestReferenceBeanInterface.class);
-		workOnHolidayRequest = (WorkOnHolidayRequestReferenceBeanInterface)createBean(WorkOnHolidayRequestReferenceBeanInterface.class);
-		subHolidayRequest = (SubHolidayRequestReferenceBeanInterface)createBean(SubHolidayRequestReferenceBeanInterface.class);
-		workTypeChangeRequest = (WorkTypeChangeRequestReferenceBeanInterface)createBean(WorkTypeChangeRequestReferenceBeanInterface.class);
-		differenceRequest = (DifferenceRequestReferenceBeanInterface)createBean(DifferenceRequestReferenceBeanInterface.class);
-		workflowCommentReference = (WorkflowCommentReferenceBeanInterface)createBean(WorkflowCommentReferenceBeanInterface.class);
+		workOnHolidayRequest = (WorkOnHolidayRequestReferenceBeanInterface)createBean(
+				WorkOnHolidayRequestReferenceBeanInterface.class);
+		subHolidayRequest = (SubHolidayRequestReferenceBeanInterface)createBean(
+				SubHolidayRequestReferenceBeanInterface.class);
+		workTypeChangeRequest = (WorkTypeChangeRequestReferenceBeanInterface)createBean(
+				WorkTypeChangeRequestReferenceBeanInterface.class);
+		differenceRequest = (DifferenceRequestReferenceBeanInterface)createBean(
+				DifferenceRequestReferenceBeanInterface.class);
+		workflowCommentReference = (WorkflowCommentReferenceBeanInterface)createBean(
+				WorkflowCommentReferenceBeanInterface.class);
 		workflowIntegrate = (WorkflowIntegrateBeanInterface)createBean(WorkflowIntegrateBeanInterface.class);
 		holidayDao = (HolidayDaoInterface)createDao(HolidayDaoInterface.class);
 		substituteReference = (SubstituteReferenceBeanInterface)createBean(SubstituteReferenceBeanInterface.class);
@@ -261,8 +260,11 @@ public class ApprovalInfoReferenceBean extends PlatformBean implements ApprovalI
 		}
 		// ワークフロー情報毎に処理
 		for (WorkflowDtoInterface workflowDto : workflowList) {
-			// 勤怠申請一覧情報を取得しリストに追加
-			list.add(getManagementRequestListDto(workflowDto, isSubApprove));
+			ManagementRequestListDtoInterface dto = getManagementRequestListDto(workflowDto, isSubApprove);
+			if (dto != null) {
+				// 勤怠申請一覧情報を取得しリストに追加
+				list.add(dto);
+			}
 		}
 		return list;
 	}
@@ -278,8 +280,11 @@ public class ApprovalInfoReferenceBean extends PlatformBean implements ApprovalI
 				functionCodeSet, state, personalIdSet, subordinateIdSet);
 		// 有効ワークフロー情報毎に処理
 		for (WorkflowDtoInterface workflowDto : effectiveList) {
-			// 勤怠申請一覧情報を取得しリストに追加
-			list.add(getManagementRequestListDto(workflowDto, false));
+			ManagementRequestListDtoInterface dto = getManagementRequestListDto(workflowDto, false);
+			if (dto != null) {
+				// 勤怠申請一覧情報を取得しリストに追加
+				list.add(dto);
+			}
 		}
 		return list;
 	}
@@ -294,8 +299,11 @@ public class ApprovalInfoReferenceBean extends PlatformBean implements ApprovalI
 				functionCodeSet);
 		// 有効ワークフロー情報毎に処理
 		for (WorkflowDtoInterface workflowDto : effectiveList) {
-			// 勤怠申請一覧情報を取得しリストに追加
-			list.add(getManagementRequestListDto(workflowDto, false));
+			ManagementRequestListDtoInterface dto = getManagementRequestListDto(workflowDto, false);
+			if (dto != null) {
+				// 勤怠申請一覧情報を取得しリストに追加
+				list.add(dto);
+			}
 		}
 		return list;
 	}
@@ -338,6 +346,11 @@ public class ApprovalInfoReferenceBean extends PlatformBean implements ApprovalI
 		if (functionCode.equals(TimeConst.CODE_FUNCTION_WORK_MANGE)) {
 			// 勤怠申請情報取得
 			AttendanceDtoInterface attendanceDto = attendanceReference.findForWorkflow(workflow);
+			// 勤怠申請情報が存在しない場合
+			if (attendanceDto == null) {
+				return null;
+			}
+			// 勤怠申請が存在する場合
 			requestInfo = getAttendanceInfo(attendanceDto);
 		} else if (functionCode.equals(TimeConst.CODE_FUNCTION_OVER_WORK)) {
 			// 残業申請情報取得
@@ -364,6 +377,11 @@ public class ApprovalInfoReferenceBean extends PlatformBean implements ApprovalI
 			WorkTypeChangeRequestDtoInterface workTypeChangeDto = workTypeChangeRequest.findForWorkflow(workflow);
 			requestInfo = getWorkTypeChangeRequestInfo(workTypeChangeDto);
 		}
+		if (PlatformConst.CODE_STATUS_CANCEL_APPLY.equals(workflowDto.getWorkflowStatus())
+				|| PlatformConst.CODE_STATUS_CANCEL_WITHDRAWN_APPLY.equals(workflowDto.getWorkflowStatus())) {
+			// 承認解除申請の場合
+			requestInfo = workflowCommentReference.getLatestWorkflowCommentInfo(workflow).getWorkflowComment();
+		}
 		// 勤怠申請一覧情報設定値を勤怠申請一覧情報に設定
 		dto.setEmployeeCode(employeeCode);
 		dto.setLastName(lastName);
@@ -385,15 +403,10 @@ public class ApprovalInfoReferenceBean extends PlatformBean implements ApprovalI
 	 */
 	protected String getAttendanceInfo(AttendanceDtoInterface dto) throws MospException {
 		String returnString = "";
-		
-		HashMap<String, String> map = new HashMap<String, String>();
-		
 		// Map作成
-		map = getAttendanceInfoMap(dto);
-		
+		HashMap<String, String> map = getAttendanceInfoMap(dto);
 		// 文字列生成
 		returnString = getAttendanceInfoText(map);
-		
 		return returnString;
 	}
 	
@@ -407,8 +420,8 @@ public class ApprovalInfoReferenceBean extends PlatformBean implements ApprovalI
 		// 始業・終業・直行・直帰・遅刻・早退・残業等必要な情報を表示する
 		StringBuffer sb = new StringBuffer();
 		HashMap<String, String> map = new HashMap<String, String>();
-		DifferenceRequestDtoInterface differenceRequestDto = differenceRequest.findForKeyOnWorkflow(
-				dto.getPersonalId(), dto.getWorkDate());
+		DifferenceRequestDtoInterface differenceRequestDto = differenceRequest.findForKeyOnWorkflow(dto.getPersonalId(),
+				dto.getWorkDate());
 		if (differenceRequestDto == null) {
 			WorkTypeDtoInterface workTypeDto = workTypeReference.findForInfo(dto.getWorkTypeCode(), dto.getWorkDate());
 			if (workTypeDto != null) {
@@ -416,20 +429,26 @@ public class ApprovalInfoReferenceBean extends PlatformBean implements ApprovalI
 				map.put("WorkTypeAbbr", workTypeDto.getWorkTypeAbbr());
 			}
 		} else {
-			WorkflowDtoInterface workflowDto = workflowIntegrate.getLatestWorkflowInfo(differenceRequestDto
-				.getWorkflow());
+			WorkflowDtoInterface workflowDto = workflowIntegrate
+				.getLatestWorkflowInfo(differenceRequestDto.getWorkflow());
 			if (workflowDto != null && PlatformConst.CODE_STATUS_COMPLETE.equals(workflowDto.getWorkflowStatus())) {
 				// 承認済の場合
-				map.put("DifferenceType", differenceRequest.getDifferenceAbbr(differenceRequestDto.getDifferenceType()));
+				map.put("DifferenceType",
+						differenceRequest.getDifferenceAbbr(differenceRequestDto.getDifferenceType()));
 			}
 		}
 		if (dto.getDirectStart() == 1) {
 			// 直行
-			map.put("DirectStart", mospParams.getName("DirectStart"));
+			map.put("DirectStart", getDirectStartNaming());
 		}
 		if (dto.getDirectEnd() == 1) {
 			// 直帰
-			map.put("DirectEnd", mospParams.getName("DirectEnd"));
+			map.put("DirectEnd", getDirectEndNaming());
+		}
+		String startWorkAndEndWork = getAttendanceWorkInfo(dto);
+		if (!startWorkAndEndWork.isEmpty()) {
+			// 始業・終業時刻
+			map.put("StartWorkAndEndWork", startWorkAndEndWork);
 		}
 		if (dto.getStartTime() != null) {
 			// 始業
@@ -457,7 +476,7 @@ public class ApprovalInfoReferenceBean extends PlatformBean implements ApprovalI
 			sb.append(getStringMinute(dto.getPrivateTime()));
 			map.put("PrivateGoingOut", sb.toString());
 		}
-		if (dto.getLateTime() > 0) {
+		if (!dto.getLateReason().isEmpty()) {
 			// 遅刻
 			sb = new StringBuffer();
 			sb.append(mospParams.getName("Tardiness"));
@@ -467,7 +486,7 @@ public class ApprovalInfoReferenceBean extends PlatformBean implements ApprovalI
 			sb.append(getStringMinute(dto.getLateTime()));
 			map.put("Tardiness", sb.toString());
 		}
-		if (dto.getLeaveEarlyTime() > 0) {
+		if (!dto.getLeaveEarlyReason().isEmpty()) {
 			// 早退
 			sb = new StringBuffer();
 			sb.append(mospParams.getName("LeaveEarly"));
@@ -478,8 +497,8 @@ public class ApprovalInfoReferenceBean extends PlatformBean implements ApprovalI
 			map.put("LeaveEarly", sb.toString());
 		}
 		// 休暇リスト取得
-		List<HolidayRequestDtoInterface> holidayList = holidayRequest.getHolidayRequestListOnWorkflow(
-				dto.getPersonalId(), dto.getWorkDate());
+		List<HolidayRequestDtoInterface> holidayList = holidayRequest
+			.getHolidayRequestListOnWorkflow(dto.getPersonalId(), dto.getWorkDate());
 		if (holidayList.isEmpty() == false) {
 			for (HolidayRequestDtoInterface holidayDto : holidayList) {
 				// 時間休の場合
@@ -492,7 +511,7 @@ public class ApprovalInfoReferenceBean extends PlatformBean implements ApprovalI
 		// 残業
 		String overtime = getAttendanceOvertimeInfo(dto);
 		if (!overtime.isEmpty()) {
-			map.put("OverTime", overtime);
+			map.put("Overtime", overtime);
 		}
 		if (dto.getLateNightTime() > 0) {
 			// 深夜
@@ -508,6 +527,10 @@ public class ApprovalInfoReferenceBean extends PlatformBean implements ApprovalI
 			// 勤怠コメント
 			map.put("TimeComment", dto.getTimeComment());
 		}
+		if (!dto.getRemarks().isEmpty()) {
+			// 備考
+			map.put("Remarks", dto.getRemarks());
+		}
 		return map;
 	}
 	
@@ -518,25 +541,39 @@ public class ApprovalInfoReferenceBean extends PlatformBean implements ApprovalI
 	 */
 	protected String getAttendanceInfoText(HashMap<String, String> map) {
 		StringBuffer sb = new StringBuffer();
-		
-		String[] listOrder = new String[0];
-		
-		listOrder = mospParams.getApplicationProperties(APP_ATTENDANCE_INFO);
-		
+		String[] listOrder = mospParams.getApplicationProperties(APP_ATTENDANCE_INFO);
 		for (String key : listOrder) {
-			
 			String targetValue = map.get(key);
 			if (targetValue == null) {
 				continue;
 			}
-			
 			sb.append(targetValue);
 			sb.append(SEPARATOR_REQUEST_INFO);
-			
 		}
-		
 		return sb.toString();
-		
+	}
+	
+	/**
+	 * 申請情報詳細に表示する始終業時刻項目を取得する。<br>
+	 * @param dto 対象DTO
+	 * @return 始終業時刻項目
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	protected String getAttendanceWorkInfo(AttendanceDtoInterface dto) throws MospException {
+		StringBuffer sb = new StringBuffer();
+		if (dto.getStartTime() == null && dto.getEndTime() == null) {
+			return sb.toString();
+		}
+		if (dto.getStartTime() != null) {
+			// 始業
+			sb.append(DateUtility.getStringTime(dto.getStartTime(), dto.getWorkDate()));
+		}
+		sb.append(mospParams.getName("Wave"));
+		if (dto.getEndTime() != null) {
+			// 終業
+			sb.append(DateUtility.getStringTime(dto.getEndTime(), dto.getWorkDate()));
+		}
+		return sb.toString();
 	}
 	
 	/**
@@ -568,6 +605,10 @@ public class ApprovalInfoReferenceBean extends PlatformBean implements ApprovalI
 	 * @return 申請情報詳細
 	 */
 	protected String getOvertimeRequestInfo(OvertimeRequestDtoInterface dto) {
+		// 申請が削除されている場合
+		if (dto == null) {
+			return "";
+		}
 		// 表示例 予定:2時間30分 残業区分：勤務後残業 理由:顧客サポート
 		StringBuffer sb = new StringBuffer();
 		// 予定
@@ -593,6 +634,10 @@ public class ApprovalInfoReferenceBean extends PlatformBean implements ApprovalI
 	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
 	 */
 	protected String getHolidayRequestInfo(HolidayRequestDtoInterface dto) throws MospException {
+		// 申請が削除されている場合
+		if (dto == null) {
+			return "";
+		}
 		int holidayType1 = dto.getHolidayType1();
 		// 表示例 結婚休暇
 		StringBuffer sb = new StringBuffer();
@@ -656,6 +701,10 @@ public class ApprovalInfoReferenceBean extends PlatformBean implements ApprovalI
 	 * @throws MospException 例外処理発生時
 	 */
 	protected String getWorkOnHolidayRequestInfo(WorkOnHolidayRequestDtoInterface dto) throws MospException {
+		// 申請が削除されている場合
+		if (dto == null) {
+			return "";
+		}
 		StringBuffer sb = new StringBuffer();
 		String startTime = DateUtility.getStringTime(dto.getStartTime(), dto.getRequestDate());
 		String endTime = DateUtility.getStringTime(dto.getEndTime(), dto.getRequestDate());
@@ -670,10 +719,25 @@ public class ApprovalInfoReferenceBean extends PlatformBean implements ApprovalI
 			// 空欄
 			sb.append(" ");
 		}
-		if (dto.getSubstitute() == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_ON
-				|| dto.getSubstitute() == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_AM
-				|| dto.getSubstitute() == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_PM) {
-			// 振替出勤の場合
+		int substitute = dto.getSubstitute();
+		if (substitute == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_ON_WORK_TYPE_CHANGE) {
+			// 振替出勤(勤務形態変更あり)の場合
+			WorkTypeDtoInterface workTypeDto = workTypeReference.findForInfo(dto.getWorkTypeCode(),
+					dto.getRequestDate());
+			if (workTypeDto != null) {
+				sb.append(mospParams.getName("Work", "Form", "Colon"));
+				sb.append(workTypeDto.getWorkTypeAbbr());
+				sb.append(SEPARATOR_REQUEST_INFO);
+			}
+		}
+		if (substitute == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_ON
+				|| substitute == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_ON_WORK_TYPE_CHANGE
+				|| substitute == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_AM
+				|| substitute == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_PM) {
+			// 振替出勤(勤務形態変更なし)・
+			// 振替出勤(勤務形態変更あり)・
+			// 振替出勤(午前)・
+			// 振替出勤(午後)の場合
 			List<SubstituteDtoInterface> list = substituteReference.getSubstituteList(dto.getWorkflow());
 			for (SubstituteDtoInterface substituteDto : list) {
 				// 振替休日
@@ -708,6 +772,10 @@ public class ApprovalInfoReferenceBean extends PlatformBean implements ApprovalI
 	 * @throws MospException 例外処理発生時
 	 */
 	protected String getSubHolidayRequestInfo(SubHolidayRequestDtoInterface dto) throws MospException {
+		// 申請が削除されている場合
+		if (dto == null) {
+			return "";
+		}
 		// 表示例 休出:2010/12/1 勤務7時間00分
 		StringBuffer sb = new StringBuffer();
 		int type = dto.getWorkDateSubHolidayType();
@@ -724,8 +792,8 @@ public class ApprovalInfoReferenceBean extends PlatformBean implements ApprovalI
 		sb.append(SEPARATOR_REQUEST_INFO);
 		sb.append(mospParams.getName("Work"));
 		sb.append(mospParams.getName("Colon"));
-		AttendanceDtoInterface attendanceDto = attendanceReference
-			.findForKey(dto.getPersonalId(), dto.getWorkDate(), 1);
+		AttendanceDtoInterface attendanceDto = attendanceReference.findForKey(dto.getPersonalId(), dto.getWorkDate(),
+				1);
 		if (attendanceDto == null) {
 			sb.append(0);
 			sb.append(mospParams.getName("Time"));
@@ -751,6 +819,10 @@ public class ApprovalInfoReferenceBean extends PlatformBean implements ApprovalI
 	 * @throws MospException 例外処理発生時
 	 */
 	protected String getWorkTypeChangeRequestInfo(WorkTypeChangeRequestDtoInterface dto) throws MospException {
+		// 申請が削除されている場合
+		if (dto == null) {
+			return "";
+		}
 		StringBuffer sb = new StringBuffer();
 		// 勤務形態
 		sb.append(workTypeReference.getWorkTypeAbbrAndTime(dto.getWorkTypeCode(), dto.getRequestDate()));
@@ -768,6 +840,10 @@ public class ApprovalInfoReferenceBean extends PlatformBean implements ApprovalI
 	 * @return 申請情報詳細
 	 */
 	protected String getDifferenceRequestInfo(DifferenceRequestDtoInterface dto) {
+		// 申請が削除されている場合
+		if (dto == null) {
+			return "";
+		}
 		StringBuffer sb = new StringBuffer();
 		sb.append(mospParams.getName("Application"));
 		sb.append(mospParams.getName("Colon"));
@@ -822,8 +898,8 @@ public class ApprovalInfoReferenceBean extends PlatformBean implements ApprovalI
 	@Override
 	public void setWorkflowInfo(RequestListDtoInterface dto, WorkflowDtoInterface workflowDto) throws MospException {
 		if (dto != null && workflowDto != null) {
-			WorkflowCommentDtoInterface commentDto = workflowCommentReference.getLatestWorkflowCommentInfo(workflowDto
-				.getWorkflow());
+			WorkflowCommentDtoInterface commentDto = workflowCommentReference
+				.getLatestWorkflowCommentInfo(workflowDto.getWorkflow());
 			if (commentDto != null) {
 				// 承認段階
 				dto.setStage(workflowDto.getWorkflowStage());
@@ -913,4 +989,21 @@ public class ApprovalInfoReferenceBean extends PlatformBean implements ApprovalI
 		}
 		return true;
 	}
+	
+	/**
+	 * 直行名称を取得する。<br>
+	 * @return 直行名称
+	 */
+	protected String getDirectStartNaming() {
+		return mospParams.getName("DirectStart");
+	}
+	
+	/**
+	 * 直帰名称を取得する。<br>
+	 * @return 直帰名称
+	 */
+	protected String getDirectEndNaming() {
+		return mospParams.getName("DirectEnd");
+	}
+	
 }

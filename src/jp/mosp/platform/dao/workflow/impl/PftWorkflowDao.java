@@ -429,6 +429,109 @@ public class PftWorkflowDao extends PlatformDao implements WorkflowDaoInterface 
 	}
 	
 	@Override
+	public List<WorkflowDtoInterface> findApprovable(Date fromDate, Date toDate) throws MospException {
+		try {
+			index = 1;
+			// SQL作成準備
+			StringBuffer sb = getSelectQuery(getClass());
+			sb.append(where());
+			sb.append(deleteFlagOff());
+			// ワークロー状況及び段階による条件を設定
+			sb.append(and());
+			sb.append(leftParenthesis());
+			sb.append(equal(COL_WORKFLOW_STATUS));
+			sb.append(or());
+			sb.append(equal(COL_WORKFLOW_STATUS));
+			sb.append(or());
+			sb.append(equal(COL_WORKFLOW_STATUS));
+			sb.append(or());
+			sb.append(equal(COL_WORKFLOW_STATUS));
+			sb.append(or());
+			sb.append(leftParenthesis());
+			sb.append(equal(COL_WORKFLOW_STATUS));
+			sb.append(and());
+			sb.append(notEqual(COL_WORKFLOW_STAGE));
+			sb.append(rightParenthesis());
+			sb.append(rightParenthesis());
+			if (fromDate != null) {
+				sb.append(and());
+				sb.append(greaterEqual(COL_WORKFLOW_DATE));
+			}
+			if (toDate != null) {
+				sb.append(and());
+				sb.append(lessEqual(COL_WORKFLOW_DATE));
+			}
+			// ステートメント生成
+			prepareStatement(sb.toString());
+			// 検索条件パラメータ設定
+			setParam(index++, PlatformConst.CODE_STATUS_APPLY);
+			setParam(index++, PlatformConst.CODE_STATUS_APPROVED);
+			setParam(index++, PlatformConst.CODE_STATUS_CANCEL);
+			setParam(index++, PlatformConst.CODE_STATUS_CANCEL_APPLY);
+			setParam(index++, PlatformConst.CODE_STATUS_REVERT);
+			setParam(index++, PlatformConst.WORKFLOW_STAGE_ZERO);
+			if (fromDate != null) {
+				setParam(index++, fromDate, false);
+			}
+			if (toDate != null) {
+				setParam(index++, toDate, false);
+			}
+			// SQL実行
+			executeQuery();
+			// 検索結果取得
+			return mappingAll();
+		} catch (Throwable e) {
+			throw new MospException(e);
+		} finally {
+			releaseResultSet();
+			releasePreparedStatement();
+		}
+	}
+	
+	@Override
+	public List<WorkflowDtoInterface> findFirstReverted(Date fromDate, Date toDate) throws MospException {
+		try {
+			index = 1;
+			// SQL作成準備
+			StringBuffer sb = getSelectQuery(getClass());
+			sb.append(where());
+			sb.append(deleteFlagOff());
+			sb.append(and());
+			sb.append(equal(COL_WORKFLOW_STAGE));
+			sb.append(and());
+			sb.append(equal(COL_WORKFLOW_STATUS));
+			if (fromDate != null) {
+				sb.append(and());
+				sb.append(greaterEqual(COL_WORKFLOW_DATE));
+			}
+			if (toDate != null) {
+				sb.append(and());
+				sb.append(lessEqual(COL_WORKFLOW_DATE));
+			}
+			// ステートメント生成
+			prepareStatement(sb.toString());
+			// 検索条件パラメータ設定
+			setParam(index++, PlatformConst.WORKFLOW_STAGE_ZERO);
+			setParam(index++, PlatformConst.CODE_STATUS_REVERT);
+			if (fromDate != null) {
+				setParam(index++, fromDate, false);
+			}
+			if (toDate != null) {
+				setParam(index++, toDate, false);
+			}
+			// SQL実行
+			executeQuery();
+			// 検索結果取得
+			return mappingAll();
+		} catch (Throwable e) {
+			throw new MospException(e);
+		} finally {
+			releaseResultSet();
+			releasePreparedStatement();
+		}
+	}
+	
+	@Override
 	public List<WorkflowDtoInterface> findForCondition(Date fromDate, Date toDate, Set<String> functionCodeSet,
 			Set<String> workflowStateSet) throws MospException {
 		try {
@@ -572,6 +675,48 @@ public class PftWorkflowDao extends PlatformDao implements WorkflowDaoInterface 
 	}
 	
 	@Override
+	public Map<Long, WorkflowDtoInterface> findForCondition(String personalId, Date fromDate, Date toDate)
+			throws MospException {
+		try {
+			index = 1;
+			// SQL作成準備
+			StringBuffer sb = getSelectQuery(getClass());
+			sb.append(where());
+			sb.append(deleteFlagOff());
+			sb.append(and());
+			sb.append(equal(COL_PERSONAL_ID));
+			// ワークフロー対象日による条件を設定
+			if (fromDate != null) {
+				sb.append(and());
+				sb.append(greaterEqual(COL_WORKFLOW_DATE));
+			}
+			if (toDate != null) {
+				sb.append(and());
+				sb.append(lessEqual(COL_WORKFLOW_DATE));
+			}
+			// ステートメント生成
+			prepareStatement(sb.toString());
+			setParam(index++, personalId);
+			// 検索条件パラメータ設定
+			if (fromDate != null) {
+				setParam(index++, fromDate, false);
+			}
+			if (toDate != null) {
+				setParam(index++, toDate, false);
+			}
+			// SQL実行
+			executeQuery();
+			// 検索結果取得
+			return mappingAllMap();
+		} catch (Throwable e) {
+			throw new MospException(e);
+		} finally {
+			releaseResultSet();
+			releasePreparedStatement();
+		}
+	}
+	
+	@Override
 	public Map<Long, WorkflowDtoInterface> findForPersonAndDay(String personalId, Date workflowDate)
 			throws MospException {
 		try {
@@ -593,6 +738,32 @@ public class PftWorkflowDao extends PlatformDao implements WorkflowDaoInterface 
 			executeQuery();
 			// 検索結果取得
 			return mappingAllMap();
+		} catch (Throwable e) {
+			throw new MospException(e);
+		} finally {
+			releaseResultSet();
+			releasePreparedStatement();
+		}
+	}
+	
+	@Override
+	public List<WorkflowDtoInterface> findForPerson(String personalId) throws MospException {
+		try {
+			index = 1;
+			// SQL作成準備
+			StringBuffer sb = getSelectQuery(getClass());
+			sb.append(where());
+			sb.append(deleteFlagOff());
+			sb.append(and());
+			sb.append(equal(COL_PERSONAL_ID));
+			// ステートメント生成
+			prepareStatement(sb.toString());
+			// 検索条件パラメータ設定
+			setParam(index++, personalId);
+			// SQL実行
+			executeQuery();
+			// 検索結果取得
+			return mappingAll();
 		} catch (Throwable e) {
 			throw new MospException(e);
 		} finally {

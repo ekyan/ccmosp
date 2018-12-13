@@ -60,9 +60,17 @@ public class TmdHolidayDataDto extends BaseDto implements HolidayDataDtoInterfac
 	 */
 	private double				givingDay;
 	/**
+	 * 付与時間数。
+	 */
+	private int					givingHour;
+	/**
 	 * 廃棄日数。
 	 */
 	private double				cancelDay;
+	/**
+	 * 廃棄時間数。
+	 */
+	private int					cancelHour;
 	/**
 	 * 取得期限。
 	 */
@@ -98,6 +106,11 @@ public class TmdHolidayDataDto extends BaseDto implements HolidayDataDtoInterfac
 	}
 	
 	@Override
+	public int getGivingHour() {
+		return givingHour;
+	}
+	
+	@Override
 	public int getHolidayType() {
 		return holidayType;
 	}
@@ -120,6 +133,11 @@ public class TmdHolidayDataDto extends BaseDto implements HolidayDataDtoInterfac
 	@Override
 	public void setGivingDay(double givingDay) {
 		this.givingDay = givingDay;
+	}
+	
+	@Override
+	public void setGivingHour(int givingHour) {
+		this.givingHour = givingHour;
 	}
 	
 	@Override
@@ -158,8 +176,18 @@ public class TmdHolidayDataDto extends BaseDto implements HolidayDataDtoInterfac
 	}
 	
 	@Override
+	public int getCancelHour() {
+		return cancelHour;
+	}
+	
+	@Override
 	public void setCancelDay(double cancelDay) {
 		this.cancelDay = cancelDay;
+	}
+	
+	@Override
+	public void setCancelHour(int cancelHour) {
+		this.cancelHour = cancelHour;
 	}
 	
 	@Override

@@ -1,5 +1,19 @@
-/**
+/*
+ * MosP - Mind Open Source Project    http://www.mosp.jp/
+ * Copyright (C) MIND Co., Ltd.       http://www.e-mind.co.jp/
  * 
+ * This program is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU Affero General Public License
+ * as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package jp.mosp.setup.bean.impl;
 
@@ -8,19 +22,15 @@ import java.util.Date;
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.constant.MospConst;
 import jp.mosp.framework.utils.DateUtility;
-import jp.mosp.framework.utils.SeUtility;
 import jp.mosp.platform.base.PlatformBean;
 import jp.mosp.platform.bean.human.EntranceRegistBeanInterface;
 import jp.mosp.platform.bean.human.HumanReferenceBeanInterface;
 import jp.mosp.platform.bean.human.HumanRegistBeanInterface;
-import jp.mosp.platform.bean.portal.PasswordCheckBeanInterface;
-import jp.mosp.platform.bean.system.UserMasterRegistBeanInterface;
-import jp.mosp.platform.bean.system.UserPasswordRegistBeanInterface;
+import jp.mosp.platform.bean.system.UserAccountRegistBeanInterface;
 import jp.mosp.platform.constant.PlatformMessageConst;
 import jp.mosp.platform.dto.human.EntranceDtoInterface;
 import jp.mosp.platform.dto.human.HumanDtoInterface;
 import jp.mosp.platform.dto.system.UserMasterDtoInterface;
-import jp.mosp.platform.dto.system.UserPasswordDtoInterface;
 import jp.mosp.setup.bean.InitialAccountCreateBeanInterface;
 import jp.mosp.setup.dto.InitialAccountParameterInterface;
 import jp.mosp.setup.dto.impl.InitialAccountParameter;
@@ -30,14 +40,24 @@ import jp.mosp.setup.dto.impl.InitialAccountParameter;
  */
 public class InitialAccountCreateBean extends PlatformBean implements InitialAccountCreateBeanInterface {
 	
+	/**
+	 * ユーザアカウント情報登録処理。<br>
+	 */
+	protected UserAccountRegistBeanInterface userAccountRegist;
+	
+	
 	@Override
-	public void initBean() {
+	public void initBean() throws MospException {
+		// Beanを準備
+		userAccountRegist = (UserAccountRegistBeanInterface)createBean(UserAccountRegistBeanInterface.class);
 	}
 	
+	@Override
 	public InitialAccountParameterInterface getInitParameter() {
 		return new InitialAccountParameter();
 	}
 	
+	@Override
 	public void execute(InitialAccountParameterInterface parameter) throws MospException {
 		// 人事マスタ登録
 		insertHuman(parameter);
@@ -103,7 +123,8 @@ public class InitialAccountCreateBean extends PlatformBean implements InitialAcc
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
 	protected void insertEntrance(InitialAccountParameterInterface parameter, String personalId) throws MospException {
-		EntranceRegistBeanInterface register = (EntranceRegistBeanInterface)createBean(EntranceRegistBeanInterface.class);
+		EntranceRegistBeanInterface register = (EntranceRegistBeanInterface)createBean(
+				EntranceRegistBeanInterface.class);
 		EntranceDtoInterface dto = register.getInitDto();
 		// DTOに値をセットする。
 		dto.setEntranceDate(parameter.getEntranceDate());
@@ -119,46 +140,20 @@ public class InitialAccountCreateBean extends PlatformBean implements InitialAcc
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
 	protected void insertUser(InitialAccountParameterInterface parameter, String personalId) throws MospException {
-		UserMasterRegistBeanInterface userMasterRegist = (UserMasterRegistBeanInterface)createBean(UserMasterRegistBeanInterface.class);
-		// DTOに値をセットする。
-		UserMasterDtoInterface dto = userMasterRegist.getInitDto();
+		// ユーザ情報を準備
+		UserMasterDtoInterface dto = userAccountRegist.getInitUserDto();
 		// ユーザID
 		String userId = parameter.getUserId();
 		dto.setUserId(userId);
 		dto.setActivateDate(getActivateDate(parameter));
 		// 社員コードから個人IDを取得して設定
 		dto.setPersonalId(personalId);
-		// デフォルトロールコード設定
+		// 初期ロールコード(セットアップ)設定
 		dto.setRoleCode(parameter.getRoleCode());
 		// 無効フラグ設定(有効)
 		dto.setInactivateFlag(MospConst.DELETE_FLAG_OFF);
-		// 登録
-		userMasterRegist.insert(dto);
-		// ユーザパスワード情報
-		initPassword(parameter);
-	}
-	
-	/**
-	 * パスワード登録
-	 * @param parameter パラメータ
-	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
-	 */
-	protected void initPassword(InitialAccountParameterInterface parameter) throws MospException {
-		// ユーザパスワード情報
-		UserPasswordRegistBeanInterface userPasswordRegist = (UserPasswordRegistBeanInterface)createBean(UserPasswordRegistBeanInterface.class);
-		UserPasswordDtoInterface dto = userPasswordRegist.getInitDto();
-		// VOの値をDTOに設定
-		dto.setChangeDate(getActivateDate(parameter));
-		String userId = parameter.getUserId();
-		// ユーザID設定
-		dto.setUserId(userId);
-		PasswordCheckBeanInterface passwordCheck = (PasswordCheckBeanInterface)createBean(PasswordCheckBeanInterface.class);
-		// 初期パスワード取得
-		String initialPassword = passwordCheck.getInitialPassword(userId);
-		// パスワード設定
-		dto.setPassword(SeUtility.encrypt(SeUtility.encrypt(initialPassword)));
-		// 登録
-		userPasswordRegist.regist(dto);
+		// 新規登録(デフォルトユーザ追加ロール情報は登録しない)
+		userAccountRegist.insert(dto, false);
 	}
 	
 	/**

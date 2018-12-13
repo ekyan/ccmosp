@@ -33,13 +33,13 @@ import jp.mosp.time.dto.settings.PaidHolidayFirstYearDtoInterface;
 /**
  * 有給休暇初年度付与参照クラス。
  */
-public class PaidHolidayFirstYearReferenceBean extends PlatformBean implements
-		PaidHolidayFirstYearReferenceBeanInterface {
+public class PaidHolidayFirstYearReferenceBean extends PlatformBean
+		implements PaidHolidayFirstYearReferenceBeanInterface {
 	
 	/**
 	 * 有給休暇初年度付与DAO。
 	 */
-	private PaidHolidayFirstYearDaoInterface	dao;
+	private PaidHolidayFirstYearDaoInterface dao;
 	
 	
 	/**

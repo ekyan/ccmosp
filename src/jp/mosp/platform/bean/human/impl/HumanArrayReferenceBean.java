@@ -29,7 +29,6 @@ import java.util.Map;
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.base.MospParams;
 import jp.mosp.framework.constant.MospConst;
-import jp.mosp.framework.property.ConventionProperty;
 import jp.mosp.framework.utils.DateUtility;
 import jp.mosp.framework.utils.MospUtility;
 import jp.mosp.framework.xml.ItemProperty;
@@ -51,11 +50,6 @@ public class HumanArrayReferenceBean extends HumanGeneralBean implements HumanAr
 	private HumanArrayDaoInterface				dao;
 	
 	/**
-	 * 人事汎用項目区分設定情報。
-	 */
-	protected ConventionProperty				conventionProperty;
-	
-	/**
 	 * 人事汎用項目情報リスト。
 	 */
 	protected List<TableItemProperty>			tableItemList;
@@ -66,9 +60,14 @@ public class HumanArrayReferenceBean extends HumanGeneralBean implements HumanAr
 	LinkedHashMap<String, Map<String, String>>	arrayHumanInfoMap;
 	
 	/**
-	 * 人事履歴情報汎用マップ。
+	 * 人事一覧情報汎用マップ。
 	 */
 	Map<String, String>							arrayMap;
+	
+	/**
+	 * 人事通常レコード識別マップ
+	 */
+	protected LinkedHashMap<String, Long>		recordsMap;
 	
 	
 	/**
@@ -103,6 +102,31 @@ public class HumanArrayReferenceBean extends HumanGeneralBean implements HumanAr
 		return dao.findForKey(personalId, humanItemType, rowId);
 	}
 	
+	private HumanArrayDtoInterface findForKeyItems(String personalId, String humanItemType, int rowId)
+			throws MospException {
+		HumanArrayDtoInterface dto = dao.findForKey(personalId, humanItemType, rowId);
+		
+		// フォーマット文字列(年月日)の場合
+		if (dto == null) {
+			dto = findForKey(personalId, humanItemType + "Year", rowId);
+		}
+		// フォーマット文字列(電話)の場合
+		if (dto == null) {
+			dto = findForKey(personalId, humanItemType + "Area", rowId);
+		}
+		
+		// フォーマット文字列(連結)の場合
+		if (dto == null) {
+			String[] arySplitItemName = MospUtility.split(humanItemType, MospConst.APP_PROPERTY_SEPARATOR);
+			if (arySplitItemName.length != 0) {
+				dto = findForKey(personalId, arySplitItemName[0], rowId);
+			}
+		}
+		
+		return dto;
+		
+	}
+	
 	@Override
 	public void setCommounInfo(String division, String viewKey) {
 		// 人事汎用項目区分設定情報取得
@@ -114,6 +138,8 @@ public class HumanArrayReferenceBean extends HumanGeneralBean implements HumanAr
 		arrayHumanInfoMap = new LinkedHashMap<String, Map<String, String>>();
 		// 人事情報汎用マップ準備
 		arrayMap = new HashMap<String, String>();
+		// レコード識別IDマップ準備
+		recordsMap = new LinkedHashMap<String, Long>();
 	}
 	
 	@Override
@@ -163,13 +189,64 @@ public class HumanArrayReferenceBean extends HumanGeneralBean implements HumanAr
 	}
 	
 	@Override
+	public void getHumanArrayDtoMapInfo(String division, String viewKey, String personalId, int rowID)
+			throws MospException {
+		// 共通情報設定
+		setCommounInfo(division, viewKey);
+		// マップに設定
+		LinkedHashMap<String, Long> keyMap = new LinkedHashMap<String, Long>();
+		
+		//人事汎用項目毎に処理
+		for (TableItemProperty tableItem : tableItemList) {
+			// 人事汎用項目名を取得
+			String[] itemNames = tableItem.getItemNames();
+			// 人事汎用項目キーを取得
+			String[] itemKeys = tableItem.getItemKeys();
+			// 人事汎用項目名毎に処理
+			for (int i = 0; i < itemNames.length; i++) {
+				// 人事汎用項目名取得
+				String itemName = itemNames[i];
+				// 空の場合
+				if (itemName.isEmpty()) {
+					continue;
+				}
+				// 人事汎用一覧情報取得
+				HumanArrayDtoInterface dto = findForKey(personalId, itemName, rowID);
+				// 人事汎用通常情報がない場合
+				if (dto == null) {
+					continue;
+				}
+				// 人事汎用項目キー取得
+				String itemKey = itemKeys[i];
+				// 人事汎用項目設定情報取得
+				ItemProperty itemProperty = conventionProperty.getItem(itemKey);
+				// プルダウンコードを取得する
+				String pulldownValue = getPulldownValue(itemProperty, dto.getActivateDate(), dto.getHumanItemValue(),
+						itemName, false);
+				if (pulldownValue.isEmpty() == false) {
+					dto.setHumanItemValue(pulldownValue);
+				}
+				// 値を設定
+				keyMap.put(itemName, dto.getPfaHumanArrayId());
+				
+				// 値を設定
+				arrayMap.put(itemName, dto.getHumanItemValue());
+				arrayMap.put(PlatformHumanConst.PRM_HUMAN_ARRAY_DATE, DateUtility.getStringDate(dto.getActivateDate()));
+				arrayHumanInfoMap.put(String.valueOf(rowID), arrayMap);
+				recordsMap.put(itemName, dto.getPfaHumanArrayId());
+			}
+		}
+	}
+	
+	@Override
 	public LinkedHashMap<String, Map<String, String>> getRowIdArrayMapInfo(String division, String viewKey,
 			String personalId, Date targetDate) throws MospException {
 		// 共通情報設定
 		setCommounInfo(division, viewKey);
 		
 		// 行IDセット取得
-		List<Integer> rowIdSet = getRowIdList(tableItemList, personalId);
+		arrayHumanInfoMap = getArrayHumanInfoMapForKey(tableItemList, personalId);
+		
 		//人事汎用項目毎に処理
 		for (TableItemProperty tableItem : tableItemList) {
 			
@@ -183,82 +260,60 @@ public class HumanArrayReferenceBean extends HumanGeneralBean implements HumanAr
 			String[] labelKeys = tableItem.getLabelKeys();
 			
 			// 行IDセット毎に処理
-			for (Integer rowId : rowIdSet) {
+			for (String rowId : arrayHumanInfoMap.keySet()) {
 				// 人事汎用項目毎に処理
 				for (int i = 0; i < itemNames.length; i++) {
-					
 					// 行ID取得
 					String mapRowId = String.valueOf(rowId);
+					
+					// プルダウンのコードから名称を取得し設定
+					Map<String, String> arrayMap = arrayHumanInfoMap.get(mapRowId);
+					if (arrayMap == null) {
+						arrayMap = new HashMap<String, String>();
+					}
+					
+					// 人事汎用履歴情報取得
+					HumanArrayDtoInterface dto = findForKeyItems(personalId, itemNames[i], Integer.parseInt(rowId));
 					
 					// 人事汎用項目設定情報取得
 					ItemProperty itemProperty = conventionProperty.getItem(itemKeys[i]);
 					
+					String humanItemValue = "";
+					
+					if (dto == null) {
+						continue;
+					}
+					
 					// 人事汎用項目ラベルキー取得
 					String labelKey = labelKeys[i];
-					
 					// フォーマットに合わせ合体させたデータを取得
 					String dateTypeValue = getSeparateTxtItemArrayValue(personalId, itemNames[i], itemProperty,
 							mapRowId, targetDate, labelKey);
+					arrayMap.put(itemNames[i], dateTypeValue);
 					
-					if (dateTypeValue.isEmpty() == false) {
-						// マップに詰める
-						Map<String, String> arrayMap = arrayHumanInfoMap.get(mapRowId);
-						if (arrayMap == null) {
-							arrayMap = new HashMap<String, String>();
-							// 行ID人事汎用履歴情報マップに詰める
-							arrayHumanInfoMap.put(mapRowId, arrayMap);
-						}
-						arrayMap.put(itemNames[i], dateTypeValue);
-					}
+					// 設定値を取得
+					humanItemValue = dateTypeValue;
 					
-					// 人事汎用履歴情報取得
-					HumanArrayDtoInterface dto = findForKey(personalId, itemNames[i], rowId);
-					
-					// フォーマット文字列(年月日)の場合
-					if (dto == null) {
-						dto = findForKey(personalId, itemNames[i] + "Year", rowId);
-					}
-					// フォーマット文字列(電話)の場合
-					if (dto == null) {
-						dto = findForKey(personalId, itemNames[i] + "Area", rowId);
-					}
-					
-					// フォーマット文字列(連結)の場合
-					if (dto == null) {
-						String[] arySplitItemName = MospUtility.split(itemNames[i], MospConst.APP_PROPERTY_SEPARATOR);
-						if (arySplitItemName.length != 0) {
-							dto = findForKey(personalId, arySplitItemName[0], rowId);
-						}
-					}
-					
-					if (dto == null) {
-						continue;
-					}
 					// プルダウン名称を取得する
 					String pulldownValue = getPulldownValue(itemProperty, dto.getActivateDate(),
 							dto.getHumanItemValue(), itemNames[i], true);
+					
+					// プルダウン値ではない場合に空になるので、空で比較
 					if (pulldownValue.isEmpty() == false) {
-						// プルダウンのコードから名称を取得し設定
-						Map<String, String> arrayMap = arrayHumanInfoMap.get(mapRowId);
-						if (arrayMap == null) {
-							arrayMap = new HashMap<String, String>();
-							// 有効日人事汎用履歴情報マップに詰める
-							arrayHumanInfoMap.put(mapRowId, arrayMap);
-						}
+						humanItemValue = pulldownValue;
 						arrayMap.put(itemNames[i], pulldownValue);
-						continue;
 					}
-					// 人事情報汎用マップ準備
-					Map<String, String> arrayMap = arrayHumanInfoMap.get(mapRowId);
-					if (arrayMap == null) {
-						arrayMap = new HashMap<String, String>();
-						// 有効日人事汎用履歴情報マップに詰める
-						arrayHumanInfoMap.put(mapRowId, arrayMap);
-					}
+					
 					// 人事情報汎用マップに詰める
-					arrayMap.put(dto.getHumanItemType(), dto.getHumanItemValue());
+					if (humanItemValue.isEmpty()) {
+						arrayMap.put(dto.getHumanItemType(), dto.getHumanItemValue());
+					}
+					
 					arrayMap.put(PlatformHumanConst.PRM_HUMAN_ARRAY_DATE,
 							DateUtility.getStringDate(dto.getActivateDate()));
+					
+					// 有効日人事汎用履歴情報マップに詰める
+					arrayHumanInfoMap.put(mapRowId, arrayMap);
 				}
 			}
 		}
@@ -271,7 +326,8 @@ public class HumanArrayReferenceBean extends HumanGeneralBean implements HumanAr
 		// 共通情報設定
 		setCommounInfo(division, viewKey);
 		// 行IDセット取得
-		List<Integer> rowIdSet = getRowIdList(tableItemList, personalId);
+		arrayHumanInfoMap = getArrayHumanInfoMapForKey(tableItemList, personalId);
+		
 		//人事汎用項目毎に処理
 		for (TableItemProperty tableItem : tableItemList) {
 			if (tableItem.getKey().equals(tableItemKey) == false) {
@@ -285,11 +341,11 @@ public class HumanArrayReferenceBean extends HumanGeneralBean implements HumanAr
 			String[] labelKeys = tableItem.getLabelKeys();
 			
 			// 行IDセット毎に処理
-			for (Integer rowId : rowIdSet) {
+			for (String rowId : arrayHumanInfoMap.keySet()) {
 				// 人事汎用項目毎に処理
 				for (int i = 0; i < itemNames.length; i++) {
 					// 行ID取得
-					String mapRowId = String.valueOf(rowId);
+					String mapRowId = rowId;
 					// 人事汎用項目設定情報取得
 					ItemProperty itemProperty = conventionProperty.getItem(itemKeys[i]);
 					// 人事汎用項目ラベルキー取得
@@ -297,7 +353,7 @@ public class HumanArrayReferenceBean extends HumanGeneralBean implements HumanAr
 					// 人事汎用項目ラベルキーが有効日の場合
 					if (labelKey.equals(PlatformHumanConst.PRM_IMPORT_HISTORY_ARRAY_ACTIVATE_DATE)) {
 						// 人事汎用履歴情報取得
-						HumanArrayDtoInterface dto = findForKey(personalId, itemNames[i], rowId);
+						HumanArrayDtoInterface dto = findForKeyItems(personalId, itemNames[i], Integer.parseInt(rowId));
 						if (dto == null) {
 							return "";
 						}
@@ -310,9 +366,9 @@ public class HumanArrayReferenceBean extends HumanGeneralBean implements HumanAr
 						return dateTypeValue;
 					}
 					// 人事汎用履歴情報取得
-					HumanArrayDtoInterface dto = findForKey(personalId, itemNames[i], rowId);
+					HumanArrayDtoInterface dto = findForKey(personalId, itemNames[i], Integer.parseInt(rowId));
 					if (dto == null) {
-						return "";
+						continue;
 					}
 					// プルダウン名称を取得する
 					String pulldownValue = getPulldownValue(itemProperty, dto.getActivateDate(),
@@ -328,60 +384,71 @@ public class HumanArrayReferenceBean extends HumanGeneralBean implements HumanAr
 	}
 	
 	/**
-	 * 対象項目の行IDセットを取得する。
+	 * 有効日人事汎用通常情報マップを取得する
 	 * @param tableItemList 人事汎用表示テーブル項目設定情報リスト
 	 * @param personalId 個人ID
-	 * @return 行IDセット
+	 * @return 有効日人事汎用通常情報マップ
 	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
 	 */
-	public List<Integer> getRowIdList(List<TableItemProperty> tableItemList, String personalId) throws MospException {
-		// 行IDリスト準備
-		List<Integer> rowIdList = new ArrayList<Integer>();
+	public LinkedHashMap<String, Map<String, String>> getArrayHumanInfoMapForKey(List<TableItemProperty> tableItemList,
+			String personalId) throws MospException {
+		// 返却用Map準備
+		LinkedHashMap<String, Map<String, String>> arrayRowHumanInfoMap = new LinkedHashMap<String, Map<String, String>>();
+		
+		// 項目値リスト取得
+		List<HumanArrayDtoInterface> valueList = new ArrayList<HumanArrayDtoInterface>();
+		
 		for (TableItemProperty tableItem : tableItemList) {
 			String[] itemNames = tableItem.getItemNames();
 			// 項目毎に処理
 			for (String itemName : itemNames) {
 				
 				// 項目値リスト取得
-				List<HumanArrayDtoInterface> valueList = dao.findForItemType(personalId, itemName);
+				List<HumanArrayDtoInterface> dataList = dao.findForItemType(personalId, itemName);
 				
 				// フォーマット文字列(年月日)の場合
-				if (valueList.isEmpty()) {
-					valueList = findForItemType(personalId, itemName + "Year");
+				if (dataList.isEmpty()) {
+					dataList = findForItemType(personalId, itemName + "Year");
 				}
 				// フォーマット文字列(電話)の場合
-				if (valueList.isEmpty()) {
-					valueList = findForItemType(personalId, itemName + "Area");
+				if (dataList.isEmpty()) {
+					dataList = findForItemType(personalId, itemName + "Area");
 				}
 				
 				// フォーマット文字列(連結)の場合
-				if (valueList.isEmpty()) {
+				if (dataList.isEmpty()) {
 					String[] aryItemName = MospUtility.split(itemName, MospConst.APP_PROPERTY_SEPARATOR);
 					if (aryItemName.length != 0) {
-						valueList = findForItemType(personalId, aryItemName[0]);
+						dataList = findForItemType(personalId, aryItemName[0]);
 					}
 				}
 				// 重複行削除
-				for (int i = 0; i < valueList.size() - 1; i++) {
-					for (int j = i + 1; j < valueList.size();) {
-						if (valueList.get(i).getHumanRowId() == valueList.get(j).getHumanRowId()) {
-							valueList.remove(j);
+				for (int i = 0; i < dataList.size() - 1; i++) {
+					for (int j = i + 1; j < dataList.size();) {
+						if (dataList.get(i).getHumanRowId() == dataList.get(j).getHumanRowId()) {
+							dataList.remove(j);
 						} else {
 							++j;
 						}
 					}
 				}
-				
-				// 項目値リスト毎に処理
-				for (HumanArrayDtoInterface dto : valueList) {
-					// 行IDを詰める
-					rowIdList.add(dto.getHumanRowId());
+				// リスト値設定
+				for (HumanArrayDtoInterface dto : dataList) {
+					valueList.add(dto);
 				}
 			}
 		}
 		
-		return rowIdList;
+		// 項目値リスト毎に処理
+		for (HumanArrayDtoInterface dto : valueList) {
+			
+			HashMap<String, String> arrayRowMap = new HashMap<String, String>();
+			arrayRowMap.put(PlatformHumanConst.PRM_HUMAN_ARRAY_DATE, DateUtility.getStringDate(dto.getActivateDate()));
+			
+			arrayRowHumanInfoMap.put(String.valueOf(dto.getHumanRowId()), arrayRowMap);
+		}
 		
+		return arrayRowHumanInfoMap;
 	}
 	
 	@Override
@@ -399,6 +466,16 @@ public class HumanArrayReferenceBean extends HumanGeneralBean implements HumanAr
 		}
 		
 		return arrayRowId;
+	}
+	
+	@Override
+	public LinkedHashMap<String, Long> getRecordsMap() {
+		return recordsMap;
+	}
+	
+	@Override
+	public LinkedHashMap<String, Map<String, String>> getArrayHumanInfoMap() {
+		return arrayHumanInfoMap;
 	}
 	
 }

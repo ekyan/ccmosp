@@ -20,6 +20,7 @@ package jp.mosp.time.base;
 import java.util.Date;
 import java.util.List;
 
+import jp.mosp.framework.base.BaseDtoInterface;
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.utils.DateUtility;
 import jp.mosp.framework.utils.MospUtility;
@@ -27,7 +28,9 @@ import jp.mosp.platform.dto.human.HumanDtoInterface;
 import jp.mosp.platform.utils.MonthUtility;
 import jp.mosp.time.bean.AttendanceListReferenceBeanInterface;
 import jp.mosp.time.bean.CutoffUtilBeanInterface;
+import jp.mosp.time.constant.TimeConst;
 import jp.mosp.time.dto.settings.CutoffDtoInterface;
+import jp.mosp.time.dto.settings.SubordinateListDtoInterface;
 import jp.mosp.time.dto.settings.TimeSettingDtoInterface;
 import jp.mosp.time.dto.settings.impl.AttendanceListDto;
 import jp.mosp.time.utils.TimeUtility;
@@ -57,6 +60,8 @@ public abstract class AttendanceListBaseAction extends TimeAction {
 		setVoThisMonthFields(personalId);
 		// VOの人事情報フィールドを設定
 		setVoHumanFields(personalId, lastDate);
+		// VOの前社員・次社員情報フィールドを設定
+		setVoRollEmployeeFields();
 	}
 	
 	/**
@@ -115,8 +120,8 @@ public abstract class AttendanceListBaseAction extends TimeAction {
 	
 	/**
 	 * VOの人事情報フィールドを設定する。<br>
-	 * @param personalId 対象年
-	 * @param targetDate 対象月
+	 * @param personalId 個人ID
+	 * @param targetDate 対象日
 	 * @throws MospException 人事情報の取得に失敗した場合
 	 */
 	protected void setVoHumanFields(String personalId, Date targetDate) throws MospException {
@@ -143,6 +148,47 @@ public abstract class AttendanceListBaseAction extends TimeAction {
 	}
 	
 	/**
+	 * VOの前社員・次社員情報フィールドを設定する。<br>
+	 */
+	protected void setVoRollEmployeeFields() {
+		// VO取得
+		AttendanceListBaseVo vo = (AttendanceListBaseVo)mospParams.getVo();
+		Object object = mospParams.getGeneralParam(TimeConst.PRM_ROLL_ARRAY);
+		if (object != null) {
+			vo.setRollArray((BaseDtoInterface[])object);
+		}
+		if (vo.getRollArray() == null || vo.getRollArray().length == 0) {
+			return;
+		}
+		int i = 0;
+		for (BaseDtoInterface baseDto : vo.getRollArray()) {
+			SubordinateListDtoInterface dto = (SubordinateListDtoInterface)baseDto;
+			if (vo.getPersonalId().equals(dto.getPersonalId())) {
+				break;
+			}
+			i++;
+		}
+		// 前社員設定
+		vo.setLblPrevEmployeeCode("");
+		vo.setPrevPersonalId("");
+		if (i > 0) {
+			BaseDtoInterface baseDto = vo.getRollArray()[i - 1];
+			SubordinateListDtoInterface dto = (SubordinateListDtoInterface)baseDto;
+			vo.setLblPrevEmployeeCode(dto.getEmployeeCode());
+			vo.setPrevPersonalId(dto.getPersonalId());
+		}
+		// 次社員設定
+		vo.setLblNextEmployeeCode("");
+		vo.setNextPersonalId("");
+		if (i + 1 < vo.getRollArray().length) {
+			BaseDtoInterface baseDto = vo.getRollArray()[i + 1];
+			SubordinateListDtoInterface dto = (SubordinateListDtoInterface)baseDto;
+			vo.setLblNextEmployeeCode(dto.getEmployeeCode());
+			vo.setNextPersonalId(dto.getPersonalId());
+		}
+	}
+	
+	/**
 	 * 検索結果リストの内容をVOに設定する。<br>
 	 * @param list 対象リスト
 	 */
@@ -155,7 +201,9 @@ public abstract class AttendanceListBaseAction extends TimeAction {
 		String[] aryWorkDayOfWeekStyle = new String[list.size()];
 		String[] aryLblWorkType = new String[list.size()];
 		String[] aryLblStartTime = new String[list.size()];
+		String[] aryStartTimeStyle = new String[list.size()];
 		String[] aryLblEndTime = new String[list.size()];
+		String[] aryEndTimeStyle = new String[list.size()];
 		String[] aryLblWorkTime = new String[list.size()];
 		String[] aryLblRestTime = new String[list.size()];
 		String[] aryLblRemark = new String[list.size()];
@@ -167,7 +215,9 @@ public abstract class AttendanceListBaseAction extends TimeAction {
 			aryWorkDayOfWeekStyle[i] = dto.getWorkDayOfWeekStyle();
 			aryLblWorkType[i] = dto.getWorkTypeAbbr();
 			aryLblStartTime[i] = dto.getStartTimeString();
+			aryStartTimeStyle[i] = dto.getStartTimeStyle();
 			aryLblEndTime[i] = dto.getEndTimeString();
+			aryEndTimeStyle[i] = dto.getEndTimeStyle();
 			aryLblWorkTime[i] = dto.getWorkTimeString();
 			aryLblRestTime[i] = dto.getRestTimeString();
 			aryLblRemark[i] = MospUtility.concat(dto.getRemark(), dto.getTimeComment());
@@ -178,7 +228,9 @@ public abstract class AttendanceListBaseAction extends TimeAction {
 		vo.setAryWorkDayOfWeekStyle(aryWorkDayOfWeekStyle);
 		vo.setAryLblWorkType(aryLblWorkType);
 		vo.setAryLblStartTime(aryLblStartTime);
+		vo.setAryStartTimeStyle(aryStartTimeStyle);
 		vo.setAryLblEndTime(aryLblEndTime);
+		vo.setAryEndTimeStyle(aryEndTimeStyle);
 		vo.setAryLblWorkTime(aryLblWorkTime);
 		vo.setAryLblRestTime(aryLblRestTime);
 		vo.setAryLblRemark(aryLblRemark);
@@ -194,6 +246,7 @@ public abstract class AttendanceListBaseAction extends TimeAction {
 		vo.setLblTimesWork(dto.getWorkDaysString());
 		vo.setLblTimesPrescribedHoliday(dto.getPrescribedHolidaysString());
 		vo.setLblTimesLegalHoliday(dto.getLegalHolidaysString());
+		vo.setLblTimesHoliday(dto.getHolidayString());
 		// チェックボックスリセット
 		vo.setCkbSelect(new String[0]);
 	}

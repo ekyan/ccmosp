@@ -37,13 +37,14 @@ public class ScheduleBookBean extends PlatformBean implements ScheduleBookBeanIn
 	/**
 	 * 勤怠一覧参照クラス。
 	 */
-	AttendanceListReferenceBeanInterface	attendanceListRefer;
+	protected AttendanceListReferenceBeanInterface attendanceListRefer;
 	
 	
 	@Override
 	public void initBean() throws MospException {
 		// 勤怠一覧参照クラス取得
-		attendanceListRefer = (AttendanceListReferenceBeanInterface)createBean(AttendanceListReferenceBeanInterface.class);
+		attendanceListRefer = (AttendanceListReferenceBeanInterface)createBean(
+				AttendanceListReferenceBeanInterface.class);
 	}
 	
 	@Override

@@ -18,6 +18,7 @@
 package jp.mosp.framework.xml;
 
 import jp.mosp.framework.property.BaseProperty;
+import jp.mosp.framework.utils.CapsuleUtility;
 
 /**
  * 人事汎用表示テーブル項目設定情報を格納する。
@@ -161,14 +162,14 @@ public class TableItemProperty implements BaseProperty {
 	 * @return labelKeys
 	 */
 	public String[] getLabelKeys() {
-		return labelKeys;
+		return CapsuleUtility.getStringArrayClone(labelKeys);
 	}
 	
 	/**
 	 * @param labelKeys セットする labelKeys
 	 */
 	public void setLabelKeys(String[] labelKeys) {
-		this.labelKeys = labelKeys;
+		this.labelKeys = CapsuleUtility.getStringArrayClone(labelKeys);
 	}
 	
 }

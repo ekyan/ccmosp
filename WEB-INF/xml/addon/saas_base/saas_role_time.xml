@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE MosP>
+<!--
+MosP - Mind Open Source Project    http://www.mosp.jp/
+Copyright (C) MIND Co., Ltd.       http://www.e-mind.co.jp/
+
+This program is free software: you can redistribute it and/or
+modify it under the terms of the GNU Affero General Public License
+as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<MosP>
+	
+	<!-- ロール追加(勤怠管理) -->
+	<Role key="TM10">
+		<RoleType>time</RoleType>
+		<RoleName>一般従業員</RoleName>
+		<RoleExtra>default</RoleExtra>
+		<ViewIndex>10</ViewIndex>
+		<Menu key="AttendanceList">
+			<Index>2110</Index>
+		</Menu>
+		<Menu key="AttendanceCard">
+			<Index>2120</Index>
+		</Menu>
+		<Menu key="ScheduleReference">
+			<Index>2130</Index>
+		</Menu>
+		<Menu key="OvertimeRequest">
+			<Index>2140</Index>
+		</Menu>
+		<Menu key="HolidayRequest">
+			<Index>2150</Index>
+		</Menu>
+		<Menu key="WorkOnHolidayRequest">
+			<Index>2160</Index>
+		</Menu>
+		<Menu key="SubHolidayRequest">
+			<Index>2170</Index>
+		</Menu>
+		<Menu key="WorkTypeChangeRequest">
+			<Index>2180</Index>
+		</Menu>
+		<Menu key="CancellationRequest">
+			<Index>2190</Index>
+		</Menu>
+	</Role>
+	<Role key="TM20">
+		<RoleType>time</RoleType>
+		<RoleName>勤怠管理者</RoleName>
+		<RoleExtra>approver</RoleExtra>
+		<ViewIndex>20</ViewIndex>
+		<Menu key="AttendanceList">
+			<Index>2110</Index>
+		</Menu>
+		<Menu key="AttendanceCard">
+			<Index>2120</Index>
+		</Menu>
+		<Menu key="ScheduleReference">
+			<Index>2130</Index>
+		</Menu>
+		<Menu key="OvertimeRequest">
+			<Index>2140</Index>
+		</Menu>
+		<Menu key="HolidayRequest">
+			<Index>2150</Index>
+		</Menu>
+		<Menu key="WorkOnHolidayRequest">
+			<Index>2160</Index>
+		</Menu>
+		<Menu key="SubHolidayRequest">
+			<Index>2170</Index>
+		</Menu>
+		<Menu key="WorkTypeChangeRequest">
+			<Index>2180</Index>
+		</Menu>
+		<Menu key="CancellationRequest">
+			<Index>2190</Index>
+		</Menu>
+		<Menu key="SubordinateList">
+			<Index>2210</Index>
+			<Range key="1">
+				<Position>RangeMyself</Position>
+				<Section>RangeMyself</Section>
+			</Range>
+		</Menu>
+		<Menu key="RequestList">
+			<Index>2220</Index>
+			<Range key="1">
+				<Position>RangeMyself</Position>
+				<Section>RangeMyself</Section>
+			</Range>
+		</Menu>
+		<Menu key="ApprovalList">
+			<Index>2230</Index>
+		</Menu>
+		<Menu key="AttendanceHumanList">
+			<Index>2240</Index>
+			<Range key="1">
+				<Position>RangeMyself</Position>
+				<Section>RangeMyself</Section>
+			</Range>
+		</Menu>
+		<Menu key="SubordinateFiscalList">
+			<Index>2245</Index>
+			<Range key="1">
+				<Position>RangeMyself</Position>
+				<Section>RangeMyself</Section>
+			</Range>
+		</Menu>
+		<Menu key="SubstitutionSetting">
+			<Index>2250</Index>
+		</Menu>
+	</Role>
+	<Role key="TM30">
+		<RoleType>time</RoleType>
+		<RoleName>計算管理者</RoleName>
+		<RoleExtra>approver,calculator</RoleExtra>
+		<ViewIndex>30</ViewIndex>
+		<Menu key="UnitList">
+			<Index>310</Index>
+		</Menu>
+		<Menu key="RouteList">
+			<Index>320</Index>
+		</Menu>
+		<Menu key="RouteApplicationList">
+			<Index>330</Index>
+		</Menu>
+		<Menu key="RouteApplicationReference">
+			<Index>340</Index>
+		</Menu>
+		<Menu key="AttendanceList">
+			<Index>2110</Index>
+		</Menu>
+		<Menu key="AttendanceCard">
+			<Index>2120</Index>
+		</Menu>
+		<Menu key="ScheduleReference">
+			<Index>2130</Index>
+		</Menu>
+		<Menu key="OvertimeRequest">
+			<Index>2140</Index>
+		</Menu>
+		<Menu key="HolidayRequest">
+			<Index>2150</Index>
+		</Menu>
+		<Menu key="WorkOnHolidayRequest">
+			<Index>2160</Index>
+		</Menu>
+		<Menu key="SubHolidayRequest">
+			<Index>2170</Index>
+		</Menu>
+		<Menu key="WorkTypeChangeRequest">
+			<Index>2180</Index>
+		</Menu>
+		<Menu key="CancellationRequest">
+			<Index>2190</Index>
+		</Menu>
+		<Menu key="SubordinateList">
+			<Index>2210</Index>
+		</Menu>
+		<Menu key="RequestList">
+			<Index>2220</Index>
+		</Menu>
+		<Menu key="ApprovalList">
+			<Index>2230</Index>
+		</Menu>
+		<Menu key="AttendanceHumanList">
+			<Index>2240</Index>
+		</Menu>
+		<Menu key="SubordinateFiscalList">
+			<Index>2245</Index>
+		</Menu>
+		<Menu key="SubstitutionSetting">
+			<Index>2250</Index>
+		</Menu>
+		<Menu key="TotalTime">
+			<Index>2310</Index>
+		</Menu>
+		<Menu key="TimeImportList">
+			<Index>2320</Index>
+		</Menu>
+		<Menu key="TimeExportList">
+			<Index>2330</Index>
+		</Menu>
+		<Menu key="HolidayMaster">
+			<Index>2410</Index>
+		</Menu>
+		<Menu key="SpecialHolidayManagement">
+			<Index>2420</Index>
+		</Menu>
+		<Menu key="OtherHolidayManagement">
+			<Index>2430</Index>
+		</Menu>
+		<Menu key="PaidHolidayManagement">
+			<Index>2440</Index>
+		</Menu>
+		<Menu key="PaidHolidayDataGrantList">
+			<Index>2450</Index>
+		</Menu>
+		<Menu key="TimeSettingList">
+			<Index>2510</Index>
+		</Menu>
+		<Menu key="WorkTypeList">
+			<Index>2520</Index>
+		</Menu>
+		<Menu key="PaidHolidayList">
+			<Index>2530</Index>
+		</Menu>
+		<Menu key="ScheduleList">
+			<Index>2540</Index>
+		</Menu>
+		<Menu key="CutoffMaster">
+			<Index>2550</Index>
+		</Menu>
+		<Menu key="ApplicationList">
+			<Index>2560</Index>
+		</Menu>
+		<Menu key="ApplicationReference">
+			<Index>2570</Index>
+		</Menu>
+		<Menu key="WorkTypePatternList">
+			<Index>2580</Index>
+		</Menu>
+	</Role>
+	
+	<!-- ロール権限(勤怠管理) -->
+	<Role key="TM10">
+		<RoleAcceptCommand>TM0110*</RoleAcceptCommand>
+		<RoleAcceptCommand>TM0111*</RoleAcceptCommand>
+		<RoleAcceptCommand>TM1*</RoleAcceptCommand>
+		<RoleRejectCommand>TM1101</RoleRejectCommand>
+		<RoleRejectCommand>TM1301</RoleRejectCommand>
+	</Role>
+	<Role key="TM20">
+		<RoleAcceptCommand>TM0110*</RoleAcceptCommand>
+		<RoleAcceptCommand>TM0111*</RoleAcceptCommand>
+		<RoleAcceptCommand>TM1*</RoleAcceptCommand>
+		<RoleAcceptCommand>TM2*</RoleAcceptCommand>
+		<RoleAcceptCommand>TM34*</RoleAcceptCommand>
+	</Role>
+	<Role key="TM30">
+		<RoleAcceptCommand>TM*</RoleAcceptCommand>
+	</Role>
+	
+</MosP>

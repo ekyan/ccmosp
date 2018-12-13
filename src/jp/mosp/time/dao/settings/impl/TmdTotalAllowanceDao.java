@@ -107,8 +107,8 @@ public class TmdTotalAllowanceDao extends PlatformDao implements TotalAllowanceD
 	}
 	
 	@Override
-	public List<TotalAllowanceDtoInterface> findForHistory(String personalId, int calculationYear,
-			int calculationMonth, String allowanceCode) throws MospException {
+	public List<TotalAllowanceDtoInterface> findForHistory(String personalId, int calculationYear, int calculationMonth,
+			String allowanceCode) throws MospException {
 		try {
 			index = 1;
 			StringBuffer sb = getSelectQuery(getClass());

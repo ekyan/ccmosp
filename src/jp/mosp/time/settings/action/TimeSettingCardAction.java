@@ -17,22 +17,29 @@
  */
 package jp.mosp.time.settings.action;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 import jp.mosp.framework.base.BaseVo;
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.constant.MospConst;
 import jp.mosp.framework.utils.DateUtility;
+import jp.mosp.framework.utils.MospUtility;
 import jp.mosp.platform.constant.PlatformConst;
 import jp.mosp.time.base.TimeAction;
-import jp.mosp.time.bean.LimitStandardReferenceBeanInterface;
 import jp.mosp.time.bean.LimitStandardRegistBeanInterface;
+import jp.mosp.time.bean.TimeSettingBeanInterface;
 import jp.mosp.time.bean.TimeSettingReferenceBeanInterface;
 import jp.mosp.time.bean.TimeSettingRegistBeanInterface;
 import jp.mosp.time.constant.TimeConst;
 import jp.mosp.time.constant.TimeMessageConst;
 import jp.mosp.time.dto.settings.LimitStandardDtoInterface;
 import jp.mosp.time.dto.settings.TimeSettingDtoInterface;
+import jp.mosp.time.entity.TimeSettingEntityInterface;
 import jp.mosp.time.settings.base.TimeSettingAction;
 import jp.mosp.time.settings.vo.TimeSettingCardVo;
 
@@ -123,9 +130,10 @@ public class TimeSettingCardAction extends TimeSettingAction {
 	 */
 	public static final String		CMD_REPLICATION_MODE	= "TM5176";
 	
-	// 限度基準データ 期間の定数
-	private static final String[]	TERM_ARRAY				= { "week1", "week2", "week4", "month1", "month2",
-		"month3", "year1"									};
+	/**
+	 * コードキー(勤怠設定追加処理)。<br>
+	 */
+	protected static final String	CODE_KEY_ADDONS			= "TimeSettingAddons";
 	
 	
 	/**
@@ -141,6 +149,24 @@ public class TimeSettingCardAction extends TimeSettingAction {
 	}
 	
 	@Override
+	protected BaseVo prepareVo(boolean useStoredVo, boolean useParametersMapper) throws MospException {
+		// 継承基のメソッドを実行
+		BaseVo vo = super.prepareVo(useStoredVo, useParametersMapper);
+		// パラメータをVOにマッピングしない場合
+		if (useParametersMapper == false) {
+			// VOを取得
+			return vo;
+		}
+		// 勤怠設定追加処理毎に処理
+		for (TimeSettingBeanInterface addonBean : getAddonBeans()) {
+			// 勤怠設定詳細画面VOにリクエストパラメータを設定
+			addonBean.mapping();
+		}
+		// VOを取得
+		return vo;
+	}
+	
+	@Override
 	public void action() throws MospException {
 		// コマンド毎の処理
 		if (mospParams.getCommand().equals(CMD_SHOW)) {
@@ -149,7 +175,7 @@ public class TimeSettingCardAction extends TimeSettingAction {
 			show();
 		} else if (mospParams.getCommand().equals(CMD_SELECT_SHOW)) {
 			// 選択表示
-			prepareVo();
+			prepareVo(true, false);
 			editMode();
 		} else if (mospParams.getCommand().equals(CMD_REGIST)) {
 			// 登録
@@ -220,29 +246,17 @@ public class TimeSettingCardAction extends TimeSettingAction {
 		setDtoFields(dto);
 		// 新規登録処理
 		regist.insert(dto);
-		// 新規登録結果確認
+		// 限度基準管理情報登録処理を準備
+		LimitStandardRegistBeanInterface limitRegist = time().limitStandardRegist();
+		// 限度基準管理情報群を登録
+		limitRegist.regist(getLimitDtos(limitRegist));
+		// 勤怠設定登録時追加処理
+		registAddon();
+		// 処理結果確認
 		if (mospParams.hasErrorMessage()) {
 			// 登録失敗メッセージ設定
 			addInsertFailedMessage();
 			return;
-		}
-		// 限度基準管理情報
-		// 登録クラス取得
-		LimitStandardRegistBeanInterface limitRegist = time().limitStandardRegist();
-		// DTOの準備
-		LimitStandardDtoInterface limitDto = limitRegist.getInitDto();
-		// 限度基準データ 期間分処理を行う。
-		for (String element : TERM_ARRAY) {
-			// DTOに値を設定
-			setLimitDtoFields(limitDto, element);
-			// 新規登録処理
-			limitRegist.insert(limitDto);
-			// 新規登録結果確認
-			if (mospParams.hasErrorMessage()) {
-				// 登録失敗メッセージ設定
-				addInsertFailedMessage();
-				return;
-			}
 		}
 		// コミット
 		commit();
@@ -265,29 +279,17 @@ public class TimeSettingCardAction extends TimeSettingAction {
 		setDtoFields(dto);
 		// 履歴追加処理
 		regist.add(dto);
-		// 履歴追加結果確認
+		// 限度基準管理情報登録処理を準備
+		LimitStandardRegistBeanInterface limitRegist = time().limitStandardRegist();
+		// 限度基準管理情報群を登録
+		limitRegist.regist(getLimitDtos(limitRegist));
+		// 勤怠設定登録時追加処理
+		registAddon();
+		// 処理結果確認
 		if (mospParams.hasErrorMessage()) {
 			// 登録失敗メッセージ設定
 			addInsertFailedMessage();
 			return;
-		}
-		// 限度基準管理情報
-		// 登録クラス取得
-		LimitStandardRegistBeanInterface limitRegist = time().limitStandardRegist();
-		// DTOの準備
-		LimitStandardDtoInterface limitDto = limitRegist.getInitDto();
-		// 限度基準データ 期間分処理を行う。
-		for (String element : TERM_ARRAY) {
-			// DTOに値を設定
-			setLimitDtoFields(limitDto, element);
-			// 履歴追加処理
-			limitRegist.insert(limitDto);
-			// 履歴追加結果確認
-			if (mospParams.hasErrorMessage()) {
-				// 登録失敗メッセージ設定
-				addInsertFailedMessage();
-				return;
-			}
 		}
 		// コミット
 		commit();
@@ -310,29 +312,17 @@ public class TimeSettingCardAction extends TimeSettingAction {
 		setDtoFields(dto);
 		// 更新処理
 		regist.update(dto);
-		// 更新結果確認
+		// 限度基準管理情報登録処理を準備
+		LimitStandardRegistBeanInterface limitRegist = time().limitStandardRegist();
+		// 限度基準管理情報群を登録
+		limitRegist.regist(getLimitDtos(limitRegist));
+		// 勤怠設定登録時追加処理
+		registAddon();
+		// 処理結果確認
 		if (mospParams.hasErrorMessage()) {
 			// 更新失敗メッセージ設定
 			addUpdateFailedMessage();
 			return;
-		}
-		// 限度基準管理情報
-		// 登録クラス取得
-		LimitStandardRegistBeanInterface limitRegist = time().limitStandardRegist();
-		// DTOの準備
-		LimitStandardDtoInterface limitDto = limitRegist.getInitDto();
-		// 限度基準データ 期間分処理を行う。
-		for (String element : TERM_ARRAY) {
-			// DTOに値を設定
-			setLimitDtoFields(limitDto, element);
-			// 更新処理
-			limitRegist.update(limitDto);
-			// 更新結果確認
-			if (mospParams.hasErrorMessage()) {
-				// 更新失敗メッセージ設定
-				addUpdateFailedMessage();
-				return;
-			}
 		}
 		// コミット
 		commit();
@@ -347,36 +337,20 @@ public class TimeSettingCardAction extends TimeSettingAction {
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
 	protected void delete() throws MospException {
-		// 登録クラス取得
-		TimeSettingRegistBeanInterface regist = time().timeSettingRegist();
-		LimitStandardRegistBeanInterface limitRegist = time().limitStandardRegist();
-		// DTOの準備
-		TimeSettingDtoInterface dto = regist.getInitDto();
-		// DTOに値を設定
-		setDtoFields(dto);
-		// 削除処理
-		regist.delete(dto);
-		// 削除結果確認
+		// 勤怠設定情報を削除
+		time().timeSettingRegist().delete(getRecordId());
+		// 限度基準情報を削除
+		time().limitStandardRegist().delete(getSettingCode(), getEditActivateDate());
+		// 勤怠設定追加処理毎に処理
+		for (TimeSettingBeanInterface addonBean : getAddonBeans()) {
+			// 勤怠設定削除時追加処理
+			addonBean.delete();
+		}
+		// 処理結果確認
 		if (mospParams.hasErrorMessage()) {
 			// 削除失敗メッセージ設定
 			addDeleteHistoryFailedMessage();
 			return;
-		}
-		// 限度基準管理情報
-		// DTOの準備
-		LimitStandardDtoInterface limitDto = limitRegist.getInitDto();
-		// 限度基準データ 期間分処理を行う。
-		for (String element : TERM_ARRAY) {
-			// DTOに値を設定
-			setLimitDtoFields(limitDto, element);
-			// 削除処理
-			limitRegist.delete(limitDto);
-			// 更新結果確認
-			if (mospParams.hasErrorMessage()) {
-				// 削除失敗メッセージ設定
-				addDeleteHistoryFailedMessage();
-				return;
-			}
 		}
 		// コミット
 		commit();
@@ -400,22 +374,18 @@ public class TimeSettingCardAction extends TimeSettingAction {
 		setDefaultValues();
 		// 勤怠設定情報取得準備
 		TimeSettingReferenceBeanInterface timeSetting = timeReference().timeSetting();
-		// 履歴編集対象取得
-		TimeSettingDtoInterface dto = timeSetting.findForKey(settingCode, activateDate);
+		// 履歴編集対象勤怠設定エンティティを取得
+		TimeSettingEntityInterface entity = timeSetting.getEntityForKey(settingCode, activateDate);
 		// 存在確認
-		checkSelectedDataExist(dto);
+		checkSelectedDataExist(entity.getTimeSettingDto());
 		// VOにセット
-		setVoFields(dto);
-		// 限度基準管理情報取得準備
-		LimitStandardReferenceBeanInterface limit = timeReference().limitStandard();
-		// 限度基準管理情報を取得しVOに設定(期間毎に処理を行う)
-		for (String element : TERM_ARRAY) {
-			// 履歴編集対象取得
-			LimitStandardDtoInterface limitDto = limit.findForKey(settingCode, activateDate, element);
-			if (limitDto != null) {
-				// VOにセット
-				setLimitVoFields(limitDto);
-			}
+		setVoFields(entity.getTimeSettingDto());
+		// VOに限度基準の情報をセット
+		setLimitVoFields(entity);
+		// 勤怠設定追加処理毎に処理
+		for (TimeSettingBeanInterface addonBean : getAddonBeans()) {
+			// 勤怠設定詳細画面VOに値を設定
+			addonBean.setVoFields();
 		}
 		// 編集モード設定
 		setEditUpdateMode(timeSetting.getTimeSettingHistory(settingCode));
@@ -435,6 +405,7 @@ public class TimeSettingCardAction extends TimeSettingAction {
 	protected void setActivationDate() throws MospException {
 		// VO取得
 		TimeSettingCardVo vo = (TimeSettingCardVo)mospParams.getVo();
+		TimeSettingReferenceBeanInterface timeSetting = timeReference().timeSetting();
 		// 現在の有効日モードを確認
 		if (vo.getModeActivateDate().equals(PlatformConst.MODE_ACTIVATE_DATE_CHANGING)) {
 			// 有効日モード設定
@@ -445,6 +416,14 @@ public class TimeSettingCardAction extends TimeSettingAction {
 		}
 		// 締日プルダウン設定
 		setCutoffPulldouwn();
+		
+		TimeSettingDtoInterface timeSettingDto = timeSetting.getTimeSettingInfo(vo.getTxtSettingCode(),
+				getEditActivateDate());
+		if (timeSettingDto == null) {
+			return;
+		}
+		vo.setPltCutoffDate(timeSettingDto.getCutoffCode());
+		
 	}
 	
 	/**
@@ -502,9 +481,9 @@ public class TimeSettingCardAction extends TimeSettingAction {
 	}
 	
 	/**
-	 * プルダウンを設定する。<br>
+	 * プルダウン・チェックボックスを設定する。<br>
 	 */
-	private void setPulldown() {
+	protected void setPulldown() {
 		// VO準備
 		TimeSettingCardVo vo = (TimeSettingCardVo)mospParams.getVo();
 		// 起算月
@@ -543,8 +522,9 @@ public class TimeSettingCardAction extends TimeSettingAction {
 	
 	/**
 	 * 初期値を設定する。<br>
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
-	public void setDefaultValues() {
+	public void setDefaultValues() throws MospException {
 		// VO準備
 		TimeSettingCardVo vo = (TimeSettingCardVo)mospParams.getVo();
 		// 基本設定
@@ -568,8 +548,6 @@ public class TimeSettingCardAction extends TimeSettingAction {
 		vo.setPltSpecificHoliday("1");
 		// 週の起算曜日
 		vo.setPltStartWeek("0");
-		// 月の起算日
-		vo.setPltStartMonth("0");
 		// 年の起算月
 		vo.setPltStartYear("0");
 		// 所定労働時間（時間）
@@ -600,10 +578,6 @@ public class TimeSettingCardAction extends TimeSettingAction {
 		vo.setTxtSubHolidayLimitMonth("0");
 		// 代休取得期限
 		vo.setTxtSubHolidayLimitDate("0");
-		// 半休入替取得（振休）
-		vo.setPltTransferExchange("0");
-		// 半休入替取得（代休）
-		vo.setPltSubHolidayExchange("0");
 		// 代休基準時間(全休)
 		vo.setTxtSubHolidayAllNormHour("00");
 		// 代休基準分(全休)
@@ -711,89 +685,21 @@ public class TimeSettingCardAction extends TimeSettingAction {
 		
 		// 限度基準
 		// 1週間限度時間（時間）
-		vo.setTxtLimit1WeekHour("00");
+		vo.setTxtLimit1WeekHour("");
 		// 1週間限度時間（分）
-		vo.setTxtLimit1WeekMinute("00");
-		// 2週間限度時間（時間）
-		vo.setTxtLimit2WeekHour("");
-		//2週間限度時間（分）
-		vo.setTxtLimit2WeekMinute("");
-		// 4週間限度時間（時間）
-		vo.setTxtLimit4WeekHour("");
-		// 4週間限度時間（分）
-		vo.setTxtLimit4WeekMinute("");
+		vo.setTxtLimit1WeekMinute("");
 		// 1ヶ月限度時間（時間）
-		vo.setTxtLimit1MonthHour("00");
+		vo.setTxtLimit1MonthHour("");
 		// 1ヶ月限度時間（分）
-		vo.setTxtLimit1MonthMinute("00");
-		// 2ヶ月限度時間（時間）
-		vo.setTxtLimit2MonthHour("");
-		// 2ヶ月限度時間（分）
-		vo.setTxtLimit2MonthMinute("");
-		// 3ヶ月限度時間（時間）
-		vo.setTxtLimit3MonthHour("");
-		// 3ヶ月限度時間（分）
-		vo.setTxtLimit3MonthMinute("");
-		// 1年間限度時間（時間）
-		vo.setTxtLimit1YearHour("");
-		// 1年間限度時間（分）
-		vo.setTxtLimit1YearMinute("");
-		// 1週間注意時間（時間）
-		vo.setTxtAttention1WeekHour("");
-		// 1週間注意時間（分）
-		vo.setTxtAttention1WeekMinute("");
-		// 2週間注意時間（時間）
-		vo.setTxtAttention2WeekHour("");
-		// 2週間注意時間（分）
-		vo.setTxtAttention2WeekMinute("");
-		// 4週間注意時間（時間）
-		vo.setTxtAttention4WeekHour("");
-		// 4週間注意時間（分）
-		vo.setTxtAttention4WeekMinute("");
+		vo.setTxtLimit1MonthMinute("");
 		// 1ヶ月注意時間（時間）
-		vo.setTxtAttention1MonthHour("00");
+		vo.setTxtAttention1MonthHour("");
 		// 1ヶ月注意時間（分）
-		vo.setTxtAttention1MonthMinute("00");
-		// 2ヶ月注意時間（時間）
-		vo.setTxtAttention2MonthHour("");
-		// 2ヶ月注意時間（分）
-		vo.setTxtAttention2MonthMinute("");
-		// 3ヶ月注意時間（時間）
-		vo.setTxtAttention3MonthHour("");
-		// 3ヶ月注意時間（分）
-		vo.setTxtAttention3MonthMinute("");
-		// 1年間注意時間（時間）
-		vo.setTxtAttention1YearHour("");
-		// 1年間注意時間（分）
-		vo.setTxtAttention1YearMinute("");
-		// 1週間警告時間（時間）
-		vo.setTxtWarning1WeekHour("");
-		// 1週間警告時間（分）
-		vo.setTxtWarning1WeekMinute("");
-		// 2週間警告時間（時間）
-		vo.setTxtWarning2WeekHour("");
-		// 2週間警告時間（分）
-		vo.setTxtWarning2WeekMinute("");
-		// 4週間警告時間（時間）
-		vo.setTxtWarning4WeekHour("");
-		// 4週間警告時間（分）
-		vo.setTxtWarning4WeekMinute("");
+		vo.setTxtAttention1MonthMinute("");
 		// 1ヶ月警告時間（時間）
-		vo.setTxtWarning1MonthHour("00");
+		vo.setTxtWarning1MonthHour("");
 		// 1ヶ月警告時間（分）
-		vo.setTxtWarning1MonthMinute("00");
-		// 2ヶ月警告時間（時間）
-		vo.setTxtWarning2MonthHour("");
-		// 2ヶ月警告時間（分）
-		vo.setTxtWarning2MonthMinute("");
-		// 3ヶ月警告時間（時間）
-		vo.setTxtWarning3MonthHour("");
-		// 3ヶ月警告時間（分）
-		vo.setTxtWarning3MonthMinute("");
-		// 1年間警告時間（時間）
-		vo.setTxtWarning1YearHour("");
-		// 1年間警告時間（分）
-		vo.setTxtWarning1YearMinute("");
+		vo.setTxtWarning1MonthMinute("");
 		
 		// 非表示項目
 		// 60時間超割増機能
@@ -816,6 +722,18 @@ public class TimeSettingCardAction extends TimeSettingAction {
 		vo.setTxtSpecificHoliday("0");
 		// 法定休日割増率
 		vo.setTxtLegalHoliday("0");
+		
+		// 勤怠設定追加JSPリストを設定
+		vo.setAddonJsps(getAddonJsps());
+		// 勤怠設定追加パラメータ群(キー：パラメータ名)を初期化
+		vo.setAddonParams(new HashMap<String, String>());
+		// 勤怠設定追加パラメータ配列群(キー：パラメータ名)を初期化
+		vo.setAddonArrays(new HashMap<String, String[]>());
+		// 勤怠設定追加処理毎に処理
+		for (TimeSettingBeanInterface addonBean : getAddonBeans()) {
+			// 勤怠設定詳細画面VOに初期値を設定
+			addonBean.initVoFields();
+		}
 	}
 	
 	/**
@@ -828,10 +746,12 @@ public class TimeSettingCardAction extends TimeSettingAction {
 		TimeSettingCardVo vo = (TimeSettingCardVo)mospParams.getVo();
 		// VOの値をDTOに設定
 		// －基本情報－
+		// レコード識別ID
+		dto.setTmmTimeSettingId(vo.getRecordId());
 		// 有効日
 		dto.setActivateDate(getEditActivateDate());
 		// 勤怠設定コード
-		dto.setWorkSettingCode(vo.getTxtSettingCode());
+		dto.setWorkSettingCode(getSettingCode());
 		// 勤怠設定名称
 		dto.setWorkSettingName(vo.getTxtSettingName());
 		// 勤怠設定略称
@@ -853,7 +773,7 @@ public class TimeSettingCardAction extends TimeSettingAction {
 		// 週の起算曜日
 		dto.setStartWeek(getInt(vo.getPltStartWeek()));
 		// 月の起算曜日
-		dto.setStartMonth(getInt(vo.getPltStartMonth()));
+		dto.setStartMonth(0);
 		// 年の起算月
 		dto.setStartYear(getInt(vo.getPltStartYear()));
 		// 所定労働時間
@@ -877,15 +797,15 @@ public class TimeSettingCardAction extends TimeSettingAction {
 		// 代休取得期限
 		dto.setSubHolidayLimitDate(getInt(vo.getTxtSubHolidayLimitDate()));
 		// 半休入替取得（振休）
-		dto.setTransferExchange(getInt(vo.getPltTransferExchange()));
+		dto.setTransferExchange(0);
 		// 半休入替取得（代休）
-		dto.setSubHolidayExchange(getInt(vo.getPltSubHolidayExchange()));
+		dto.setSubHolidayExchange(0);
 		// 代休基準時間(全休)
-		dto.setSubHolidayAllNorm(DateUtility.getTime(vo.getTxtSubHolidayAllNormHour(),
-				vo.getTxtSubHolidayAllNormMinute()));
+		dto.setSubHolidayAllNorm(
+				DateUtility.getTime(vo.getTxtSubHolidayAllNormHour(), vo.getTxtSubHolidayAllNormMinute()));
 		// 代休基準時間(半休)
-		dto.setSubHolidayHalfNorm(DateUtility.getTime(vo.getTxtSubHolidayHalfNormHour(),
-				vo.getTxtSubHolidayHalfNormMinute()));
+		dto.setSubHolidayHalfNorm(
+				DateUtility.getTime(vo.getTxtSubHolidayHalfNormHour(), vo.getTxtSubHolidayHalfNormMinute()));
 		// ポータル出退勤ボタン表示
 		dto.setPortalTimeButtons(getInt(vo.getPltPortalTimeButtons()));
 		// ポータル休憩ボタン表示
@@ -898,7 +818,7 @@ public class TimeSettingCardAction extends TimeSettingAction {
 		dto.setRoundDailyStartUnit(getInt(vo.getTxtRoundDailyStart()));
 		// 日出勤丸め
 		dto.setRoundDailyStart(getInt(vo.getPltRoundDailyStart()));
-		// 日退勤丸め単位	
+		// 日退勤丸め単位
 		dto.setRoundDailyEndUnit(getInt(vo.getTxtRoundDailyEnd()));
 		// 日退勤丸め
 		dto.setRoundDailyEnd(getInt(vo.getPltRoundDailyEnd()));
@@ -910,7 +830,7 @@ public class TimeSettingCardAction extends TimeSettingAction {
 		dto.setRoundDailyRestStartUnit(getInt(vo.getTxtRoundDailyRestStart()));
 		// 日休憩入丸め
 		dto.setRoundDailyRestStart(getInt(vo.getPltRoundDailyRestStart()));
-		// 日休憩戻丸め単位	
+		// 日休憩戻丸め単位
 		dto.setRoundDailyRestEndUnit(getInt(vo.getTxtRoundDailyRestEnd()));
 		// 日休憩戻丸め
 		dto.setRoundDailyRestEnd(getInt(vo.getPltRoundDailyRestEnd()));
@@ -930,7 +850,7 @@ public class TimeSettingCardAction extends TimeSettingAction {
 		dto.setRoundDailyPrivateStartUnit(getInt(vo.getTxtRoundDailyPrivateIn()));
 		// 日私用外出入り丸め
 		dto.setRoundDailyPrivateStart(getInt(vo.getPltRoundDailyPrivateIn()));
-		// 日私用外出戻丸め単位	
+		// 日私用外出戻丸め単位
 		dto.setRoundDailyPrivateEndUnit(getInt(vo.getTxtRoundDailyPrivateOut()));
 		// 日私用外出戻り丸め
 		dto.setRoundDailyPrivateEnd(getInt(vo.getPltRoundDailyPrivateOut()));
@@ -938,7 +858,7 @@ public class TimeSettingCardAction extends TimeSettingAction {
 		dto.setRoundDailyPublicStartUnit(getInt(vo.getTxtRoundDailyPublicIn()));
 		// 日公用外出入り丸め
 		dto.setRoundDailyPublicStart(getInt(vo.getPltRoundDailyPublicIn()));
-		// 日公用外出戻丸め単位	
+		// 日公用外出戻丸め単位
 		dto.setRoundDailyPublicEndUnit(getInt(vo.getTxtRoundDailyPublicOut()));
 		// 日公用外出戻り丸め
 		dto.setRoundDailyPublicEnd(getInt(vo.getPltRoundDailyPublicOut()));
@@ -962,9 +882,9 @@ public class TimeSettingCardAction extends TimeSettingAction {
 		dto.setRoundMonthlyLateUnit(getInt(vo.getTxtRoundMonthlyLate()));
 		// 月遅刻時間丸め
 		dto.setRoundMonthlyLate(getInt(vo.getPltRoundMonthlyLate()));
-		// 月早退丸め単位	
+		// 月早退丸め単位
 		dto.setRoundMonthlyEarlyUnit(getInt(vo.getTxtRoundMonthlyLeaveEarly()));
-		// 月早退時間丸め	
+		// 月早退時間丸め
 		dto.setRoundMonthlyEarly(getInt(vo.getPltRoundMonthlyLeaveEarly()));
 		// 月私用外出丸め単位
 		dto.setRoundMonthlyPrivateTime(getInt(vo.getTxtRoundMonthlyPrivate()));
@@ -1004,58 +924,42 @@ public class TimeSettingCardAction extends TimeSettingAction {
 		dto.setSpecificHoliday(getInt(vo.getTxtSpecificHoliday()));
 		// 法定休日割増率
 		dto.setLegalHoliday(getInt(vo.getTxtLegalHoliday()));
+		// 見込月設定
+		dto.setProspectsMonths("");
 	}
 	
 	/**
-	 * VO(編集項目)の値を限度基準DTOに設定する。<br>
-	 * @param dto 対象DTO
-	 * @param term 期間
+	 * VO(編集項目)の値を限度基準情報に設定し取得する。<br>
+	 * @param limitRegist 限度基準情報登録処理
+	 * @return 限度基準情報群
 	 * @throws MospException 日付操作に失敗した場合
 	 */
-	protected void setLimitDtoFields(LimitStandardDtoInterface dto, String term) throws MospException {
-		// VO取得
+	protected Set<LimitStandardDtoInterface> getLimitDtos(LimitStandardRegistBeanInterface limitRegist)
+			throws MospException {
+		// VOを準備
 		TimeSettingCardVo vo = (TimeSettingCardVo)mospParams.getVo();
-		// VOの値をDTOに設定
-		dto.setActivateDate(getEditActivateDate());
-		dto.setWorkSettingCode(vo.getTxtSettingCode());
-		dto.setTerm(term);
-		dto.setInactivateFlag(getInt(vo.getPltEditInactivate()));
-		if (term.equals("week1")) {
-			// 1週間
-			dto.setLimitTime(getTimeValue(vo.getTxtLimit1WeekHour(), vo.getTxtLimit1WeekMinute()));
-			dto.setAttentionTime(getTimeValue(vo.getTxtAttention1WeekHour(), vo.getTxtAttention1WeekMinute()));
-			dto.setWarningTime(getTimeValue(vo.getTxtWarning1WeekHour(), vo.getTxtWarning1WeekMinute()));
-		} else if (term.equals("week2")) {
-			// 2週間
-			dto.setLimitTime(getTimeValue(vo.getTxtLimit2WeekHour(), vo.getTxtLimit2WeekMinute()));
-			dto.setAttentionTime(getTimeValue(vo.getTxtAttention2WeekHour(), vo.getTxtAttention2WeekMinute()));
-			dto.setWarningTime(getTimeValue(vo.getTxtWarning2WeekHour(), vo.getTxtWarning2WeekMinute()));
-		} else if (term.equals("week4")) {
-			// 4週間
-			dto.setLimitTime(getTimeValue(vo.getTxtLimit4WeekHour(), vo.getTxtLimit4WeekMinute()));
-			dto.setAttentionTime(getTimeValue(vo.getTxtAttention4WeekHour(), vo.getTxtAttention4WeekMinute()));
-			dto.setWarningTime(getTimeValue(vo.getTxtWarning4WeekHour(), vo.getTxtWarning4WeekMinute()));
-		} else if (term.equals("month1")) {
-			// 1ヶ月
-			dto.setLimitTime(getTimeValue(vo.getTxtLimit1MonthHour(), vo.getTxtLimit1MonthMinute()));
-			dto.setAttentionTime(getTimeValue(vo.getTxtAttention1MonthHour(), vo.getTxtAttention1MonthMinute()));
-			dto.setWarningTime(getTimeValue(vo.getTxtWarning1MonthHour(), vo.getTxtWarning1MonthMinute()));
-		} else if (term.equals("month2")) {
-			// 2ヶ月
-			dto.setLimitTime(getTimeValue(vo.getTxtLimit2MonthHour(), vo.getTxtLimit2MonthMinute()));
-			dto.setAttentionTime(getTimeValue(vo.getTxtAttention2MonthHour(), vo.getTxtAttention2MonthMinute()));
-			dto.setWarningTime(getTimeValue(vo.getTxtWarning2MonthHour(), vo.getTxtWarning2MonthMinute()));
-		} else if (term.equals("month3")) {
-			// 3ヶ月
-			dto.setLimitTime(getTimeValue(vo.getTxtLimit3MonthHour(), vo.getTxtLimit3MonthMinute()));
-			dto.setAttentionTime(getTimeValue(vo.getTxtAttention3MonthHour(), vo.getTxtAttention3MonthMinute()));
-			dto.setWarningTime(getTimeValue(vo.getTxtWarning3MonthHour(), vo.getTxtWarning3MonthMinute()));
-		} else if (term.equals("year1")) {
-			// 1年間
-			dto.setLimitTime(getTimeValue(vo.getTxtLimit1YearHour(), vo.getTxtLimit1YearMinute()));
-			dto.setAttentionTime(getTimeValue(vo.getTxtAttention1YearHour(), vo.getTxtAttention1YearMinute()));
-			dto.setWarningTime(getTimeValue(vo.getTxtWarning1YearHour(), vo.getTxtWarning1YearMinute()));
-		}
+		// 限度基準情報群を準備
+		Set<LimitStandardDtoInterface> dtos = new LinkedHashSet<LimitStandardDtoInterface>();
+		// DTOを準備
+		LimitStandardDtoInterface week1Dto = limitRegist.getInitDto();
+		LimitStandardDtoInterface month1Dto = limitRegist.getInitDto();
+		// 限度基準情報群にDTOを設定
+		dtos.add(week1Dto);
+		dtos.add(month1Dto);
+		// VOの値をDTO(1週間)に設定
+		week1Dto.setWorkSettingCode(getSettingCode());
+		week1Dto.setActivateDate(getEditActivateDate());
+		week1Dto.setTerm(TimeSettingEntityInterface.TERM_ONE_WEEK);
+		week1Dto.setLimitTime(getTimeValue(vo.getTxtLimit1WeekHour(), vo.getTxtLimit1WeekMinute()));
+		// VOの値をDTO(1ヶ月)に設定
+		month1Dto.setWorkSettingCode(getSettingCode());
+		month1Dto.setActivateDate(getEditActivateDate());
+		month1Dto.setTerm(TimeSettingEntityInterface.TERM_ONE_MONTH);
+		month1Dto.setLimitTime(getTimeValue(vo.getTxtLimit1MonthHour(), vo.getTxtLimit1MonthMinute()));
+		month1Dto.setAttentionTime(getTimeValue(vo.getTxtAttention1MonthHour(), vo.getTxtAttention1MonthMinute()));
+		month1Dto.setWarningTime(getTimeValue(vo.getTxtWarning1MonthHour(), vo.getTxtWarning1MonthMinute()));
+		// 限度基準情報群を取得
+		return dtos;
 	}
 	
 	/**
@@ -1066,6 +970,8 @@ public class TimeSettingCardAction extends TimeSettingAction {
 		// VO取得
 		TimeSettingCardVo vo = (TimeSettingCardVo)mospParams.getVo();
 		// DTOの値をVOに設定
+		// レコード識別ID
+		vo.setRecordId(dto.getTmmTimeSettingId());
 		// 基本情報
 		vo.setTxtEditActivateYear(getStringYear(dto.getActivateDate()));
 		vo.setTxtEditActivateMonth(getStringMonth(dto.getActivateDate()));
@@ -1086,8 +992,6 @@ public class TimeSettingCardAction extends TimeSettingAction {
 		vo.setPltSpecificHoliday(String.valueOf(dto.getSpecificHolidayHandling()));
 		// 週の起算曜日
 		vo.setPltStartWeek(String.valueOf(dto.getStartWeek()));
-		// 月の起算日（非表示）
-		vo.setPltStartMonth(String.valueOf(dto.getStartMonth()));
 		// 年の起算月
 		vo.setPltStartYear(String.valueOf(dto.getStartYear()));
 		// 所定労働時間（時間）
@@ -1118,10 +1022,6 @@ public class TimeSettingCardAction extends TimeSettingAction {
 		vo.setTxtSubHolidayLimitMonth(String.valueOf(dto.getSubHolidayLimitMonth()));
 		// 代休取得期限
 		vo.setTxtSubHolidayLimitDate(String.valueOf(dto.getSubHolidayLimitDate()));
-		// 半休入替取得（振休）
-		vo.setPltTransferExchange(String.valueOf(dto.getTransferExchange()));
-		// 半休入替取得（代休）
-		vo.setPltSubHolidayExchange(String.valueOf(dto.getSubHolidayExchange()));
 		// 代休基準時間(全休)
 		vo.setTxtSubHolidayAllNormHour(DateUtility.getStringHour(dto.getSubHolidayAllNorm()));
 		// 代休基準分(全休)
@@ -1141,19 +1041,19 @@ public class TimeSettingCardAction extends TimeSettingAction {
 		vo.setTxtRoundDailyStart(String.valueOf(dto.getRoundDailyStartUnit()));
 		// 日出勤丸め
 		vo.setPltRoundDailyStart(String.valueOf(dto.getRoundDailyStart()));
-		// 日退勤丸め単位	
+		// 日退勤丸め単位
 		vo.setTxtRoundDailyEnd(String.valueOf(dto.getRoundDailyEndUnit()));
 		// 日退勤丸め
 		vo.setPltRoundDailyEnd(String.valueOf(dto.getRoundDailyEnd()));
 		// 日勤務時間丸め単位
-		vo.setTxtRoundDailyWork(String.valueOf(dto.getRoundDailyWorkUnit()));
+		vo.setTxtRoundDailyWork(String.valueOf(dto.getRoundDailyTimeWork()));
 		// 日勤務時間丸め
 		vo.setPltRoundDailyWork(String.valueOf(dto.getRoundDailyWork()));
 		// 日休憩入丸め単位
 		vo.setTxtRoundDailyRestStart(String.valueOf(dto.getRoundDailyRestStartUnit()));
 		// 日休憩入丸め
 		vo.setPltRoundDailyRestStart(String.valueOf(dto.getRoundDailyRestStart()));
-		// 日休憩戻丸め単位	
+		// 日休憩戻丸め単位
 		vo.setTxtRoundDailyRestEnd(String.valueOf(dto.getRoundDailyRestEndUnit()));
 		// 日休憩戻丸め
 		vo.setPltRoundDailyRestEnd(String.valueOf(dto.getRoundDailyRestEnd()));
@@ -1173,7 +1073,7 @@ public class TimeSettingCardAction extends TimeSettingAction {
 		vo.setTxtRoundDailyPrivateIn(String.valueOf(dto.getRoundDailyPrivateStartUnit()));
 		// 日私用外出入り丸め
 		vo.setPltRoundDailyPrivateIn(String.valueOf(dto.getRoundDailyPrivateStart()));
-		// 日私用外出戻丸め単位	
+		// 日私用外出戻丸め単位
 		vo.setTxtRoundDailyPrivateOut(String.valueOf(dto.getRoundDailyPrivateEndUnit()));
 		// 日私用外出戻り丸め
 		vo.setPltRoundDailyPrivateOut(String.valueOf(dto.getRoundDailyPrivateEnd()));
@@ -1181,7 +1081,7 @@ public class TimeSettingCardAction extends TimeSettingAction {
 		vo.setTxtRoundDailyPublicIn(String.valueOf(dto.getRoundDailyPublicStartUnit()));
 		// 日公用外出入り丸め
 		vo.setPltRoundDailyPublicIn(String.valueOf(dto.getRoundDailyPublicStart()));
-		// 日公用外出戻丸め単位	
+		// 日公用外出戻丸め単位
 		vo.setTxtRoundDailyPublicOut(String.valueOf(dto.getRoundDailyPublicEndUnit()));
 		// 日公用外出戻り丸め
 		vo.setPltRoundDailyPublicOut(String.valueOf(dto.getRoundDailyPublicEnd()));
@@ -1250,69 +1150,92 @@ public class TimeSettingCardAction extends TimeSettingAction {
 	
 	/**
 	 * 限度基準DTOの値をVO(編集項目)に設定する。<br>
-	 * @param dto 対象DTO
+	 * @param entity 勤怠設定エンティティ
 	 */
-	protected void setLimitVoFields(LimitStandardDtoInterface dto) {
-		// VO取得
+	protected void setLimitVoFields(TimeSettingEntityInterface entity) {
+		// VOを準備
 		TimeSettingCardVo vo = (TimeSettingCardVo)mospParams.getVo();
-		String term = dto.getTerm();
-		// DTOの値をVOに設定
-		if (term.equals("week1")) {
-			// 1週間
-			vo.setTxtLimit1WeekHour(convIntegerTimeToStringHour(dto.getLimitTime()));
-			vo.setTxtLimit1WeekMinute(convIntegerTimeToStringMinutes(dto.getLimitTime()));
-			vo.setTxtAttention1WeekHour(convIntegerTimeToStringHour(dto.getAttentionTime()));
-			vo.setTxtAttention1WeekMinute(convIntegerTimeToStringMinutes(dto.getAttentionTime()));
-			vo.setTxtWarning1WeekHour(convIntegerTimeToStringHour(dto.getWarningTime()));
-			vo.setTxtWarning1WeekMinute(convIntegerTimeToStringMinutes(dto.getWarningTime()));
-		} else if (term.equals("week2")) {
-			// 2週間
-			vo.setTxtLimit2WeekHour(convIntegerTimeToStringHour(dto.getLimitTime()));
-			vo.setTxtLimit2WeekMinute(convIntegerTimeToStringMinutes(dto.getLimitTime()));
-			vo.setTxtAttention2WeekHour(convIntegerTimeToStringHour(dto.getAttentionTime()));
-			vo.setTxtAttention2WeekMinute(convIntegerTimeToStringMinutes(dto.getAttentionTime()));
-			vo.setTxtWarning2WeekHour(convIntegerTimeToStringHour(dto.getWarningTime()));
-			vo.setTxtWarning2WeekMinute(convIntegerTimeToStringMinutes(dto.getWarningTime()));
-		} else if (term.equals("week4")) {
-			// 4週間
-			vo.setTxtLimit4WeekHour(convIntegerTimeToStringHour(dto.getLimitTime()));
-			vo.setTxtLimit4WeekMinute(convIntegerTimeToStringMinutes(dto.getLimitTime()));
-			vo.setTxtAttention4WeekHour(convIntegerTimeToStringHour(dto.getAttentionTime()));
-			vo.setTxtAttention4WeekMinute(convIntegerTimeToStringMinutes(dto.getAttentionTime()));
-			vo.setTxtWarning4WeekHour(convIntegerTimeToStringHour(dto.getWarningTime()));
-			vo.setTxtWarning4WeekMinute(convIntegerTimeToStringMinutes(dto.getWarningTime()));
-		} else if (term.equals("month1")) {
-			// 1ヶ月
-			vo.setTxtLimit1MonthHour(convIntegerTimeToStringHour(dto.getLimitTime()));
-			vo.setTxtLimit1MonthMinute(convIntegerTimeToStringMinutes(dto.getLimitTime()));
-			vo.setTxtAttention1MonthHour(convIntegerTimeToStringHour(dto.getAttentionTime()));
-			vo.setTxtAttention1MonthMinute(convIntegerTimeToStringMinutes(dto.getAttentionTime()));
-			vo.setTxtWarning1MonthHour(convIntegerTimeToStringHour(dto.getWarningTime()));
-			vo.setTxtWarning1MonthMinute(convIntegerTimeToStringMinutes(dto.getWarningTime()));
-		} else if (term.equals("month2")) {
-			// 2ヶ月
-			vo.setTxtLimit2MonthHour(convIntegerTimeToStringHour(dto.getLimitTime()));
-			vo.setTxtLimit2MonthMinute(convIntegerTimeToStringMinutes(dto.getLimitTime()));
-			vo.setTxtAttention2MonthHour(convIntegerTimeToStringHour(dto.getAttentionTime()));
-			vo.setTxtAttention2MonthMinute(convIntegerTimeToStringMinutes(dto.getAttentionTime()));
-			vo.setTxtWarning2MonthHour(convIntegerTimeToStringHour(dto.getWarningTime()));
-			vo.setTxtWarning2MonthMinute(convIntegerTimeToStringMinutes(dto.getWarningTime()));
-		} else if (term.equals("month3")) {
-			// 3ヶ月
-			vo.setTxtLimit3MonthHour(convIntegerTimeToStringHour(dto.getLimitTime()));
-			vo.setTxtLimit3MonthMinute(convIntegerTimeToStringMinutes(dto.getLimitTime()));
-			vo.setTxtAttention3MonthHour(convIntegerTimeToStringHour(dto.getAttentionTime()));
-			vo.setTxtAttention3MonthMinute(convIntegerTimeToStringMinutes(dto.getAttentionTime()));
-			vo.setTxtWarning3MonthHour(convIntegerTimeToStringHour(dto.getWarningTime()));
-			vo.setTxtWarning3MonthMinute(convIntegerTimeToStringMinutes(dto.getWarningTime()));
-		} else if (term.equals("year1")) {
-			// 1年間
-			vo.setTxtLimit1YearHour(convIntegerTimeToStringHour(dto.getLimitTime()));
-			vo.setTxtLimit1YearMinute(convIntegerTimeToStringMinutes(dto.getLimitTime()));
-			vo.setTxtAttention1YearHour(convIntegerTimeToStringHour(dto.getAttentionTime()));
-			vo.setTxtAttention1YearMinute(convIntegerTimeToStringMinutes(dto.getAttentionTime()));
-			vo.setTxtWarning1YearHour(convIntegerTimeToStringHour(dto.getWarningTime()));
-			vo.setTxtWarning1YearMinute(convIntegerTimeToStringMinutes(dto.getWarningTime()));
+		// 1週間
+		vo.setTxtLimit1WeekHour(entity.getOneWeekLimitHours());
+		vo.setTxtLimit1WeekMinute(entity.getOneWeekLimitMinutes());
+		// 1ヶ月
+		vo.setTxtLimit1MonthHour(entity.getOneMonthLimitHours());
+		vo.setTxtLimit1MonthMinute(entity.getOneMonthLimitMinutes());
+		vo.setTxtAttention1MonthHour(entity.getOneMonthAttentionHours());
+		vo.setTxtAttention1MonthMinute(entity.getOneMonthAttentionMinutes());
+		vo.setTxtWarning1MonthHour(entity.getOneMonthWarningHours());
+		vo.setTxtWarning1MonthMinute(entity.getOneMonthWarningMinutes());
+	}
+	
+	/**
+	 * VOから勤怠設定コードを取得する。<br>
+	 * @return 勤怠設定コード
+	 */
+	protected String getSettingCode() {
+		// VOを準備
+		TimeSettingCardVo vo = (TimeSettingCardVo)mospParams.getVo();
+		// 勤怠設定コードを取得
+		return MospUtility.getString(vo.getTxtSettingCode());
+	}
+	
+	/**
+	 * 勤怠設定追加処理リストを取得する。<br>
+	 * @return 勤怠設定追加処理リスト
+	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
+	 */
+	protected List<TimeSettingBeanInterface> getAddonBeans() throws MospException {
+		// 勤怠設定追加処理リストを準備
+		List<TimeSettingBeanInterface> addonBeans = new ArrayList<TimeSettingBeanInterface>();
+		// 勤怠設定追加処理配列毎に処理
+		for (String[] addon : getCodeArray(CODE_KEY_ADDONS, false)) {
+			// 勤怠設定追加処理を取得
+			String addonBean = addon[0];
+			// 勤怠設定追加処理が設定されていない場合
+			if (MospUtility.isEmpty(addonBean)) {
+				// 次の勤怠設定追加処理へ
+				continue;
+			}
+			// 勤怠設定追加処理を取得
+			TimeSettingBeanInterface bean = (TimeSettingBeanInterface)platform().createBean(addonBean);
+			// 勤怠設定追加処理リストに値を追加
+			addonBeans.add(bean);
+		}
+		// 勤怠設定追加処理リストを取得
+		return addonBeans;
+	}
+	
+	/**
+	 * 勤怠設定追加JSPリストを取得する。<br>
+	 * @return 勤怠設定追加JSPリスト
+	 */
+	protected List<String> getAddonJsps() {
+		// 勤怠設定追加JSPリストを準備
+		List<String> addonJsps = new ArrayList<String>();
+		// 勤怠設定追加処理配列毎に処理
+		for (String[] addon : getCodeArray(CODE_KEY_ADDONS, false)) {
+			// 勤怠設定追加JSPを取得
+			String addonJsp = addon[1];
+			// 勤怠設定追加JSPが設定されていない場合
+			if (MospUtility.isEmpty(addonJsp)) {
+				// 次の勤怠設定追加JSPへ
+				continue;
+			}
+			// 勤怠設定追加JSPリストに値を追加
+			addonJsps.add(addonJsp);
+		}
+		// 勤怠設定追加JSPリストを取得
+		return addonJsps;
+	}
+	
+	/**
+	 * 勤怠設定登録時追加処理を行う。<br>
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	protected void registAddon() throws MospException {
+		// 勤怠設定追加処理毎に処理
+		for (TimeSettingBeanInterface addonBean : getAddonBeans()) {
+			// 勤怠設定登録時追加処理
+			addonBean.regist();
 		}
 	}
 	

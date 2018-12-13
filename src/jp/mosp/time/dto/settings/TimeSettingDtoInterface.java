@@ -94,7 +94,7 @@ public interface TimeSettingDtoInterface extends PlatformDtoInterface {
 	/**
 	 * @return 日勤務時間丸め単位。
 	 */
-	int getRoundDailyWorkUnit();
+	int getRoundDailyTimeWork();
 	
 	/**
 	 * @return 日勤務時間丸め。
@@ -409,6 +409,11 @@ public interface TimeSettingDtoInterface extends PlatformDtoInterface {
 	 * @return 法定休日割増率。
 	 */
 	int getLegalHoliday();
+	
+	/**
+	 * @return 見込月。
+	 */
+	String getProspectsMonths();
 	
 	/**
 	 * @return 締日略称。
@@ -798,6 +803,11 @@ public interface TimeSettingDtoInterface extends PlatformDtoInterface {
 	 * @param legalHoliday セットする 法定休日割増率。
 	 */
 	void setLegalHoliday(int legalHoliday);
+	
+	/**
+	 * @param prospectsMonths セットする 見込月。
+	 */
+	void setProspectsMonths(String prospectsMonths);
 	
 	/**
 	 * @param cutoffAbbr セットする 締日略称。

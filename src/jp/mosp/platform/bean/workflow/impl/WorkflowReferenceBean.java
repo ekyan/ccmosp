@@ -19,8 +19,10 @@ package jp.mosp.platform.bean.workflow.impl;
 
 import java.sql.Connection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import jp.mosp.framework.base.BaseDtoInterface;
@@ -40,7 +42,7 @@ public class WorkflowReferenceBean extends PlatformBean implements WorkflowRefer
 	/**
 	 * ワークフローDAOクラス。<br>
 	 */
-	private WorkflowDaoInterface	dao;
+	private WorkflowDaoInterface dao;
 	
 	
 	/**
@@ -71,7 +73,8 @@ public class WorkflowReferenceBean extends PlatformBean implements WorkflowRefer
 	}
 	
 	@Override
-	public List<WorkflowDtoInterface> getListForApproverId(String functionCode, String approverId) throws MospException {
+	public List<WorkflowDtoInterface> getListForApproverId(String functionCode, String approverId)
+			throws MospException {
 		return dao.findForApproverId(functionCode, approverId);
 	}
 	
@@ -155,6 +158,7 @@ public class WorkflowReferenceBean extends PlatformBean implements WorkflowRefer
 		set.add(PlatformConst.CODE_STATUS_CANCEL);
 		set.add(PlatformConst.CODE_STATUS_COMPLETE);
 		set.add(PlatformConst.CODE_STATUS_CANCEL_APPLY);
+		set.add(PlatformConst.CODE_STATUS_CANCEL_WITHDRAWN_APPLY);
 		return set;
 	}
 	
@@ -200,6 +204,7 @@ public class WorkflowReferenceBean extends PlatformBean implements WorkflowRefer
 		// 勤怠管理用機能コードセット準備
 		Set<String> set = new HashSet<String>();
 		set.add(PlatformConst.CODE_STATUS_CANCEL_APPLY);
+		set.add(PlatformConst.CODE_STATUS_CANCEL_WITHDRAWN_APPLY);
 		return set;
 	}
 	
@@ -207,6 +212,24 @@ public class WorkflowReferenceBean extends PlatformBean implements WorkflowRefer
 	public List<WorkflowDtoInterface> getPersonalList(String personalId, Date startDate, Date endDate,
 			Set<String> functionCodeSet) throws MospException {
 		return dao.findForCondition(personalId, startDate, endDate, functionCodeSet);
+	}
+	
+	@Override
+	public Map<Long, WorkflowDtoInterface> findForPersonAndDay(String personalId, Date workflowDate,
+			Set<String> functionCode) throws MospException {
+		// マップ準備
+		Map<Long, WorkflowDtoInterface> result = new HashMap<Long, WorkflowDtoInterface>();
+		// ワークフロー情報取得
+		Map<Long, WorkflowDtoInterface> map = dao.findForPersonAndDay(personalId, workflowDate);
+		// ワークフロー情報毎に処理
+		for (WorkflowDtoInterface dto : map.values()) {
+			// 対象機能コードに含まれている場合
+			if (functionCode.contains(dto.getFunctionCode())) {
+				// マップに詰める
+				result.put(dto.getWorkflow(), dto);
+			}
+		}
+		return result;
 	}
 	
 }

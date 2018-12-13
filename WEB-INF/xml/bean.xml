@@ -31,6 +31,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<Model key="HumanGeneral">
 		jp.mosp.platform.bean.human.impl.HumanGeneralBean
 	</Model>
+	<Model key="HumanGeneralCheck">
+		jp.mosp.platform.bean.human.impl.HumanGeneralCheckBean
+	</Model>
+	<Model key="EmployeeNumbering">
+		jp.mosp.platform.bean.human.impl.EmployeeNumberingBean
+	</Model>
 <!--Reference-->
 	<Model key="EmployeeReference">
 		jp.mosp.platform.bean.human.impl.EmployeeReferenceBean
@@ -49,6 +55,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	</Model>
 	<Model key="ConcurrentReference">
 		jp.mosp.platform.bean.human.impl.ConcurrentReferenceBean
+	</Model>
+	<Model key="AddressReference">
+		jp.mosp.platform.bean.human.impl.AddressReferenceBean
+	</Model>
+	<Model key="PhoneReference">
+		jp.mosp.platform.bean.human.impl.PhoneReferenceBean
+	</Model>
+	<Model key="AccountReference">
+		jp.mosp.platform.bean.human.impl.AccountReferenceBean
 	</Model>
 	<Model key="HumanHistoryReference">
 		jp.mosp.platform.bean.human.impl.HumanHistoryReferenceBean
@@ -93,6 +108,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<Model key="ConcurrentRegist">
 		jp.mosp.platform.bean.human.impl.ConcurrentRegistBean
 	</Model>
+	<Model key="AddressRegist">
+		jp.mosp.platform.bean.human.impl.AddressRegistBean
+	</Model>
+	<Model key="PhoneRegist">
+		jp.mosp.platform.bean.human.impl.PhoneRegistBean
+	</Model>
+	<Model key="AccountRegist">
+		jp.mosp.platform.bean.human.impl.AccountRegistBean
+	</Model>
 	<Model key="HumanHistoryRegist">
 		jp.mosp.platform.bean.human.impl.HumanHistoryRegistBean
 	</Model>
@@ -116,9 +140,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<Model key="PlatformMasterCheck">
 		jp.mosp.platform.bean.system.impl.PlatformMasterCheckBean
 	</Model>
+	<Model key="PlatformSystemValidate">
+		jp.mosp.platform.bean.system.impl.PlatformSystemValidateBean
+	</Model>
+	<Model key="Cipher">
+		jp.mosp.platform.bean.system.impl.CipherBean
+	</Model>
+	
 <!--Reference-->
 	<Model key="UserMasterReference">
 		jp.mosp.platform.bean.system.impl.UserMasterReferenceBean
+	</Model>
+	<Model key="UserExtraRoleReference">
+		jp.mosp.platform.bean.system.impl.UserExtraRoleReferenceBean
 	</Model>
 	<Model key="SectionReference">
 		jp.mosp.platform.bean.system.impl.SectionReferenceBean
@@ -147,6 +181,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<Model key="NamingReference">
 		jp.mosp.platform.bean.system.impl.NamingReferenceBean
 	</Model>
+	<Model key="PostalCodeReference">
+		jp.mosp.platform.bean.system.impl.PostalCodeReferenceBean
+	</Model>
+	<Model key="BankBaseReference">
+		jp.mosp.platform.bean.system.impl.BankBaseReferenceBean
+	</Model>
+	<Model key="BankBranchReference">
+		jp.mosp.platform.bean.system.impl.BankBranchReferenceBean
+	</Model>
+	<Model key="PlatformMaster">
+		jp.mosp.platform.bean.system.impl.PlatformMasterBean
+	</Model>
 	
 	
 <!--Search-->
@@ -173,8 +219,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	</Model>
 	
 <!--Register-->
+	<Model key="UserAccountRegist">
+		jp.mosp.platform.bean.system.impl.UserAccountRegistBean
+	</Model>
 	<Model key="UserMasterRegist">
 		jp.mosp.platform.bean.system.impl.UserMasterRegistBean
+	</Model>
+	<Model key="UserExtraRoleRegist">
+		jp.mosp.platform.bean.system.impl.UserExtraRoleRegistBean
 	</Model>
 	<Model key="UserPasswordRegist">
 		jp.mosp.platform.bean.system.impl.UserPasswordRegistBean
@@ -203,10 +255,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<Model key="NamingRegist">
 		jp.mosp.platform.bean.system.impl.NamingRegistBean
 	</Model>
+	<Model key="PostalCodeRegist">
+		jp.mosp.platform.bean.system.impl.PostalCodeRegistBean
+	</Model>
+	<Model key="BankBaseRegist">
+		jp.mosp.platform.bean.system.impl.BankBaseRegistBean
+	</Model>
+	<Model key="BankBranchRegist">
+		jp.mosp.platform.bean.system.impl.BankBranchRegistBean
+	</Model>
+	<Model key="AppPropertyRegist">
+		jp.mosp.platform.bean.system.impl.AppPropertyRegistBean
+	</Model>
 	
 <!--jp.mosp.platform.bean.portal-->
 	<Model key="Auth">
 		jp.mosp.platform.bean.portal.impl.AuthBean
+	</Model>
+	<Model key="MospUser">
+		jp.mosp.platform.bean.portal.impl.MospUserBean
 	</Model>
 	<Model key="UserCheck">
 		jp.mosp.platform.bean.portal.impl.UserCheckBean
@@ -214,9 +281,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<Model key="PasswordCheck">
 		jp.mosp.platform.bean.portal.impl.PasswordCheckBean
 	</Model>
-	
-	<Model key="Holiday">
-		jp.mosp.platform.bean.portal.impl.HolidayBean
+	<Model key="PreAction">
+		jp.mosp.platform.bean.portal.impl.PreActionBean
 	</Model>
 	
 <!--jp.mosp.platform.bean.message-->
@@ -243,6 +309,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<Model key="ImportFieldReference">
 		jp.mosp.platform.bean.file.impl.ImportFieldReferenceBean
 	</Model>
+	<Model key="TemplateOutput">
+		jp.mosp.platform.bean.file.impl.TemplateOutputBean
+	</Model>
 	<Model key="ExportReference">
 		jp.mosp.platform.bean.file.impl.ExportReferenceBean
 	</Model>
@@ -254,6 +323,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	</Model>
 	<Model key="UserExport">
 		jp.mosp.platform.bean.file.impl.UserExportBean
+	</Model>
+	<Model key="UserExtraRoleExport">
+		jp.mosp.platform.bean.file.impl.UserExtraRoleExportBean
 	</Model>
 	<Model key="SectionExport">
 		jp.mosp.platform.bean.file.impl.SectionExportBean
@@ -286,8 +358,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<Model key="UserImport">
 		jp.mosp.platform.bean.file.impl.UserImportBean
 	</Model>
+	<Model key="UserExtraRoleImport">
+		jp.mosp.platform.bean.file.impl.UserExtraRoleImportBean
+	</Model>
 	<Model key="SectionImport">
 		jp.mosp.platform.bean.file.impl.SectionImportBean
+	</Model>
+	<Model key="PositionImport">
+		jp.mosp.platform.bean.file.impl.PositionImportBean
 	</Model>
 	<Model key="UnitSectionImport">
 		jp.mosp.platform.bean.file.impl.UnitSectionImportBean
@@ -359,9 +437,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<Model key="RouteApplicationRegist">
 		jp.mosp.platform.bean.workflow.impl.RouteApplicationRegistBean
 	</Model>
-	
 	<Model key="WorkflowIntegrate">
 		jp.mosp.platform.bean.workflow.impl.WorkflowIntegrateBean
 	</Model>
 	
+<!-- jp.mosp.platform.bean.mail -->
+	<Model key="Mail">
+		jp.mosp.platform.bean.mail.impl.MailBean
+	</Model>
+	<Model key="MailSender">
+		jp.mosp.platform.bean.mail.impl.MailSenderBean
+	</Model>
+	<Model key="MailStartTls">
+		 jp.mosp.platform.bean.mail.impl.MailStartTlsBean
+	</Model>
 </MosP>

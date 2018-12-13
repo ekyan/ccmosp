@@ -74,4 +74,11 @@ public interface SubHolidayDaoInterface extends BaseDaoInterface {
 	List<SubHolidayDtoInterface> findSubHolidayList(String personalId, Date startDate, Date endDate)
 			throws MospException;
 	
+	/**
+	 * 個人IDで代休データリストを取得する。<br>
+	 * @param personalId 個人ID
+	 * @return 代休データリスト
+	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
+	 */
+	List<SubHolidayDtoInterface> findSubHolidayList(String personalId) throws MospException;
 }

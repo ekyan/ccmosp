@@ -25,7 +25,6 @@ import jp.mosp.framework.xml.CssProperty;
 import jp.mosp.framework.xml.InputProperty;
 import jp.mosp.framework.xml.ItemProperty;
 import jp.mosp.framework.xml.LabelProperty;
-import jp.mosp.framework.xml.MappingProperty;
 
 /**
  * 人事汎用項目区分設定情報を格納する。

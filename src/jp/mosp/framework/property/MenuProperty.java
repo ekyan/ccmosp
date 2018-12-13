@@ -18,7 +18,7 @@
 package jp.mosp.framework.property;
 
 /**
- * MosPメニュー設定情報を扱う。<br>
+ * MosP設定情報(メニュー)。<br>
  */
 public class MenuProperty {
 	

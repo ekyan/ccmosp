@@ -597,33 +597,33 @@ public class ConcurrentCardAction extends PlatformHumanAction {
 		String[] aryConcurrentEndDay = new String[]{ concurrentEndDay };
 		for (int i = 0; i < vo.getAryTxtConcurrentStartYear().length; i++) {
 			// 必須確認
-			InputCheckUtility.checkRequired(vo.getAryTxtConcurrentStartYear()[i], aryConcurrentStartDay, mospParams);
-			InputCheckUtility.checkRequired(vo.getAryTxtConcurrentStartMonth()[i], aryConcurrentStartDay, mospParams);
-			InputCheckUtility.checkRequired(vo.getAryTxtConcurrentStartDay()[i], aryConcurrentStartDay, mospParams);
+			InputCheckUtility.checkRequired(mospParams, vo.getAryTxtConcurrentStartYear()[i], aryConcurrentStartDay);
+			InputCheckUtility.checkRequired(mospParams, vo.getAryTxtConcurrentStartMonth()[i], aryConcurrentStartDay);
+			InputCheckUtility.checkRequired(mospParams, vo.getAryTxtConcurrentStartDay()[i], aryConcurrentStartDay);
 			// 数値確認
-			InputCheckUtility.checkNumber(vo.getAryTxtConcurrentStartYear()[i], aryConcurrentStartDay, mospParams);
-			InputCheckUtility.checkNumber(vo.getAryTxtConcurrentStartMonth()[i], aryConcurrentStartDay, mospParams);
-			InputCheckUtility.checkNumber(vo.getAryTxtConcurrentStartDay()[i], aryConcurrentStartDay, mospParams);
+			InputCheckUtility.checkNumber(mospParams, vo.getAryTxtConcurrentStartYear()[i], aryConcurrentStartDay);
+			InputCheckUtility.checkNumber(mospParams, vo.getAryTxtConcurrentStartMonth()[i], aryConcurrentStartDay);
+			InputCheckUtility.checkNumber(mospParams, vo.getAryTxtConcurrentStartDay()[i], aryConcurrentStartDay);
 			// 項目長チェック
-			InputCheckUtility.checkLength(vo.getAryTxtConcurrentStartYear()[i], 4, concurrentStartDay, mospParams);
-			InputCheckUtility.checkLength(vo.getAryTxtConcurrentStartMonth()[i], 2, concurrentStartDay, mospParams);
-			InputCheckUtility.checkLength(vo.getAryTxtConcurrentStartDay()[i], 2, concurrentStartDay, mospParams);
+			InputCheckUtility.checkLength(mospParams, vo.getAryTxtConcurrentStartYear()[i], 4, concurrentStartDay);
+			InputCheckUtility.checkLength(mospParams, vo.getAryTxtConcurrentStartMonth()[i], 2, concurrentStartDay);
+			InputCheckUtility.checkLength(mospParams, vo.getAryTxtConcurrentStartDay()[i], 2, concurrentStartDay);
 			// 終了日が入力されていた場合
 			if ((vo.getAryTxtConcurrentEndYear()[i] != null && !vo.getAryTxtConcurrentEndYear()[i].isEmpty())
 					|| (vo.getAryTxtConcurrentEndMonth()[i] != null && !vo.getAryTxtConcurrentEndMonth()[i].isEmpty())
 					|| (vo.getAryTxtConcurrentEndDay()[i] != null && !vo.getAryTxtConcurrentEndDay()[i].isEmpty())) {
 				// 必須確認
-				InputCheckUtility.checkRequired(vo.getAryTxtConcurrentEndYear()[i], aryConcurrentEndDay, mospParams);
-				InputCheckUtility.checkRequired(vo.getAryTxtConcurrentEndMonth()[i], aryConcurrentEndDay, mospParams);
-				InputCheckUtility.checkRequired(vo.getAryTxtConcurrentEndDay()[i], aryConcurrentEndDay, mospParams);
+				InputCheckUtility.checkRequired(mospParams, vo.getAryTxtConcurrentEndYear()[i], aryConcurrentEndDay);
+				InputCheckUtility.checkRequired(mospParams, vo.getAryTxtConcurrentEndMonth()[i], aryConcurrentEndDay);
+				InputCheckUtility.checkRequired(mospParams, vo.getAryTxtConcurrentEndDay()[i], aryConcurrentEndDay);
 				// 数値確認
-				InputCheckUtility.checkNumber(vo.getAryTxtConcurrentEndYear()[i], aryConcurrentEndDay, mospParams);
-				InputCheckUtility.checkNumber(vo.getAryTxtConcurrentEndMonth()[i], aryConcurrentEndDay, mospParams);
-				InputCheckUtility.checkNumber(vo.getAryTxtConcurrentEndDay()[i], aryConcurrentEndDay, mospParams);
+				InputCheckUtility.checkNumber(mospParams, vo.getAryTxtConcurrentEndYear()[i], aryConcurrentEndDay);
+				InputCheckUtility.checkNumber(mospParams, vo.getAryTxtConcurrentEndMonth()[i], aryConcurrentEndDay);
+				InputCheckUtility.checkNumber(mospParams, vo.getAryTxtConcurrentEndDay()[i], aryConcurrentEndDay);
 				// 項目長チェック
-				InputCheckUtility.checkLength(vo.getAryTxtConcurrentEndYear()[i], 4, concurrentEndDay, mospParams);
-				InputCheckUtility.checkLength(vo.getAryTxtConcurrentEndMonth()[i], 2, concurrentEndDay, mospParams);
-				InputCheckUtility.checkLength(vo.getAryTxtConcurrentEndDay()[i], 2, concurrentEndDay, mospParams);
+				InputCheckUtility.checkLength(mospParams, vo.getAryTxtConcurrentEndYear()[i], 4, concurrentEndDay);
+				InputCheckUtility.checkLength(mospParams, vo.getAryTxtConcurrentEndMonth()[i], 2, concurrentEndDay);
+				InputCheckUtility.checkLength(mospParams, vo.getAryTxtConcurrentEndDay()[i], 2, concurrentEndDay);
 				// 日付期間妥当性確認
 				// 開始日
 				Date startDate = getDate(vo.getAryTxtConcurrentStartYear()[i], vo.getAryTxtConcurrentStartMonth()[i],
@@ -634,7 +634,7 @@ public class ConcurrentCardAction extends PlatformHumanAction {
 				String[] aryErrDateMessage = new String[]{ concurrentEndDay,
 					concurrentStartDay + mospParams.getName("Since") };
 				// 終了日妥当性チェック
-				InputCheckUtility.checkTerm(endDate, startDate, endDate, aryErrDateMessage, mospParams);
+				InputCheckUtility.checkTerm(mospParams, endDate, startDate, endDate, aryErrDateMessage);
 			}
 		}
 		return !mospParams.hasErrorMessage();

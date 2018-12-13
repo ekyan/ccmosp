@@ -55,9 +55,19 @@ public interface HolidayDataDtoInterface extends PlatformDtoInterface {
 	double getGivingDay();
 	
 	/**
+	 * @return 付与時間数。
+	 */
+	int getGivingHour();
+	
+	/**
 	 * @return 廃棄日数。
 	 */
 	double getCancelDay();
+	
+	/**
+	 * @return 廃棄時間数。
+	 */
+	int getCancelHour();
 	
 	/**
 	 * @return 取得期限。
@@ -100,9 +110,19 @@ public interface HolidayDataDtoInterface extends PlatformDtoInterface {
 	void setGivingDay(double givingDay);
 	
 	/**
+	 * @param givingHour セットする 付与時間数。
+	 */
+	void setGivingHour(int givingHour);
+	
+	/**
 	 * @param cancelDay セットする 廃棄日数。
 	 */
 	void setCancelDay(double cancelDay);
+	
+	/**
+	 * @param cancelHour セットする 廃棄時間数。
+	 */
+	void setCancelHour(int cancelHour);
 	
 	/**
 	 * @param holidayLimitDate セットする 取得期限。

@@ -18,6 +18,7 @@
 package jp.mosp.time.dao.settings;
 
 import java.util.Date;
+import java.util.List;
 
 import jp.mosp.framework.base.BaseDaoInterface;
 import jp.mosp.framework.base.MospException;
@@ -40,4 +41,14 @@ public interface TimeRecordDaoInterface extends BaseDaoInterface {
 	TimeRecordDtoInterface findForKey(String personalId, Date workDate, int timesWork, String recordType)
 			throws MospException;
 	
+	/**
+	 * 開始日から終了日までの期間の打刻データを取得する。
+	 * @param personalId 個人ID
+	 * @param startDate 開始日 
+	 * @param endDate 	終了日
+	 * @return 打刻データDTO
+	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
+	 */
+	public List<TimeRecordDtoInterface> findForList(String personalId, Date startDate, Date endDate)
+			throws MospException;
 }

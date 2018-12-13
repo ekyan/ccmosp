@@ -29,7 +29,7 @@ public class RouteCardVo extends PlatformSystemVo {
 	private String				pltRouteStage;								// 承認階層
 	private String				txtRouteCode;								// ルートコード
 	private String				txtRouteName;								// ルート名称
-																			
+	
 	private String				pltUnitStage1;								// 1次ユニット名称
 	private String				pltUnitStage2;								// 2次ユニット名称
 	private String				pltUnitStage3;								// 3次ユニット名称
@@ -39,8 +39,8 @@ public class RouteCardVo extends PlatformSystemVo {
 	private String				pltUnitStage7;								// 7次ユニット名称
 	private String				pltUnitStage8;								// 8次ユニット名称
 	private String				pltUnitStage9;								// 9次ユニット名称
-	private String				pltUnitStage10;							// 10次ユニット名称
-																			
+	private String				pltUnitStage10;								// 10次ユニット名称
+	
 	private String				lblApproverStage1;							// 1次ユニット承認者
 	private String				lblApproverStage2;							// 2次ユニット承認者
 	private String				lblApproverStage3;							// 3次ユニット承認者
@@ -50,12 +50,12 @@ public class RouteCardVo extends PlatformSystemVo {
 	private String				lblApproverStage7;							// 7次ユニット承認者
 	private String				lblApproverStage8;							// 8次ユニット承認者
 	private String				lblApproverStage9;							// 9次ユニット承認者
-	private String				lblApproverStage10;						// 10次ユニット承認者
-																			
+	private String				lblApproverStage10;							// 10次ユニット承認者
+	
 	private String[][]			aryPltRouteStage;							// 承認階層プルダウンリスト
 	private String[][]			aryPltEditInactivate;						// 無効フラグプルダウンリスト
 	private String[][]			aryPltUnitStage;							// ユニットプルダウンリスト
-																			
+	
 	
 	/**
 	 * @return pltRouteStage

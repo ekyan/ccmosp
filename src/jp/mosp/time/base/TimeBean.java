@@ -29,6 +29,7 @@ import jp.mosp.framework.utils.DateUtility;
 import jp.mosp.platform.base.PlatformBean;
 import jp.mosp.platform.constant.PlatformMessageConst;
 import jp.mosp.platform.dto.human.HumanDtoInterface;
+import jp.mosp.platform.utils.PlatformNamingUtility;
 import jp.mosp.time.bean.ApplicationReferenceBeanInterface;
 import jp.mosp.time.bean.PaidHolidayReferenceBeanInterface;
 import jp.mosp.time.bean.ScheduleReferenceBeanInterface;
@@ -50,17 +51,22 @@ public abstract class TimeBean extends PlatformBean {
 	/**
 	 * デフォルト勤務回数。
 	 */
-	public static final int		TIMES_WORK_DEFAULT	= 1;
+	public static final int			TIMES_WORK_DEFAULT	= 1;
 	
 	/**
 	 * 1時間あたりのミリ秒数。<br>
 	 */
-	public static final int		MILLI_SEC_PER_HOUR	= 3600000;
+	public static final int			MILLI_SEC_PER_HOUR	= 3600000;
 	
 	/**
 	 * 時刻正規表現。
 	 */
-	public static final String	REG_ATTENDANCE_TIME	= "([0-3][0-9]|[4][0-7])[0-5][0-9]";
+	public static final String		REG_ATTENDANCE_TIME	= "([0-3][0-9]|[4][0-7])[0-5][0-9]";
+	
+	/**
+	 * MosPアプリケーション設定キー(勤怠申請後処理群)。<br>
+	 */
+	protected static final String	APP_AFTER_APPLY_ATT	= "AfterApplyAttendanceBeans";
 	
 	
 	/**
@@ -126,6 +132,10 @@ public abstract class TimeBean extends PlatformBean {
 	 * @return 日付オブジェクトの差(分)
 	 */
 	protected int getDefferenceMinutes(Date startTime, Date endTime) {
+		// 開始時刻、終了時刻確認
+		if (startTime == null || endTime == null) {
+			return 0;
+		}
 		// ミリ秒で差を取得
 		long defference = endTime.getTime() - startTime.getTime();
 		// 時間に変換
@@ -165,16 +175,10 @@ public abstract class TimeBean extends PlatformBean {
 			return null;
 		}
 		// 時間取得
-		Integer hour = getInteger(time.substring(0, 2));
-		Integer minute = getInteger(time.substring(2, 4));
-		// 対象日時間取得
-		long attendanceTime = date.getTime();
-		// 時間を加算
-		attendanceTime += hour.longValue() * MILLI_SEC_PER_HOUR;
-		// 分を加算
-		attendanceTime += minute * MILLI_SEC_PER_HOUR / TimeConst.CODE_DEFINITION_HOUR;
-		// 日付オブジェクトに変換
-		return new Date(attendanceTime);
+		String hour = time.substring(0, 2);
+		String minute = time.substring(2, 4);
+		// 基準日における時刻を取得
+		return TimeUtility.getDateTime(date, hour, minute);
 	}
 	
 	/**
@@ -182,7 +186,7 @@ public abstract class TimeBean extends PlatformBean {
 	 * @return ハイフン名称
 	 */
 	protected String getHyphenNaming() {
-		return mospParams.getName("Hyphen");
+		return PlatformNamingUtility.hyphen(mospParams);
 	}
 	
 	/**
@@ -210,15 +214,6 @@ public abstract class TimeBean extends PlatformBean {
 	protected void addNotWorkDateErrorMessage(Date targetDate) {
 		mospParams.addErrorMessage(TimeMessageConst.MSG_NOT_WORK_DATE, getStringDate(targetDate),
 				mospParams.getName("jp.mosp.time.input.vo.WorkOnHolidayRequestVo"));
-	}
-	
-	/**
-	 * 限度基準に対象のコードが存在しない場合、エラーメッセージを追加する。<br>
-	 * @param date 対象日付
-	 */
-	protected void addSettingApplicationDefectLimitStandardErrorMessage(Date date) {
-		String errorMes = mospParams.getName("Limit", "Norm");
-		mospParams.addErrorMessage(PlatformMessageConst.MSG_NO_ITEM, errorMes);
 	}
 	
 	// 残業申請関連
@@ -574,46 +569,61 @@ public abstract class TimeBean extends PlatformBean {
 	}
 	
 	/**
-	 * 
+	 * 勤怠基本設定情報を確認する。<br>
+	 * 設定適用・勤怠設定・勤怠対象者・カレンダ・有給休暇管理を確認する。<br>
+	 * 情報がない場合はエラーメッセージを返す。<br>
 	 * @param personalId 個人ID
 	 * @param targetDate 対象日
+	 * @param functionCode 機能コード
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
-	protected void initial(String personalId, Date targetDate) throws MospException {
-		ApplicationReferenceBeanInterface applicationReference = (ApplicationReferenceBeanInterface)createBean(ApplicationReferenceBeanInterface.class);
-		TimeSettingReferenceBeanInterface timeSettingReference = (TimeSettingReferenceBeanInterface)createBean(TimeSettingReferenceBeanInterface.class);
-		ScheduleReferenceBeanInterface scheduleReference = (ScheduleReferenceBeanInterface)createBean(ScheduleReferenceBeanInterface.class);
-		PaidHolidayReferenceBeanInterface paidHolidayReference = (PaidHolidayReferenceBeanInterface)createBean(PaidHolidayReferenceBeanInterface.class);
-		
-		// 設定適用
+	protected void initial(String personalId, Date targetDate, String functionCode) throws MospException {
+		// 参照クラス取得
+		ApplicationReferenceBeanInterface applicationReference = (ApplicationReferenceBeanInterface)createBean(
+				ApplicationReferenceBeanInterface.class);
+		TimeSettingReferenceBeanInterface timeSettingReference = (TimeSettingReferenceBeanInterface)createBean(
+				TimeSettingReferenceBeanInterface.class);
+		ScheduleReferenceBeanInterface scheduleReference = (ScheduleReferenceBeanInterface)createBean(
+				ScheduleReferenceBeanInterface.class);
+		PaidHolidayReferenceBeanInterface paidHolidayReference = (PaidHolidayReferenceBeanInterface)createBean(
+				PaidHolidayReferenceBeanInterface.class);
+		// 設定適用情報取得
 		ApplicationDtoInterface applicationDto = applicationReference.findForPerson(personalId, targetDate);
 		applicationReference.chkExistApplication(applicationDto, targetDate);
 		if (mospParams.hasErrorMessage()) {
 			return;
 		}
-		// 勤怠設定
-		TimeSettingDtoInterface timeSettingDto = timeSettingReference.getTimeSettingInfo(
-				applicationDto.getWorkSettingCode(), targetDate);
+		// 勤怠設定情報取得
+		TimeSettingDtoInterface timeSettingDto = timeSettingReference
+			.getTimeSettingInfo(applicationDto.getWorkSettingCode(), targetDate);
 		timeSettingReference.chkExistTimeSetting(timeSettingDto, targetDate);
 		if (mospParams.hasErrorMessage()) {
 			return;
 		}
 		// 勤怠管理対象フラグのチェック
-		if (timeSettingDto.getTimeManagementFlag() == MospConst.INACTIVATE_FLAG_ON) {
+		if (timeSettingDto.getTimeManagementFlag() != MospConst.INACTIVATE_FLAG_OFF) {
+			// 人事情報取得
 			HumanDtoInterface dto = getHumanInfo(personalId, targetDate);
+			// 無効(休暇申請可)かつ休暇または、振出/休出または、勤務形態変更申請の場合
+			if (timeSettingDto.getTimeManagementFlag() == 2 && (functionCode.equals(TimeConst.CODE_FUNCTION_VACATION)
+					|| functionCode.equals(TimeConst.CODE_FUNCTION_WORK_HOLIDAY)
+					|| functionCode.equals(TimeConst.CODE_FUNCTION_WORK_TYPE_CHANGE))) {
+				return;
+			}
+			// エラーメッセージ追加
 			addNotUserAttendanceManagementTargetErrorMessage(targetDate, dto.getEmployeeCode());
 			return;
 		}
-		// カレンダ
+		// カレンダ情報取得
 		ScheduleDtoInterface scheduleDto = scheduleReference.getScheduleInfo(applicationDto.getScheduleCode(),
 				targetDate);
 		scheduleReference.chkExistSchedule(scheduleDto, targetDate);
 		if (mospParams.hasErrorMessage()) {
 			return;
 		}
-		// 有給休暇管理
-		PaidHolidayDtoInterface paidHolidayDto = paidHolidayReference.getPaidHolidayInfo(
-				applicationDto.getPaidHolidayCode(), targetDate);
+		// 有給休暇管理情報取得
+		PaidHolidayDtoInterface paidHolidayDto = paidHolidayReference
+			.getPaidHolidayInfo(applicationDto.getPaidHolidayCode(), targetDate);
 		paidHolidayReference.chkExistPaidHoliday(paidHolidayDto, targetDate);
 	}
 	
@@ -637,7 +647,8 @@ public abstract class TimeBean extends PlatformBean {
 	 * @param endTime 終了時刻
 	 * @return 確認結果(true：重複している、false：重複していない)
 	 */
-	protected boolean checkDuplicationTimeZone(Date requestStartTime, Date requestEndTime, Date startTime, Date endTime) {
+	protected boolean checkDuplicationTimeZone(Date requestStartTime, Date requestEndTime, Date startTime,
+			Date endTime) {
 		// 時刻が同じ場合
 		if (startTime.equals(requestStartTime) || endTime.equals(requestEndTime)) {
 			return true;
@@ -652,4 +663,5 @@ public abstract class TimeBean extends PlatformBean {
 		}
 		return false;
 	}
+	
 }

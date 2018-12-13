@@ -26,6 +26,7 @@ import = "jp.mosp.framework.base.MospParams"
 import = "jp.mosp.framework.constant.MospConst"
 import = "jp.mosp.framework.utils.HtmlUtility"
 import = "jp.mosp.platform.constant.PlatformConst"
+import = "jp.mosp.platform.utils.PlatformNamingUtility"
 import = "jp.mosp.time.constant.TimeConst"
 import = "jp.mosp.time.settings.action.ApplicationCardAction"
 import = "jp.mosp.time.settings.action.ApplicationListAction"
@@ -42,17 +43,12 @@ ApplicationCardVo vo = (ApplicationCardVo)params.getVo();
 			</th>
 		</tr>
 		<tr>
-			<td class="TitleTd"><span class="RequiredLabel">*&nbsp;</span><%= params.getName("ActivateDate") %></td>
-			<td class="InputTd">
-				<div id="divSearchClassRoute">
-					<input type="text" class="Number4RequiredTextBox" id="txtEditActivateYear" name="txtEditActivateYear" value="<%= HtmlUtility.escapeHTML(vo.getTxtEditActivateYear()) %>" />
-					<label for="txtEditActivateYear"><%= params.getName("Year") %></label>
-					<input type="text" class="Number2RequiredTextBox" id="txtEditActivateMonth" name="txtEditActivateMonth" value="<%= HtmlUtility.escapeHTML(vo.getTxtEditActivateMonth()) %>" />
-					<label for="txtEditActivateMonth"><%= params.getName("Month") %></label>
-					<input type="text" class="Number2RequiredTextBox" id="txtEditActivateDay" name="txtEditActivateDay" value="<%= HtmlUtility.escapeHTML(vo.getTxtEditActivateDay()) %>" />
-					<label for="txtEditActivateDay"><%= params.getName("Day") %></label>
-					<button type="button" class="Name2Button" id="btnEditActivateDate" onclick="submitForm(event, 'divSearchClassRoute', null, '<%= ApplicationCardAction.CMD_SET_ACTIVATION_DATE %>')"><%= vo.getModeActivateDate().equals(PlatformConst.MODE_ACTIVATE_DATE_FIXED) ? params.getName("Change") : params.getName("Decision") %></button>
-				</div>
+			<td class="TitleTd"><span class="RequiredLabel">*&nbsp;</span><%= PlatformNamingUtility.activateDate(params) %></td>
+			<td class="InputTd" id="tdActivateDate">
+				<%= HtmlUtility.getTextboxTag("Number4RequiredTextBox", "txtEditActivateYear" , "txtEditActivateYear" , vo.getTxtEditActivateYear (), false) %>&nbsp;<label for="txtSearchActivateYear" ><%= PlatformNamingUtility.year (params) %></label>
+				<%= HtmlUtility.getTextboxTag("Number2RequiredTextBox", "txtEditActivateMonth", "txtEditActivateMonth", vo.getTxtEditActivateMonth(), false) %>&nbsp;<label for="txtSearchActivateMonth"><%= PlatformNamingUtility.month(params) %></label>
+				<%= HtmlUtility.getTextboxTag("Number2RequiredTextBox", "txtEditActivateDay"  , "txtEditActivateDay"  , vo.getTxtEditActivateDay  (), false) %>&nbsp;<label for="txtSearchActivateDay"  ><%= PlatformNamingUtility.day  (params) %></label>
+				<button type="button" class="Name2Button" id="btnEditActivateDate" onclick="submitForm(event, 'tdActivateDate', null, '<%= ApplicationCardAction.CMD_SET_ACTIVATION_DATE %>')"><%= PlatformNamingUtility.activeteDateButton(params, vo.getModeActivateDate()) %></button>
 			</td>
 			<td class="TitleTd"><span class="RequiredLabel">*&nbsp;</span><span><label for="txtEditApplicationCode"><%= params.getName("Set") %><%= params.getName("Apply") %><%= params.getName("Code") %></label></span></td>
 			<td class="InputTd">

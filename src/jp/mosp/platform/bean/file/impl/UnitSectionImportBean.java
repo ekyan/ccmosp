@@ -56,14 +56,17 @@ public class UnitSectionImportBean extends UnitImportBean {
 			throws MospException {
 		// 継承基のメソッドを実行
 		ApprovalUnitDtoInterface dto = super.getUnitDto(fieldList, data);
-		// 登録情報の内容を取得(登録情報に含まれない場合はnull)
+		// 登録情報の内容を取得(登録情報に含まれない場合は空白)
 		String approverSectionCode = getFieldValue(PfmApprovalUnitDao.COL_APPROVER_SECTION_CODE, fieldList, data);
 		String approverPositionCode = getFieldValue(PfmApprovalUnitDao.COL_APPROVER_POSITION_CODE, fieldList, data);
+		String approverPositionGrade = getFieldValue(PfmApprovalUnitDao.COL_APPROVER_POSITION_GRADE, fieldList, data);
 		// ユニット区分設定
 		dto.setUnitType(PlatformConst.UNIT_TYPE_SECTION);
 		// 承認者所属及び職位設定
 		dto.setApproverSectionCode(approverSectionCode);
 		dto.setApproverPositionCode(approverPositionCode);
+		// 承認者職位等級範囲設定
+		dto.setApproverPositionGrade(approverPositionGrade);
 		// 承認者個人ID設定(空白)
 		dto.setApproverPersonalId("");
 		return dto;

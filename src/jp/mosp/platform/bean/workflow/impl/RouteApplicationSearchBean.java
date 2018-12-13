@@ -131,7 +131,8 @@ public class RouteApplicationSearchBean extends PlatformBean implements RouteApp
 			return list;
 		}
 		// 人事マスタ参照クラス準備
-		HumanReferenceBeanInterface humanReference = (HumanReferenceBeanInterface)createBean(HumanReferenceBeanInterface.class);
+		HumanReferenceBeanInterface humanReference = (HumanReferenceBeanInterface)createBean(
+				HumanReferenceBeanInterface.class);
 		// ワークフロークラス準備
 		WorkflowIntegrateBeanInterface workflow;
 		workflow = (WorkflowIntegrateBeanInterface)createBean(WorkflowIntegrateBeanInterface.class);

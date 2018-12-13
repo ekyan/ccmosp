@@ -32,7 +32,7 @@ import jp.mosp.time.dto.settings.TotalTimeDataDtoInterface;
 public interface SubordinateSearchBeanInterface extends HumanSearchBeanInterface {
 	
 	/**
-	 * 部下リストを取得する。<br><br>
+	 * 部下一覧画面で検索したリストを取得する。<br><br>
 	 * 設定された条件で、検索を行う。
 	 * @return 部下リスト
 	 * @throws MospException インスタンスの取得、SQLの作成及び実行に失敗した場合
@@ -48,27 +48,17 @@ public interface SubordinateSearchBeanInterface extends HumanSearchBeanInterface
 	Set<String> getSubordinateIdSet() throws MospException;
 	
 	/**
-	 * 承認対象社員リストを取得する。<br><br>
-	 * 設定された条件で、検索を行う。<br>
-	 * @return 承認対象社員リスト
-	 * @throws MospException インスタンスの取得、SQLの作成及び実行に失敗した場合
-	 */
-	List<SubordinateListDtoInterface> getApprovableList() throws MospException;
-	
-	/**
 	 * 部下一覧情報DTOを取得する。<br><br>
-	 * @param humanDto 人事情報
-	 * @param year 対象年
-	 * @param month 対象月
+	 * @param humanDto         人事情報
+	 * @param year             対象年
+	 * @param month            対象月
 	 * @param totalTimeDataDto 勤怠集計情報DTO
-	 * @param searchApprovalState 承認状態(検索条件)
-	 * @param searchCutoffState 締状態(検索条件)
+	 * @param searchBeforeDay  前日までフラグ(承認状態取得用)
 	 * @return 部下一覧情報DTO
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
 	SubordinateListDtoInterface getSubordinateListDto(HumanDtoInterface humanDto, int year, int month,
-			TotalTimeDataDtoInterface totalTimeDataDto, String searchApprovalState, String searchCutoffState)
-			throws MospException;
+			TotalTimeDataDtoInterface totalTimeDataDto, boolean searchBeforeDay) throws MospException;
 	
 	/**
 	 * 人事情報を設定する。<br>
@@ -83,6 +73,14 @@ public interface SubordinateSearchBeanInterface extends HumanSearchBeanInterface
 	 * @param totalTimeDataDto 勤怠集計データDTO
 	 */
 	void setTotalTimeData(SubordinateListDtoInterface dto, TotalTimeDataDtoInterface totalTimeDataDto);
+	
+	/**
+	 * 限度基準情報を設定する。<br>
+	 * @param dto 対象DTO
+	 * @param humanDto 人事情報DTO
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	void setLimitStandard(SubordinateListDtoInterface dto, HumanDtoInterface humanDto) throws MospException;
 	
 	/**
 	 * @param targetYear セットする 対象年。
@@ -100,8 +98,18 @@ public interface SubordinateSearchBeanInterface extends HumanSearchBeanInterface
 	void setApproval(String approval);
 	
 	/**
+	 * @param approvalBeforeDay セットする 未承認前日フラグ。
+	 */
+	void setApprovalBeforeDay(String approvalBeforeDay);
+	
+	/**
 	 * @param calc セットする 締状態。
 	 */
 	void setCalc(String calc);
+	
+	/**
+	 * @param humanType セットする 人区分。
+	 */
+	void setHumanType(String humanType);
 	
 }

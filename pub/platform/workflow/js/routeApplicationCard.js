@@ -34,7 +34,7 @@ function onLoadExtra() {
 		setReadOnly("txtEditActivateDay", true);
 		setDisabled("txtApplicationCode", true);
 		// 決定ボタン押下不可
-		setDisabled("btnActivateDate", true);
+		setReadOnly("btnActivateDate", true);
 		// ラジオボタン押下不可
 		setReadOnly("radMaster", true);
 		setReadOnly("radEmployeeCode", true);
@@ -54,7 +54,7 @@ function onLoadExtra() {
 		setReadOnly("txtEditActivateDay", true);
 	} else {
 		// 登録ボタン利用不可
-		setDisabled("btnRegist", true);
+		setReadOnly("btnRegist", true);
 		// ラジオボタン押下不可
 		setReadOnly("radMaster", true);
 		setReadOnly("radEmployeeCode", true);

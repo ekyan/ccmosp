@@ -616,7 +616,7 @@ public class WorkPlaceMasterAction extends PlatformSystemAction {
 		dto.setPfmWorkPlaceId(vo.getRecordId());
 		dto.setActivateDate(getEditActivateDate());
 		dto.setWorkPlaceCode(vo.getTxtEditWorkPlaceCode());
-		dto.setInactivateFlag(Integer.valueOf(vo.getPltEditInactivate()));
+		dto.setInactivateFlag(getInt(vo.getPltEditInactivate()));
 		dto.setWorkPlaceKana(vo.getTxtEditWorkPlaceKana());
 		dto.setWorkPlaceName(vo.getTxtEditWorkPlaceName());
 		dto.setWorkPlaceAbbr(vo.getTxtEditWorkPlaceAbbr());

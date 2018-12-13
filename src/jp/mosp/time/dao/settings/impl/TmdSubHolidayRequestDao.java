@@ -190,6 +190,27 @@ public class TmdSubHolidayRequestDao extends PlatformDao implements SubHolidayRe
 	}
 	
 	@Override
+	public List<SubHolidayRequestDtoInterface> findForList(String personalId) throws MospException {
+		try {
+			index = 1;
+			StringBuffer sb = getSelectQuery(getClass());
+			sb.append(where());
+			sb.append(deleteFlagOff());
+			sb.append(and());
+			sb.append(equal(COL_PERSONAL_ID));
+			prepareStatement(sb.toString());
+			setParam(index++, personalId);
+			executeQuery();
+			return mappingAll();
+		} catch (Throwable e) {
+			throw new MospException(e);
+		} finally {
+			releaseResultSet();
+			releasePreparedStatement();
+		}
+	}
+	
+	@Override
 	public List<SubHolidayRequestDtoInterface> findForList(String personalId, Date requestDate) throws MospException {
 		try {
 			index = 1;
@@ -421,6 +442,30 @@ public class TmdSubHolidayRequestDao extends PlatformDao implements SubHolidayRe
 				setParam(index++, routeCode);
 			}
 			setParam(index++, TimeConst.CODE_FUNCTION_COMPENSATORY_HOLIDAY);
+			executeQuery();
+			return mappingAll();
+		} catch (Throwable e) {
+			throw new MospException(e);
+		} finally {
+			releaseResultSet();
+			releasePreparedStatement();
+		}
+	}
+	
+	@Override
+	public List<SubHolidayRequestDtoInterface> findForWorkDate(String personalId, Date workDate) throws MospException {
+		try {
+			index = 1;
+			StringBuffer sb = getSelectQuery(getClass());
+			sb.append(where());
+			sb.append(deleteFlagOff());
+			sb.append(and());
+			sb.append(equal(COL_PERSONAL_ID));
+			sb.append(and());
+			sb.append(equal(COL_WORK_DATE));
+			prepareStatement(sb.toString());
+			setParam(index++, personalId);
+			setParam(index++, workDate);
 			executeQuery();
 			return mappingAll();
 		} catch (Throwable e) {

@@ -362,14 +362,14 @@ public class TotalTimeVo extends TimeSettingVo {
 	 * @param aryCutoffState セットする aryCutoffState
 	 */
 	public void setAryCutoffState(int[] aryCutoffState) {
-		this.aryCutoffState = aryCutoffState;
+		this.aryCutoffState = getIntArrayClone(aryCutoffState);
 	}
 	
 	/**
 	 * @return aryCutoffState
 	 */
 	public int[] getAryCutoffState() {
-		return aryCutoffState;
+		return getIntArrayClone(aryCutoffState);
 	}
 	
 	/**

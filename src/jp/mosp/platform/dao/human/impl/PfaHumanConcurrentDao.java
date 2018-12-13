@@ -27,6 +27,7 @@ import jp.mosp.framework.base.BaseDtoInterface;
 import jp.mosp.framework.base.MospException;
 import jp.mosp.platform.base.PlatformDao;
 import jp.mosp.platform.dao.human.ConcurrentDaoInterface;
+import jp.mosp.platform.dao.system.PositionDaoInterface;
 import jp.mosp.platform.dao.system.SectionDaoInterface;
 import jp.mosp.platform.dto.human.ConcurrentDtoInterface;
 import jp.mosp.platform.dto.human.impl.PfaHumanConcurrentDto;
@@ -39,47 +40,52 @@ public class PfaHumanConcurrentDao extends PlatformDao implements ConcurrentDaoI
 	/**
 	 * 人事兼務情報。
 	 */
-	public static final String	TABLE						= "pfa_human_concurrent";
+	public static final String		TABLE						= "pfa_human_concurrent";
 	
 	/**
 	 * レコード識別ID。
 	 */
-	public static final String	COL_PFA_HUMAN_CONCURRENT_ID	= "pfa_human_concurrent_id";
+	public static final String		COL_PFA_HUMAN_CONCURRENT_ID	= "pfa_human_concurrent_id";
 	
 	/**
 	 * 個人ID。
 	 */
-	public static final String	COL_PERSONAL_ID				= "personal_id";
+	public static final String		COL_PERSONAL_ID				= "personal_id";
 	
 	/**
 	 * 開始日。
 	 */
-	public static final String	COL_START_DATE				= "start_date";
+	public static final String		COL_START_DATE				= "start_date";
 	
 	/**
 	 * 終了日。
 	 */
-	public static final String	COL_END_DATE				= "end_date";
+	public static final String		COL_END_DATE				= "end_date";
 	
 	/**
 	 * 所属コード。
 	 */
-	public static final String	COL_SECTION_CODE			= "section_code";
+	public static final String		COL_SECTION_CODE			= "section_code";
 	
 	/**
 	 * 職位コード。
 	 */
-	public static final String	COL_POSITION_CODE			= "position_code";
+	public static final String		COL_POSITION_CODE			= "position_code";
 	
 	/**
 	 * 備考。
 	 */
-	public static final String	COL_CONCURRENT_REMARK		= "concurrent_remark";
+	public static final String		COL_CONCURRENT_REMARK		= "concurrent_remark";
 	
 	/**
 	 * キー。
 	 */
-	public static final String	KEY_1						= COL_PFA_HUMAN_CONCURRENT_ID;
+	public static final String		KEY_1						= COL_PFA_HUMAN_CONCURRENT_ID;
+	
+	/**
+	 * 職位マスタDAOクラス(サブクエリ等取得用)。
+	 */
+	protected PositionDaoInterface	positionDao;
 	
 	
 	/**
@@ -90,8 +96,8 @@ public class PfaHumanConcurrentDao extends PlatformDao implements ConcurrentDaoI
 	}
 	
 	@Override
-	public void initDao() {
-		// 処理無し
+	public void initDao() throws MospException {
+		positionDao = (PositionDaoInterface)loadDao(PositionDaoInterface.class);
 	}
 	
 	@Override
@@ -129,6 +135,44 @@ public class PfaHumanConcurrentDao extends PlatformDao implements ConcurrentDaoI
 			sb.append(getOrderByColumn(COL_START_DATE));
 			prepareStatement(sb.toString());
 			setParam(index++, personalId);
+			executeQuery();
+			return mappingAll();
+		} catch (Throwable e) {
+			throw new MospException(e);
+		} finally {
+			releaseResultSet();
+			releasePreparedStatement();
+		}
+	}
+	
+	@Override
+	public List<ConcurrentDtoInterface> findForTerm(Date fromDate, Date toDate) throws MospException {
+		try {
+			index = 1;
+			StringBuffer sb = getSelectQuery(getClass());
+			sb.append(where());
+			sb.append(deleteFlagOff());
+			sb.append(and());
+			if (toDate == null) {
+				sb.append(leftParenthesis());
+				sb.append(greaterEqual(COL_END_DATE));
+				sb.append(or());
+				sb.append(isNull(COL_END_DATE));
+				sb.append(rightParenthesis());
+				prepareStatement(sb.toString());
+				setParam(index++, fromDate);
+			} else {
+				sb.append(less(COL_START_DATE));
+				sb.append(and());
+				sb.append(leftParenthesis());
+				sb.append(greaterEqual(COL_END_DATE));
+				sb.append(or());
+				sb.append(isNull(COL_END_DATE));
+				sb.append(rightParenthesis());
+				prepareStatement(sb.toString());
+				setParam(index++, toDate);
+				setParam(index++, fromDate);
+			}
 			executeQuery();
 			return mappingAll();
 		} catch (Throwable e) {
@@ -310,6 +354,54 @@ public class PfaHumanConcurrentDao extends PlatformDao implements ConcurrentDaoI
 		// パラメータインデックス準備
 		int idx = index;
 		// パラメータ設定
+		setParam(idx++, positionCode, ps);
+		setParam(idx++, targetDate, false, ps);
+		setParam(idx++, targetDate, false, ps);
+		// インデックス返却
+		return idx;
+	}
+	
+	@Override
+	public String getQueryForPositionGrade(boolean greaterEqual, String targetColumn) {
+		// SQL作成準備
+		StringBuffer sb = new StringBuffer();
+		sb.append(targetColumn);
+		sb.append(in());
+		sb.append(leftParenthesis());
+		// 個人IDを抽出
+		sb.append(select());
+		sb.append(COL_PERSONAL_ID);
+		sb.append(from(TABLE));
+		sb.append(where());
+		sb.append(deleteFlagOff());
+		// 職位条件SQL追加
+		sb.append(and());
+		sb.append(COL_POSITION_CODE);
+		sb.append(in());
+		sb.append(leftParenthesis());
+		sb.append(positionDao.getQueryForPositionGrade(greaterEqual));
+		sb.append(rightParenthesis());
+		// 対象日条件SQL追加
+		sb.append(and());
+		sb.append(lessEqual(COL_START_DATE));
+		sb.append(and());
+		sb.append(leftParenthesis());
+		sb.append(isNull(COL_END_DATE));
+		sb.append(or());
+		sb.append(greaterEqual(COL_END_DATE));
+		sb.append(rightParenthesis());
+		sb.append(rightParenthesis());
+		return sb.toString();
+	}
+	
+	@Override
+	public int setParamsForPositionGrade(int index, String positionCode, Date targetDate, PreparedStatement ps)
+			throws MospException {
+		// パラメータインデックス準備
+		int idx = index;
+		// パラメータ設定
+		setParam(idx++, targetDate, false, ps);
+		setParam(idx++, targetDate, false, ps);
 		setParam(idx++, positionCode, ps);
 		setParam(idx++, targetDate, false, ps);
 		setParam(idx++, targetDate, false, ps);

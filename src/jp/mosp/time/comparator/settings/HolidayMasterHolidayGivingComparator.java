@@ -25,13 +25,13 @@ import java.util.Comparator;
 import jp.mosp.time.dto.settings.HolidayDtoInterface;
 
 /**
- *
+ * 休暇種別情報の標準付与日数による比較クラス。<br>
  */
 public class HolidayMasterHolidayGivingComparator implements Comparator<HolidayDtoInterface> {
 	
 	@Override
 	public int compare(HolidayDtoInterface dto1, HolidayDtoInterface dto2) {
-		return Double.valueOf(dto2.getHolidayGiving()).compareTo(Double.valueOf(dto1.getHolidayGiving()));
+		return Double.compare(dto2.getHolidayGiving(), dto1.getHolidayGiving());
 	}
 	
 }

@@ -38,6 +38,7 @@ import = "jp.mosp.time.constant.TimeConst"
 import = "jp.mosp.time.settings.action.OtherHolidayHistoryAction"
 import = "jp.mosp.time.settings.action.OtherHolidayManagementAction"
 import = "jp.mosp.time.settings.vo.OtherHolidayHistoryVo"
+import = "jp.mosp.platform.utils.PlatformNamingUtility"
 %><%
 MospParams params = (MospParams)request.getAttribute(MospConst.ATT_MOSP_PARAMS);
 OtherHolidayHistoryVo vo = (OtherHolidayHistoryVo)params.getVo();
@@ -75,7 +76,7 @@ if (vo.getModeCardEdit().equals(PlatformConst.MODE_CARD_EDIT_EDIT)) {
 				<input type="text" class="Number2RequiredTextBox" id="txtEditActivateDay" name="txtEditActivateDay" value="<%= HtmlUtility.escapeHTML(vo.getTxtEditActivateDay()) %>"/>
 				<label for="txtEditActivateDay"><%= params.getName("Day") %></label>
 			</td>
-			<td class="TitleTd"><span class="RequiredLabel">*&nbsp;</span><label for="txtEditEmployeeCode"><%= params.getName("Employee") %><%= params.getName("Code") %></label></td>
+			<td class="TitleTd"><span class="RequiredLabel">*&nbsp;</span><label for="txtEditEmployeeCode"><%= PlatformNamingUtility.employeeCode(params) %></label></td>
 			<td class="InputTd">
 				<input type="text" class="Code10RequiredTextBox" id="txtEditEmployeeCode" name="txtEditEmployeeCode" value="<%= HtmlUtility.escapeHTML(vo.getTxtEditEmployeeCode()) %>"/>&nbsp;
 				<button type="button" class="Name2Button" id="btnActivateDate" onclick="submitForm(event, 'trInsertCheck', null, '<%= OtherHolidayHistoryAction.CMD_SET_EMPLOYEE_DECISION %>');"><%= vo.getJsEditActivateDate().equals(PlatformConst.MODE_ACTIVATE_DATE_FIXED) ? params.getName("Change") : params.getName("Decision") %></button>
@@ -139,7 +140,7 @@ if (vo.getModeCardEdit().equals(PlatformConst.MODE_CARD_EDIT_EDIT)) {
 				<button type="button" class="Name2Button" id="btnActivateDate" onclick="submitForm(event, 'tdOtherSearchHolidayDate', null, '<%= OtherHolidayHistoryAction.CMD_SET_ACTIVATION_DATE %>');"><%= vo.getJsSearchActivateDate().equals(PlatformConst.MODE_ACTIVATE_DATE_FIXED) ? params.getName("Change") : params.getName("Decision") %></button>
 				
 			</td>
-			<td class="TitleTd"><%= params.getName("Employee") %><%= params.getName("Code") %></td>
+			<td class="TitleTd"><%= PlatformNamingUtility.employeeCode(params) %></td>
 			<td class="InputTd">
 				<input type="text" class="Code10TextBox" id="txtSearchEmployeeCode" name="txtSearchEmployeeCode" value="<%= HtmlUtility.escapeHTML(vo.getTxtSearchEmployeeCode()) %>"/>
 			</td>

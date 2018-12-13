@@ -39,6 +39,7 @@ import jp.mosp.platform.comparator.workflow.ApprovalUnitMasterUnitCodeComparator
 import jp.mosp.platform.comparator.workflow.RouteApplicationMasterApplicationCodeComparator;
 import jp.mosp.platform.constant.PlatformConst;
 import jp.mosp.platform.dto.human.HumanDtoInterface;
+import jp.mosp.platform.dto.workflow.ApprovalRouteDtoInterface;
 import jp.mosp.platform.dto.workflow.RouteApplicationDtoInterface;
 import jp.mosp.platform.system.base.PlatformSystemAction;
 import jp.mosp.platform.workflow.vo.RouteApplicationListVo;
@@ -302,6 +303,7 @@ public class RouteApplicationListAction extends PlatformSystemAction {
 		String[] aryLblApplicationCode = new String[list.size()];
 		String[] aryLblApplicationName = new String[list.size()];
 		String[] aryLblRouteName = new String[list.size()];
+		String[] aryLblRouteActivateDate = new String[list.size()];
 		String[] aryLblRouteCode = new String[list.size()];
 		String[] aryLblFlowType = new String[list.size()];
 		String[] aryLblApplicationLength = new String[list.size()];
@@ -318,6 +320,8 @@ public class RouteApplicationListAction extends PlatformSystemAction {
 		SectionReferenceBeanInterface getSectionInfo = reference().section();
 		// 承認ルートマスタ
 		ApprovalRouteReferenceBeanInterface getRouteInfo = reference().approvalRoute();
+		// 検索有効日
+		Date date = getSearchActivateDate();
 		// データ作成
 		for (int i = 0; i < list.size(); i++) {
 			// リストから情報を取得
@@ -329,11 +333,20 @@ public class RouteApplicationListAction extends PlatformSystemAction {
 			aryLblApplicationName[i] = dto.getRouteApplicationName();
 			aryLblFlowType[i] = getFlowTypeName(dto.getWorkflowType());
 			aryLblUnitInactivate[i] = getInactivateFlagName(dto.getInactivateFlag());
-			Date date = dto.getActivateDate();
-			// ルート名称
-			aryLblRouteName[i] = getRouteInfo.getRouteName(dto.getRouteCode(), date);
+			// ルート取得
+			ApprovalRouteDtoInterface approvalRouteDto = getRouteInfo.getApprovalRouteInfo(dto.getRouteCode(), date);
+			// ルート有効日、ルート名準備
+			aryLblRouteActivateDate[i] = aryLblActivateDate[i];
+			aryLblRouteName[i] = "";
+			// ルート情報がある場合
+			if (approvalRouteDto != null) {
+				// 設定
+				aryLblRouteActivateDate[i] = getStringDate(approvalRouteDto.getActivateDate());
+				aryLblRouteName[i] = approvalRouteDto.getRouteName();
+			}
+			
 			StringBuffer sb = new StringBuffer();
-			if (dto.getRouteApplicationType() == Integer.valueOf(PlatformConst.APPLICATION_TYPE_MASTER)) {
+			if (dto.getRouteApplicationType() == getInt(PlatformConst.APPLICATION_TYPE_MASTER)) {
 				// マスタ組み合わせ指定
 				// 勤務地略称取得
 				if (!dto.getWorkPlaceCode().equals("")) {
@@ -399,6 +412,7 @@ public class RouteApplicationListAction extends PlatformSystemAction {
 		vo.setAryLblApplicationCode(aryLblApplicationCode);
 		vo.setAryLblApplicationName(aryLblApplicationName);
 		vo.setAryLblRouteName(aryLblRouteName);
+		vo.setAryLblRouteActivateDate(aryLblRouteActivateDate);
 		vo.setAryLblRouteCode(aryLblRouteCode);
 		vo.setAryLblFlowType(aryLblFlowType);
 		vo.setAryLblApplicationLength(aryLblApplicationLength);
@@ -432,6 +446,7 @@ public class RouteApplicationListAction extends PlatformSystemAction {
 		vo.setAryLblApplicationName(new String[0]);
 		vo.setAryLblRouteName(new String[0]);
 		vo.setAryLblRouteCode(new String[0]);
+		vo.setAryLblRouteActivateDate(new String[0]);
 		vo.setAryLblFlowType(new String[0]);
 		vo.setAryLblApplicationLength(new String[0]);
 		vo.setAryLblInactivate(new String[0]);

@@ -90,7 +90,7 @@ public class CutoffErrorListDto extends BaseDto implements CutoffErrorListDtoInt
 	
 	@Override
 	public Date getDate() {
-		return date;
+		return getDateClone(date);
 	}
 	
 	@Override
@@ -145,7 +145,7 @@ public class CutoffErrorListDto extends BaseDto implements CutoffErrorListDtoInt
 	
 	@Override
 	public void setDate(Date date) {
-		this.date = date;
+		this.date = getDateClone(date);
 	}
 	
 	@Override

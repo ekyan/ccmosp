@@ -36,7 +36,7 @@ public class RestReferenceBean extends PlatformBean implements RestReferenceBean
 	/**
 	 *  勤怠データ休憩情報マスタDAOクラス。<br>
 	 */
-	RestDaoInterface	dao;
+	RestDaoInterface dao;
 	
 	
 	/**
@@ -61,7 +61,8 @@ public class RestReferenceBean extends PlatformBean implements RestReferenceBean
 	}
 	
 	@Override
-	public RestDtoInterface findForKey(String personalId, Date workDate, int timesWork, int times) throws MospException {
+	public RestDtoInterface findForKey(String personalId, Date workDate, int timesWork, int times)
+			throws MospException {
 		return dao.findForKey(personalId, workDate, timesWork, times);
 	}
 	

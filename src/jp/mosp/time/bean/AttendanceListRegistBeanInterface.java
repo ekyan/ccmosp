@@ -83,10 +83,10 @@ public interface AttendanceListRegistBeanInterface {
 	 * @param oldMinutely2HolidayList 旧分単位休暇2リスト
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
-	void registCorrection(AttendanceDtoInterface dto, AttendanceDtoInterface oldDto,
-			List<RestDtoInterface> oldRestList, List<GoOutDtoInterface> oldPublicList,
-			List<GoOutDtoInterface> oldPrivateList, List<GoOutDtoInterface> oldMinutely1HolidayList,
-			List<GoOutDtoInterface> oldMinutely2HolidayList) throws MospException;
+	void registCorrection(AttendanceDtoInterface dto, AttendanceDtoInterface oldDto, List<RestDtoInterface> oldRestList,
+			List<GoOutDtoInterface> oldPublicList, List<GoOutDtoInterface> oldPrivateList,
+			List<GoOutDtoInterface> oldMinutely1HolidayList, List<GoOutDtoInterface> oldMinutely2HolidayList)
+			throws MospException;
 	
 	/**
 	 * 代休データを登録する。<br>

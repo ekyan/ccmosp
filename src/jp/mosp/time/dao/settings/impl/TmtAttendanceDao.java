@@ -220,7 +220,8 @@ public class TmtAttendanceDao extends PlatformDao implements AttendanceTransacti
 	}
 	
 	@Override
-	public AttendanceTransactionDtoInterface sum(String personalId, Date firstDate, Date lastDate) throws MospException {
+	public AttendanceTransactionDtoInterface sum(String personalId, Date firstDate, Date lastDate)
+			throws MospException {
 		try {
 			index = 1;
 			StringBuffer sb = new StringBuffer();

@@ -62,6 +62,10 @@ public class PfmApprovalUnitDto extends BaseDto implements ApprovalUnitDtoInterf
 	 */
 	private String				approverPositionCode;
 	/**
+	 * 承認者職位等級範囲。
+	 */
+	private String				approverPositionGrade;
+	/**
 	 * 複数決済。
 	 */
 	private int					routeStage;
@@ -149,6 +153,16 @@ public class PfmApprovalUnitDto extends BaseDto implements ApprovalUnitDtoInterf
 	@Override
 	public void setApproverPositionCode(String approverPositionCode) {
 		this.approverPositionCode = approverPositionCode;
+	}
+	
+	@Override
+	public String getApproverPositionGrade() {
+		return approverPositionGrade;
+	}
+	
+	@Override
+	public void setApproverPositionGrade(String approverPositionGrade) {
+		this.approverPositionGrade = approverPositionGrade;
 	}
 	
 	@Override

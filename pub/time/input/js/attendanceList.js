@@ -38,6 +38,8 @@ var MSG_CONFIRM_TOTAL = "TMQ3002";
  * @throws 実行時例外
  */
 function onLoadExtra() {
+	// 勤怠一覧用当日背景色設定
+	setToDayTableColor("list")
 	// 勤怠年イベントハンドラ設定
 	setOnChangeHandler("pltSelectYear", changeYearMonth);
 	// 勤怠月イベントハンドラ設定
@@ -104,7 +106,15 @@ function checkExtra(aryMessage, event) {
  * @return 無し
  */
 function checkTotal(event) {
-	var rep = [getFormValue("pltSelectYear"), getFormValue("pltSelectMonth")];
+	// 年月取得
+	var elm = getFormValue("pltSelectYear");
+	var elm2 = getFormValue("pltSelectMonth");
+	// 勤怠別承認一覧の場合
+	if(elm == null && elm2 == null){
+		elm = document.getElementById("pltSelectYear").innerText;
+		elm2 = document.getElementById("pltSelectMonth").innerText;
+	}
+	var rep = [elm,elm2 ];
 	return confirm(getMessage(MSG_CONFIRM_TOTAL, rep));
 }
 
@@ -138,6 +148,8 @@ function checkChangeBox(target, needFocus) {
 	var trElement = target.parentNode.parentNode;
 	// TR要素内TD要素群取得
 	var tdElements = getElementsByTagName(trElement, TAG_TD);
+	// TR要素内SPAN要素群取得
+	var spanElements = getElementsByTagName(trElement, TAG_SPAN );
 	// TR要素内INPUT要素群取得(確認用)
 	var inputElements = getElementsByTagName(trElement, TAG_INPUT);
 	// チェックボックス確認
@@ -147,8 +159,8 @@ function checkChangeBox(target, needFocus) {
 			return;
 		}
 		// 始業、終業のテキストボックスを追加
-		var startTime = addTextBoxes(tdElements.item(4), "txtStartTime");
-		var endTime = addTextBoxes(tdElements.item(5), "txtEndTime");
+		var startTime = addTextBoxes(spanElements.item(1), "txtStartTime");
+		var endTime = addTextBoxes(spanElements.item(2), "txtEndTime");
 		// フォーカス設定
 		if (needFocus) {
 			setFocus(startTime);
@@ -162,8 +174,8 @@ function checkChangeBox(target, needFocus) {
 			return;
 		}
 		// 始業、終業のテキストボックスを除去
-		removeTextBoxes(tdElements.item(4))
-		removeTextBoxes(tdElements.item(5))
+		removeTextBoxes(spanElements.item(1))
+		removeTextBoxes(spanElements.item(2))
 	}
 }
 
@@ -330,3 +342,4 @@ function checkEndTime(startTime, endTime, aryMessage) {
 	setBgColor(endTime, COLOR_FIELD_ERROR);
 	aryMessage.push(getMessage(MSG_END_TIME_CHECK, null));
 }
+

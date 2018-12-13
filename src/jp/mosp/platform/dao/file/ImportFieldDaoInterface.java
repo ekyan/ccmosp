@@ -46,4 +46,13 @@ public interface ImportFieldDaoInterface extends BaseDaoInterface {
 	 */
 	List<ImportFieldDtoInterface> findForList(String importCode) throws MospException;
 	
+	/**
+	 * インポートコードとフィールド名称（前方一致）でインポートマスタリストを取得する
+	 * @param importCode インポートコード
+	 * @param aryFieldName フィールド名称
+	 * @return インポートマスタリスト
+	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
+	 */
+	List<ImportFieldDtoInterface> findLikeStartNameList(String importCode, String[] aryFieldName) throws MospException;
+	
 }

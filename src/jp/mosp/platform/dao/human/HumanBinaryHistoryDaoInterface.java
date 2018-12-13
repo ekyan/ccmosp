@@ -77,4 +77,13 @@ public interface HumanBinaryHistoryDaoInterface extends BaseDaoInterface {
 	 */
 	List<HumanBinaryHistoryDtoInterface> findForInfoNotIn(List<String> itemNames) throws MospException;
 	
+	/**
+	 * 個人IDと有効日で対象人事汎用バイナリ履歴リスト取得
+	 * @param personalId 個人ID
+	 * @param activateDate 有効日
+	 * @return 人事汎用バイナリ履歴リスト
+	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
+	 */
+	List<HumanBinaryHistoryDtoInterface> findForActivateDate(String personalId, Date activateDate) throws MospException;
+	
 }

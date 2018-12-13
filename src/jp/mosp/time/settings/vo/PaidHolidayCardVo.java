@@ -47,6 +47,44 @@ public class PaidHolidayCardVo extends TimeSettingVo {
 	private String				pltMaxCarryOverTimes;
 	// 半日単位取得
 	private String				pltHalfDayUnit;
+	// TODO
+	private String				pltWorkOnHolidayCalc;
+	
+	private String				txtProportionallyOneDayAndSixMonths;
+	private String				txtProportionallyOneDayAndOneYearAndSixMonths;
+	private String				txtProportionallyOneDayAndTwoYearsAndSixMonths;
+	private String				txtProportionallyOneDayAndThreeYearsAndSixMonths;
+	private String				txtProportionallyOneDayAndFourYearsAndSixMonths;
+	private String				txtProportionallyOneDayAndFiveYearsAndSixMonths;
+	private String				txtProportionallyOneDayAndSixYearsAndSixMonthsOrMore;
+	private String				txtProportionallyTwoDaysAndSixMonths;
+	private String				txtProportionallyTwoDaysAndOneYearAndSixMonths;
+	private String				txtProportionallyTwoDaysAndTwoYearsAndSixMonths;
+	private String				txtProportionallyTwoDaysAndThreeYearsAndSixMonths;
+	private String				txtProportionallyTwoDaysAndFourYearsAndSixMonths;
+	private String				txtProportionallyTwoDaysAndFiveYearsAndSixMonths;
+	private String				txtProportionallyTwoDaysAndSixYearsAndSixMonthsOrMore;
+	private String				txtProportionallyThreeDaysAndSixMonths;
+	private String				txtProportionallyThreeDaysAndOneYearAndSixMonths;
+	private String				txtProportionallyThreeDaysAndTwoYearsAndSixMonths;
+	private String				txtProportionallyThreeDaysAndThreeYearsAndSixMonths;
+	private String				txtProportionallyThreeDaysAndFourYearsAndSixMonths;
+	private String				txtProportionallyThreeDaysAndFiveYearsAndSixMonths;
+	private String				txtProportionallyThreeDaysAndSixYearsAndSixMonthsOrMore;
+	private String				txtProportionallyFourDaysAndSixMonths;
+	private String				txtProportionallyFourDaysAndOneYearAndSixMonths;
+	private String				txtProportionallyFourDaysAndTwoYearsAndSixMonths;
+	private String				txtProportionallyFourDaysAndThreeYearsAndSixMonths;
+	private String				txtProportionallyFourDaysAndFourYearsAndSixMonths;
+	private String				txtProportionallyFourDaysAndFiveYearsAndSixMonths;
+	private String				txtProportionallyFourDaysAndSixYearsAndSixMonthsOrMore;
+	private String				txtProportionallyFiveDaysOrMoreAndSixMonths;
+	private String				txtProportionallyFiveDaysOrMoreAndOneYearAndSixMonths;
+	private String				txtProportionallyFiveDaysOrMoreAndTwoYearsAndSixMonths;
+	private String				txtProportionallyFiveDaysOrMoreAndThreeYearsAndSixMonths;
+	private String				txtProportionallyFiveDaysOrMoreAndFourYearsAndSixMonths;
+	private String				txtProportionallyFiveDaysOrMoreAndFiveYearsAndSixMonths;
+	private String				txtProportionallyFiveDaysOrMoreAndSixYearsAndSixMonthsOrMore;
 	
 	private String				txtGivingTimingJanuary;
 	private String				txtGivingTimingFebruary;
@@ -376,6 +414,539 @@ public class PaidHolidayCardVo extends TimeSettingVo {
 	 */
 	public void setPltHalfDayUnit(String pltHalfDayUnit) {
 		this.pltHalfDayUnit = pltHalfDayUnit;
+	}
+	
+	/**
+	 * @return pltWorkOnHolidayCalc
+	 */
+	public String getPltWorkOnHolidayCalc() {
+		return pltWorkOnHolidayCalc;
+	}
+	
+	/**
+	 * @param pltWorkOnHolidayCalc セットする pltWorkOnHolidayCalc
+	 */
+	public void setPltWorkOnHolidayCalc(String pltWorkOnHolidayCalc) {
+		this.pltWorkOnHolidayCalc = pltWorkOnHolidayCalc;
+	}
+	
+	/**
+	 * @return txtProportionallyOneDayAndSixMonths
+	 */
+	public String getTxtProportionallyOneDayAndSixMonths() {
+		return txtProportionallyOneDayAndSixMonths;
+	}
+	
+	/**
+	 * @param txtProportionallyOneDayAndSixMonths セットする txtProportionallyOneDayAndSixMonths
+	 */
+	public void setTxtProportionallyOneDayAndSixMonths(String txtProportionallyOneDayAndSixMonths) {
+		this.txtProportionallyOneDayAndSixMonths = txtProportionallyOneDayAndSixMonths;
+	}
+	
+	/**
+	 * @return txtProportionallyOneDayAndOneYearAndSixMonths
+	 */
+	public String getTxtProportionallyOneDayAndOneYearAndSixMonths() {
+		return txtProportionallyOneDayAndOneYearAndSixMonths;
+	}
+	
+	/**
+	 * @param txtProportionallyOneDayAndOneYearAndSixMonths セットする txtProportionallyOneDayAndOneYearAndSixMonths
+	 */
+	public void setTxtProportionallyOneDayAndOneYearAndSixMonths(String txtProportionallyOneDayAndOneYearAndSixMonths) {
+		this.txtProportionallyOneDayAndOneYearAndSixMonths = txtProportionallyOneDayAndOneYearAndSixMonths;
+	}
+	
+	/**
+	 * @return txtProportionallyOneDayAndTwoYearsAndSixMonths
+	 */
+	public String getTxtProportionallyOneDayAndTwoYearsAndSixMonths() {
+		return txtProportionallyOneDayAndTwoYearsAndSixMonths;
+	}
+	
+	/**
+	 * @param txtProportionallyOneDayAndTwoYearsAndSixMonths セットする txtProportionallyOneDayAndTwoYearsAndSixMonths
+	 */
+	public void setTxtProportionallyOneDayAndTwoYearsAndSixMonths(
+			String txtProportionallyOneDayAndTwoYearsAndSixMonths) {
+		this.txtProportionallyOneDayAndTwoYearsAndSixMonths = txtProportionallyOneDayAndTwoYearsAndSixMonths;
+	}
+	
+	/**
+	 * @return txtProportionallyOneDayAndThreeYearsAndSixMonths
+	 */
+	public String getTxtProportionallyOneDayAndThreeYearsAndSixMonths() {
+		return txtProportionallyOneDayAndThreeYearsAndSixMonths;
+	}
+	
+	/**
+	 * @param txtProportionallyOneDayAndThreeYearsAndSixMonths セットする txtProportionallyOneDayAndThreeYearsAndSixMonths
+	 */
+	public void setTxtProportionallyOneDayAndThreeYearsAndSixMonths(
+			String txtProportionallyOneDayAndThreeYearsAndSixMonths) {
+		this.txtProportionallyOneDayAndThreeYearsAndSixMonths = txtProportionallyOneDayAndThreeYearsAndSixMonths;
+	}
+	
+	/**
+	 * @return txtProportionallyOneDayAndFourYearsAndSixMonths
+	 */
+	public String getTxtProportionallyOneDayAndFourYearsAndSixMonths() {
+		return txtProportionallyOneDayAndFourYearsAndSixMonths;
+	}
+	
+	/**
+	 * @param txtProportionallyOneDayAndFourYearsAndSixMonths セットする txtProportionallyOneDayAndFourYearsAndSixMonths
+	 */
+	public void setTxtProportionallyOneDayAndFourYearsAndSixMonths(
+			String txtProportionallyOneDayAndFourYearsAndSixMonths) {
+		this.txtProportionallyOneDayAndFourYearsAndSixMonths = txtProportionallyOneDayAndFourYearsAndSixMonths;
+	}
+	
+	/**
+	 * @return txtProportionallyOneDayAndFiveYearsAndSixMonths
+	 */
+	public String getTxtProportionallyOneDayAndFiveYearsAndSixMonths() {
+		return txtProportionallyOneDayAndFiveYearsAndSixMonths;
+	}
+	
+	/**
+	 * @param txtProportionallyOneDayAndFiveYearsAndSixMonths セットする txtProportionallyOneDayAndFiveYearsAndSixMonths
+	 */
+	public void setTxtProportionallyOneDayAndFiveYearsAndSixMonths(
+			String txtProportionallyOneDayAndFiveYearsAndSixMonths) {
+		this.txtProportionallyOneDayAndFiveYearsAndSixMonths = txtProportionallyOneDayAndFiveYearsAndSixMonths;
+	}
+	
+	/**
+	 * @return txtProportionallyOneDayAndSixYearsAndSixMonthsOrMore
+	 */
+	public String getTxtProportionallyOneDayAndSixYearsAndSixMonthsOrMore() {
+		return txtProportionallyOneDayAndSixYearsAndSixMonthsOrMore;
+	}
+	
+	/**
+	 * @param txtProportionallyOneDayAndSixYearsAndSixMonthsOrMore セットする txtProportionallyOneDayAndSixYearsAndSixMonthsOrMore
+	 */
+	public void setTxtProportionallyOneDayAndSixYearsAndSixMonthsOrMore(
+			String txtProportionallyOneDayAndSixYearsAndSixMonthsOrMore) {
+		this.txtProportionallyOneDayAndSixYearsAndSixMonthsOrMore = txtProportionallyOneDayAndSixYearsAndSixMonthsOrMore;
+	}
+	
+	/**
+	 * @return txtProportionallyTwoDaysAndSixMonths
+	 */
+	public String getTxtProportionallyTwoDaysAndSixMonths() {
+		return txtProportionallyTwoDaysAndSixMonths;
+	}
+	
+	/**
+	 * @param txtProportionallyTwoDaysAndSixMonths セットする txtProportionallyTwoDaysAndSixMonths
+	 */
+	public void setTxtProportionallyTwoDaysAndSixMonths(String txtProportionallyTwoDaysAndSixMonths) {
+		this.txtProportionallyTwoDaysAndSixMonths = txtProportionallyTwoDaysAndSixMonths;
+	}
+	
+	/**
+	 * @return txtProportionallyTwoDaysAndOneYearAndSixMonths
+	 */
+	public String getTxtProportionallyTwoDaysAndOneYearAndSixMonths() {
+		return txtProportionallyTwoDaysAndOneYearAndSixMonths;
+	}
+	
+	/**
+	 * @param txtProportionallyTwoDaysAndOneYearAndSixMonths セットする txtProportionallyTwoDaysAndOneYearAndSixMonths
+	 */
+	public void setTxtProportionallyTwoDaysAndOneYearAndSixMonths(
+			String txtProportionallyTwoDaysAndOneYearAndSixMonths) {
+		this.txtProportionallyTwoDaysAndOneYearAndSixMonths = txtProportionallyTwoDaysAndOneYearAndSixMonths;
+	}
+	
+	/**
+	 * @return txtProportionallyTwoDaysAndTwoYearsAndSixMonths
+	 */
+	public String getTxtProportionallyTwoDaysAndTwoYearsAndSixMonths() {
+		return txtProportionallyTwoDaysAndTwoYearsAndSixMonths;
+	}
+	
+	/**
+	 * @param txtProportionallyTwoDaysAndTwoYearsAndSixMonths セットする txtProportionallyTwoDaysAndTwoYearsAndSixMonths
+	 */
+	public void setTxtProportionallyTwoDaysAndTwoYearsAndSixMonths(
+			String txtProportionallyTwoDaysAndTwoYearsAndSixMonths) {
+		this.txtProportionallyTwoDaysAndTwoYearsAndSixMonths = txtProportionallyTwoDaysAndTwoYearsAndSixMonths;
+	}
+	
+	/**
+	 * @return txtProportionallyTwoDaysAndThreeYearsAndSixMonths
+	 */
+	public String getTxtProportionallyTwoDaysAndThreeYearsAndSixMonths() {
+		return txtProportionallyTwoDaysAndThreeYearsAndSixMonths;
+	}
+	
+	/**
+	 * @param txtProportionallyTwoDaysAndThreeYearsAndSixMonths セットする txtProportionallyTwoDaysAndThreeYearsAndSixMonths
+	 */
+	public void setTxtProportionallyTwoDaysAndThreeYearsAndSixMonths(
+			String txtProportionallyTwoDaysAndThreeYearsAndSixMonths) {
+		this.txtProportionallyTwoDaysAndThreeYearsAndSixMonths = txtProportionallyTwoDaysAndThreeYearsAndSixMonths;
+	}
+	
+	/**
+	 * @return txtProportionallyTwoDaysAndFourYearsAndSixMonths
+	 */
+	public String getTxtProportionallyTwoDaysAndFourYearsAndSixMonths() {
+		return txtProportionallyTwoDaysAndFourYearsAndSixMonths;
+	}
+	
+	/**
+	 * @param txtProportionallyTwoDaysAndFourYearsAndSixMonths セットする txtProportionallyTwoDaysAndFourYearsAndSixMonths
+	 */
+	public void setTxtProportionallyTwoDaysAndFourYearsAndSixMonths(
+			String txtProportionallyTwoDaysAndFourYearsAndSixMonths) {
+		this.txtProportionallyTwoDaysAndFourYearsAndSixMonths = txtProportionallyTwoDaysAndFourYearsAndSixMonths;
+	}
+	
+	/**
+	 * @return txtProportionallyTwoDaysAndFiveYearsAndSixMonths
+	 */
+	public String getTxtProportionallyTwoDaysAndFiveYearsAndSixMonths() {
+		return txtProportionallyTwoDaysAndFiveYearsAndSixMonths;
+	}
+	
+	/**
+	 * @param txtProportionallyTwoDaysAndFiveYearsAndSixMonths セットする txtProportionallyTwoDaysAndFiveYearsAndSixMonths
+	 */
+	public void setTxtProportionallyTwoDaysAndFiveYearsAndSixMonths(
+			String txtProportionallyTwoDaysAndFiveYearsAndSixMonths) {
+		this.txtProportionallyTwoDaysAndFiveYearsAndSixMonths = txtProportionallyTwoDaysAndFiveYearsAndSixMonths;
+	}
+	
+	/**
+	 * @return txtProportionallyTwoDaysAndSixYearsAndSixMonthsOrMore
+	 */
+	public String getTxtProportionallyTwoDaysAndSixYearsAndSixMonthsOrMore() {
+		return txtProportionallyTwoDaysAndSixYearsAndSixMonthsOrMore;
+	}
+	
+	/**
+	 * @param txtProportionallyTwoDaysAndSixYearsAndSixMonthsOrMore セットする txtProportionallyTwoDaysAndSixYearsAndSixMonthsOrMore
+	 */
+	public void setTxtProportionallyTwoDaysAndSixYearsAndSixMonthsOrMore(
+			String txtProportionallyTwoDaysAndSixYearsAndSixMonthsOrMore) {
+		this.txtProportionallyTwoDaysAndSixYearsAndSixMonthsOrMore = txtProportionallyTwoDaysAndSixYearsAndSixMonthsOrMore;
+	}
+	
+	/**
+	 * @return txtProportionallyThreeDaysAndSixMonths
+	 */
+	public String getTxtProportionallyThreeDaysAndSixMonths() {
+		return txtProportionallyThreeDaysAndSixMonths;
+	}
+	
+	/**
+	 * @param txtProportionallyThreeDaysAndSixMonths セットする txtProportionallyThreeDaysAndSixMonths
+	 */
+	public void setTxtProportionallyThreeDaysAndSixMonths(String txtProportionallyThreeDaysAndSixMonths) {
+		this.txtProportionallyThreeDaysAndSixMonths = txtProportionallyThreeDaysAndSixMonths;
+	}
+	
+	/**
+	 * @return txtProportionallyThreeDaysAndOneYearAndSixMonths
+	 */
+	public String getTxtProportionallyThreeDaysAndOneYearAndSixMonths() {
+		return txtProportionallyThreeDaysAndOneYearAndSixMonths;
+	}
+	
+	/**
+	 * @param txtProportionallyThreeDaysAndOneYearAndSixMonths セットする txtProportionallyThreeDaysAndOneYearAndSixMonths
+	 */
+	public void setTxtProportionallyThreeDaysAndOneYearAndSixMonths(
+			String txtProportionallyThreeDaysAndOneYearAndSixMonths) {
+		this.txtProportionallyThreeDaysAndOneYearAndSixMonths = txtProportionallyThreeDaysAndOneYearAndSixMonths;
+	}
+	
+	/**
+	 * @return txtProportionallyThreeDaysAndTwoYearsAndSixMonths
+	 */
+	public String getTxtProportionallyThreeDaysAndTwoYearsAndSixMonths() {
+		return txtProportionallyThreeDaysAndTwoYearsAndSixMonths;
+	}
+	
+	/**
+	 * @param txtProportionallyThreeDaysAndTwoYearsAndSixMonths セットする txtProportionallyThreeDaysAndTwoYearsAndSixMonths
+	 */
+	public void setTxtProportionallyThreeDaysAndTwoYearsAndSixMonths(
+			String txtProportionallyThreeDaysAndTwoYearsAndSixMonths) {
+		this.txtProportionallyThreeDaysAndTwoYearsAndSixMonths = txtProportionallyThreeDaysAndTwoYearsAndSixMonths;
+	}
+	
+	/**
+	 * @return txtProportionallyThreeDaysAndThreeYearsAndSixMonths
+	 */
+	public String getTxtProportionallyThreeDaysAndThreeYearsAndSixMonths() {
+		return txtProportionallyThreeDaysAndThreeYearsAndSixMonths;
+	}
+	
+	/**
+	 * @param txtProportionallyThreeDaysAndThreeYearsAndSixMonths セットする txtProportionallyThreeDaysAndThreeYearsAndSixMonths
+	 */
+	public void setTxtProportionallyThreeDaysAndThreeYearsAndSixMonths(
+			String txtProportionallyThreeDaysAndThreeYearsAndSixMonths) {
+		this.txtProportionallyThreeDaysAndThreeYearsAndSixMonths = txtProportionallyThreeDaysAndThreeYearsAndSixMonths;
+	}
+	
+	/**
+	 * @return txtProportionallyThreeDaysAndFourYearsAndSixMonths
+	 */
+	public String getTxtProportionallyThreeDaysAndFourYearsAndSixMonths() {
+		return txtProportionallyThreeDaysAndFourYearsAndSixMonths;
+	}
+	
+	/**
+	 * @param txtProportionallyThreeDaysAndFourYearsAndSixMonths セットする txtProportionallyThreeDaysAndFourYearsAndSixMonths
+	 */
+	public void setTxtProportionallyThreeDaysAndFourYearsAndSixMonths(
+			String txtProportionallyThreeDaysAndFourYearsAndSixMonths) {
+		this.txtProportionallyThreeDaysAndFourYearsAndSixMonths = txtProportionallyThreeDaysAndFourYearsAndSixMonths;
+	}
+	
+	/**
+	 * @return txtProportionallyThreeDaysAndFiveYearsAndSixMonths
+	 */
+	public String getTxtProportionallyThreeDaysAndFiveYearsAndSixMonths() {
+		return txtProportionallyThreeDaysAndFiveYearsAndSixMonths;
+	}
+	
+	/**
+	 * @param txtProportionallyThreeDaysAndFiveYearsAndSixMonths セットする txtProportionallyThreeDaysAndFiveYearsAndSixMonths
+	 */
+	public void setTxtProportionallyThreeDaysAndFiveYearsAndSixMonths(
+			String txtProportionallyThreeDaysAndFiveYearsAndSixMonths) {
+		this.txtProportionallyThreeDaysAndFiveYearsAndSixMonths = txtProportionallyThreeDaysAndFiveYearsAndSixMonths;
+	}
+	
+	/**
+	 * @return txtProportionallyThreeDaysAndSixYearsAndSixMonthsOrMore
+	 */
+	public String getTxtProportionallyThreeDaysAndSixYearsAndSixMonthsOrMore() {
+		return txtProportionallyThreeDaysAndSixYearsAndSixMonthsOrMore;
+	}
+	
+	/**
+	 * @param txtProportionallyThreeDaysAndSixYearsAndSixMonthsOrMore セットする txtProportionallyThreeDaysAndSixYearsAndSixMonthsOrMore
+	 */
+	public void setTxtProportionallyThreeDaysAndSixYearsAndSixMonthsOrMore(
+			String txtProportionallyThreeDaysAndSixYearsAndSixMonthsOrMore) {
+		this.txtProportionallyThreeDaysAndSixYearsAndSixMonthsOrMore = txtProportionallyThreeDaysAndSixYearsAndSixMonthsOrMore;
+	}
+	
+	/**
+	 * @return txtProportionallyFourDaysAndSixMonths
+	 */
+	public String getTxtProportionallyFourDaysAndSixMonths() {
+		return txtProportionallyFourDaysAndSixMonths;
+	}
+	
+	/**
+	 * @param txtProportionallyFourDaysAndSixMonths セットする txtProportionallyFourDaysAndSixMonths
+	 */
+	public void setTxtProportionallyFourDaysAndSixMonths(String txtProportionallyFourDaysAndSixMonths) {
+		this.txtProportionallyFourDaysAndSixMonths = txtProportionallyFourDaysAndSixMonths;
+	}
+	
+	/**
+	 * @return txtProportionallyFourDaysAndOneYearAndSixMonths
+	 */
+	public String getTxtProportionallyFourDaysAndOneYearAndSixMonths() {
+		return txtProportionallyFourDaysAndOneYearAndSixMonths;
+	}
+	
+	/**
+	 * @param txtProportionallyFourDaysAndOneYearAndSixMonths セットする txtProportionallyFourDaysAndOneYearAndSixMonths
+	 */
+	public void setTxtProportionallyFourDaysAndOneYearAndSixMonths(
+			String txtProportionallyFourDaysAndOneYearAndSixMonths) {
+		this.txtProportionallyFourDaysAndOneYearAndSixMonths = txtProportionallyFourDaysAndOneYearAndSixMonths;
+	}
+	
+	/**
+	 * @return txtProportionallyFourDaysAndTwoYearsAndSixMonths
+	 */
+	public String getTxtProportionallyFourDaysAndTwoYearsAndSixMonths() {
+		return txtProportionallyFourDaysAndTwoYearsAndSixMonths;
+	}
+	
+	/**
+	 * @param txtProportionallyFourDaysAndTwoYearsAndSixMonths セットする txtProportionallyFourDaysAndTwoYearsAndSixMonths
+	 */
+	public void setTxtProportionallyFourDaysAndTwoYearsAndSixMonths(
+			String txtProportionallyFourDaysAndTwoYearsAndSixMonths) {
+		this.txtProportionallyFourDaysAndTwoYearsAndSixMonths = txtProportionallyFourDaysAndTwoYearsAndSixMonths;
+	}
+	
+	/**
+	 * @return txtProportionallyFourDaysAndThreeYearsAndSixMonths
+	 */
+	public String getTxtProportionallyFourDaysAndThreeYearsAndSixMonths() {
+		return txtProportionallyFourDaysAndThreeYearsAndSixMonths;
+	}
+	
+	/**
+	 * @param txtProportionallyFourDaysAndThreeYearsAndSixMonths セットする txtProportionallyFourDaysAndThreeYearsAndSixMonths
+	 */
+	public void setTxtProportionallyFourDaysAndThreeYearsAndSixMonths(
+			String txtProportionallyFourDaysAndThreeYearsAndSixMonths) {
+		this.txtProportionallyFourDaysAndThreeYearsAndSixMonths = txtProportionallyFourDaysAndThreeYearsAndSixMonths;
+	}
+	
+	/**
+	 * @return txtProportionallyFourDaysAndFourYearsAndSixMonths
+	 */
+	public String getTxtProportionallyFourDaysAndFourYearsAndSixMonths() {
+		return txtProportionallyFourDaysAndFourYearsAndSixMonths;
+	}
+	
+	/**
+	 * @param txtProportionallyFourDaysAndFourYearsAndSixMonths セットする txtProportionallyFourDaysAndFourYearsAndSixMonths
+	 */
+	public void setTxtProportionallyFourDaysAndFourYearsAndSixMonths(
+			String txtProportionallyFourDaysAndFourYearsAndSixMonths) {
+		this.txtProportionallyFourDaysAndFourYearsAndSixMonths = txtProportionallyFourDaysAndFourYearsAndSixMonths;
+	}
+	
+	/**
+	 * @return txtProportionallyFourDaysAndFiveYearsAndSixMonths
+	 */
+	public String getTxtProportionallyFourDaysAndFiveYearsAndSixMonths() {
+		return txtProportionallyFourDaysAndFiveYearsAndSixMonths;
+	}
+	
+	/**
+	 * @param txtProportionallyFourDaysAndFiveYearsAndSixMonths セットする txtProportionallyFourDaysAndFiveYearsAndSixMonths
+	 */
+	public void setTxtProportionallyFourDaysAndFiveYearsAndSixMonths(
+			String txtProportionallyFourDaysAndFiveYearsAndSixMonths) {
+		this.txtProportionallyFourDaysAndFiveYearsAndSixMonths = txtProportionallyFourDaysAndFiveYearsAndSixMonths;
+	}
+	
+	/**
+	 * @return txtProportionallyFourDaysAndSixYearsAndSixMonthsOrMore
+	 */
+	public String getTxtProportionallyFourDaysAndSixYearsAndSixMonthsOrMore() {
+		return txtProportionallyFourDaysAndSixYearsAndSixMonthsOrMore;
+	}
+	
+	/**
+	 * @param txtProportionallyFourDaysAndSixYearsAndSixMonthsOrMore セットする txtProportionallyFourDaysAndSixYearsAndSixMonthsOrMore
+	 */
+	public void setTxtProportionallyFourDaysAndSixYearsAndSixMonthsOrMore(
+			String txtProportionallyFourDaysAndSixYearsAndSixMonthsOrMore) {
+		this.txtProportionallyFourDaysAndSixYearsAndSixMonthsOrMore = txtProportionallyFourDaysAndSixYearsAndSixMonthsOrMore;
+	}
+	
+	/**
+	 * @return txtProportionallyFiveDaysOrMoreAndSixMonths
+	 */
+	public String getTxtProportionallyFiveDaysOrMoreAndSixMonths() {
+		return txtProportionallyFiveDaysOrMoreAndSixMonths;
+	}
+	
+	/**
+	 * @param txtProportionallyFiveDaysOrMoreAndSixMonths セットする txtProportionallyFiveDaysOrMoreAndSixMonths
+	 */
+	public void setTxtProportionallyFiveDaysOrMoreAndSixMonths(String txtProportionallyFiveDaysOrMoreAndSixMonths) {
+		this.txtProportionallyFiveDaysOrMoreAndSixMonths = txtProportionallyFiveDaysOrMoreAndSixMonths;
+	}
+	
+	/**
+	 * @return txtProportionallyFiveDaysOrMoreAndOneYearAndSixMonths
+	 */
+	public String getTxtProportionallyFiveDaysOrMoreAndOneYearAndSixMonths() {
+		return txtProportionallyFiveDaysOrMoreAndOneYearAndSixMonths;
+	}
+	
+	/**
+	 * @param txtProportionallyFiveDaysOrMoreAndOneYearAndSixMonths セットする txtProportionallyFiveDaysOrMoreAndOneYearAndSixMonths
+	 */
+	public void setTxtProportionallyFiveDaysOrMoreAndOneYearAndSixMonths(
+			String txtProportionallyFiveDaysOrMoreAndOneYearAndSixMonths) {
+		this.txtProportionallyFiveDaysOrMoreAndOneYearAndSixMonths = txtProportionallyFiveDaysOrMoreAndOneYearAndSixMonths;
+	}
+	
+	/**
+	 * @return txtProportionallyFiveDaysOrMoreAndTwoYearsAndSixMonths
+	 */
+	public String getTxtProportionallyFiveDaysOrMoreAndTwoYearsAndSixMonths() {
+		return txtProportionallyFiveDaysOrMoreAndTwoYearsAndSixMonths;
+	}
+	
+	/**
+	 * @param txtProportionallyFiveDaysOrMoreAndTwoYearsAndSixMonths セットする txtProportionallyFiveDaysOrMoreAndTwoYearsAndSixMonths
+	 */
+	public void setTxtProportionallyFiveDaysOrMoreAndTwoYearsAndSixMonths(
+			String txtProportionallyFiveDaysOrMoreAndTwoYearsAndSixMonths) {
+		this.txtProportionallyFiveDaysOrMoreAndTwoYearsAndSixMonths = txtProportionallyFiveDaysOrMoreAndTwoYearsAndSixMonths;
+	}
+	
+	/**
+	 * @return txtProportionallyFiveDaysOrMoreAndThreeYearsAndSixMonths
+	 */
+	public String getTxtProportionallyFiveDaysOrMoreAndThreeYearsAndSixMonths() {
+		return txtProportionallyFiveDaysOrMoreAndThreeYearsAndSixMonths;
+	}
+	
+	/**
+	 * @param txtProportionallyFiveDaysOrMoreAndThreeYearsAndSixMonths セットする txtProportionallyFiveDaysOrMoreAndThreeYearsAndSixMonths
+	 */
+	public void setTxtProportionallyFiveDaysOrMoreAndThreeYearsAndSixMonths(
+			String txtProportionallyFiveDaysOrMoreAndThreeYearsAndSixMonths) {
+		this.txtProportionallyFiveDaysOrMoreAndThreeYearsAndSixMonths = txtProportionallyFiveDaysOrMoreAndThreeYearsAndSixMonths;
+	}
+	
+	/**
+	 * @return txtProportionallyFiveDaysOrMoreAndFourYearsAndSixMonths
+	 */
+	public String getTxtProportionallyFiveDaysOrMoreAndFourYearsAndSixMonths() {
+		return txtProportionallyFiveDaysOrMoreAndFourYearsAndSixMonths;
+	}
+	
+	/**
+	 * @param txtProportionallyFiveDaysOrMoreAndFourYearsAndSixMonths セットする txtProportionallyFiveDaysOrMoreAndFourYearsAndSixMonths
+	 */
+	public void setTxtProportionallyFiveDaysOrMoreAndFourYearsAndSixMonths(
+			String txtProportionallyFiveDaysOrMoreAndFourYearsAndSixMonths) {
+		this.txtProportionallyFiveDaysOrMoreAndFourYearsAndSixMonths = txtProportionallyFiveDaysOrMoreAndFourYearsAndSixMonths;
+	}
+	
+	/**
+	 * @return txtProportionallyFiveDaysOrMoreAndFiveYearsAndSixMonths
+	 */
+	public String getTxtProportionallyFiveDaysOrMoreAndFiveYearsAndSixMonths() {
+		return txtProportionallyFiveDaysOrMoreAndFiveYearsAndSixMonths;
+	}
+	
+	/**
+	 * @param txtProportionallyFiveDaysOrMoreAndFiveYearsAndSixMonths セットする txtProportionallyFiveDaysOrMoreAndFiveYearsAndSixMonths
+	 */
+	public void setTxtProportionallyFiveDaysOrMoreAndFiveYearsAndSixMonths(
+			String txtProportionallyFiveDaysOrMoreAndFiveYearsAndSixMonths) {
+		this.txtProportionallyFiveDaysOrMoreAndFiveYearsAndSixMonths = txtProportionallyFiveDaysOrMoreAndFiveYearsAndSixMonths;
+	}
+	
+	/**
+	 * @return txtProportionallyFiveDaysOrMoreAndSixYearsAndSixMonthsOrMore
+	 */
+	public String getTxtProportionallyFiveDaysOrMoreAndSixYearsAndSixMonthsOrMore() {
+		return txtProportionallyFiveDaysOrMoreAndSixYearsAndSixMonthsOrMore;
+	}
+	
+	/**
+	 * @param txtProportionallyFiveDaysOrMoreAndSixYearsAndSixMonthsOrMore セットする txtProportionallyFiveDaysOrMoreAndSixYearsAndSixMonthsOrMore
+	 */
+	public void setTxtProportionallyFiveDaysOrMoreAndSixYearsAndSixMonthsOrMore(
+			String txtProportionallyFiveDaysOrMoreAndSixYearsAndSixMonthsOrMore) {
+		this.txtProportionallyFiveDaysOrMoreAndSixYearsAndSixMonthsOrMore = txtProportionallyFiveDaysOrMoreAndSixYearsAndSixMonthsOrMore;
 	}
 	
 	/**

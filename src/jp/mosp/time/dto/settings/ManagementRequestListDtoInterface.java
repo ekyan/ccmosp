@@ -29,8 +29,8 @@ import jp.mosp.platform.dto.base.SectionCodeDtoInterface;
 /**
  * 申請情報確認一覧DTOインターフェース
  */
-public interface ManagementRequestListDtoInterface extends EmployeeCodeDtoInterface, EmployeeNameDtoInterface,
-		SectionCodeDtoInterface, RequestListDtoInterface {
+public interface ManagementRequestListDtoInterface
+		extends EmployeeCodeDtoInterface, EmployeeNameDtoInterface, SectionCodeDtoInterface, RequestListDtoInterface {
 	
 	/**
 	 * @return 申請カテゴリ。

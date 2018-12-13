@@ -25,7 +25,6 @@ import jp.mosp.framework.base.BaseDtoInterface;
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.base.MospParams;
 import jp.mosp.framework.utils.DateUtility;
-import jp.mosp.platform.bean.human.EntranceReferenceBeanInterface;
 import jp.mosp.platform.bean.human.RetirementReferenceBeanInterface;
 import jp.mosp.platform.bean.human.SuspensionReferenceBeanInterface;
 import jp.mosp.platform.bean.workflow.WorkflowCommentRegistBeanInterface;
@@ -34,26 +33,20 @@ import jp.mosp.platform.bean.workflow.WorkflowRegistBeanInterface;
 import jp.mosp.platform.constant.PlatformConst;
 import jp.mosp.platform.constant.PlatformMessageConst;
 import jp.mosp.platform.dto.workflow.WorkflowDtoInterface;
+import jp.mosp.platform.utils.PlatformMessageUtility;
 import jp.mosp.time.base.TimeBean;
-import jp.mosp.time.bean.ApplicationReferenceBeanInterface;
 import jp.mosp.time.bean.CutoffUtilBeanInterface;
 import jp.mosp.time.bean.RequestUtilBeanInterface;
-import jp.mosp.time.bean.ScheduleDateReferenceBeanInterface;
-import jp.mosp.time.bean.ScheduleReferenceBeanInterface;
-import jp.mosp.time.bean.SubstituteReferenceBeanInterface;
+import jp.mosp.time.bean.ScheduleUtilBeanInterface;
 import jp.mosp.time.bean.TimeApprovalBeanInterface;
 import jp.mosp.time.bean.WorkTypeChangeRequestRegistBeanInterface;
 import jp.mosp.time.bean.WorkTypeReferenceBeanInterface;
 import jp.mosp.time.constant.TimeConst;
 import jp.mosp.time.constant.TimeMessageConst;
 import jp.mosp.time.dao.settings.WorkTypeChangeRequestDaoInterface;
-import jp.mosp.time.dto.settings.ApplicationDtoInterface;
-import jp.mosp.time.dto.settings.ScheduleDateDtoInterface;
-import jp.mosp.time.dto.settings.ScheduleDtoInterface;
-import jp.mosp.time.dto.settings.SubstituteDtoInterface;
-import jp.mosp.time.dto.settings.WorkOnHolidayRequestDtoInterface;
+import jp.mosp.time.dto.settings.HolidayRequestDtoInterface;
+import jp.mosp.time.dto.settings.SubHolidayRequestDtoInterface;
 import jp.mosp.time.dto.settings.WorkTypeChangeRequestDtoInterface;
-import jp.mosp.time.dto.settings.WorkTypeDtoInterface;
 import jp.mosp.time.dto.settings.impl.TmdWorkTypeChangeRequestDto;
 
 /**
@@ -67,29 +60,9 @@ public class WorkTypeChangeRequestRegistBean extends TimeBean implements WorkTyp
 	protected WorkTypeChangeRequestDaoInterface		dao;
 	
 	/**
-	 * 設定適用管理参照クラス。<br>
-	 */
-	protected ApplicationReferenceBeanInterface		applicationReference;
-	
-	/**
-	 * カレンダ管理参照クラス。<br>
-	 */
-	protected ScheduleReferenceBeanInterface		scheduleReference;
-	
-	/**
-	 * カレンダ日参照クラス。<br>
-	 */
-	protected ScheduleDateReferenceBeanInterface	scheduleDateReference;
-	
-	/**
 	 * 勤務形態マスタ参照クラス。<br>
 	 */
 	protected WorkTypeReferenceBeanInterface		workTypeReference;
-	
-	/**
-	 * 人事入社情報参照クラス。<br>
-	 */
-	protected EntranceReferenceBeanInterface		entranceReference;
 	
 	/**
 	 * 人事休職情報参照クラス。<br>
@@ -100,11 +73,6 @@ public class WorkTypeChangeRequestRegistBean extends TimeBean implements WorkTyp
 	 * 人事退職情報参照クラス。<br>
 	 */
 	protected RetirementReferenceBeanInterface		retirementReference;
-	
-	/**
-	 * 振替休日データ参照クラス。<br>
-	 */
-	protected SubstituteReferenceBeanInterface		substituteReference;
 	
 	/**
 	 * ワークフロー統括クラス。<br>
@@ -131,6 +99,11 @@ public class WorkTypeChangeRequestRegistBean extends TimeBean implements WorkTyp
 	 */
 	protected CutoffUtilBeanInterface				cutoffUtil;
 	
+	/**
+	 * カレンダユーティリティ。
+	 */
+	protected ScheduleUtilBeanInterface				scheduleUtil;
+	
 	
 	/**
 	 * {@link TimeBean#TimeBean()}を実行する。<br>
@@ -151,18 +124,15 @@ public class WorkTypeChangeRequestRegistBean extends TimeBean implements WorkTyp
 	@Override
 	public void initBean() throws MospException {
 		dao = (WorkTypeChangeRequestDaoInterface)createDao(WorkTypeChangeRequestDaoInterface.class);
-		applicationReference = (ApplicationReferenceBeanInterface)createBean(ApplicationReferenceBeanInterface.class);
-		scheduleReference = (ScheduleReferenceBeanInterface)createBean(ScheduleReferenceBeanInterface.class);
-		scheduleDateReference = (ScheduleDateReferenceBeanInterface)createBean(ScheduleDateReferenceBeanInterface.class);
 		workTypeReference = (WorkTypeReferenceBeanInterface)createBean(WorkTypeReferenceBeanInterface.class);
-		entranceReference = (EntranceReferenceBeanInterface)createBean(EntranceReferenceBeanInterface.class);
 		suspensionReference = (SuspensionReferenceBeanInterface)createBean(SuspensionReferenceBeanInterface.class);
 		retirementReference = (RetirementReferenceBeanInterface)createBean(RetirementReferenceBeanInterface.class);
-		substituteReference = (SubstituteReferenceBeanInterface)createBean(SubstituteReferenceBeanInterface.class);
 		workflowIntegrate = (WorkflowIntegrateBeanInterface)createBean(WorkflowIntegrateBeanInterface.class);
 		workflowRegist = (WorkflowRegistBeanInterface)createBean(WorkflowRegistBeanInterface.class);
-		workflowCommentRegist = (WorkflowCommentRegistBeanInterface)createBean(WorkflowCommentRegistBeanInterface.class);
+		workflowCommentRegist = (WorkflowCommentRegistBeanInterface)createBean(
+				WorkflowCommentRegistBeanInterface.class);
 		cutoffUtil = (CutoffUtilBeanInterface)createBean(CutoffUtilBeanInterface.class);
+		scheduleUtil = (ScheduleUtilBeanInterface)createBean(ScheduleUtilBeanInterface.class);
 	}
 	
 	@Override
@@ -307,9 +277,7 @@ public class WorkTypeChangeRequestRegistBean extends TimeBean implements WorkTyp
 			workflowDto = workflowRegist.withdrawn(workflowDto);
 			if (workflowDto != null) {
 				// ワークフローコメント登録
-				workflowCommentRegist.addComment(
-						workflowDto,
-						mospParams.getUser().getPersonalId(),
+				workflowCommentRegist.addComment(workflowDto, mospParams.getUser().getPersonalId(),
 						mospParams.getProperties().getMessage(PlatformMessageConst.MSG_PROCESS_SUCCEED,
 								new String[]{ mospParams.getName("TakeDown") }));
 			}
@@ -338,7 +306,8 @@ public class WorkTypeChangeRequestRegistBean extends TimeBean implements WorkTyp
 	
 	@Override
 	public void validate(WorkTypeChangeRequestDtoInterface dto) throws MospException {
-		initial(dto.getPersonalId(), dto.getRequestDate());
+		// 勤怠基本情報確認
+		initial(dto.getPersonalId(), dto.getRequestDate(), TimeConst.CODE_FUNCTION_WORK_TYPE_CHANGE);
 		// カレンダ勤務形態コードを取得
 		String scheduledWorkTypeCode = getScheduledWorkTypeCode(dto.getPersonalId(), dto.getRequestDate());
 		// カレンダ勤務形態コードと選択した勤務形態コードが同じ場合
@@ -404,8 +373,6 @@ public class WorkTypeChangeRequestRegistBean extends TimeBean implements WorkTyp
 		checkDraft(dto);
 		// 必須項目チェック。
 		checkRequired(dto);
-		// 申請期間チェック。
-		checkPeriod(dto);
 	}
 	
 	@Override
@@ -417,6 +384,16 @@ public class WorkTypeChangeRequestRegistBean extends TimeBean implements WorkTyp
 		if (checkAttendanceNoMsg(requestUtil)) {
 			// 勤怠が申請されている場合
 			addOthersRequestErrorMessage(dto.getRequestDate(), mospParams.getName("WorkManage"));
+		}
+		// 休暇申請リストを取得
+		List<HolidayRequestDtoInterface> holidayList = requestUtil.getHolidayList(false);
+		// 休暇申請情報毎に処理
+		for (HolidayRequestDtoInterface holidayRequestDto : holidayList) {
+			if (holidayRequestDto.getHolidayRange() == TimeConst.CODE_HOLIDAY_RANGE_TIME) {
+				// 時間休が存在する場合
+				addOthersRequestErrorMessage(dto.getRequestDate(), mospParams.getName("Vacation"));
+				break;
+			}
 		}
 	}
 	
@@ -443,8 +420,9 @@ public class WorkTypeChangeRequestRegistBean extends TimeBean implements WorkTyp
 	}
 	
 	@Override
-	public void checkCancel(WorkTypeChangeRequestDtoInterface dto) {
-		// 現在処理無し。処理が必要になった場合追加される予定。
+	public void checkCancel(WorkTypeChangeRequestDtoInterface dto) throws MospException {
+		// 解除申請時と同様の処理を行う
+		checkCancelAppli(dto);
 	}
 	
 	/**
@@ -532,20 +510,30 @@ public class WorkTypeChangeRequestRegistBean extends TimeBean implements WorkTyp
 	 */
 	protected void checkRequest(WorkTypeChangeRequestDtoInterface dto, RequestUtilBeanInterface requestUtil)
 			throws MospException {
-		if (checkRequestNoMsg(requestUtil)) {
-			// 他の申請が行われている場合
-			addApplicatedRequestErrorMessage(dto.getRequestDate());
-		}
+		// 休暇申請の有無の確認
+		checkHolidayRequest(dto, requestUtil);
 	}
 	
 	/**
-	 * 他の申請チェック。
+	 * 休暇申請チェック。
+	 * @param dto 対象DTO
 	 * @param requestUtil 申請ユーティリティ
-	 * @return 全休の休暇申請が行われている場合true、そうでない場合false
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
-	protected boolean checkRequestNoMsg(RequestUtilBeanInterface requestUtil) throws MospException {
-		return requestUtil.isHolidayAllDay(false);
+	protected void checkHolidayRequest(WorkTypeChangeRequestDtoInterface dto, RequestUtilBeanInterface requestUtil)
+			throws MospException {
+		// 申請日の休暇申請リストを取得
+		List<HolidayRequestDtoInterface> holidayList = requestUtil.getHolidayList(false);
+		if (!holidayList.isEmpty()) {
+			// 未承認・n次承認・n次戻・承認済の休暇申請が存在する場合
+			addOthersRequestErrorMessage(dto.getRequestDate(), mospParams.getName("Vacation"));
+		}
+		// 代休申請リストを取得
+		List<SubHolidayRequestDtoInterface> subHolidayList = requestUtil.getSubHolidayList(false);
+		if (!subHolidayList.isEmpty()) {
+			// 未承認・n次承認・n次戻・承認済の代休申請が存在する場合
+			addOthersRequestErrorMessage(dto.getRequestDate(), mospParams.getName("CompensatoryHoliday"));
+		}
 	}
 	
 	@Override
@@ -575,7 +563,7 @@ public class WorkTypeChangeRequestRegistBean extends TimeBean implements WorkTyp
 	 */
 	protected void checkSchedule(String personalId, Date targetDate, RequestUtilBeanInterface requestUtil)
 			throws MospException {
-		String workTypeCode = getScheduledWorkTypeCode(personalId, targetDate, requestUtil);
+		String workTypeCode = scheduleUtil.getScheduledWorkTypeCode(personalId, targetDate, requestUtil);
 		if (workTypeCode == null || workTypeCode.isEmpty() || TimeConst.CODE_HOLIDAY_LEGAL_HOLIDAY.equals(workTypeCode)
 				|| TimeConst.CODE_HOLIDAY_PRESCRIBED_HOLIDAY.equals(workTypeCode)) {
 			// 出勤日でない場合
@@ -589,84 +577,7 @@ public class WorkTypeChangeRequestRegistBean extends TimeBean implements WorkTyp
 	
 	@Override
 	public String getScheduledWorkTypeCode(String personalId, Date targetDate) throws MospException {
-		RequestUtilBeanInterface requestUtil = (RequestUtilBeanInterface)createBean(RequestUtilBeanInterface.class);
-		requestUtil.setRequests(personalId, targetDate);
-		return getScheduledWorkTypeCode(personalId, targetDate, requestUtil);
-	}
-	
-	/**
-	 * カレンダ勤務形態コードを取得する。
-	 * @param personalId 個人ID
-	 * @param targetDate 対象日
-	 * @param requestUtil 申請ユーティリティ
-	 * @return カレンダ勤務形態コード
-	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
-	 */
-	protected String getScheduledWorkTypeCode(String personalId, Date targetDate, RequestUtilBeanInterface requestUtil)
-			throws MospException {
-		Date date = targetDate;
-		WorkOnHolidayRequestDtoInterface workOnHolidayRequestDto = requestUtil.getWorkOnHolidayDto(true);
-		if (workOnHolidayRequestDto == null) {
-			// 振出・休出申請が承認済でない場合
-			List<SubstituteDtoInterface> list = requestUtil.getSubstituteList(true);
-			for (SubstituteDtoInterface substituteDto : list) {
-				if (substituteDto.getSubstituteRange() == TimeConst.CODE_HOLIDAY_RANGE_ALL) {
-					// 全休の場合
-					return substituteDto.getSubstituteType();
-				}
-			}
-		} else {
-			// 振出・休出申請が承認済である場合
-			int substitute = workOnHolidayRequestDto.getSubstitute();
-			if (substitute == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_ON
-					|| substitute == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_AM
-					|| substitute == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_PM) {
-				// 振替出勤の場合
-				List<SubstituteDtoInterface> list = substituteReference.getSubstituteList(workOnHolidayRequestDto
-					.getWorkflow());
-				for (SubstituteDtoInterface substituteDto : list) {
-					date = substituteDto.getSubstituteDate();
-					break;
-				}
-			} else if (substitute == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_OFF) {
-				// 休日出勤の場合
-				if (TimeConst.CODE_HOLIDAY_LEGAL_HOLIDAY.equals(workOnHolidayRequestDto.getWorkOnHolidayType())) {
-					// 法定休日出勤の場合
-					return TimeConst.CODE_WORK_ON_LEGAL_HOLIDAY;
-				} else if (TimeConst.CODE_HOLIDAY_PRESCRIBED_HOLIDAY.equals(workOnHolidayRequestDto
-					.getWorkOnHolidayType())) {
-					// 所定休日出勤の場合
-					return TimeConst.CODE_WORK_ON_PRESCRIBED_HOLIDAY;
-				} else {
-					return "";
-				}
-			} else {
-				return "";
-			}
-		}
-		ApplicationDtoInterface applicationDto = applicationReference.findForPerson(personalId, date);
-		if (applicationDto == null) {
-			return "";
-		}
-		ScheduleDtoInterface scheduleDto = scheduleReference.getScheduleInfo(applicationDto.getScheduleCode(), date);
-		if (scheduleDto == null) {
-			return "";
-		}
-		ScheduleDateDtoInterface scheduleDateDto = scheduleDateReference.getScheduleDateInfo(
-				scheduleDto.getScheduleCode(), scheduleDto.getActivateDate(), date);
-		if (scheduleDateDto == null || scheduleDateDto.getWorkTypeCode() == null) {
-			return "";
-		}
-		if (scheduleDateDto.getWorkTypeCode().isEmpty()
-				|| TimeConst.CODE_HOLIDAY_LEGAL_HOLIDAY.equals(scheduleDateDto.getWorkTypeCode())
-				|| TimeConst.CODE_HOLIDAY_PRESCRIBED_HOLIDAY.equals(scheduleDateDto.getWorkTypeCode())) {
-			return scheduleDateDto.getWorkTypeCode();
-		}
-		WorkTypeDtoInterface workTypeDto = workTypeReference.findForInfo(scheduleDateDto.getWorkTypeCode(), date);
-		if (workTypeDto == null || workTypeDto.getWorkTypeCode() == null) {
-			return "";
-		}
-		return workTypeDto.getWorkTypeCode();
+		return scheduleUtil.getScheduledWorkTypeCode(personalId, targetDate, true);
 	}
 	
 	@Override
@@ -695,9 +606,9 @@ public class WorkTypeChangeRequestRegistBean extends TimeBean implements WorkTyp
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
 	protected void checkEntered(WorkTypeChangeRequestDtoInterface dto) throws MospException {
-		if (!entranceReference.isEntered(dto.getPersonalId(), dto.getRequestDate())) {
+		if (!isEntered(dto.getPersonalId(), dto.getRequestDate())) {
 			// 出勤日時点で入社していない場合
-			addNotEntranceErrorMessage();
+			PlatformMessageUtility.addErrorEmployeeNotJoin(mospParams);
 		}
 	}
 	
@@ -732,27 +643,6 @@ public class WorkTypeChangeRequestRegistBean extends TimeBean implements WorkTyp
 	 */
 	protected void checkTighten(WorkTypeChangeRequestDtoInterface dto) throws MospException {
 		cutoffUtil.checkTighten(dto.getPersonalId(), dto.getRequestDate(), mospParams.getName("GoingWork", "Day"));
-	}
-	
-	/**
-	 * 申請時の入力チェック。申請期間チェック。<br>
-	 * @param dto 対象DTO
-	 */
-	protected void checkPeriod(WorkTypeChangeRequestDtoInterface dto) {
-		if (checkPeriodNoMsg(dto)) {
-			// 出勤日がシステム日付の1ヶ月後より先の場合
-			addRequestPeriodErrorMessage();
-		}
-	}
-	
-	/**
-	 * 申請時の入力チェック。申請期間チェック。<br>
-	 * @param dto 対象DTO
-	 * @return 出勤日がシステム日付の1ヶ月後までの場合true、そうでない場合false
-	 */
-	protected boolean checkPeriodNoMsg(WorkTypeChangeRequestDtoInterface dto) {
-		// システム日付の1ヶ月後より先の申請は不可
-		return dto.getRequestDate().after(DateUtility.addMonth(getSystemDate(), 1));
 	}
 	
 	@Override

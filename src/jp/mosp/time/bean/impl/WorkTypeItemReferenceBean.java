@@ -25,8 +25,10 @@ import java.util.Date;
 
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.base.MospParams;
+import jp.mosp.framework.utils.DateUtility;
 import jp.mosp.platform.base.PlatformBean;
 import jp.mosp.time.bean.WorkTypeItemReferenceBeanInterface;
+import jp.mosp.time.constant.TimeConst;
 import jp.mosp.time.dao.settings.WorkTypeItemDaoInterface;
 import jp.mosp.time.dto.settings.WorkTypeItemDtoInterface;
 
@@ -38,7 +40,7 @@ public class WorkTypeItemReferenceBean extends PlatformBean implements WorkTypeI
 	/**
 	 * 勤務形態項目マスタDAO。
 	 */
-	private WorkTypeItemDaoInterface	dao;
+	private WorkTypeItemDaoInterface dao;
 	
 	
 	/**
@@ -74,4 +76,40 @@ public class WorkTypeItemReferenceBean extends PlatformBean implements WorkTypeI
 		return dao.findForKey(workTypeCode, activateDate, workTypeItemCode);
 	}
 	
+	@Override
+	public int getWorkTime(Date startWorkTime, Date endWorkTime, int restTime) {
+		if (startWorkTime == null || endWorkTime == null) {
+			return 0;
+		}
+		
+		long startTime = startWorkTime.getTime();
+		long endTime = endWorkTime.getTime();
+		int difference = (int)(endTime - startTime) / TimeConst.CODE_DEFINITION_MINUTE_MILLI_SEC;
+		
+		return difference - restTime;
+	}
+	
+	@Override
+	public int getRestTime(int rest1, int rest2, int rest3, int rest4) {
+		return rest1 + rest2 + rest3 + rest4;
+	}
+	
+	@Override
+	public int getDifferenceTime(String startTimeHour, String startTimeMinute, String endTimeHour,
+			String endTimeMinute) {
+		if (startTimeHour.isEmpty() || startTimeMinute.isEmpty() || endTimeHour.isEmpty() || endTimeMinute.isEmpty()) {
+			return 0;
+		}
+		
+		int differencetime = 0;
+		try {
+			long start = DateUtility.getTime(startTimeHour, startTimeMinute).getTime();
+			long end = DateUtility.getTime(endTimeHour, endTimeMinute).getTime();
+			differencetime = (int)Math.abs((end - start) / TimeConst.CODE_DEFINITION_MINUTE_MILLI_SEC);
+		} catch (MospException e) {
+			e.printStackTrace();
+		}
+		
+		return differencetime;
+	}
 }

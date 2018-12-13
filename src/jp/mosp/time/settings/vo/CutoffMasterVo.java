@@ -302,14 +302,14 @@ public class CutoffMasterVo extends TimeSettingVo {
 	 * @return aryLblSelfTightening
 	 */
 	public String[] getAryLblSelfTightening() {
-		return aryLblSelfTightening;
+		return getStringArrayClone(aryLblSelfTightening);
 	}
 	
 	/**
 	 * @param aryLblSelfTightening セットする aryLblSelfTightening
 	 */
 	public void setAryLblSelfTightening(String[] aryLblSelfTightening) {
-		this.aryLblSelfTightening = aryLblSelfTightening;
+		this.aryLblSelfTightening = getStringArrayClone(aryLblSelfTightening);
 	}
 	
 }

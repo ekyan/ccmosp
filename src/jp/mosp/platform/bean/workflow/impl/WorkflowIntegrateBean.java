@@ -30,19 +30,20 @@ import java.util.Set;
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.base.MospParams;
 import jp.mosp.framework.utils.MospUtility;
+import jp.mosp.framework.utils.RoleUtility;
 import jp.mosp.platform.base.PlatformBean;
 import jp.mosp.platform.bean.human.ConcurrentReferenceBeanInterface;
-import jp.mosp.platform.bean.human.EntranceReferenceBeanInterface;
 import jp.mosp.platform.bean.human.HumanReferenceBeanInterface;
 import jp.mosp.platform.bean.human.HumanSearchBeanInterface;
 import jp.mosp.platform.bean.human.RetirementReferenceBeanInterface;
 import jp.mosp.platform.bean.human.SuspensionReferenceBeanInterface;
+import jp.mosp.platform.bean.system.PlatformMasterBeanInterface;
 import jp.mosp.platform.bean.system.PositionReferenceBeanInterface;
+import jp.mosp.platform.bean.system.UserExtraRoleReferenceBeanInterface;
 import jp.mosp.platform.bean.system.UserMasterReferenceBeanInterface;
 import jp.mosp.platform.bean.workflow.ApprovalRouteReferenceBeanInterface;
 import jp.mosp.platform.bean.workflow.ApprovalRouteUnitReferenceBeanInterface;
 import jp.mosp.platform.bean.workflow.ApprovalUnitReferenceBeanInterface;
-import jp.mosp.platform.bean.workflow.RouteApplicationReferenceBeanInterface;
 import jp.mosp.platform.bean.workflow.SubApproverReferenceBeanInterface;
 import jp.mosp.platform.bean.workflow.WorkflowIntegrateBeanInterface;
 import jp.mosp.platform.bean.workflow.WorkflowReferenceBeanInterface;
@@ -59,7 +60,6 @@ import jp.mosp.platform.dto.workflow.ApprovalUnitDtoInterface;
 import jp.mosp.platform.dto.workflow.RouteApplicationDtoInterface;
 import jp.mosp.platform.dto.workflow.SubApproverDtoInterface;
 import jp.mosp.platform.dto.workflow.WorkflowDtoInterface;
-import jp.mosp.platform.utils.PlatformUtility;
 
 /**
  * ワークフロー統括クラス。
@@ -72,9 +72,9 @@ public class WorkflowIntegrateBean extends PlatformBean implements WorkflowInteg
 	protected WorkflowReferenceBeanInterface			workflowReference;
 	
 	/**
-	 * 承認ルート適用参照クラス。
+	 * プラットフォームマスタ参照クラス。<br>
 	 */
-	protected RouteApplicationReferenceBeanInterface	applicationReference;
+	protected PlatformMasterBeanInterface				platformMaster;
 	
 	/**
 	 * 承認ルート参照クラス。
@@ -102,11 +102,6 @@ public class WorkflowIntegrateBean extends PlatformBean implements WorkflowInteg
 	protected HumanReferenceBeanInterface				humanReference;
 	
 	/**
-	 * 人事入社情報参照クラス。
-	 */
-	protected EntranceReferenceBeanInterface			entranceReference;
-	
-	/**
 	 * 人事退職情報参照クラス。
 	 */
 	protected RetirementReferenceBeanInterface			retirementReference;
@@ -125,6 +120,11 @@ public class WorkflowIntegrateBean extends PlatformBean implements WorkflowInteg
 	 * ユーザマスタ参照クラス。
 	 */
 	protected UserMasterReferenceBeanInterface			userMasterReference;
+	
+	/**
+	 * ユーザ追加ロール情報参照処理。<br>
+	 */
+	protected UserExtraRoleReferenceBeanInterface		userExtraRoleRefer;
 	
 	/**
 	 * 職位マスタ参照クラス。
@@ -156,19 +156,21 @@ public class WorkflowIntegrateBean extends PlatformBean implements WorkflowInteg
 	@Override
 	public void initBean() throws MospException {
 		routeReference = (ApprovalRouteReferenceBeanInterface)createBean(ApprovalRouteReferenceBeanInterface.class);
-		applicationReference = (RouteApplicationReferenceBeanInterface)createBean(RouteApplicationReferenceBeanInterface.class);
-		routeUnitReference = (ApprovalRouteUnitReferenceBeanInterface)createBean(ApprovalRouteUnitReferenceBeanInterface.class);
+		routeUnitReference = (ApprovalRouteUnitReferenceBeanInterface)createBean(
+				ApprovalRouteUnitReferenceBeanInterface.class);
 		unitReference = (ApprovalUnitReferenceBeanInterface)createBean(ApprovalUnitReferenceBeanInterface.class);
 		humanSearch = (HumanSearchBeanInterface)createBean(HumanSearchBeanInterface.class);
 		humanReference = (HumanReferenceBeanInterface)createBean(HumanReferenceBeanInterface.class);
-		entranceReference = (EntranceReferenceBeanInterface)createBean(EntranceReferenceBeanInterface.class);
 		retirementReference = (RetirementReferenceBeanInterface)createBean(RetirementReferenceBeanInterface.class);
 		suspensionReference = (SuspensionReferenceBeanInterface)createBean(SuspensionReferenceBeanInterface.class);
 		concurrentReference = (ConcurrentReferenceBeanInterface)createBean(ConcurrentReferenceBeanInterface.class);
 		userMasterReference = (UserMasterReferenceBeanInterface)createBean(UserMasterReferenceBeanInterface.class);
+		userExtraRoleRefer = (UserExtraRoleReferenceBeanInterface)createBean(UserExtraRoleReferenceBeanInterface.class);
 		positionReference = (PositionReferenceBeanInterface)createBean(PositionReferenceBeanInterface.class);
 		workflowReference = (WorkflowReferenceBeanInterface)createBean(WorkflowReferenceBeanInterface.class);
 		subApproverReference = (SubApproverReferenceBeanInterface)createBean(SubApproverReferenceBeanInterface.class);
+		// プラットフォームマスタ参照クラスを取得
+		platformMaster = (PlatformMasterBeanInterface)createBean(PlatformMasterBeanInterface.class);
 	}
 	
 	@Override
@@ -182,7 +184,8 @@ public class WorkflowIntegrateBean extends PlatformBean implements WorkflowInteg
 		// ルート承認者リスト準備
 		List<List<String[]>> routeApproverList = new ArrayList<List<String[]>>();
 		// ルート適用情報取得及び確認
-		RouteApplicationDtoInterface routeApplicationDto = findForPerson(personalId, targetDate, workflowType);
+		RouteApplicationDtoInterface routeApplicationDto = platformMaster.getRouteApplication(personalId, targetDate,
+				workflowType);
 		if (routeApplicationDto == null) {
 			return routeApproverList;
 		}
@@ -267,12 +270,6 @@ public class WorkflowIntegrateBean extends PlatformBean implements WorkflowInteg
 	}
 	
 	@Override
-	public RouteApplicationDtoInterface findForPerson(String personalId, Date targetDate, int workflowType)
-			throws MospException {
-		return applicationReference.findForPerson(personalId, targetDate, workflowType);
-	}
-	
-	@Override
 	public String getWorkflowStatus(String status, int stage) {
 		// ワークフロー状態確認
 		if (PlatformConst.CODE_STATUS_DRAFT.equals(status)) {
@@ -295,7 +292,8 @@ public class WorkflowIntegrateBean extends PlatformBean implements WorkflowInteg
 			// 承認済
 			return getNameFinish();
 		}
-		if (PlatformConst.CODE_STATUS_CANCEL_APPLY.equals(status)) {
+		if (PlatformConst.CODE_STATUS_CANCEL_APPLY.equals(status)
+				|| PlatformConst.CODE_STATUS_CANCEL_WITHDRAWN_APPLY.equals(status)) {
 			// 解除申
 			return getNameCancelAppli();
 		}
@@ -334,7 +332,8 @@ public class WorkflowIntegrateBean extends PlatformBean implements WorkflowInteg
 		} else if (status.equals(PlatformConst.CODE_STATUS_COMPLETE)) {
 			// 承認(最終承認)
 			return getNameApprove();
-		} else if (status.equals(PlatformConst.CODE_STATUS_CANCEL_APPLY)) {
+		} else if (status.equals(PlatformConst.CODE_STATUS_CANCEL_APPLY)
+				|| status.equals(PlatformConst.CODE_STATUS_CANCEL_WITHDRAWN_APPLY)) {
 			// 解除申
 			return getNameApply();
 		}
@@ -343,6 +342,33 @@ public class WorkflowIntegrateBean extends PlatformBean implements WorkflowInteg
 	
 	@Override
 	public boolean isApprover(WorkflowDtoInterface dto, String personalId) throws MospException {
+		// ルートユニットリスト群を準備
+		Map<String, List<ApprovalRouteUnitDtoInterface>> routeUnitMap = new HashMap<String, List<ApprovalRouteUnitDtoInterface>>();
+		// 承認者ユニットコード群を準備
+		Set<String> approverSet = new HashSet<String>();
+		// 非承認者ユニットコード群を準備
+		Set<String> notApproverSet = new HashSet<String>();
+		// 対象個人IDが操作権を持つかどうかを確認
+		return isApprover(dto, personalId, routeUnitMap, approverSet, notApproverSet);
+	}
+	
+	/**
+	 * 対象ワークフローにおいて、対象個人IDが操作権を持つかどうかを確認する。<br>
+	 * <br>
+	 * 一度確認したユニットは、承認者ユニットコード群
+	 * 及び非承認者ユニットコード群に保持しておく。<br>
+	 * <br>
+	 * @param dto            対象ワークフロー情報
+	 * @param personalId     対象個人ID
+	 * @param routeUnitMap   ルートユニットリスト群(キー：ルートコード)
+	 * @param approverSet    承認者ユニットコード群(キー：対象日)
+	 * @param notApproverSet 非承認者ユニットコード群(キー：対象日)
+	 * @return 確認結果(true：操作権を持つ、false：操作権を持たない)
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	protected boolean isApprover(WorkflowDtoInterface dto, String personalId,
+			Map<String, List<ApprovalRouteUnitDtoInterface>> routeUnitMap, Set<String> approverSet,
+			Set<String> notApproverSet) throws MospException {
 		// ワークフロー段階確認
 		if (dto.getWorkflowStage() == PlatformConst.WORKFLOW_STAGE_ZERO) {
 			// 操作者が申請者の場合
@@ -355,7 +381,8 @@ public class WorkflowIntegrateBean extends PlatformBean implements WorkflowInteg
 			return false;
 		}
 		// 操作権を持つ段階を取得
-		List<Integer> approverStageList = getApproverStageList(dto, personalId);
+		List<Integer> approverStageList = getApproverStageList(dto, personalId, routeUnitMap, approverSet,
+				notApproverSet);
 		// ワークフロー段階確認
 		if (approverStageList.contains(dto.getWorkflowStage())) {
 			return true;
@@ -386,13 +413,15 @@ public class WorkflowIntegrateBean extends PlatformBean implements WorkflowInteg
 			}
 			return false;
 		}
+		// システム日付を取得
+		Date systemDate = getSystemDate();
 		// ルートユニット情報取得
-		List<ApprovalRouteUnitDtoInterface> routeUnitList = routeUnitReference.getApprovalRouteUnitList(
-				dto.getRouteCode(), dto.getWorkflowDate());
+		List<ApprovalRouteUnitDtoInterface> routeUnitList = routeUnitReference
+			.getApprovalRouteUnitList(dto.getRouteCode(), systemDate);
 		// ルートユニット毎に確認
 		for (ApprovalRouteUnitDtoInterface routeUnitDto : routeUnitList) {
 			// ユニット承認者リスト取得
-			List<HumanDtoInterface> humanList = getUnitApproverList(routeUnitDto.getUnitCode(), dto.getWorkflowDate());
+			List<HumanDtoInterface> humanList = getUnitApproverList(routeUnitDto.getUnitCode(), systemDate);
 			// ユニット承認者毎に処理
 			for (HumanDtoInterface humanDto : humanList) {
 				// 対象個人ID確認
@@ -407,12 +436,18 @@ public class WorkflowIntegrateBean extends PlatformBean implements WorkflowInteg
 	/**
 	 * 対象ワークフローにおいて、対象個人IDが操作権を持つ段階のリスト取得する。<br>
 	 * 操作権を持たない場合は0を返す。<br>
-	 * @param dto        対象ワークフロー情報
-	 * @param personalId 対象個人ID
+	 * <br>
+	 * @param dto            対象ワークフロー情報
+	 * @param personalId     対象個人ID
+	 * @param routeUnitMap   ルートユニットリスト群(キー：ルートコード)
+	 * @param approverSet    承認者ユニットコード群
+	 * @param notApproverSet 非承認者ユニットコード群
 	 * @return 操作権を持つ段階のリスト
 	 * @throws MospException インスタンスの取得、SQLの作成及び実行に失敗した場合
 	 */
-	protected List<Integer> getApproverStageList(WorkflowDtoInterface dto, String personalId) throws MospException {
+	protected List<Integer> getApproverStageList(WorkflowDtoInterface dto, String personalId,
+			Map<String, List<ApprovalRouteUnitDtoInterface>> routeUnitMap, Set<String> approverSet,
+			Set<String> notApproverSet) throws MospException {
 		// 操作権を持つ段階のリスト準備
 		List<Integer> stageList = new ArrayList<Integer>();
 		// 承認者個人ID確認
@@ -428,24 +463,86 @@ public class WorkflowIntegrateBean extends PlatformBean implements WorkflowInteg
 			}
 			return stageList;
 		}
-		// ルートユニット情報取得
-		List<ApprovalRouteUnitDtoInterface> routeUnitList = routeUnitReference.getApprovalRouteUnitList(
-				dto.getRouteCode(), dto.getWorkflowDate());
+		// システム日付を取得
+		Date systemDate = getSystemDate();
+		// ルートコードを取得
+		String routeCode = dto.getRouteCode();
+		// ルートユニット情報を取得
+		List<ApprovalRouteUnitDtoInterface> routeUnitList = routeUnitMap.get(routeCode);
+		// ルートユニット情報が取得できなかった場合
+		if (routeUnitList == null) {
+			// ルートユニット情報取得
+			routeUnitList = routeUnitReference.getApprovalRouteUnitList(routeCode, systemDate);
+			routeUnitMap.put(routeCode, routeUnitList);
+		}
 		// ルートユニット毎に確認
 		for (ApprovalRouteUnitDtoInterface routeUnitDto : routeUnitList) {
-			// ユニット承認者リスト取得
-			List<HumanDtoInterface> humanList = getUnitApproverList(routeUnitDto.getUnitCode(), dto.getWorkflowDate());
-			// ユニット承認者毎に処理
-			for (HumanDtoInterface humanDto : humanList) {
-				// 対象個人ID確認
-				if (personalId.equals(humanDto.getPersonalId())) {
-					// 操作権を持つ段階のリストに追加
-					stageList.add(routeUnitDto.getApprovalStage());
-					break;
-				}
+			// ユニットコード取得
+			String unitCode = routeUnitDto.getUnitCode();
+			// 承認者ユニットコード群に含まれる場合
+			if (approverSet.contains(unitCode)) {
+				// 操作権を持つ段階のリストに追加
+				stageList.add(routeUnitDto.getApprovalStage());
+				continue;
+			}
+			// 非承認者ユニットコード群に含まれる場合
+			if (notApproverSet.contains(unitCode)) {
+				// 処理無し
+				continue;
+			}
+			// 対象日におけるユニットに設定されている承認者個人ID群を取得
+			Set<String> unitApproverSet = getUnitApproverSet(unitCode, systemDate);
+			// 対象個人ID確認
+			if (unitApproverSet.contains(personalId)) {
+				// 承認者ユニットコード群に追加
+				approverSet.add(unitCode);
+				// 操作権を持つ段階のリストに追加
+				stageList.add(routeUnitDto.getApprovalStage());
+			} else {
+				// 非承認者ユニットコード群に追加
+				notApproverSet.add(unitCode);
 			}
 		}
 		return stageList;
+	}
+	
+	/**
+	 * 対象日におけるユニットに設定されている承認者個人ID群を取得する。<br>
+	 * <br>
+	 * 但し、代理承認者は含まれない。<br>
+	 * また、入社、休職、退職、ロールは、考慮しない。<br>
+	 * <br>
+	 * @param unitCode   ユニットコード
+	 * @param targetDate 対象日
+	 * @return 承認者個人ID群
+	 * @throws MospException インスタンスの取得、SQLの作成及び実行に失敗した場合
+	 */
+	protected Set<String> getUnitApproverSet(String unitCode, Date targetDate) throws MospException {
+		// 検索ユニット承認者群準備
+		Set<String> set = new HashSet<String>();
+		// ユニット情報取得
+		ApprovalUnitDtoInterface unitDto = unitReference.getApprovalUnitInfo(unitCode, targetDate);
+		// ユニット区分が個人IDの場合
+		if (PlatformConst.UNIT_TYPE_PERSON.equals(unitDto.getUnitType())) {
+			// 個人ID配列取得
+			set.addAll(asList(unitDto.getApproverPersonalId(), SEPARATOR_DATA));
+		}
+		// ユニット区分が所属の場合
+		if (PlatformConst.UNIT_TYPE_SECTION.equals(unitDto.getUnitType())) {
+			// 検索条件設定(対象日)
+			humanSearch.setTargetDate(targetDate);
+			// 検索条件設定(所属コード)
+			humanSearch.setSectionCode(unitDto.getApproverSectionCode());
+			// 検索条件設定(職位コード)
+			humanSearch.setPositionCode(unitDto.getApproverPositionCode());
+			// 検索条件設定(職位等級範囲)
+			humanSearch.setPositionGradeRange(unitDto.getApproverPositionGrade());
+			// 検索条件設定(兼務要否)
+			humanSearch.setNeedConcurrent(true);
+			// 承認者検索
+			set.addAll(humanSearch.getPersonalIdSet());
+		}
+		return set;
 	}
 	
 	@Override
@@ -477,6 +574,8 @@ public class WorkflowIntegrateBean extends PlatformBean implements WorkflowInteg
 			humanSearch.setSectionCode(unitDto.getApproverSectionCode());
 			// 検索条件設定(職位コード)
 			humanSearch.setPositionCode(unitDto.getApproverPositionCode());
+			// 検索条件設定(職位等級範囲)
+			humanSearch.setPositionGradeRange(unitDto.getApproverPositionGrade());
 			// 検索条件設定(兼務要否)
 			humanSearch.setNeedConcurrent(true);
 			// 承認者検索
@@ -485,7 +584,7 @@ public class WorkflowIntegrateBean extends PlatformBean implements WorkflowInteg
 		// ユニット承認者リスト準備
 		List<HumanDtoInterface> approverList = new ArrayList<HumanDtoInterface>();
 		// 承認ロールセット取得
-		Set<String> approverRoleSet = PlatformUtility.getApproverRoleSet(mospParams);
+		Set<String> approverRoleSet = RoleUtility.getApproverRoles(mospParams);
 		// 検索ユニット承認者毎に処理
 		for (HumanDtoInterface approver : searchList) {
 			// 対象者が有効な承認者であるかを確認
@@ -520,8 +619,7 @@ public class WorkflowIntegrateBean extends PlatformBean implements WorkflowInteg
 	protected boolean isValidApprover(String psersonalId, Date targetDate, Set<String> approverRoleSet)
 			throws MospException {
 		// 入社、休職、退職を確認
-		if (entranceReference.isEntered(psersonalId, targetDate) == false
-				|| retirementReference.isRetired(psersonalId, targetDate)
+		if (isEntered(psersonalId, targetDate) == false || retirementReference.isRetired(psersonalId, targetDate)
 				|| suspensionReference.isSuspended(psersonalId, targetDate)) {
 			return false;
 		}
@@ -530,7 +628,7 @@ public class WorkflowIntegrateBean extends PlatformBean implements WorkflowInteg
 		// ユーザ情報毎に確認
 		for (UserMasterDtoInterface user : userList) {
 			// 承認ロールを確認
-			if (approverRoleSet.contains(user.getRoleCode())) {
+			if (userExtraRoleRefer.isTheRoleCodeSet(user, approverRoleSet)) {
 				// 承認ロールを有している場合
 				return true;
 			}
@@ -718,19 +816,26 @@ public class WorkflowIntegrateBean extends PlatformBean implements WorkflowInteg
 		// 承認可能ワークフロー情報リスト取得
 		List<WorkflowDtoInterface> approvableList = workflowReference.getApprovableList(functionCodeSet);
 		// 特権ロール確認
-		if (mospParams.getUserRole().isSuper()) {
+		if (RoleUtility.isSuper(mospParams)) {
 			// 全ての承認可能ワークフロー情報を取得
 			return approvableList;
 		}
 		// 対象個人IDが承認可能なワークフロー情報リストを準備
 		List<WorkflowDtoInterface> list = new ArrayList<WorkflowDtoInterface>();
+		// ルートユニットリスト群を準備
+		Map<String, List<ApprovalRouteUnitDtoInterface>> routeUnitMap = new HashMap<String, List<ApprovalRouteUnitDtoInterface>>();
+		// 承認者ユニットコード群を準備
+		Set<String> approverSet = new HashSet<String>();
+		// 非承認者ユニットコード群を準備
+		Set<String> notApproverSet = new HashSet<String>();
 		// ワークフロー情報毎に処理
 		for (WorkflowDtoInterface dto : approvableList) {
 			// 承認者確認
-			if (isApprover(dto, personalId)) {
+			if (isApprover(dto, personalId, routeUnitMap, approverSet, notApproverSet)) {
 				// リストにワークフロー情報を追加
 				list.add(dto);
 			}
+			
 		}
 		return list;
 	}
@@ -750,16 +855,22 @@ public class WorkflowIntegrateBean extends PlatformBean implements WorkflowInteg
 		// 承認可能ワークフロー情報リスト取得
 		List<WorkflowDtoInterface> cancelableList = workflowReference.getCancelableList(functionCodeSet);
 		// 特権ロール確認
-		if (mospParams.getUserRole().isSuper()) {
+		if (RoleUtility.isSuper(mospParams)) {
 			// 全ての承認可能ワークフロー情報を取得
 			return cancelableList;
 		}
 		// 対象個人IDが承認可能なワークフロー情報リストを準備
 		List<WorkflowDtoInterface> list = new ArrayList<WorkflowDtoInterface>();
+		// ルートユニットリスト群を準備
+		Map<String, List<ApprovalRouteUnitDtoInterface>> routeUnitMap = new HashMap<String, List<ApprovalRouteUnitDtoInterface>>();
+		// 承認者ユニットコード群を準備
+		Set<String> approverSet = new HashSet<String>();
+		// 非承認者ユニットコード群を準備
+		Set<String> notApproverSet = new HashSet<String>();
 		// ワークフロー情報毎に処理
 		for (WorkflowDtoInterface dto : cancelableList) {
 			// 承認者確認
-			if (isApprover(dto, personalId)) {
+			if (isApprover(dto, personalId, routeUnitMap, approverSet, notApproverSet)) {
 				// リストにワークフロー情報を追加
 				list.add(dto);
 			}
@@ -797,7 +908,7 @@ public class WorkflowIntegrateBean extends PlatformBean implements WorkflowInteg
 			subAapprovableMap.put(function, new HashMap<Long, WorkflowDtoInterface>());
 		}
 		// 特権ロール確認
-		if (mospParams.getUserRole().isSuper()) {
+		if (RoleUtility.isSuper(mospParams)) {
 			// 空の代理承認可能ワークフロー情報マップを取得(マップ特権ロールは全ての申請を操作できるため)
 			return subAapprovableMap;
 		}
@@ -853,7 +964,7 @@ public class WorkflowIntegrateBean extends PlatformBean implements WorkflowInteg
 			subAapprovableMap.put(function, new HashMap<Long, WorkflowDtoInterface>());
 		}
 		// 特権ロール確認
-		if (mospParams.getUserRole().isSuper()) {
+		if (RoleUtility.isSuper(mospParams)) {
 			// 空の代理承認可能ワークフロー情報マップを取得(マップ特権ロールは全ての申請を操作できるため)
 			return subAapprovableMap;
 		}
@@ -895,7 +1006,8 @@ public class WorkflowIntegrateBean extends PlatformBean implements WorkflowInteg
 		} else if (state.equals(PlatformConst.CODE_STATUS_REVERT)) {
 			// 差戻ワークフロー情報取得
 			effectiveList = workflowReference.getRevertedList(fromDate, toDate, functionCodeSet);
-		} else if (state.equals(PlatformConst.CODE_STATUS_CANCEL_APPLY)) {
+		} else if (state.equals(PlatformConst.CODE_STATUS_CANCEL_APPLY)
+				|| state.equals(PlatformConst.CODE_STATUS_CANCEL_WITHDRAWN_APPLY)) {
 			// 解除申ワークフロー情報取得
 			effectiveList = workflowReference.getCancelAppliedList(fromDate, toDate, functionCodeSet);
 		} else {
@@ -913,7 +1025,7 @@ public class WorkflowIntegrateBean extends PlatformBean implements WorkflowInteg
 			}
 		}
 		// 計算ロール確認
-		if (mospParams.getUserRole().isCalculator()) {
+		if (RoleUtility.isCalculator(mospParams)) {
 			// 全ての有効ワークフロー情報を取得
 			return searchList;
 		}
@@ -967,6 +1079,11 @@ public class WorkflowIntegrateBean extends PlatformBean implements WorkflowInteg
 	@Override
 	public boolean isCancelApprovable(WorkflowDtoInterface dto) {
 		return dto.getWorkflowStatus().equals(PlatformConst.CODE_STATUS_CANCEL_APPLY);
+	}
+	
+	@Override
+	public boolean isCancelWithDrawnApprovable(WorkflowDtoInterface dto) {
+		return dto.getWorkflowStatus().equals(PlatformConst.CODE_STATUS_CANCEL_WITHDRAWN_APPLY);
 	}
 	
 	@Override

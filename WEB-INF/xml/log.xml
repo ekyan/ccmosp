@@ -44,6 +44,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		jp.mosp.framework.log.MospLogger
 	</Application>
 	
+	<!-- パラメータログ出力クラス(カンマ区切で複数設定可能) -->
+	<Application key="LogTypeParameter">
+		jp.mosp.framework.log.MospLogger
+	</Application>
+	
 	<!-- 参照SQLログ出力クラス(カンマ区切で複数設定可能) -->
 	<Application key="LogTypeSqlSelect">
 		jp.mosp.framework.log.MospLogger
@@ -104,6 +109,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		500
 	</Application>
 	
+	<!-- パラメータログレベル(500：FINE) -->
+	<Application key="LogLevelParameter">500</Application>
+	
 	<!-- 参照SQLログレベル(500：FINE) -->
 	<Application key="LogLevelSqlSelect">500</Application>
 	
@@ -157,5 +165,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<Application key="LogLevel">
 		300
 	</Application>
-
+	
 </MosP>

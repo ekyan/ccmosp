@@ -103,7 +103,8 @@ public class WorkTypeChangeRequestSearchBean extends TimeBean implements WorkTyp
 	public void initBean() throws MospException {
 		dao = (WorkTypeChangeRequestDaoInterface)createDao(WorkTypeChangeRequestDaoInterface.class);
 		workflowIntegrate = (WorkflowIntegrateBeanInterface)createBean(WorkflowIntegrateBeanInterface.class);
-		approvalInfoReference = (ApprovalInfoReferenceBeanInterface)createBean(ApprovalInfoReferenceBeanInterface.class);
+		approvalInfoReference = (ApprovalInfoReferenceBeanInterface)createBean(
+				ApprovalInfoReferenceBeanInterface.class);
 	}
 	
 	@Override
@@ -121,8 +122,8 @@ public class WorkTypeChangeRequestSearchBean extends TimeBean implements WorkTyp
 		List<WorkTypeChangeRequestListDtoInterface> list = new ArrayList<WorkTypeChangeRequestListDtoInterface>();
 		for (WorkTypeChangeRequestDtoInterface workTypeChangeRequestDto : requestList) {
 			WorkTypeChangeRequestListDtoInterface dto = new WorkTypeChangeRequestListDto();
-			WorkflowDtoInterface workflowDto = workflowIntegrate.getLatestWorkflowInfo(workTypeChangeRequestDto
-				.getWorkflow());
+			WorkflowDtoInterface workflowDto = workflowIntegrate
+				.getLatestWorkflowInfo(workTypeChangeRequestDto.getWorkflow());
 			if (workflowDto == null) {
 				continue;
 			}

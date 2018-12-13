@@ -38,7 +38,7 @@ public class EntranceRegistBean extends PlatformHumanBean implements EntranceReg
 	/**
 	 * 人事入社情報DAOクラス。<br>
 	 */
-	EntranceDaoInterface	dao;
+	EntranceDaoInterface dao;
 	
 	
 	/**

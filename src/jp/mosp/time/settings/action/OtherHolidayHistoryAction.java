@@ -257,7 +257,7 @@ public class OtherHolidayHistoryAction extends TimeSettingAction {
 			setPageInfo(CMD_PAGE, getListLength());
 			editMode();
 			// 編集モード設定
-			vo.setModeCardEdit(PlatformConst.MODE_CARD_EDIT_INSERT);
+			vo.setModeCardEdit(PlatformConst.MODE_CARD_EDIT_EDIT);
 		} catch (Exception e) {
 			throw new MospException(e);
 		}
@@ -282,8 +282,8 @@ public class OtherHolidayHistoryAction extends TimeSettingAction {
 		search.setPositionCode(vo.getPltSearchPosition());
 		search.setInactivateFlag(vo.getPltSearchInactivate());
 		// 検索条件をもとに検索クラスからマスタリストを取得
-		List<HolidayHistoryListDtoInterface> list = search.getSearchList(Integer.parseInt(mospParams.getProperties()
-			.getCodeArray(TimeConst.CODE_KEY_HOLIDAY_TYPE_MASTER, false)[1][0]));
+		List<HolidayHistoryListDtoInterface> list = search.getSearchList(Integer
+			.parseInt(mospParams.getProperties().getCodeArray(TimeConst.CODE_KEY_HOLIDAY_TYPE_MASTER, false)[1][0]));
 		// 検索結果リスト設定
 		vo.setList(list);
 		// デフォルトソートキー及びソート順設定
@@ -746,6 +746,8 @@ public class OtherHolidayHistoryAction extends TimeSettingAction {
 		dto.setActivateDate(getEditActivateDate());
 		dto.setPersonalId(vo.getPersonalId());
 		dto.setGivingDay(Double.valueOf(vo.getTxtEditHolidayGiving()));
+		// TODO 時間数
+		dto.setGivingHour(0);
 		// 取得期間が0ヶ月0日の場合、Date型の最大日付を設定する。
 		if ("0".equals(vo.getTxtEditHolidayLimitMonth()) && "0".equals(vo.getTxtEditHolidayLimitDay())) {
 			dto.setHolidayLimitDate(TimeUtility.getUnlimitedDate());
@@ -754,11 +756,12 @@ public class OtherHolidayHistoryAction extends TimeSettingAction {
 					DateUtility.addMonth(getEditActivateDate(), Integer.parseInt(vo.getTxtEditHolidayLimitMonth())),
 					Integer.parseInt(vo.getTxtEditHolidayLimitDay()) - 1));
 		}
-		dto.setHolidayLimitMonth(Integer.valueOf(vo.getTxtEditHolidayLimitMonth()));
-		dto.setHolidayLimitDay(Integer.valueOf(vo.getTxtEditHolidayLimitDay()));
+		dto.setHolidayLimitMonth(getInt(vo.getTxtEditHolidayLimitMonth()));
+		dto.setHolidayLimitDay(getInt(vo.getTxtEditHolidayLimitDay()));
 		dto.setHolidayType(TimeConst.CODE_HOLIDAYTYPE_OTHER);
-		dto.setInactivateFlag(Integer.valueOf(vo.getPltEditInactivate()));
+		dto.setInactivateFlag(getInt(vo.getPltEditInactivate()));
 		dto.setCancelDay(0);
+		dto.setCancelHour(0);
 		dto.setHolidayCode(vo.getPltEditHolidayType());
 	}
 	

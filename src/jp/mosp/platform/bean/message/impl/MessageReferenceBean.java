@@ -38,7 +38,7 @@ public class MessageReferenceBean extends PlatformBean implements MessageReferen
 	/**
 	 * メッセージテーブルDAO。
 	 */
-	private MessageDaoInterface	dao;
+	private MessageDaoInterface dao;
 	
 	
 	/**

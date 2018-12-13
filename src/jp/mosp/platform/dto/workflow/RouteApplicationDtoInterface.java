@@ -18,12 +18,14 @@
 package jp.mosp.platform.dto.workflow;
 
 import jp.mosp.platform.base.PlatformDtoInterface;
+import jp.mosp.platform.dto.base.ApplicationMasterDtoInterface;
 import jp.mosp.platform.dto.base.WorkflowTypeDtoInterface;
 
 /**
  * ルート適用マスタDTOインターフェース。
  */
-public interface RouteApplicationDtoInterface extends PlatformDtoInterface, WorkflowTypeDtoInterface {
+public interface RouteApplicationDtoInterface
+		extends PlatformDtoInterface, ApplicationMasterDtoInterface, WorkflowTypeDtoInterface {
 	
 	/**
 	 * @return レコード識別ID。
@@ -74,55 +76,5 @@ public interface RouteApplicationDtoInterface extends PlatformDtoInterface, Work
 	 * @param routeApplicationType セットする ルート適用区分。
 	 */
 	void setRouteApplicationType(int routeApplicationType);
-	
-	/**
-	 * @return 勤務地コード。
-	 */
-	String getWorkPlaceCode();
-	
-	/**
-	 * @param workPlaceCode セットする 勤務地コード。
-	 */
-	void setWorkPlaceCode(String workPlaceCode);
-	
-	/**
-	 * @return 雇用契約コード。
-	 */
-	String getEmploymentContractCode();
-	
-	/**
-	 * @param employmentContractCode セットする 雇用契約コード。
-	 */
-	void setEmploymentContractCode(String employmentContractCode);
-	
-	/**
-	 * @return 所属コード。
-	 */
-	String getSectionCode();
-	
-	/**
-	 * @param sectionCode セットする 所属コード。
-	 */
-	void setSectionCode(String sectionCode);
-	
-	/**
-	 * @return 職位コード。
-	 */
-	String getPositionCode();
-	
-	/**
-	 * @param positionCode セットする 職位コード。
-	 */
-	void setPositionCode(String positionCode);
-	
-	/**
-	 * @return 個人ID。
-	 */
-	String getPersonalIds();
-	
-	/**
-	 * @param personalIds セットする 個人ID。
-	 */
-	void setPersonalIds(String personalIds);
 	
 }

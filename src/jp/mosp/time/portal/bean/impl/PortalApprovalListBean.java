@@ -22,6 +22,7 @@ import java.util.Map;
 
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.base.MospParams;
+import jp.mosp.framework.utils.RoleUtility;
 import jp.mosp.platform.bean.portal.PortalBeanInterface;
 import jp.mosp.platform.bean.portal.impl.PortalBean;
 import jp.mosp.platform.dto.workflow.WorkflowDtoInterface;
@@ -122,7 +123,7 @@ public class PortalApprovalListBean extends PortalBean implements PortalBeanInte
 	@Override
 	public void show() throws MospException {
 		// 承認権限確認
-		if (mospParams.getUserRole().isApprover() == false) {
+		if (RoleUtility.isApprover(mospParams) == false) {
 			return;
 		}
 		// ポータル用JSPパス追加
@@ -134,13 +135,13 @@ public class PortalApprovalListBean extends PortalBean implements PortalBeanInte
 		// 承認可能ワークフロー情報群(勤怠)を取得
 		Map<String, Map<Long, WorkflowDtoInterface>> approvableMap = approvalInfoRefer.getApprovableMap(personalId);
 		// 代理承認可能ワークフロー情報群(勤怠)を取得
-		Map<String, Map<Long, WorkflowDtoInterface>> subApprovableMap = approvalInfoRefer.getSubApprovableMap(
-				personalId, approvableMap);
+		Map<String, Map<Long, WorkflowDtoInterface>> subApprovableMap = approvalInfoRefer
+			.getSubApprovableMap(personalId, approvableMap);
 		// 解除承認可能ワークフロー情報群(勤怠)を取得
 		Map<String, Map<Long, WorkflowDtoInterface>> cancelableMap = approvalInfoRefer.getCancelableMap(personalId);
 		// 代理解除承認可能ワークフロー情報群(勤怠)を取得
-		Map<String, Map<Long, WorkflowDtoInterface>> subCancelableMap = approvalInfoRefer.getSubCancelableMap(
-				personalId, cancelableMap);
+		Map<String, Map<Long, WorkflowDtoInterface>> subCancelableMap = approvalInfoRefer
+			.getSubCancelableMap(personalId, cancelableMap);
 		// VOに設定
 		setVoList(approvableMap, subApprovableMap, cancelableMap, subCancelableMap);
 		// 範囲設定除去
@@ -188,12 +189,9 @@ public class PortalApprovalListBean extends PortalBean implements PortalBeanInte
 		putPortalParameter(PRM_APPROVAL_LIST_COMPENSATORY_HOLIDAY, String.valueOf(subHolidayCount));
 		putPortalParameter(PRM_APPROVAL_LIST_TIME_DIFFERENCE_GOINGWORK, String.valueOf(differenceCount));
 		putPortalParameter(PRM_APPROVAL_LIST_WORK_TYPE_CHANGE, String.valueOf(workTypeChangeCount));
-		putPortalParameter(
-				PRM_APPROVAL_LIST_ALL_APPROVAL,
-				String.valueOf(attendanceCount + overTimeCount + holidayCount + workOnHolidayCount + subHolidayCount
-						+ differenceCount + workTypeChangeCount));
-		putPortalParameter(
-				PRM_APPROVAL_LIST_ALL_CANCEL,
+		putPortalParameter(PRM_APPROVAL_LIST_ALL_APPROVAL, String.valueOf(attendanceCount + overTimeCount + holidayCount
+				+ workOnHolidayCount + subHolidayCount + differenceCount + workTypeChangeCount));
+		putPortalParameter(PRM_APPROVAL_LIST_ALL_CANCEL,
 				String.valueOf(cancelableMap.get(TimeConst.CODE_FUNCTION_WORK_MANGE).size()
 						+ cancelableMap.get(TimeConst.CODE_FUNCTION_OVER_WORK).size()
 						+ cancelableMap.get(TimeConst.CODE_FUNCTION_VACATION).size()

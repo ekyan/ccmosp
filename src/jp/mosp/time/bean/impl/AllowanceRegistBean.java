@@ -38,7 +38,7 @@ public class AllowanceRegistBean extends PlatformBean implements AllowanceRegist
 	/**
 	 * 手当マスタDAOクラス。<br>
 	 */
-	AllowanceDaoInterface	dao;
+	AllowanceDaoInterface dao;
 	
 	
 	/**

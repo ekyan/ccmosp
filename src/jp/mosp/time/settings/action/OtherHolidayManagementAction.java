@@ -126,7 +126,7 @@ public class OtherHolidayManagementAction extends TimeAction {
 			prepareVo(true, false);
 			search();
 		} else if (mospParams.getCommand().equals(CMD_SORT)) {
-			// ソート 
+			// ソート
 			prepareVo();
 			sort();
 		} else if (mospParams.getCommand().equals(CMD_PAGE)) {
@@ -172,8 +172,8 @@ public class OtherHolidayManagementAction extends TimeAction {
 		search.setSectionCode(vo.getPltSearchSection());
 		search.setPositionCode(vo.getPltSearchPosition());
 		// 検索条件をもとに検索クラスからマスタリストを取得
-		List<HolidayManagementListDtoInterface> list = search.getSearchList(Integer.parseInt(mospParams.getProperties()
-			.getCodeArray(TimeConst.CODE_KEY_HOLIDAY_TYPE_MASTER, false)[1][0]));
+		List<HolidayManagementListDtoInterface> list = search.getSearchList(Integer
+			.parseInt(mospParams.getProperties().getCodeArray(TimeConst.CODE_KEY_HOLIDAY_TYPE_MASTER, false)[1][0]));
 		// 検索結果リスト設定
 		vo.setList(list);
 		// デフォルトソートキー及びソート順設定
@@ -314,11 +314,13 @@ public class OtherHolidayManagementAction extends TimeAction {
 			aryLblHolidayCodeName[i] = getHolidayAbbr(dto.getHolidayCode(), getSearchActivateDate(),
 					TimeConst.CODE_HOLIDAYTYPE_OTHER);
 			aryLblHolidayCode[i] = String.valueOf(dto.getHolidayCode());
-			if (TimeUtility.getUnlimitedDate().compareTo(dto.getHolidayLimit()) == 0) {
+			// 取得期限が無期限(無制限)であるかを確認
+			if (TimeUtility.isUnlimited(dto.getHolidayLimit())) {
 				aryLblHolidayRemainder[i] = mospParams.getName("NoLimit");
 				aryLblHolidayLimit[i] = mospParams.getName("NoLimit");
 			} else {
-				aryLblHolidayRemainder[i] = getFormatRestDay(dto.getHolidayRemainder());
+				aryLblHolidayRemainder[i] = getFormatDaysAndHours(dto.getHolidayRemainder(),
+						dto.getHolidayRemaindHours(), false);
 				aryLblHolidayLimit[i] = getStringDate(dto.getHolidayLimit());
 			}
 		}

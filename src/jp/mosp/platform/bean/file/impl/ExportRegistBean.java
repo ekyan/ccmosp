@@ -35,7 +35,7 @@ public class ExportRegistBean extends PlatformBean implements ExportRegistBeanIn
 	/**
 	 * エクスポートマスタDAOクラス。<br>
 	 */
-	ExportDaoInterface	dao;
+	ExportDaoInterface dao;
 	
 	
 	/**

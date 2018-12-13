@@ -96,6 +96,11 @@ public class TimeExportListVo extends ExportListVo {
 	 */
 	private String[][]			aryPltCutoff;
 	
+	/**
+	 * 下位所属含むチェックボックス。
+	 */
+	private String				ckbNeedLowerSection;
+	
 	
 	/**
 	 * @return txtStartYear
@@ -291,6 +296,20 @@ public class TimeExportListVo extends ExportListVo {
 	 */
 	public void setAryPltCutoff(String[][] aryPltCutoff) {
 		this.aryPltCutoff = getStringArrayClone(aryPltCutoff);
+	}
+	
+	/**
+	 * @return ckbNeedLowerSection
+	 */
+	public String getCkbNeedLowerSection() {
+		return ckbNeedLowerSection;
+	}
+	
+	/**
+	 * @param ckbNeedLowerSection セットする ckbNeedLowerSection
+	 */
+	public void setCkbNeedLowerSection(String ckbNeedLowerSection) {
+		this.ckbNeedLowerSection = ckbNeedLowerSection;
 	}
 	
 }

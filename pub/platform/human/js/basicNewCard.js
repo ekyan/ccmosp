@@ -26,7 +26,7 @@ function onLoadExtra() {
 	// 有効日モード確認
 	if (modeActivateDate == MODE_ACTIVATE_DATE_CHANGING) {
 		// 登録ボタン利用不可(変更状態の場合)
-		setDisabled("btnRegist", true);
+		setReadOnly("btnRegist", true);
 	} else {
 		// 有効日編集不可(決定状態の場合)
 		setReadOnly("txtActivateYear", true);
@@ -36,6 +36,6 @@ function onLoadExtra() {
 	// 人事情報一覧遷移ボタン利用可否確認
 	if (typeof(jsToHumanInfo) == "undefined") {
 		// 人事情報一覧遷移ボタン利用不可
-		setDisabled("btnHumenInfo", true);
+		setReadOnly("btnHumenInfo", true);
 	}
 }

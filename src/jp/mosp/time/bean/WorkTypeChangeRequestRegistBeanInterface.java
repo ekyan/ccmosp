@@ -125,8 +125,9 @@ public interface WorkTypeChangeRequestRegistBeanInterface {
 	/**
 	 * 取消時の確認処理を行う。<br>
 	 * @param dto 対象DTO
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
-	void checkCancel(WorkTypeChangeRequestDtoInterface dto);
+	void checkCancel(WorkTypeChangeRequestDtoInterface dto) throws MospException;
 	
 	/**
 	 * 申請時の入力チェック。カレンダチェック。<br>

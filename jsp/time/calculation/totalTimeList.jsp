@@ -51,6 +51,7 @@ import = "jp.mosp.time.comparator.settings.SubordinateWorkOnHolidayTimeComparato
 import = "jp.mosp.time.comparator.settings.SubordinateWorkTimeComaparator"
 import = "jp.mosp.time.constant.TimeConst"
 import = "jp.mosp.time.input.action.AttendanceHistoryAction"
+import = "jp.mosp.platform.utils.PlatformNamingUtility"
 %><%
 MospParams params = (MospParams)request.getAttribute(MospConst.ATT_MOSP_PARAMS);
 TotalTimeListVo vo = (TotalTimeListVo)params.getVo();
@@ -67,7 +68,7 @@ TotalTimeListVo vo = (TotalTimeListVo)params.getVo();
 	</thead>
 	<tbody>
 		<tr>
-			<td class="TitleTd"><%= params.getName("Employee","Code") %></td>
+			<td class="TitleTd"><%= PlatformNamingUtility.employeeCode(params) %></td>
 			<td class="InputTd">
 				<input type="text" class="Code10TextBox" id="txtEditFromEmployeeCode" name="txtEditFromEmployeeCode" value="<%= HtmlUtility.escapeHTML(vo.getTxtEditFromEmployeeCode()) %>" />
 				<%= params.getName("Wave") %>
@@ -112,6 +113,7 @@ TotalTimeListVo vo = (TotalTimeListVo)params.getVo();
 				<select class="Name7PullDown" id="pltEditApproval" name="pltEditApproval">
 					<%= HtmlUtility.getSelectOption(vo.getAryPltEditApproval(), vo.getPltEditApproval()) %>
 				</select>
+				<input type="checkbox" class="CheckBox" id="ckbYesterday" name="ckbYesterday" value="<%= MospConst.CHECKBOX_ON %>" <%= HtmlUtility.getChecked(vo.getCkbYesterday()) %> />&nbsp;<%= params.getName("BeforeDay","Until") %>
 			</td>
 			<td class="TitleTd"><%= params.getName("Cutoff","State") %></td>
 			<td class="InputTd">
@@ -187,7 +189,7 @@ for (int i = 0; i < vo.getAryLblEmployeeCode().length; i++) {
 			<tr>
 				<td class="ListSelectTd">
 <% if (vo.getAryNeedDetail(i)) { %>
-					<button type="button" class="Name2Button" onclick="submitTransfer(event, null, null, new Array('<%= TimeConst.PRM_TRANSFERRED_YEAR %>', '<%= vo.getTargetYear() %>', '<%= TimeConst.PRM_TRANSFERRED_MONTH %>', '<%= vo.getTargetMonth() %>', '<%= PlatformConst.PRM_TRANSFERRED_CODE %>', '<%= HtmlUtility.escapeHTML(vo.getCutoffCode()) %>', '<%= TimeConst.PRM_TRANSFERRED_GENERIC_CODE %>', '<%= HtmlUtility.escapeHTML(vo.getAryPersonalId(i)) %>'), '<%= TotalTimeCardAction.CMD_SELECT_SHOW %>');"><%= params.getName("Detail") %></button>
+					<button type="button" class="Name2Button" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_ACTION %>', '<%= TotalTimeCardAction.class.getName() %>', '<%= PlatformConst.PRM_TRANSFERRED_INDEX %>', '<%= i %>'), '<%= TotalTimeListAction.CMD_TRANSFER %>');"><%= params.getName("Detail") %></button>
 <% } %>
 				</td>
 				<td class="ListInputTd"><%= HtmlUtility.escapeHTML(vo.getAryLblEmployeeCode(i)) %></td>
@@ -208,7 +210,7 @@ for (int i = 0; i < vo.getAryLblEmployeeCode().length; i++) {
 				<td class="ListSelectTd"><span class="<%= vo.getClaApploval(i) %>"><%= HtmlUtility.escapeHTML(vo.getAryLblApploval(i)) %></span></td>
 				<td class="ListSelectTd"><span class="<%= vo.getClaCalc(i) %>"><%= HtmlUtility.escapeHTML(vo.getAryLblCalc(i)) %></span></td>
 				<td class="ListSelectTd"><a class="Link" id="linkCorecctionHistory" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_ACTION %>', '<%= AttendanceHistoryAction.class.getName() %>', '<%= PlatformConst.PRM_TRANSFERRED_INDEX %>', '<%= i %>'), '<%= TotalTimeListAction.CMD_TRANSFER %>');"><%= HtmlUtility.escapeHTML(vo.getAryLblCorrection()[i]) %></a></td>
-				<td class="ListSelectTd"><input type="checkbox" class="SelectCheckBox" id="ckbSelect" name="ckbSelect" value="<%= vo.getAryPersonalId(i) %>" <%= HtmlUtility.getChecked(vo.getAryPersonalId(i), vo.getCkbSelect()) %> /></td>
+				<td class="ListSelectTd"><input type="checkbox" class="SelectCheckBox" id="ckbSelect" name="ckbSelect" value="<%= i %>" <%= HtmlUtility.getChecked(i, vo.getCkbSelect()) %> /></td>
 			</tr>
 <%
 }

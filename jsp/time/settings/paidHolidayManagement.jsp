@@ -39,6 +39,7 @@ import = "jp.mosp.time.settings.action.PaidHolidayHistoryAction"
 import = "jp.mosp.time.settings.action.PaidHolidayManagementAction"
 import = "jp.mosp.time.settings.action.PaidHolidayReferenceAction"
 import = "jp.mosp.time.settings.vo.PaidHolidayManagementVo"
+import = "jp.mosp.platform.utils.PlatformNamingUtility"
 %><%
 MospParams params = (MospParams)request.getAttribute(MospConst.ATT_MOSP_PARAMS);
 PaidHolidayManagementVo vo = (PaidHolidayManagementVo)params.getVo();
@@ -61,7 +62,7 @@ PaidHolidayManagementVo vo = (PaidHolidayManagementVo)params.getVo();
 			<label for="txtSearchActivateDay"><%= params.getName("Day") %></label>&nbsp;
 			<button type="button" class="Name2Button" id="btnActivateDate" onclick="submitForm(event, 'tdSearchPaidHolidayDate', null, '<%= PaidHolidayManagementAction.CMD_SET_ACTIVATION_DATE %>')"><%= vo.getModeActivateDate().equals(PlatformConst.MODE_ACTIVATE_DATE_FIXED) ? params.getName("Change") : params.getName("Decision") %></button>
 		</td>
-		<td class="TitleTd"><%= params.getName("Employee","Code") %></td>
+		<td class="TitleTd"><%= PlatformNamingUtility.employeeCode(params) %></td>
 		<td class="InputTd">
 			<input type="text" class="Code10TextBox" id="txtSearchEmployeeCode" name="txtSearchEmployeeCode" value="<%= HtmlUtility.escapeHTML(vo.getTxtSearchEmployeeCode()) %>"/>
 		</td>
@@ -116,7 +117,7 @@ PaidHolidayManagementVo vo = (PaidHolidayManagementVo)params.getVo();
 			<tr>
 				<th class="ListSortTh" id="thButton"></th>
 				<th class="ListSortTh" id="thEmployeeName"onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= EmployeeNameComparator.class.getName() %>'), '<%= PaidHolidayManagementAction.CMD_SORT %>')"><%= params.getName("Employee","FirstName") %><%= PlatformUtility.getSortMark(EmployeeNameComparator.class.getName(), params) %></th>
-				<th class="ListSortTh" id="thEmployeeCode"onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= EmployeeCodeComparator.class.getName() %>'), '<%= PaidHolidayManagementAction.CMD_SORT %>')"><%= params.getName("Employee","Code") %><%= PlatformUtility.getSortMark(EmployeeCodeComparator.class.getName(), params) %></th>
+				<th class="ListSortTh" id="thEmployeeCode"onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= EmployeeCodeComparator.class.getName() %>'), '<%= PaidHolidayManagementAction.CMD_SORT %>')"><%= PlatformNamingUtility.employeeCode(params) %><%= PlatformUtility.getSortMark(EmployeeCodeComparator.class.getName(), params) %></th>
 				<th class="ListSortTh" id="thSection" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= SectionCodeComparator.class.getName() %>'), '<%= PaidHolidayManagementAction.CMD_SORT %>')"><%= params.getName("Section") %><%= PlatformUtility.getSortMark(SectionCodeComparator.class.getName(), params) %></th>
 				<th class="ListSortTh" id="thLblFormerDate" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= PaidHolidayManagementListFormerDateComparator.class.getName() %>'), '<%= PaidHolidayManagementAction.CMD_SORT %>')"><%= params.getName("PreviousYear","Days") %><%= PlatformUtility.getSortMark(PaidHolidayManagementListFormerDateComparator.class.getName(), params) %></th>
 				<th class="ListSortTh" id="thLblFormerTime" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= PaidHolidayManagementListFormerTimeComparator.class.getName() %>'), '<%= PaidHolidayManagementAction.CMD_SORT %>')"><%= params.getName("PreviousYear","Time") %><%= PlatformUtility.getSortMark(PaidHolidayManagementListFormerTimeComparator.class.getName(), params) %></th>

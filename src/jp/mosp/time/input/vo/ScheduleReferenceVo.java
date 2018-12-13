@@ -31,6 +31,21 @@ public class ScheduleReferenceVo extends AttendanceListBaseVo {
 	 */
 	private String				lblApplicationSchedule;
 	
+	/**
+	 * 始業打刻時間表示要否。
+	 */
+	private boolean				isLblStartRecordTime;
+	
+	/**
+	 * 終業打刻時間表示要否。
+	 */
+	private boolean				isLblEndRecordTime;
+	
+	/**
+	 * カット([外出]+[遅早]+[無給時短時間])表示要否。
+	 */
+	private boolean				isLblTimesCat;
+	
 	
 	/**
 	 * @return lblApplicationSchedule
@@ -44,6 +59,48 @@ public class ScheduleReferenceVo extends AttendanceListBaseVo {
 	 */
 	public void setLblApplicationSchedule(String lblApplicationSchedule) {
 		this.lblApplicationSchedule = lblApplicationSchedule;
+	}
+	
+	/**
+	 * @return isLblStartRecordTime
+	 */
+	public boolean isLblStartRecordTime() {
+		return isLblStartRecordTime;
+	}
+	
+	/**
+	 * @param isLblStartRecordTime セットする isLblStartRecordTime
+	 */
+	public void setLblStartRecordTime(boolean isLblStartRecordTime) {
+		this.isLblStartRecordTime = isLblStartRecordTime;
+	}
+	
+	/**
+	 * @return isLblEndRecordTime
+	 */
+	public boolean isLblEndRecordTime() {
+		return isLblEndRecordTime;
+	}
+	
+	/**
+	 * @param isLblEndRecordTime セットする isLblEndRecordTime
+	 */
+	public void setLblEndRecordTime(boolean isLblEndRecordTime) {
+		this.isLblEndRecordTime = isLblEndRecordTime;
+	}
+	
+	/**
+	 * @return isLblTimesCat
+	 */
+	public boolean isLblTimesCat() {
+		return isLblTimesCat;
+	}
+	
+	/**
+	 * @param isLblTimesCat セットする isLblTimesCat
+	 */
+	public void setLblTimesCat(boolean isLblTimesCat) {
+		this.isLblTimesCat = isLblTimesCat;
 	}
 	
 }

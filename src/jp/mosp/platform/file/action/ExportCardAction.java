@@ -22,6 +22,7 @@ import java.util.List;
 
 import jp.mosp.framework.base.BaseVo;
 import jp.mosp.framework.base.MospException;
+import jp.mosp.framework.utils.RoleUtility;
 import jp.mosp.platform.bean.file.ExportFieldReferenceBeanInterface;
 import jp.mosp.platform.bean.file.ExportFieldRegistBeanInterface;
 import jp.mosp.platform.bean.file.ExportReferenceBeanInterface;
@@ -396,6 +397,11 @@ public class ExportCardAction extends PlatformSystemAction {
 			String[] aryDivision = mospParams.getApplicationProperties(PlatformConst.APP_HUMAN_GENERAL_DIVISIONS);
 			// 画面区分毎に処理
 			for (String division : aryDivision) {
+				// ロールで非表示設定された人事汎用管理区分が存在した場合は表示対象としない
+				if (RoleUtility.getHiddenDivisionsList(mospParams).contains(division)) {
+					continue;
+				}
+				
 				// 項目配列取得
 				String[][] aryAddItem = reference().humanNormal().getPulldownForHumanExportImport(division,
 						KEY_VIEW_HUMAN_EXPORT);
@@ -422,8 +428,8 @@ public class ExportCardAction extends PlatformSystemAction {
 		dto.setExportCode(vo.getTxtEditCode());
 		dto.setExportName(vo.getTxtEditName());
 		dto.setType(vo.getPltEditType());
-		dto.setHeader(Integer.valueOf(vo.getPltEditHeader()));
-		dto.setInactivateFlag(Integer.valueOf(vo.getPltEditInactivate()));
+		dto.setHeader(getInt(vo.getPltEditHeader()));
+		dto.setInactivateFlag(getInt(vo.getPltEditInactivate()));
 	}
 	
 	/**

@@ -23,7 +23,10 @@ import java.util.List;
 
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.base.MospParams;
+import jp.mosp.framework.constant.MospConst;
+import jp.mosp.framework.utils.MospUtility;
 import jp.mosp.platform.base.PlatformBean;
+import jp.mosp.platform.utils.PlatformNamingUtility;
 import jp.mosp.time.bean.TotalTimeCorrectionRegistBeanInterface;
 import jp.mosp.time.constant.TimeConst;
 import jp.mosp.time.dao.settings.TotalTimeCorrectionDaoInterface;
@@ -43,7 +46,7 @@ public class TotalTimeCorrectionRegistBean extends PlatformBean implements Total
 	/**
 	 * 勤怠集計修正データDAOクラス。<br>
 	 */
-	TotalTimeCorrectionDaoInterface	dao;
+	TotalTimeCorrectionDaoInterface dao;
 	
 	
 	/**
@@ -74,6 +77,8 @@ public class TotalTimeCorrectionRegistBean extends PlatformBean implements Total
 	
 	@Override
 	public void insert(TotalTimeCorrectionDtoInterface dto) throws MospException {
+		// DTOの妥当性確認
+		validate(dto);
 		if (mospParams.hasErrorMessage()) {
 			return;
 		}
@@ -103,17 +108,6 @@ public class TotalTimeCorrectionRegistBean extends PlatformBean implements Total
 	}
 	
 	@Override
-	public void insertAbsence(TotalTimeCorrectionDtoInterface dto, TotalAbsenceDtoInterface oldDto,
-			TotalAbsenceDtoInterface newDto) throws MospException {
-		// 変更部分の検索
-		TotalTimeCorrectionDtoInterface correctionDto = getCorrectionDto(dto,
-				TimeConst.CODE_TOTALTIME_ITEM_NAME_ABSENCE, oldDto.getTimes(), newDto.getTimes(),
-				newDto.getAbsenceCode());
-		// 登録
-		insert(correctionDto);
-	}
-	
-	@Override
 	public void insertAllowance(TotalTimeCorrectionDtoInterface dto, TotalAllowanceDtoInterface oldDto,
 			TotalAllowanceDtoInterface newDto) throws MospException {
 		// 変更部分の検索
@@ -123,27 +117,74 @@ public class TotalTimeCorrectionRegistBean extends PlatformBean implements Total
 	}
 	
 	@Override
-	public void insertLeave(TotalTimeCorrectionDtoInterface dto, TotalLeaveDtoInterface oldDto,
-			TotalLeaveDtoInterface newDto) throws MospException {
+	public void insertAbsence(TotalTimeCorrectionDtoInterface dto, TotalAbsenceDtoInterface oldDto,
+			TotalAbsenceDtoInterface newDto, boolean isDay, boolean isHour) throws MospException {
+		// 休暇コードを取得
+		String code = newDto.getAbsenceCode();
 		// 変更部分の検索
-		TotalTimeCorrectionDtoInterface correctionDto = getCorrectionDto(dto,
-				TimeConst.CODE_TOTALTIME_ITEM_NAME_TOTALLEAVE, oldDto.getTimes(), newDto.getTimes(),
-				newDto.getHolidayCode());
-		// 登録
-		insert(correctionDto);
+		if (isDay) {
+			// 修正箇所区分を準備
+			String type = TimeConst.CODE_TOTALTIME_ITEM_NAME_ABSENCE;
+			// 勤怠集計修正情報に休暇修正情報(日数)を設定
+			setHolidayCorrection(dto, type, oldDto.getTimes(), newDto.getTimes(), code);
+			// 登録
+			insert(dto);
+		}
+		if (isHour) {
+			// 修正箇所区分を準備
+			String type = TimeConst.CODE_TOTALTIME_ITEM_NAME_ABSENCEHOUR;
+			// 勤怠集計修正情報に休暇修正情報(時間)を設定
+			setHolidayCorrection(dto, type, oldDto.getHours(), newDto.getHours(), code);
+			// 登録
+			insert(dto);
+		}
+	}
+	
+	@Override
+	public void insertLeave(TotalTimeCorrectionDtoInterface dto, TotalLeaveDtoInterface oldDto,
+			TotalLeaveDtoInterface newDto, boolean isDay, boolean isHour) throws MospException {
+		// 休暇コードを取得
+		String code = newDto.getHolidayCode();
+		// 変更部分の検索
+		if (isDay) {
+			// 修正箇所区分を準備
+			String type = TimeConst.CODE_TOTALTIME_ITEM_NAME_TOTALLEAVE;
+			// 勤怠集計修正情報に休暇修正情報(日数)を設定
+			setHolidayCorrection(dto, type, oldDto.getTimes(), newDto.getTimes(), code);
+			// 登録
+			insert(dto);
+		}
+		if (isHour) {
+			// 修正箇所区分を準備
+			String type = TimeConst.CODE_TOTALTIME_ITEM_NAME_TOTALLEAVEHOUR;
+			// 勤怠集計修正情報に休暇修正情報(時間)を設定
+			setHolidayCorrection(dto, type, oldDto.getHours(), newDto.getHours(), code);
+			// 登録
+			insert(dto);
+		}
 	}
 	
 	@Override
 	public void insertOtherVacation(TotalTimeCorrectionDtoInterface dto, TotalOtherVacationDtoInterface oldDto,
-			TotalOtherVacationDtoInterface newDto) throws MospException {
-		// DTOの妥当性確認
-		validate(dto);
-		// 変更部分の検索
-		TotalTimeCorrectionDtoInterface correctionDto = getCorrectionDto(dto,
-				TimeConst.CODE_TOTALTIME_ITEM_NAME_OTHERVACATION, oldDto.getTimes(), newDto.getTimes(),
-				newDto.getHolidayCode());
-		// 登録
-		insert(correctionDto);
+			TotalOtherVacationDtoInterface newDto, boolean isDay, boolean isHour) throws MospException {
+		// 休暇コードを取得
+		String code = newDto.getHolidayCode();
+		if (isDay) {
+			// 修正箇所区分を準備
+			String type = TimeConst.CODE_TOTALTIME_ITEM_NAME_OTHERVACATION;
+			// 勤怠集計修正情報に休暇修正情報(日数)を設定
+			setHolidayCorrection(dto, type, oldDto.getTimes(), newDto.getTimes(), code);
+			// 登録
+			insert(dto);
+		}
+		if (isHour) {
+			// 修正箇所区分を準備
+			String type = TimeConst.CODE_TOTALTIME_ITEM_NAME_OTHERVACATIONHOUR;
+			// 勤怠集計修正情報に休暇修正情報(時間)を設定
+			setHolidayCorrection(dto, type, oldDto.getHours(), newDto.getHours(), code);
+			// 登録
+			insert(dto);
+		}
 	}
 	
 	@Override
@@ -189,8 +230,8 @@ public class TotalTimeCorrectionRegistBean extends PlatformBean implements Total
 		}
 		// 無給時短時間
 		if (oldDto.getShortUnpaid() != newDto.getShortUnpaid()) {
-			list.add(getTotalTimeCorrectionDto(TimeConst.CODE_TOTALTIME_ITEM_NAME_SHORT_UNPAID,
-					oldDto.getShortUnpaid(), newDto.getShortUnpaid()));
+			list.add(getTotalTimeCorrectionDto(TimeConst.CODE_TOTALTIME_ITEM_NAME_SHORT_UNPAID, oldDto.getShortUnpaid(),
+					newDto.getShortUnpaid()));
 		}
 		// 出勤日数
 		if (oldDto.getTimesWorkDate() != newDto.getTimesWorkDate()) {
@@ -269,8 +310,8 @@ public class TotalTimeCorrectionRegistBean extends PlatformBean implements Total
 		}
 		// 法定外残業時間
 		if (oldDto.getOvertimeOut() != newDto.getOvertimeOut()) {
-			list.add(getTotalTimeCorrectionDto(TimeConst.CODE_TOTALTIME_ITEM_NAME_OVERTIME_OUT,
-					oldDto.getOvertimeOut(), newDto.getOvertimeOut()));
+			list.add(getTotalTimeCorrectionDto(TimeConst.CODE_TOTALTIME_ITEM_NAME_OVERTIME_OUT, oldDto.getOvertimeOut(),
+					newDto.getOvertimeOut()));
 		}
 		// 深夜時間
 		if (oldDto.getLateNight() != newDto.getLateNight()) {
@@ -579,18 +620,58 @@ public class TotalTimeCorrectionRegistBean extends PlatformBean implements Total
 		return dto;
 	}
 	
-	private TotalTimeCorrectionDtoInterface getCorrectionDto(TotalTimeCorrectionDtoInterface dto, String type,
-			double beforeTime, double afterTime, String code) {
-		if (afterTime != beforeTime) {
-			StringBuffer sb = new StringBuffer();
-			sb.append(type);
-			sb.append(",");
-			sb.append(code);
-			dto.setCorrectionType(sb.toString());
-			dto.setCorrectionBefore(String.valueOf(beforeTime));
-			dto.setCorrectionAfter(String.valueOf(afterTime));
-		}
-		return dto;
+	/**
+	 * 勤怠集計修正情報に休暇修正情報(日数)を設定する。<br>
+	 * @param dto        勤怠集計修正情報
+	 * @param type       修正箇所区分
+	 * @param beforeTime 修正前日数
+	 * @param afterTime  修正後日数
+	 * @param code       休暇コード
+	 */
+	protected void setHolidayCorrection(TotalTimeCorrectionDtoInterface dto, String type, double beforeTime,
+			double afterTime, String code) {
+		// 文字配列を準備
+		String[] strs = { type, code };
+		// 修正箇所を設定
+		dto.setCorrectionType(MospUtility.concat(MospConst.APP_PROPERTY_SEPARATOR, strs));
+		// 修正前日数を設定
+		dto.setCorrectionBefore(String.valueOf(beforeTime));
+		// 修正後日数を設定
+		dto.setCorrectionAfter(String.valueOf(afterTime));
+	}
+	
+	/**
+	 * 勤怠集計修正情報に休暇修正情報(時間)を設定する。<br>
+	 * @param dto        勤怠集計修正情報
+	 * @param type       修正箇所区分
+	 * @param beforeTime 修正前時間
+	 * @param afterTime  修正後時間
+	 * @param code       休暇コード
+	 */
+	protected void setHolidayCorrection(TotalTimeCorrectionDtoInterface dto, String type, int beforeTime, int afterTime,
+			String code) {
+		// 文字配列を準備
+		String[] strs = { type, code };
+		// 修正箇所を設定
+		dto.setCorrectionType(MospUtility.concat(MospConst.APP_PROPERTY_SEPARATOR, strs));
+		// 修正前時間を設定
+		dto.setCorrectionBefore(getStringHolidayHours(beforeTime));
+		// 修正後時間を設定
+		dto.setCorrectionAfter(getStringHolidayHours(afterTime));
+	}
+	
+	/**
+	 * 時間文字列(hours時間)を取得する。<br>
+	 * @param hours 時間
+	 * @return 時間文字列(hours時間)
+	 */
+	protected String getStringHolidayHours(int hours) {
+		// 文字列を準備
+		StringBuilder sb = new StringBuilder();
+		sb.append(hours);
+		sb.append(PlatformNamingUtility.time(mospParams));
+		// 時間文字列(hours時間)を取得
+		return sb.toString();
 	}
 	
 }

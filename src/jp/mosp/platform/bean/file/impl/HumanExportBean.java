@@ -43,8 +43,6 @@ import jp.mosp.platform.dao.file.ExportDaoInterface;
 import jp.mosp.platform.dao.file.ExportFieldDaoInterface;
 import jp.mosp.platform.dao.human.EntranceDaoInterface;
 import jp.mosp.platform.dao.human.RetirementDaoInterface;
-import jp.mosp.platform.dao.system.GeneralDaoInterface;
-import jp.mosp.platform.dao.system.NamingDaoInterface;
 import jp.mosp.platform.dto.file.ExportDtoInterface;
 import jp.mosp.platform.dto.file.ExportFieldDtoInterface;
 import jp.mosp.platform.dto.human.EntranceDtoInterface;
@@ -94,16 +92,6 @@ public class HumanExportBean extends PlatformBean implements HumanExportBeanInte
 	protected HumanArrayReferenceBeanInterface		humanArray;
 	
 	/**
-	 * 名称区分DAO。<br>
-	 */
-	protected NamingDaoInterface					namingDao;
-	
-	/**
-	 * 汎用テーブルDAO。<br>
-	 */
-	protected GeneralDaoInterface					generalDao;
-	
-	/**
 	 * 人事マスタ検索クラス。<br>
 	 */
 	protected HumanSearchBeanInterface				humanSearch;
@@ -142,8 +130,6 @@ public class HumanExportBean extends PlatformBean implements HumanExportBeanInte
 		exportFieldDao = (ExportFieldDaoInterface)createDao(ExportFieldDaoInterface.class);
 		entranceDao = (EntranceDaoInterface)createDao(EntranceDaoInterface.class);
 		retirementDao = (RetirementDaoInterface)createDao(RetirementDaoInterface.class);
-		namingDao = (NamingDaoInterface)createDao(NamingDaoInterface.class);
-		generalDao = (GeneralDaoInterface)createDao(GeneralDaoInterface.class);
 		humanNoraml = (HumanNormalReferenceBeanInterface)createBean(HumanNormalReferenceBeanInterface.class);
 		humanHistory = (HumanHistoryReferenceBeanInterface)createBean(HumanHistoryReferenceBeanInterface.class);
 		humanArray = (HumanArrayReferenceBeanInterface)createBean(HumanArrayReferenceBeanInterface.class);
@@ -463,6 +449,15 @@ public class HumanExportBean extends PlatformBean implements HumanExportBeanInte
 			data = sectionReference.getSectionDisplay(human.getSectionCode(), targetDate);
 		}
 		return data;
+	}
+	
+	@Override
+	public boolean isExistLikeFieldName(String exportCode, String[] aryFieldName) throws MospException {
+		List<ExportFieldDtoInterface> list = exportFieldDao.findLikeStartNameList(exportCode, aryFieldName);
+		list = list == null ? new ArrayList<ExportFieldDtoInterface>() : list;
+		
+		return list.isEmpty() ? false : true;
+		
 	}
 	
 	/**

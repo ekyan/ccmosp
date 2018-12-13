@@ -22,9 +22,10 @@ import java.util.List;
 
 import jp.mosp.framework.base.MospException;
 import jp.mosp.time.dto.settings.TimeSettingDtoInterface;
+import jp.mosp.time.entity.TimeSettingEntityInterface;
 
 /**
- * 勤怠設定参照インターフェース。
+ * 勤怠設定参照処理インターフェース。
  */
 public interface TimeSettingReferenceBeanInterface {
 	
@@ -138,5 +139,53 @@ public interface TimeSettingReferenceBeanInterface {
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
 	String[][] getSelectArray(Date targetDate, boolean needBlank) throws MospException;
+	
+	/**
+	 * 対象月が見込月であるかどうか判定する。<br>
+	 * @param targetDate 対象日
+	 * @param prospectsMonths 見込月
+	 * @return 見込月判定（true:見込月、false:見込月ではない）
+	 */
+	boolean isProspectsMonth(Date targetDate, String prospectsMonths);
+	
+	/**
+	 * 対象月が見込月であるかどうか判定する。<br>
+	 * @param targetMonth 対象月
+	 * @param prospectsMonths 見込月
+	 * @return 見込月判定（true:見込月、false:見込月ではない）
+	 */
+	boolean isProspectsMonth(int targetMonth, String prospectsMonths);
+	
+	/**
+	 * 実績入力モード時の文言を返却します。
+	 * @return 実績入力モード判定文字列
+	 */
+	String getPerformanceInputModeString();
+	
+	/**
+	 * 勤怠設定エンティティを取得する。<br>
+	 * @param workSettingCode 勤怠設定コード
+	 * @param targetDate      対象日
+	 * @return 勤怠設定エンティティ
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	TimeSettingEntityInterface getEntity(String workSettingCode, Date targetDate) throws MospException;
+	
+	/**
+	 * 勤怠設定エンティティを取得する。<br>
+	 * @param workSettingCode 勤怠設定コード
+	 * @param activateDate    有効日
+	 * @return 勤怠設定エンティティ
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	TimeSettingEntityInterface getEntityForKey(String workSettingCode, Date activateDate) throws MospException;
+	
+	/**
+	 * 勤怠設定エンティティを取得する。<br>
+	 * @param dto 勤怠設定情報
+	 * @return 勤怠設定エンティティ
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	TimeSettingEntityInterface getEntity(TimeSettingDtoInterface dto) throws MospException;
 	
 }

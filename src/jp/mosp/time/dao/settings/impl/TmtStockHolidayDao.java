@@ -245,7 +245,7 @@ public class TmtStockHolidayDao extends PlatformDao implements StockHolidayTrans
 				setParam(index++, activateDate);
 			}
 			if (!inactivateFlag.isEmpty()) {
-				setParam(index++, Integer.valueOf(inactivateFlag));
+				setParam(index++, Integer.parseInt(inactivateFlag));
 			}
 			executeQuery();
 			StockHolidayTransactionDtoInterface dto = null;
@@ -285,7 +285,7 @@ public class TmtStockHolidayDao extends PlatformDao implements StockHolidayTrans
 				setParam(index++, activateDate);
 			}
 			if (!inactivateFlag.isEmpty()) {
-				setParam(index++, Integer.valueOf(inactivateFlag));
+				setParam(index++, Integer.parseInt(inactivateFlag));
 			}
 			executeQuery();
 			return mappingAll();

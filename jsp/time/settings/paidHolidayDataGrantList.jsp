@@ -37,6 +37,7 @@ import = "jp.mosp.time.comparator.settings.PaidHolidayDataGrantListGrantDaysComp
 import = "jp.mosp.time.constant.TimeConst"
 import = "jp.mosp.time.settings.action.PaidHolidayDataGrantListAction"
 import = "jp.mosp.time.settings.vo.PaidHolidayDataGrantListVo"
+import = "jp.mosp.platform.utils.PlatformNamingUtility"
 %><%
 MospParams params = (MospParams)request.getAttribute(MospConst.ATT_MOSP_PARAMS);
 PaidHolidayDataGrantListVo vo = (PaidHolidayDataGrantListVo)params.getVo();
@@ -73,7 +74,7 @@ PaidHolidayDataGrantListVo vo = (PaidHolidayDataGrantListVo)params.getVo();
 					<input type="text" class="Number2TextBox" id="txtSearchEntranceDay" name="txtSearchEntranceDay" value="<%= HtmlUtility.escapeHTML(vo.getTxtSearchEntranceDay()) %>" />
 					<label for="txtSearchActivateDay"><%=params.getName("Day")%></label>&nbsp;
 				</td>
-				<td class="TitleTd"><label for="txtSearchEmployeeCode"><%= params.getName("Employee", "Code") %></label></td>
+				<td class="TitleTd"><label for="txtSearchEmployeeCode"><%= PlatformNamingUtility.employeeCode(params) %></label></td>
 				<td class="InputTd">
 					<input type="text" class="Code10TextBox" id="txtSearchEmployeeCode" name="txtSearchEmployeeCode" value="<%= HtmlUtility.escapeHTML(vo.getTxtSearchEmployeeCode()) %>" />
 				</td>
@@ -151,7 +152,7 @@ if (!vo.getList().isEmpty()) {
 --%>
 	</span>
 	<span class="TableButtonSpan">
-		<button type="button" class="Name8Button" onclick="submitRegist(event, 'paidHolidayDataSearch', null, '<%= PaidHolidayDataGrantListAction.CMD_OTHER_BATCH_UPDATE2 %>');"><%= params.getName("Stock", "Vacation", "Giving") %></button>
+		<button type="button" id="btStockHoliday" class="Name8Button" onclick="submitRegist(event, 'paidHolidayDataSearch', null, '<%= PaidHolidayDataGrantListAction.CMD_OTHER_BATCH_UPDATE2 %>');"><%= params.getName("Stock", "Vacation", "Giving") %></button>
 	</span>
 </div>
 <%
@@ -164,7 +165,7 @@ if (!vo.getList().isEmpty()) {
 if (!vo.getList().isEmpty()) {
 %>
 			<tr>
-				<th class="UnderTd">
+				<th>
 					<span class="TableButtonSpan">
 						<button type="button" class="Name8Button" onclick="submitRegist(event, 'paidHolidayDataSearch', checkCalcExtra, '<%= PaidHolidayDataGrantListAction.CMD_CALC1 %>');"><%= params.getName("GoingWork", "Rate", "Select", "Calc") %></button>
 						<button type="button" class="Name8Button" onclick="submitRegist(event, 'paidHolidayDataSearch', checkGrantExtra, '<%= PaidHolidayDataGrantListAction.CMD_BATCH_UPDATE %>');"><%= params.getName("PaidVacation", "Select", "Giving") %></button>
@@ -181,12 +182,12 @@ if (!vo.getList().isEmpty()) {
 			<tr>
 				<th class="ListSelectTh" id="thButton"></th>
 				<th class="ListSortTh" id="thEmployeeCode" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= EmployeeCodeComparator.class.getName() %>'), '<%= PaidHolidayDataGrantListAction.CMD_SORT %>');">
-					<%= params.getName("Employee", "Code") %><%= PlatformUtility.getSortMark(EmployeeCodeComparator.class.getName(), params) %>
+					<%= PlatformNamingUtility.employeeCode(params) %><%= PlatformUtility.getSortMark(EmployeeCodeComparator.class.getName(), params) %>
 				</th>
-				<th class="ListSortTh" id="thEmployeeName" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= EmployeeNameComparator.class.getName() %>'), '<%= PaidHolidayDataGrantListAction.CMD_SORT %>');">
+				<th class="ListSortTh" <% if (!params.isTestSupport()) { %> id="thEmployeeName" <% } else { %> id="thEmployeeName2" <% } %> onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= EmployeeNameComparator.class.getName() %>'), '<%= PaidHolidayDataGrantListAction.CMD_SORT %>');">
 					<%= params.getName("Employee", "FirstName") %><%= PlatformUtility.getSortMark(EmployeeNameComparator.class.getName(), params) %>
 				</th>
-				<th class="ListSortTh" id="thAttendanceRate" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= PaidHolidayDataGrantListAttendanceRateComparator.class.getName() %>'), '<%= PaidHolidayDataGrantListAction.CMD_SORT %>');">
+				<th class="ListSortTh" <% if (!params.isTestSupport()) { %> id="thAttendanceRate" <% } else { %> id="thAttendanceRate2" <% } %> onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= PaidHolidayDataGrantListAttendanceRateComparator.class.getName() %>'), '<%= PaidHolidayDataGrantListAction.CMD_SORT %>');">
 					<%= params.getName("GoingWork", "Rate") %><%= PlatformUtility.getSortMark(PaidHolidayDataGrantListAttendanceRateComparator.class.getName(), params) %>
 				</th>
 				<th class="ListSortTh" id="thAccomplish" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= PaidHolidayDataGrantListAccomplishComparator.class.getName() %>'), '<%= PaidHolidayDataGrantListAction.CMD_SORT %>');">
@@ -195,7 +196,7 @@ if (!vo.getList().isEmpty()) {
 				<th class="ListSortTh" id="thGrant" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= PaidHolidayDataGrantListGrantComparator.class.getName() %>'), '<%= PaidHolidayDataGrantListAction.CMD_SORT %>');">
 					<%= params.getName("Giving", "State") %><%= PlatformUtility.getSortMark(PaidHolidayDataGrantListGrantComparator.class.getName(), params) %>
 				</th>
-				<th class="ListSortTh" id="thGrantDate" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= PaidHolidayDataGrantListGrantDateComparator.class.getName() %>'), '<%= PaidHolidayDataGrantListAction.CMD_SORT %>');">
+				<th class="ListSortTh" <% if (!params.isTestSupport()) { %> id="thGrantDate" <% } else { %> id="thGrantDate2" <% } %> onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= PaidHolidayDataGrantListGrantDateComparator.class.getName() %>'), '<%= PaidHolidayDataGrantListAction.CMD_SORT %>');">
 					<%= params.getName("Giving", "Date") %><%= PlatformUtility.getSortMark(PaidHolidayDataGrantListGrantDateComparator.class.getName(), params) %>
 				</th>
 				<th class="ListSortTh" id="thGrantDays" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= PaidHolidayDataGrantListGrantDaysComparator.class.getName() %>'), '<%= PaidHolidayDataGrantListAction.CMD_SORT %>');">
@@ -205,7 +206,7 @@ if (!vo.getList().isEmpty()) {
 <%
 if (!vo.getList().isEmpty()) {
 %>
-					<input type="checkbox" onclick="doAllBoxChecked(this);" />
+					<input type="checkbox" class="CheckBox" onclick="doAllBoxChecked(this);" />
 <%
 }
 %>
@@ -224,14 +225,16 @@ for (int i = 0; i < vo.getAryLblEmployeeCode().length; i++) {
 				</td>
 				<td class="ListInputTd"><%= HtmlUtility.escapeHTML(vo.getAryLblEmployeeCode()[i]) %></td>
 				<td class="ListInputTd"><%= HtmlUtility.escapeHTML(vo.getAryLblEmployeeName()[i]) %></td>
-				<td class="ListSelectTd"><%= HtmlUtility.escapeHTML(vo.getAryLblAttendanceRate()[i]) %></td>
+				<td class="ListSelectTd"><%= HtmlUtility.escapeHTML(vo.getAryLblAttendanceRate()[i]) %>
+					<%= HtmlUtility.escapeHTML(vo.getAryLblNumberOfAttendance()[i]) %>
+				</td>
 				<td class="ListSelectTd"><%= HtmlUtility.escapeHTML(vo.getAryLblAccomplish()[i]) %></td>
 				<td class="ListSelectTd"><%= HtmlUtility.escapeHTML(vo.getAryLblGrant()[i]) %></td>
 				<td class="ListSelectTd"><%= HtmlUtility.escapeHTML(vo.getAryLblGrantDate()[i]) %></td>
 				<td class="ListSelectTd"><%= HtmlUtility.escapeHTML(vo.getAryLblGrantDays()[i]) %></td>
 				<td class="ListSelectTd">
 <% if (!params.getName("Hyphen").equals(vo.getAryLblGrantDate()[i])) { %>
-					<input type="checkbox" name="ckbSelect" class="SelectCheckBox" value="<%= i %>" />
+					<input type="checkbox" name="ckbSelect" class="CheckBox" value="<%= i %>" />
 <% } %>
 				</td>
 			</tr>
@@ -253,3 +256,13 @@ if (!vo.getList().isEmpty()) {
 		</tbody>
 	</table>
 </div>
+<%
+if (!vo.getList().isEmpty()) {
+%>
+<%= HtmlUtility.getListInfoFlex(params, vo.getList(), vo.getPageCommand(), vo.getDataPerPage(), vo.getSelectIndex()) %>
+<div class="MoveUpLink" id="divMoveUp">
+	<a onclick="pageToTop();"><%= params.getName("UpperTriangular","TopOfPage") %></a>
+</div>
+<%
+}
+%>

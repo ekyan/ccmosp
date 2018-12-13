@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE MosP>
+<!--
+MosP - Mind Open Source Project    http://www.mosp.jp/
+Copyright (C) MIND Co., Ltd.       http://www.e-mind.co.jp/
+
+This program is free software: you can redistribute it and/or
+modify it under the terms of the GNU Affero General Public License
+as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<MosP>
+	
+	<!-- 案件一覧 -->
+	<Controller key="ME01010*">
+		<ActionClass>jp.mosp.addon.manage.action.MeProposeListAction</ActionClass>
+	</Controller>
+	<Controller key="ME01012*">
+		<ActionClass>jp.mosp.addon.manage.action.MeProposeListAction</ActionClass>
+	</Controller>
+	
+	<!-- 案件登録 -->
+	<Controller key="ME01020*">
+		<ActionClass>jp.mosp.addon.manage.action.MeProposeCardAction</ActionClass>
+	</Controller>
+	<Controller key="ME01021*">
+		<ActionClass>jp.mosp.addon.manage.action.MeProposeCardAction</ActionClass>
+	</Controller>
+	<Controller key="ME01022*">
+		<ActionClass>jp.mosp.addon.manage.action.MeProposeCardAction</ActionClass>
+	</Controller>
+	
+	<!-- 企業マスタ -->
+	<Controller key="ME01040*">
+		<ActionClass>jp.mosp.addon.manage.action.MeCompanyMasterAction</ActionClass>
+	</Controller>
+	<Controller key="ME01041*">
+		<ActionClass>jp.mosp.addon.manage.action.MeCompanyMasterAction</ActionClass>
+	</Controller>
+	<Controller key="ME01042*">
+		<ActionClass>jp.mosp.addon.manage.action.MeCompanyMasterAction</ActionClass>
+	</Controller>
+	
+	<!-- 売上分析 -->
+	<Controller key="ME01050*">
+		<ActionClass>jp.mosp.addon.manage.action.MeAnalysisSalesListAction</ActionClass>
+	</Controller>
+	<Controller key="ME01053*">
+		<ActionClass>jp.mosp.addon.manage.action.MeAnalysisSalesListAction</ActionClass>
+	</Controller>
+	
+	<!-- 売上予算 -->
+	<Controller key="ME02010*">
+		<ActionClass>jp.mosp.addon.manage.action.MeSalesCostBudgetCardAction</ActionClass>
+	</Controller>
+	
+	<!-- 販管費予算 -->
+	<Controller key="ME03010*">
+		<ActionClass>jp.mosp.addon.manage.action.MeSgaCardAction</ActionClass>
+	</Controller>
+	
+	<!-- 販管費実績 -->
+	<Controller key="ME03020*">
+		<ActionClass>jp.mosp.addon.manage.action.MeSgaCardAction</ActionClass>
+	</Controller>
+	
+	<!-- 経営分析 -->
+	<Controller key="ME04010*">
+		<ActionClass>jp.mosp.addon.manage.action.MeAnalysisSalesListAction</ActionClass>
+	</Controller>
+	
+	<!-- 経営設定 -->
+	<Controller key="ME05010*">
+		<ActionClass>jp.mosp.addon.manage.action.MeConfigAction</ActionClass>
+	</Controller>
+	
+	<!-- 集計区分マスタ -->
+	<Controller key="ME05020*">
+		<ActionClass>jp.mosp.addon.manage.action.MeTotalTypeMasterAction</ActionClass>
+	</Controller>
+	<Controller key="ME05021*">
+		<ActionClass>jp.mosp.addon.manage.action.MeTotalTypeMasterAction</ActionClass>
+	</Controller>
+	
+	<!-- インポート -->
+	<Controller key="ME05030*">
+		<ActionClass>jp.mosp.addon.manage.action.MeImportListAction</ActionClass>
+	</Controller>
+	<Controller key="ME050337">
+		<ActionClass>jp.mosp.addon.manage.action.MeImportListAction</ActionClass>
+		<NeedProcSeq>unnecessary</NeedProcSeq>
+	</Controller>
+	
+</MosP>

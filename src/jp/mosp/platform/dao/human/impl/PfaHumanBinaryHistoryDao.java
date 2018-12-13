@@ -297,4 +297,29 @@ public class PfaHumanBinaryHistoryDao extends PlatformDao implements HumanBinary
 			releasePreparedStatement();
 		}
 	}
+	
+	@Override
+	public List<HumanBinaryHistoryDtoInterface> findForActivateDate(String personalId, Date activateDate)
+			throws MospException {
+		try {
+			index = 1;
+			StringBuffer sb = getSelectQuery(getClass());
+			sb.append(where());
+			sb.append(deleteFlagOff());
+			sb.append(and());
+			sb.append(equal(COL_PERSONAL_ID));
+			sb.append(and());
+			sb.append(equal(COL_ACTIVATE_DATE));
+			prepareStatement(sb.toString());
+			setParam(index++, personalId);
+			setParam(index++, activateDate);
+			executeQuery();
+			return mappingAll();
+		} catch (Throwable e) {
+			throw new MospException(e);
+		} finally {
+			releaseResultSet();
+			releasePreparedStatement();
+		}
+	}
 }

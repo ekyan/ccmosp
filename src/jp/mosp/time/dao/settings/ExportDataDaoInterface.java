@@ -35,12 +35,14 @@ public interface ExportDataDaoInterface {
 	 * @param workPlaceCode 勤務地コード
 	 * @param employmentCode 雇用契約コード
 	 * @param sectionCode 所属コード
+	 * @param ckbNeedLowerSection 下位所属含む
 	 * @param positionCode 職位コード
 	 * @return 勤怠データ
 	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
 	 */
 	ResultSet findForAttendance(Date startDate, Date endDate, String cutoffCode, String workPlaceCode,
-			String employmentCode, String sectionCode, String positionCode) throws MospException;
+			String employmentCode, String sectionCode, int ckbNeedLowerSection, String positionCode)
+			throws MospException;
 	
 	/**
 	 * 勤怠集計データを取得する。<br>
@@ -50,12 +52,14 @@ public interface ExportDataDaoInterface {
 	 * @param workPlaceCode 勤務地コード
 	 * @param employmentCode 雇用契約コード
 	 * @param sectionCode 所属コード
+	 * @param ckbNeedLowerSection 下位所属含む
 	 * @param positionCode 職位コ－ド
 	 * @return　勤怠集計データ
 	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
 	 */
 	ResultSet findForTotalTime(Date startDate, Date endDate, String cutoffCode, String workPlaceCode,
-			String employmentCode, String sectionCode, String positionCode) throws MospException;
+			String employmentCode, String sectionCode, int ckbNeedLowerSection, String positionCode)
+			throws MospException;
 	
 	/**
 	 * 有給休暇データを取得する。<br>
@@ -65,12 +69,14 @@ public interface ExportDataDaoInterface {
 	 * @param workPlaceCode 勤務地コード
 	 * @param employmentCode 雇用契約コード
 	 * @param sectionCode 所属コード
+	 * @param ckbNeedLowerSection 下位所属含む
 	 * @param positionCode 職位コード
 	 * @return 有給休暇データ
 	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
 	 */
 	ResultSet findForPaidHoliday(Date startDate, Date endDate, String cutoffCode, String workPlaceCode,
-			String employmentCode, String sectionCode, String positionCode) throws MospException;
+			String employmentCode, String sectionCode, int ckbNeedLowerSection, String positionCode)
+			throws MospException;
 	
 	/**
 	 * ストック休暇データを取得する。<br>
@@ -80,27 +86,14 @@ public interface ExportDataDaoInterface {
 	 * @param workPlaceCode 勤務地コード
 	 * @param employmentCode 雇用契約コード
 	 * @param sectionCode 所属コード
+	 * @param ckbNeedLowerSection 下位所属含む
 	 * @param positionCode 職位コード
 	 * @return ストック休暇データ
 	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
 	 */
 	ResultSet findForStockHoliday(Date startDate, Date endDate, String cutoffCode, String workPlaceCode,
-			String employmentCode, String sectionCode, String positionCode) throws MospException;
-	
-	/**
-	 * 時間単位有給休暇データを取得する。<br>
-	 * @param startDate 開始日
-	 * @param endDate 終了日
-	 * @param cutoffCode 締日コード
-	 * @param workPlaceCode 勤務地コード
-	 * @param employmentCode 雇用契約コード
-	 * @param sectionCode 所属コード
-	 * @param positionCode 職位コード
-	 * @return 時間単位有給休暇データ
-	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
-	 */
-	ResultSet findForTimelyPaidHoliday(Date startDate, Date endDate, String cutoffCode, String workPlaceCode,
-			String employmentCode, String sectionCode, String positionCode) throws MospException;
+			String employmentCode, String sectionCode, int ckbNeedLowerSection, String positionCode)
+			throws MospException;
 	
 	/**
 	 * 休暇データを取得する。<br>
@@ -110,12 +103,14 @@ public interface ExportDataDaoInterface {
 	 * @param workPlaceCode 勤務地コード
 	 * @param employmentCode 雇用契約コード
 	 * @param sectionCode 所属コード
+	 * @param ckbNeedLowerSection 下位所属含む
 	 * @param positionCode 職位コード
 	 * @return 休暇データ
 	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
 	 */
 	ResultSet findForHolidayData(Date startDate, Date endDate, String cutoffCode, String workPlaceCode,
-			String employmentCode, String sectionCode, String positionCode) throws MospException;
+			String employmentCode, String sectionCode, int ckbNeedLowerSection, String positionCode)
+			throws MospException;
 	
 	/**
 	 * 終了処理

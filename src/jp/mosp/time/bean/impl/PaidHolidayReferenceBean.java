@@ -37,7 +37,7 @@ public class PaidHolidayReferenceBean extends PlatformBean implements PaidHolida
 	/**
 	 * 有給休暇設定DAO。
 	 */
-	private PaidHolidayDaoInterface	dao;
+	private PaidHolidayDaoInterface dao;
 	
 	
 	/**

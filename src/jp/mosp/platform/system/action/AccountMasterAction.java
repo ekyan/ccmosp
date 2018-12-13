@@ -18,26 +18,28 @@
 package jp.mosp.platform.system.action;
 
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import jp.mosp.framework.base.BaseDtoInterface;
 import jp.mosp.framework.base.BaseVo;
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.utils.MospUtility;
-import jp.mosp.framework.utils.SeUtility;
 import jp.mosp.platform.base.PlatformAction;
 import jp.mosp.platform.bean.human.HumanReferenceBeanInterface;
-import jp.mosp.platform.bean.system.UserMasterRegistBeanInterface;
+import jp.mosp.platform.bean.system.RoleReferenceBeanInterface;
+import jp.mosp.platform.bean.system.UserAccountRegistBeanInterface;
 import jp.mosp.platform.bean.system.UserMasterSearchBeanInterface;
-import jp.mosp.platform.bean.system.UserPasswordRegistBeanInterface;
 import jp.mosp.platform.comparator.base.EmployeeCodeComparator;
 import jp.mosp.platform.comparator.system.SectionMasterClassRouteComparator;
 import jp.mosp.platform.constant.PlatformConst;
 import jp.mosp.platform.constant.PlatformMessageConst;
 import jp.mosp.platform.dto.human.HumanDtoInterface;
 import jp.mosp.platform.dto.system.AccountInfoDtoInterface;
+import jp.mosp.platform.dto.system.UserExtraRoleDtoInterface;
 import jp.mosp.platform.dto.system.UserMasterDtoInterface;
-import jp.mosp.platform.dto.system.UserPasswordDtoInterface;
 import jp.mosp.platform.system.base.PlatformSystemAction;
 import jp.mosp.platform.system.vo.AccountMasterVo;
 
@@ -313,8 +315,6 @@ public class AccountMasterAction extends PlatformSystemAction {
 		initPlatformSystemVoFields();
 		// ページ繰り設定
 		setPageInfo(CMD_PAGE, getListLength());
-		// プルダウン設定
-		setBatchPulldown();
 		// ソートキー設定
 		vo.setComparatorName(SectionMasterClassRouteComparator.class.getName());
 		// 新規登録モード設定
@@ -400,18 +400,16 @@ public class AccountMasterAction extends PlatformSystemAction {
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
 	protected void insert() throws MospException {
-		// 登録クラス取得
-		UserMasterRegistBeanInterface userRegist = platform().userMasterRegist();
-		UserPasswordRegistBeanInterface passwordRegist = platform().userPasswordRegist();
-		// DTOの準備
-		UserMasterDtoInterface userDto = userRegist.getInitDto();
-		UserPasswordDtoInterface passwordDto = passwordRegist.getInitDto();
-		// DTOに値を設定
+		// 登録処理を準備
+		UserAccountRegistBeanInterface regist = platform().userAccountRegist();
+		// 初期DTOを準備
+		UserMasterDtoInterface userDto = regist.getInitUserDto();
+		Set<UserExtraRoleDtoInterface> extraRoleDtos = regist.getInitExtraRoleDtos(getNumberOfRoleType());
+		// 初期DTOに値を設定
 		setUserDtoFields(userDto);
-		setPasswordDtoFields(passwordDto);
-		// 登録処理
-		userRegist.insert(userDto);
-		passwordRegist.regist(passwordDto);
+		setExtraRoleDtosFields(extraRoleDtos);
+		// 新規登録
+		regist.insert(userDto, extraRoleDtos);
 		// 登録結果確認
 		if (mospParams.hasErrorMessage()) {
 			// 登録失敗メッセージ設定
@@ -435,14 +433,16 @@ public class AccountMasterAction extends PlatformSystemAction {
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
 	protected void add() throws MospException {
-		// 登録クラス取得
-		UserMasterRegistBeanInterface userRegist = platform().userMasterRegist();
-		// DTOの準備
-		UserMasterDtoInterface userDto = userRegist.getInitDto();
-		// DTOに値を設定
+		// 登録処理を準備
+		UserAccountRegistBeanInterface regist = platform().userAccountRegist();
+		// 初期DTOを準備
+		UserMasterDtoInterface userDto = regist.getInitUserDto();
+		Set<UserExtraRoleDtoInterface> extraRoleDtos = regist.getInitExtraRoleDtos(getNumberOfRoleType());
+		// 初期DTOに値を設定
 		setUserDtoFields(userDto);
-		// 履歴追加処理
-		userRegist.add(userDto);
+		setExtraRoleDtosFields(extraRoleDtos);
+		// 履歴追加
+		regist.add(userDto, extraRoleDtos);
 		// 履歴追加結果確認
 		if (mospParams.hasErrorMessage()) {
 			// 登録失敗メッセージ設定
@@ -466,14 +466,16 @@ public class AccountMasterAction extends PlatformSystemAction {
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
 	protected void update() throws MospException {
-		// 登録クラス取得
-		UserMasterRegistBeanInterface userRegist = platform().userMasterRegist();
-		// DTOの準備
-		UserMasterDtoInterface userDto = userRegist.getInitDto();
-		// DTOに値を設定
+		// 登録処理を準備
+		UserAccountRegistBeanInterface regist = platform().userAccountRegist();
+		// 初期DTOを準備
+		UserMasterDtoInterface userDto = regist.getInitUserDto();
+		Set<UserExtraRoleDtoInterface> extraRoleDtos = regist.getInitExtraRoleDtos(getNumberOfRoleType());
+		// 初期DTOに値を設定
 		setUserDtoFields(userDto);
-		// 履歴更新更新処理
-		userRegist.update(userDto);
+		setExtraRoleDtosFields(extraRoleDtos);
+		// 履歴更新
+		regist.update(userDto, extraRoleDtos);
 		// 更新結果確認
 		if (mospParams.hasErrorMessage()) {
 			// 更新失敗メッセージ設定
@@ -497,12 +499,14 @@ public class AccountMasterAction extends PlatformSystemAction {
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
 	protected void delete() throws MospException {
-		// VO取得
+		// VOを準備
 		AccountMasterVo vo = (AccountMasterVo)mospParams.getVo();
-		// 削除対象ID配列取得
+		// 登録処理を準備
+		UserAccountRegistBeanInterface regist = platform().userAccountRegist();
+		// レコード識別ID配列を取得
 		long[] idArray = getIdArray(vo.getCkbSelect());
 		// 削除処理
-		platform().userMasterRegist().delete(idArray);
+		regist.delete(idArray);
 		// 削除結果確認
 		if (mospParams.hasErrorMessage()) {
 			// 削除失敗メッセージ設定
@@ -528,12 +532,13 @@ public class AccountMasterAction extends PlatformSystemAction {
 		AccountMasterVo vo = (AccountMasterVo)mospParams.getVo();
 		// 新規登録モード設定
 		setEditInsertMode();
+		// プルダウン(編集)設定
+		setEditPulldown();
 		// 初期値設定
 		vo.setTxtEditUserId("");
 		vo.setTxtEditEmployeeCode("");
 		vo.setPltEditRoleCode("");
-		// プルダウン(編集)設定
-		setEditPulldown();
+		vo.setPltExtraRoles(new String[vo.getAryRoleType().length]);
 		// 社員選択モード設定
 		vo.setModeEditEmployee(PlatformConst.MODE_ACTIVATE_DATE_CHANGING);
 		// 選択社員情報設定
@@ -576,11 +581,11 @@ public class AccountMasterAction extends PlatformSystemAction {
 		// VO取得
 		AccountMasterVo vo = (AccountMasterVo)mospParams.getVo();
 		// 履歴編集対象取得
-		UserMasterDtoInterface userDto = reference().user().findForKey(userId, activateDate);
+		UserMasterDtoInterface dto = reference().user().findForKey(userId, activateDate);
 		// 存在確認
-		checkSelectedDataExist(userDto);
+		checkSelectedDataExist(dto);
 		// VOにセット
-		setVoFields(userDto);
+		setVoFields(dto);
 		// 編集モード(履歴編集)設定
 		setEditUpdateMode(reference().user().getUserHistory(userId));
 		// プルダウン設定
@@ -596,17 +601,20 @@ public class AccountMasterAction extends PlatformSystemAction {
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
 	protected void batchUpdate() throws MospException {
-		// VO準備
+		// VOを準備
 		AccountMasterVo vo = (AccountMasterVo)mospParams.getVo();
-		// 一括更新区分確認
+		// 登録処理を準備
+		UserAccountRegistBeanInterface regist = platform().userAccountRegist();
+		// レコード識別ID配列及び有効日を取得
+		long[] idArray = getIdArray(vo.getCkbSelect());
+		Date activateDate = getUpdateActivateDate();
+		// 一括更新区分を確認
 		if (vo.getRadBatchUpdateType().equals(TYPE_BATCH_UPDATE_ROLE)) {
 			// 一括更新処理(ロール)
-			platform().userMasterRegist().update(getIdArray(vo.getCkbSelect()), getUpdateActivateDate(),
-					vo.getPltUpdateRoleCode());
+			regist.update(idArray, activateDate, vo.getPltUpdateRoleCode());
 		} else {
 			// 一括更新処理(有効/無効)
-			platform().userMasterRegist().update(getIdArray(vo.getCkbSelect()), getUpdateActivateDate(),
-					getInt(vo.getPltUpdateInactivate()));
+			regist.update(idArray, activateDate, getInt(vo.getPltUpdateInactivate()));
 		}
 		// 一括更新結果確認
 		if (mospParams.hasErrorMessage()) {
@@ -621,7 +629,7 @@ public class AccountMasterAction extends PlatformSystemAction {
 		// 新規登録モード設定(編集領域をリセット)
 		insertMode();
 		// 検索有効日設定(一括更新有効日を検索条件に設定)
-		setSearchActivateDate(getUpdateActivateDate());
+		setSearchActivateDate(activateDate);
 		// 検索
 		search();
 	}
@@ -683,18 +691,14 @@ public class AccountMasterAction extends PlatformSystemAction {
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
 	protected void initPassword() throws MospException {
-		// VO準備
+		// VOを準備
 		AccountMasterVo vo = (AccountMasterVo)mospParams.getVo();
-		// ユーザIDリスト取得
-		List<String> userIdList = platform().userMasterRegist().getUserIdList(getIdArray(vo.getCkbSelect()));
-		// ユーザIDリスト取得結果確認
-		if (mospParams.hasErrorMessage()) {
-			// パスワード初期化失敗メッセージ設定
-			addInitPasswordFaildMessage();
-			return;
-		}
-		// パスワード初期化
-		platform().userPasswordRegist().initPassword(userIdList);
+		// 登録処理を準備
+		UserAccountRegistBeanInterface regist = platform().userAccountRegist();
+		// レコード識別ID配列を取得
+		long[] idArray = getIdArray(vo.getCkbSelect());
+		// パスワードを初期化
+		regist.initPassword(idArray);
 		// パスワード初期化結果確認
 		if (mospParams.hasErrorMessage()) {
 			// パスワード初期化失敗メッセージ設定
@@ -757,47 +761,63 @@ public class AccountMasterAction extends PlatformSystemAction {
 	 * @throws MospException 個人IDの取得に失敗した場合
 	 */
 	protected void setUserDtoFields(UserMasterDtoInterface dto) throws MospException {
-		// VO取得
+		// VOを取得
 		AccountMasterVo vo = (AccountMasterVo)mospParams.getVo();
-		// DTOの値をVOに設定
+		// VOの値をDTOに設定
 		dto.setPfmUserId(vo.getRecordId());
 		dto.setActivateDate(getEditActivateDate());
 		dto.setUserId(vo.getTxtEditUserId());
 		dto.setRoleCode(vo.getPltEditRoleCode());
-		dto.setInactivateFlag(Integer.valueOf(vo.getPltEditInactivate()));
+		dto.setInactivateFlag(getInt(vo.getPltEditInactivate()));
 		// 個人ID設定
 		dto.setPersonalId(reference().human().getPersonalId(vo.getTxtEditEmployeeCode(), getEditActivateDate()));
 	}
 	
 	/**
-	 * VO(編集項目)の値をDTOに設定する。<br>
-	 * @param dto 対象DTO
-	 * @throws MospException 暗号化に失敗した場合
+	 * VO(編集項目)の値をユーザ追加ロール情報群に設定する。<br>
+	 * @param dtos ユーザ追加ロール情報群
 	 */
-	protected void setPasswordDtoFields(UserPasswordDtoInterface dto) throws MospException {
-		// VO準備
+	protected void setExtraRoleDtosFields(Set<UserExtraRoleDtoInterface> dtos) {
+		// VOを取得
 		AccountMasterVo vo = (AccountMasterVo)mospParams.getVo();
-		// DTOの値をVOに設定
-		dto.setUserId(vo.getTxtEditUserId());
-		dto.setPassword(SeUtility.encrypt(SeUtility.encrypt(vo.getTxtEditUserId())));
-		dto.setChangeDate(getEditActivateDate());
+		// ユーザID及び有効日を取得
+		String userId = vo.getTxtEditUserId();
+		Date activateDate = getEditActivateDate();
+		// ユーザ追加ロール情報群の反復子を取得
+		Iterator<UserExtraRoleDtoInterface> iterator = dtos.iterator();
+		// ロール区分毎に処理
+		for (int i = 0; i < getNumberOfRoleType(); i++) {
+			// ユーザ追加ロール情報を取得
+			UserExtraRoleDtoInterface dto = iterator.next();
+			// VOの値をユーザ追加ロール情報に設定
+			dto.setUserId(userId);
+			dto.setActivateDate(activateDate);
+			dto.setRoleType(vo.getAryRoleType(i));
+			dto.setRoleCode(vo.getPltExtraRoles(i));
+		}
 	}
 	
 	/**
 	 * DTOの値をVO(編集項目)に設定する。<br>
-	 * @param dto 対象DTO
+	 * @param dto ユーザマスタ情報
 	 * @throws MospException ロール情報、社員情報の取得に失敗した場合
 	 */
 	public void setVoFields(UserMasterDtoInterface dto) throws MospException {
 		// VO取得
 		AccountMasterVo vo = (AccountMasterVo)mospParams.getVo();
+		// ユーザIDと有効日と個人IDを取得
+		String userId = dto.getUserId();
+		Date activateDate = dto.getActivateDate();
+		String personalId = dto.getPersonalId();
 		// 社員情報取得
-		HumanDtoInterface humanDto = reference().human().getHumanInfo(dto.getPersonalId(), dto.getActivateDate());
+		HumanDtoInterface humanDto = reference().human().getHumanInfo(personalId, activateDate);
+		// ユーザ追加ロール情報群(キー：ロール区分、値：ロールコード)を取得
+		Map<String, String> userExtraRoleMap = reference().userExtraRole().getUserExtraRoleMap(userId, activateDate);
 		// DTOの値をVOに設定
 		vo.setRecordId(dto.getPfmUserId());
-		vo.setTxtEditUserId(dto.getUserId());
-		vo.setTxtEditActivateYear(getStringYear(dto.getActivateDate()));
-		vo.setTxtEditActivateMonth(getStringMonth(dto.getActivateDate()));
+		vo.setTxtEditUserId(userId);
+		vo.setTxtEditActivateYear(getStringYear(activateDate));
+		vo.setTxtEditActivateMonth(getStringMonth(activateDate));
 		vo.setTxtEditActivateDay(getStringDay(dto.getActivateDate()));
 		vo.setPltEditRoleCode(dto.getRoleCode());
 		vo.setPltEditInactivate(String.valueOf(dto.getInactivateFlag()));
@@ -806,6 +826,12 @@ public class AccountMasterAction extends PlatformSystemAction {
 		if (humanDto != null) {
 			vo.setTxtEditEmployeeCode(humanDto.getEmployeeCode());
 		}
+		// ユーザ追加ロール情報群(キー：ロール区分、値：ロールコード)を設定
+		String[] pltExtraRoles = new String[vo.getAryRoleType().length];
+		for (int i = 0; i < vo.getAryRoleType().length; i++) {
+			pltExtraRoles[i] = userExtraRoleMap.get(vo.getAryRoleType(i));
+		}
+		vo.setPltExtraRoles(pltExtraRoles);
 	}
 	
 	/**
@@ -815,8 +841,16 @@ public class AccountMasterAction extends PlatformSystemAction {
 	protected void setEditPulldown() throws MospException {
 		// VO取得
 		AccountMasterVo vo = (AccountMasterVo)mospParams.getVo();
-		// プルダウン設定
-		vo.setAryPltEditRoleCode(reference().role().getSelectArray(getEditActivateDate(), true));
+		// ロール参照クラスを準備
+		RoleReferenceBeanInterface roleRefer = reference().role();
+		// 対象日を取得
+		Date targetDate = getEditActivateDate();
+		// プルダウンリスト(メインロール：編集)を取得しVOに設定
+		vo.setAryPltEditRoleCode(roleRefer.getSelectArray(targetDate, true));
+		// プルダウンリスト(ロール区分：追加ロール項目名表示用)を取得しVOに設定
+		vo.setAryRoleType(roleRefer.getRoleTypeSelectArray(targetDate));
+		// プルダウンリスト(追加ロール：編集)を取得しVOに設定
+		vo.setAryPltExtraRoles(roleRefer.getExtraRoleArrays(targetDate, false, true));
 	}
 	
 	/**
@@ -828,6 +862,17 @@ public class AccountMasterAction extends PlatformSystemAction {
 		AccountMasterVo vo = (AccountMasterVo)mospParams.getVo();
 		// プルダウン設定
 		vo.setAryPltUpdateRoleCode(reference().role().getSelectArray(getUpdateActivateDate(), true));
+	}
+	
+	/**
+	 * ロール区分の個数をVOから取得する。<br>
+	 * @return ロール区分の個数
+	 */
+	protected int getNumberOfRoleType() {
+		// VOを取得
+		AccountMasterVo vo = (AccountMasterVo)mospParams.getVo();
+		// ロール区分の個数をVOから取得
+		return vo.getAryRoleType().length;
 	}
 	
 	/**

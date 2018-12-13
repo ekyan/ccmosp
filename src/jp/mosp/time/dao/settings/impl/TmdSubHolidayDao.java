@@ -287,4 +287,25 @@ public class TmdSubHolidayDao extends PlatformDao implements SubHolidayDaoInterf
 		}
 	}
 	
+	@Override
+	public List<SubHolidayDtoInterface> findSubHolidayList(String personalId) throws MospException {
+		try {
+			index = 1;
+			StringBuffer sb = getSelectQuery(getClass());
+			sb.append(where());
+			sb.append(deleteFlagOff());
+			sb.append(and());
+			sb.append(equal(COL_PERSONAL_ID));
+			prepareStatement(sb.toString());
+			setParam(index++, personalId);
+			executeQuery();
+			return mappingAll();
+		} catch (Throwable e) {
+			throw new MospException(e);
+		} finally {
+			releaseResultSet();
+			releasePreparedStatement();
+		}
+	}
+	
 }

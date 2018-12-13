@@ -21,9 +21,12 @@
 package jp.mosp.time.bean.impl;
 
 import java.sql.Connection;
+import java.util.Date;
+import java.util.Map;
 
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.base.MospParams;
+import jp.mosp.framework.utils.DateUtility;
 import jp.mosp.platform.base.PlatformBean;
 import jp.mosp.time.bean.TotalTimeReferenceBeanInterface;
 import jp.mosp.time.dao.settings.TotalTimeDataDaoInterface;
@@ -37,7 +40,7 @@ public class TotalTimeReferenceBean extends PlatformBean implements TotalTimeRef
 	/**
 	 * 勤怠集計データDAO。
 	 */
-	protected TotalTimeDataDaoInterface	dao;
+	protected TotalTimeDataDaoInterface dao;
 	
 	
 	/**
@@ -65,6 +68,30 @@ public class TotalTimeReferenceBean extends PlatformBean implements TotalTimeRef
 	public TotalTimeDataDtoInterface findForKey(String personalId, int calculationYear, int calculationMonth)
 			throws MospException {
 		return dao.findForKey(personalId, calculationYear, calculationMonth);
+	}
+	
+	@Override
+	public Map<Integer, TotalTimeDataDtoInterface> findFiscalMap(String personalId, Date firstDate, Date lastDate)
+			throws MospException {
+		// 値取得
+		int startYear = DateUtility.getYear(firstDate);
+		int startMonth = DateUtility.getMonth(firstDate);
+		int endYear = DateUtility.getYear(lastDate);
+		int endMonth = DateUtility.getMonth(lastDate);
+		return findFiscalMap(personalId, startYear, startMonth, endYear, endMonth);
+	}
+	
+	@Override
+	public Map<Integer, TotalTimeDataDtoInterface> findFiscalMap(String personalId, int startYear, int startMonth,
+			int endYear, int endMonth) throws MospException {
+		// 値取得
+		return dao.findFiscalMap(personalId, startYear, startMonth, endYear, endMonth);
+	}
+	
+	@Override
+	public int getMinYear() throws MospException {
+		// 勤怠集計情報が存在する最小の年を取得
+		return dao.getMinYear();
 	}
 	
 }

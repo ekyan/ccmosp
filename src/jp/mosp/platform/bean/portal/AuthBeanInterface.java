@@ -26,9 +26,9 @@ public interface AuthBeanInterface {
 	
 	/**
 	 * ユーザID及びパスワードによる認証処理を行う。
-	 * @param userId   ユーザーID
-	 * @param password パスワード
+	 * @param userId ユーザーID
+	 * @param pass   パスワード(クライアント暗号化済)
 	 * @throws MospException 認証時に例外が発生した場合
 	 */
-	void authenticate(String userId, String password) throws MospException;
+	void authenticate(String userId, String pass) throws MospException;
 }

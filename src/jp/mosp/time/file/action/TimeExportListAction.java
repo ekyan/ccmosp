@@ -26,10 +26,12 @@ import jp.mosp.platform.constant.PlatformMessageConst;
 import jp.mosp.platform.file.base.ExportListAction;
 import jp.mosp.platform.file.base.ExportListVo;
 import jp.mosp.platform.utils.MonthUtility;
+import jp.mosp.time.base.TimeAction;
 import jp.mosp.time.base.TimeReferenceBeanHandlerInterface;
 import jp.mosp.time.bean.CutoffReferenceBeanInterface;
 import jp.mosp.time.constant.TimeConst;
 import jp.mosp.time.file.vo.TimeExportListVo;
+import jp.mosp.time.utils.TimeMessageUtility;
 
 /**
  * 勤怠エクスポートの実行。エクスポートマスタの管理を行う。<br>
@@ -117,6 +119,12 @@ public class TimeExportListAction extends ExportListAction {
 	}
 	
 	@Override
+	protected void setViewPath(String className) {
+		super.setViewPath(className);
+		mospParams.addJsFile(TimeAction.PATH_TIME_JS);
+	}
+	
+	@Override
 	protected BaseVo getSpecificVo() {
 		return new TimeExportListVo();
 	}
@@ -198,6 +206,11 @@ public class TimeExportListAction extends ExportListAction {
 		TimeExportListVo vo = (TimeExportListVo)mospParams.getVo();
 		// 現在の有効日モードを確認
 		if (vo.getModeActivateDate().equals(PlatformConst.MODE_ACTIVATE_DATE_CHANGING)) {
+			// 開始年月と終了年月の比較
+			if (isActivationDateValid() == false) {
+				
+				return;
+			}
 			// 有効日モード設定
 			vo.setModeActivateDate(PlatformConst.MODE_ACTIVATE_DATE_FIXED);
 		} else {
@@ -228,7 +241,8 @@ public class TimeExportListAction extends ExportListAction {
 		// プルダウン対象日取得
 		Date targetDate = getPulldownTargetDate();
 		// 勤怠管理参照用BeanHandler取得(ExportListActionでは扱わないためクラスを指定して取得)
-		TimeReferenceBeanHandlerInterface timeReference = (TimeReferenceBeanHandlerInterface)createHandler(TimeReferenceBeanHandlerInterface.class);
+		TimeReferenceBeanHandlerInterface timeReference = (TimeReferenceBeanHandlerInterface)createHandler(
+				TimeReferenceBeanHandlerInterface.class);
 		// 締日参照クラス取得
 		CutoffReferenceBeanInterface cutoffReference = timeReference.cutoff();
 		// 締日プルダウン取得
@@ -299,6 +313,50 @@ public class TimeExportListAction extends ExportListAction {
 	 */
 	protected void addNoCutoffMessage() {
 		mospParams.addErrorMessage(PlatformMessageConst.MSG_NO_ITEM, mospParams.getName("CutoffDate"));
+	}
+	
+	/**
+	 * 有効日期間の開始日を取得する。<br>
+	 * 有効日決定ボタンを押下時の有効日期間前後チェックでのみ用いられる。<br>
+	 * @return 有効日期間の開始日
+	 * @throws MospException 日付操作に失敗した場合
+	 */
+	protected Date getEditStartDate() throws MospException {
+		// VO取得
+		TimeExportListVo vo = (TimeExportListVo)mospParams.getVo();
+		return MonthUtility.getYearMonthTermFirstDate(getInt(vo.getTxtStartYear()), getInt(vo.getTxtStartMonth()),
+				mospParams);
+	}
+	
+	/**
+	 * 有効日期間の終了日を取得する。<br>
+	 * 有効日決定ボタンを押下時の有効日期間前後チェックでのみ用いられる。<br>
+	 * @return 有効日期間の終了日
+	 * @throws MospException 日付操作に失敗した場合
+	 */
+	protected Date getEditEndDate() throws MospException {
+		// VO取得
+		TimeExportListVo vo = (TimeExportListVo)mospParams.getVo();
+		return MonthUtility.getYearMonthTermLastDate(getInt(vo.getTxtEndYear()), getInt(vo.getTxtEndMonth()),
+				mospParams);
+	}
+	
+	/**
+	 * 有効日が妥当であるかを確認する。<br>
+	 * 有効日期間の開始日が有効日期間の終了日よりも後の場合、妥当でないと判断する。<br>
+	 * @return trueは年月が超えている。falseの年月が超えていない。
+	 * @throws MospException 例外発生時
+	 */
+	protected boolean isActivationDateValid() throws MospException {
+		// 有効日期間の開始日が有効日期間の終了日よりも後の場合
+		if (getEditStartDate().after(getEditEndDate())) {
+			// エラーメッセージを設定
+			TimeMessageUtility.addErrorActivateDateEndBeforeStart(mospParams);
+			return false;
+		}
+		// 有効日が妥当である場合
+		return true;
+		
 	}
 	
 }

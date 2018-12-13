@@ -36,7 +36,7 @@ public class SetupFinishAction extends PlatformAction {
 	 *  表示コマンド。<br>
 	 *  初期表示を行う。<br>
 	 */
-	public static final String	CMD_SHOW	= "SU4000";
+	public static final String CMD_SHOW = "SU4000";
 	
 	
 	/**

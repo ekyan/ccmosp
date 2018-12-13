@@ -20,14 +20,19 @@ package jp.mosp.platform.bean.human.impl;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.base.MospParams;
+import jp.mosp.framework.constant.MospConst;
+import jp.mosp.framework.property.ConventionProperty;
+import jp.mosp.framework.xml.ItemProperty;
 import jp.mosp.framework.xml.TableItemProperty;
 import jp.mosp.platform.bean.human.HumanArrayRegistBeanInterface;
 import jp.mosp.platform.bean.human.HumanGeneralBeanInterface;
+import jp.mosp.platform.bean.human.HumanGeneralCheckBeanInterface;
 import jp.mosp.platform.bean.human.base.PlatformHumanBean;
 import jp.mosp.platform.dao.human.HumanArrayDaoInterface;
 import jp.mosp.platform.dto.human.HumanArrayDtoInterface;
@@ -42,12 +47,16 @@ public class HumanArrayRegistBean extends PlatformHumanBean implements HumanArra
 	/**
 	 * 人事兼通常報DAOクラス。<br>
 	 */
-	HumanArrayDaoInterface		dao;
+	HumanArrayDaoInterface			dao;
 	
 	/**
 	 * 人事汎用管理機能クラス。<br>
 	 */
-	HumanGeneralBeanInterface	humanGeneral;
+	HumanGeneralBeanInterface		humanGeneral;
+	/**
+	 * 人事汎用管理チェッククラス
+	 */
+	HumanGeneralCheckBeanInterface	humanGeneralCheckBean;
 	
 	
 	/**
@@ -72,6 +81,8 @@ public class HumanArrayRegistBean extends PlatformHumanBean implements HumanArra
 		// DAO準備
 		dao = (HumanArrayDaoInterface)createDao(HumanArrayDaoInterface.class);
 		humanGeneral = (HumanGeneralBeanInterface)createBean(HumanGeneralBeanInterface.class);
+		humanGeneralCheckBean = (HumanGeneralCheckBeanInterface)createBean(HumanGeneralCheckBeanInterface.class);
+		
 	}
 	
 	@Override
@@ -80,8 +91,14 @@ public class HumanArrayRegistBean extends PlatformHumanBean implements HumanArra
 	}
 	
 	@Override
-	public void regist(String division, String viewKey, String personalId, Date activeDate, int rowId)
-			throws MospException {
+	public void regist(String division, String viewKey, String personalId, Date activeDate, int rowId,
+			LinkedHashMap<String, Long> recordsMap) throws MospException {
+		// 入力チェック
+		humanGeneralCheckBean.validate(division, viewKey);
+		if (mospParams.hasErrorMessage()) {
+			return;
+		}
+		
 		// 行番号取得
 		int newRowId = getRowId();
 		// 人事汎用項目情報リストを取得
@@ -90,22 +107,43 @@ public class HumanArrayRegistBean extends PlatformHumanBean implements HumanArra
 		for (TableItemProperty tableItem : tableItemList) {
 			// 人事汎用一覧情報項目名を取得
 			String[] itemNames = tableItem.getItemNames();
+			String[] itemKeys = tableItem.getItemKeys();
 			// 人事汎用一覧情報項目名毎に処理
-			for (String itemName : itemNames) {
+			for (int i = 0; i < itemNames.length; i++) {
+				HumanArrayDtoInterface dto;
+				
+				String itemName = itemNames[i];
 				// 空の場合
 				if (itemName.isEmpty()) {
 					continue;
 				}
-				// 人事汎用一覧情報取得
-				HumanArrayDtoInterface dto = dao.findForKey(personalId, itemName, rowId);
+				// レコード識別IDの取得
+				Long recordId = recordsMap.get(itemName);
+				
 				// MosP処理情報から値取得
 				String value = mospParams.getRequestParam(itemName);
+				
 				// 値がない場合
 				if (value == null) {
 					value = "";
 				}
+				
+				// 人事汎用項目区分設定情報取得
+				ConventionProperty conventionProperty = mospParams.getProperties().getConventionProperties()
+					.get(PlatformHumanConst.KEY_DEFAULT_CONVENTION);
+				
+				ItemProperty itemProperty = conventionProperty.getItem(itemKeys[i]);
+				
+				// 項目形式がチェックボックス以外
+				if (itemProperty.getType().equals(PlatformHumanConst.KEY_HUMAN_ITEM_TYPE_CHECK_BOX)) {
+					// チェックボックスで且つ値が未設定の場合
+					if (value.isEmpty()) {
+						value = MospConst.CHECKBOX_OFF;
+					}
+				}
+				
 				// レコード識別ID確認
-				if (dto == null) {
+				if (recordId == null) {
 					int rowRegistId = rowId;
 					
 					// 新規登録の場合
@@ -128,6 +166,8 @@ public class HumanArrayRegistBean extends PlatformHumanBean implements HumanArra
 						return;
 					}
 				} else {
+					// 人事汎用一覧情報取得
+					dto = (HumanArrayDtoInterface)dao.findForKey(recordId, false);
 					// 値を設定
 					dto.setHumanItemValue(value);
 					// 更新
@@ -139,6 +179,41 @@ public class HumanArrayRegistBean extends PlatformHumanBean implements HumanArra
 			}
 		}
 		
+	}
+	
+	@Override
+	public void delete(String division, String viewKey, int rowId, LinkedHashMap<String, Long> recordsMap)
+			throws MospException {
+		// 人事汎用項目情報リストを取得
+		List<TableItemProperty> tableItemList = humanGeneral.getTableItemList(division, viewKey);
+		//人事汎用項目毎に処理
+		for (TableItemProperty tableItem : tableItemList) {
+			// 人事汎用項目名を取得
+			String[] itemNames = tableItem.getItemNames();
+			// 人事汎用項目名毎に処理
+			for (String itemName : itemNames) {
+				// 空の場合
+				if (itemName.isEmpty()) {
+					continue;
+				}
+				// レコード識別IDの取得
+				Long recordId = recordsMap.get(itemName);
+				
+				// 人事汎用通常情報取得
+				HumanArrayDtoInterface dto = (HumanArrayDtoInterface)dao.findForKey(recordId, false);
+				// レコード識別ID確認
+				if (dto == null) {
+					// 処理なし
+					continue;
+				} else {
+					// 削除
+					delete(dto);
+					if (mospParams.hasErrorMessage()) {
+						return;
+					}
+				}
+			}
+		}
 	}
 	
 	@Override

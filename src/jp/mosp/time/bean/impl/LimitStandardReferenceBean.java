@@ -38,7 +38,7 @@ public class LimitStandardReferenceBean extends PlatformBean implements LimitSta
 	/**
 	 * 限度基準管理DAO
 	 */
-	private LimitStandardDaoInterface	dao;
+	private LimitStandardDaoInterface dao;
 	
 	
 	/**

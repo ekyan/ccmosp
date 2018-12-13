@@ -40,18 +40,6 @@ public interface PaidHolidayTransactionReferenceBeanInterface {
 	/**
 	 * 有給休暇トランザクションリスト取得。
 	 * @param personalId 個人ID
-	 * @param firstDate 対象年月日
-	 * @param lastDate 対象年月日
-	 * @return 有給休暇トランザクションリスト
-	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
-	 */
-	@Deprecated
-	List<PaidHolidayTransactionDtoInterface> findForList(String personalId, Date firstDate, Date lastDate)
-			throws MospException;
-	
-	/**
-	 * 有給休暇トランザクションリスト取得。
-	 * @param personalId 個人ID
 	 * @param acquisitionDate 取得日
 	 * @param startDate 開始日
 	 * @param endDate 終了日
@@ -69,8 +57,8 @@ public interface PaidHolidayTransactionReferenceBeanInterface {
 	 * @return 有給休暇トランザクションリスト
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
-	List<PaidHolidayTransactionDtoInterface> findForInfoList(String personalId, Date activateDate, String inactivateFlag)
-			throws MospException;
+	List<PaidHolidayTransactionDtoInterface> findForInfoList(String personalId, Date activateDate,
+			String inactivateFlag) throws MospException;
 	
 	/**
 	 * 期間内に適用されている設定が存在するか確認する。<br>
@@ -89,4 +77,14 @@ public interface PaidHolidayTransactionReferenceBeanInterface {
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
 	List<PaidHolidayTransactionDtoInterface> findForHistoryList(String personalId) throws MospException;
+	
+	/**
+	 * 個人IDと取得日から有給休暇トランザクションリスト取得する。
+	 * @param personalId 個人ID
+	 * @param acquisitionDate 取得日
+	 * @return 有給休暇トランザクションリスト
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	List<PaidHolidayTransactionDtoInterface> findForAcquisitionList(String personalId, Date acquisitionDate)
+			throws MospException;
 }

@@ -15,9 +15,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-/**
- * 
- */
 package jp.mosp.time.dto.settings.impl;
 
 import java.util.Date;
@@ -30,9 +27,6 @@ import jp.mosp.time.dto.settings.WorkOnHolidayRequestListDtoInterface;
  */
 public class WorkOnHolidayRequestListDto extends BaseDto implements WorkOnHolidayRequestListDtoInterface {
 	
-	/**
-	 * 
-	 */
 	private static final long	serialVersionUID	= -1542854401511065150L;
 	
 	/**
@@ -43,6 +37,10 @@ public class WorkOnHolidayRequestListDto extends BaseDto implements WorkOnHolida
 	 * 出勤日。
 	 */
 	private Date				requestDate;
+	/**
+	 * 勤務形態コード。
+	 */
+	private String				workTypeCode;
 	/**
 	 * 出勤予定時刻。
 	 */
@@ -56,21 +54,17 @@ public class WorkOnHolidayRequestListDto extends BaseDto implements WorkOnHolida
 	 */
 	private String				requestReason;
 	/**
-	 * 振替日1。
+	 * 振替日。
 	 */
-	private Date				substituteDate1;
+	private Date				substituteDate;
 	/**
-	 * 振替範囲1。
+	 * 振替範囲。
 	 */
-	private int					substituteRange1;
+	private int					substituteRange;
 	/**
-	 * 振替日2。
+	 * 振替申請。（区分）
 	 */
-	private Date				substituteDate2;
-	/**
-	 * 振替範囲2。
-	 */
-	private int					substituteRange2;
+	private int					substitute;
 	/**
 	 * 承認段階。
 	 */
@@ -96,28 +90,28 @@ public class WorkOnHolidayRequestListDto extends BaseDto implements WorkOnHolida
 	}
 	
 	@Override
+	public String getWorkTypeCode() {
+		return workTypeCode;
+	}
+	
+	@Override
 	public String getRequestReason() {
 		return requestReason;
 	}
 	
 	@Override
-	public Date getSubstituteDate1() {
-		return getDateClone(substituteDate1);
+	public Date getSubstituteDate() {
+		return getDateClone(substituteDate);
 	}
 	
 	@Override
-	public Date getSubstituteDate2() {
-		return getDateClone(substituteDate2);
+	public int getSubstituteRange() {
+		return substituteRange;
 	}
 	
 	@Override
-	public int getSubstituteRange1() {
-		return substituteRange1;
-	}
-	
-	@Override
-	public int getSubstituteRange2() {
-		return substituteRange2;
+	public int getSubstitute() {
+		return substitute;
 	}
 	
 	@Override
@@ -131,28 +125,28 @@ public class WorkOnHolidayRequestListDto extends BaseDto implements WorkOnHolida
 	}
 	
 	@Override
+	public void setWorkTypeCode(String workTypeCode) {
+		this.workTypeCode = workTypeCode;
+	}
+	
+	@Override
 	public void setRequestReason(String requestReason) {
 		this.requestReason = requestReason;
 	}
 	
 	@Override
-	public void setSubstituteDate1(Date substituteDate1) {
-		this.substituteDate1 = getDateClone(substituteDate1);
+	public void setSubstituteDate(Date substituteDate) {
+		this.substituteDate = getDateClone(substituteDate);
 	}
 	
 	@Override
-	public void setSubstituteDate2(Date substituteDate2) {
-		this.substituteDate2 = getDateClone(substituteDate2);
+	public void setSubstituteRange(int substituteRange) {
+		this.substituteRange = substituteRange;
 	}
 	
 	@Override
-	public void setSubstituteRange1(int substituteRange1) {
-		this.substituteRange1 = substituteRange1;
-	}
-	
-	@Override
-	public void setSubstituteRange2(int substituteRange2) {
-		this.substituteRange2 = substituteRange2;
+	public void setSubstitute(int substitute) {
+		this.substitute = substitute;
 	}
 	
 	@Override

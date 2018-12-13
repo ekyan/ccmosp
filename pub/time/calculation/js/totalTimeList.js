@@ -30,8 +30,8 @@ var MSG_SEARCH_CONDITION = "PFW0234";
 function onLoadExtra() {
 	// 確定
 	if (jsCutoffState == 2) {
-		setDisabled("btnDraft", true);
-		setDisabled("btnRelease", true);
+		setReadOnly("btnDraft", true);
+		setReadOnly("btnRelease", true);
 	}
 }
 

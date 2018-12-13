@@ -23,26 +23,35 @@ import jp.mosp.platform.bean.file.ExportFieldReferenceBeanInterface;
 import jp.mosp.platform.bean.file.ExportReferenceBeanInterface;
 import jp.mosp.platform.bean.file.ExportSearchBeanInterface;
 import jp.mosp.platform.bean.file.HumanExportBeanInterface;
+import jp.mosp.platform.bean.file.HumanImportBeanInterface;
 import jp.mosp.platform.bean.file.ImportFieldReferenceBeanInterface;
 import jp.mosp.platform.bean.file.ImportReferenceBeanInterface;
 import jp.mosp.platform.bean.file.ImportSearchBeanInterface;
 import jp.mosp.platform.bean.file.SectionExportBeanInterface;
 import jp.mosp.platform.bean.file.UserExportBeanInterface;
+import jp.mosp.platform.bean.file.UserExtraRoleExportBeanInterface;
+import jp.mosp.platform.bean.human.AccountReferenceBeanInterface;
+import jp.mosp.platform.bean.human.AddressReferenceBeanInterface;
 import jp.mosp.platform.bean.human.ConcurrentReferenceBeanInterface;
+import jp.mosp.platform.bean.human.EmployeeNumberingBeanInterface;
 import jp.mosp.platform.bean.human.EntranceReferenceBeanInterface;
 import jp.mosp.platform.bean.human.HumanArrayReferenceBeanInterface;
 import jp.mosp.platform.bean.human.HumanBinaryArrayReferenceBeanInterface;
 import jp.mosp.platform.bean.human.HumanBinaryHistoryReferenceBeanInterface;
 import jp.mosp.platform.bean.human.HumanBinaryNormalReferenceBeanInterface;
 import jp.mosp.platform.bean.human.HumanHistoryReferenceBeanInterface;
+import jp.mosp.platform.bean.human.HumanInfoExtraBeanInterface;
 import jp.mosp.platform.bean.human.HumanNormalReferenceBeanInterface;
 import jp.mosp.platform.bean.human.HumanReferenceBeanInterface;
 import jp.mosp.platform.bean.human.HumanSearchBeanInterface;
+import jp.mosp.platform.bean.human.PhoneReferenceBeanInterface;
 import jp.mosp.platform.bean.human.RetirementReferenceBeanInterface;
 import jp.mosp.platform.bean.human.SuspensionReferenceBeanInterface;
 import jp.mosp.platform.bean.message.MessageReferenceBeanInterface;
 import jp.mosp.platform.bean.message.MessageSearchBeanInterface;
-import jp.mosp.platform.bean.portal.HolidayBeanInterface;
+import jp.mosp.platform.bean.portal.PreActionBeanInterface;
+import jp.mosp.platform.bean.system.BankBaseReferenceBeanInterface;
+import jp.mosp.platform.bean.system.BankBranchReferenceBeanInterface;
 import jp.mosp.platform.bean.system.EmploymentContractReferenceBeanInterface;
 import jp.mosp.platform.bean.system.EmploymentContractSearchBeanInterface;
 import jp.mosp.platform.bean.system.GeneralReferenceBeanInterface;
@@ -50,12 +59,15 @@ import jp.mosp.platform.bean.system.IcCardReferenceBeanInterface;
 import jp.mosp.platform.bean.system.IcCardSearchBeanInterface;
 import jp.mosp.platform.bean.system.NamingReferenceBeanInterface;
 import jp.mosp.platform.bean.system.NamingSearchBeanInterface;
+import jp.mosp.platform.bean.system.PlatformMasterBeanInterface;
 import jp.mosp.platform.bean.system.PositionReferenceBeanInterface;
 import jp.mosp.platform.bean.system.PositionSearchBeanInterface;
+import jp.mosp.platform.bean.system.PostalCodeReferenceBeanInterface;
 import jp.mosp.platform.bean.system.ReceptionIcCardReferenceBeanInterface;
 import jp.mosp.platform.bean.system.RoleReferenceBeanInterface;
 import jp.mosp.platform.bean.system.SectionReferenceBeanInterface;
 import jp.mosp.platform.bean.system.SectionSearchBeanInterface;
+import jp.mosp.platform.bean.system.UserExtraRoleReferenceBeanInterface;
 import jp.mosp.platform.bean.system.UserMasterReferenceBeanInterface;
 import jp.mosp.platform.bean.system.UserMasterSearchBeanInterface;
 import jp.mosp.platform.bean.system.WorkPlaceReferenceBeanInterface;
@@ -84,6 +96,13 @@ public interface ReferenceBeanHandlerInterface extends BaseBeanHandlerInterface 
 	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
 	 */
 	UserMasterReferenceBeanInterface user() throws MospException;
+	
+	/**
+	 * ユーザ追加ロール参照処理を取得する。<br>
+	 * @return ユーザ追加ロール参照処理
+	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
+	 */
+	UserExtraRoleReferenceBeanInterface userExtraRole() throws MospException;
 	
 	/**
 	 * @return 所属マスタ参照
@@ -128,6 +147,24 @@ public interface ReferenceBeanHandlerInterface extends BaseBeanHandlerInterface 
 	NamingReferenceBeanInterface naming() throws MospException;
 	
 	/**
+	 * @return 郵便番号マスタ参照
+	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
+	 */
+	PostalCodeReferenceBeanInterface postalCode() throws MospException;
+	
+	/**
+	 * @return 銀行マスタ参照
+	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
+	 */
+	BankBaseReferenceBeanInterface bankBase() throws MospException;
+	
+	/**
+	 * @return 銀行支店マスタ参照
+	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
+	 */
+	BankBranchReferenceBeanInterface bankBranch() throws MospException;
+	
+	/**
 	 * 人事マスタ検索インスタンスを取得する。
 	 * @return 人事マスタ検索インスタンス
 	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
@@ -163,6 +200,27 @@ public interface ReferenceBeanHandlerInterface extends BaseBeanHandlerInterface 
 	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
 	 */
 	ConcurrentReferenceBeanInterface concurrent() throws MospException;
+	
+	/**
+	 * 住所情報参照クラスを取得する。
+	 * @return 住所情報参照クラス
+	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
+	 */
+	AddressReferenceBeanInterface address() throws MospException;
+	
+	/**
+	 * 電話情報参照クラスを取得する。
+	 * @return 電話情報参照クラス
+	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
+	 */
+	PhoneReferenceBeanInterface phone() throws MospException;
+	
+	/**
+	 * 口座情報参照クラスを取得する。<br>
+	 * @return 口座情報参照クラス
+	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
+	 */
+	AccountReferenceBeanInterface account() throws MospException;
 	
 	/**
 	 * @return 人事汎用履歴情報参照
@@ -394,11 +452,25 @@ public interface ReferenceBeanHandlerInterface extends BaseBeanHandlerInterface 
 	HumanExportBeanInterface humanExport() throws MospException;
 	
 	/**
+	 * 人事マスタインポートクラスを取得する。
+	 * @return 人事マスタインポートクラス
+	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
+	 */
+	HumanImportBeanInterface humanImport() throws MospException;
+	
+	/**
 	 * ユーザマスタエクスポートクラスを取得する。
 	 * @return ユーザマスタエクスポートクラス
 	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
 	 */
 	UserExportBeanInterface userExport() throws MospException;
+	
+	/**
+	 * ユーザ追加ロール情報エクスポート処理を取得する。
+	 * @return ユーザ追加ロール情報エクスポート処理
+	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
+	 */
+	UserExtraRoleExportBeanInterface userExtraRoleExport() throws MospException;
 	
 	/**
 	 * 所属マスタエクスポートクラスを取得する。
@@ -408,10 +480,32 @@ public interface ReferenceBeanHandlerInterface extends BaseBeanHandlerInterface 
 	SectionExportBeanInterface sectionExport() throws MospException;
 	
 	/**
-	 * 祝日インターフェースを取得する。
-	 * @return 祝日インターフェース
+	 * 社員コード採番クラスを取得する。<br>
+	 * @return 社員コード採番クラス
 	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
 	 */
-	HolidayBeanInterface holiday() throws MospException;
+	EmployeeNumberingBeanInterface employeeNumbering() throws MospException;
+	
+	/**
+	 * 人事情報一覧画面追加情報用Beanクラスを取得する。
+	 * @param className クラス名
+	 * @return 人事情報一覧画面追加情報用Beanクラス
+	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
+	 */
+	HumanInfoExtraBeanInterface humanInfoExtra(String className) throws MospException;
+	
+	/**
+	 * アクション前処理クラスを取得する。<br>
+	 * @return アクション前処理クラス
+	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
+	 */
+	PreActionBeanInterface preAction() throws MospException;
+	
+	/**
+	 * プラットフォームマスタ参照処理を取得する。<br>
+	 * @return プラットフォームマスタ参照処理
+	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
+	 */
+	PlatformMasterBeanInterface master() throws MospException;
 	
 }

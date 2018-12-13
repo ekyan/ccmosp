@@ -67,7 +67,7 @@ public class TmtStockHolidayDto extends BaseDto implements StockHolidayTransacti
 	
 	@Override
 	public Date getAcquisitionDate() {
-		return acquisitionDate;
+		return getDateClone(acquisitionDate);
 	}
 	
 	@Override

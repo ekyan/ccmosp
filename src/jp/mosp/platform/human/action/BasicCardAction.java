@@ -35,6 +35,7 @@ import jp.mosp.platform.human.vo.BasicCardVo;
 import jp.mosp.platform.portal.action.PortalAction;
 import jp.mosp.platform.utils.InputCheckUtility;
 import jp.mosp.platform.utils.PlatformMessageUtility;
+import jp.mosp.platform.utils.PlatformNamingUtility;
 
 /**
  * 社員基本情報の履歴追加・履歴編集を行う。<br>
@@ -404,7 +405,7 @@ public class BasicCardAction extends PlatformHumanAction {
 	 * プルダウンの設定を行う。<br>
 	 * @throws MospException 実行時例外が発生した場合
 	 */
-	private void setPulldown() throws MospException {
+	protected void setPulldown() throws MospException {
 		// VO取得
 		BasicCardVo vo = (BasicCardVo)mospParams.getVo();
 		// 有効日モード確認
@@ -441,8 +442,8 @@ public class BasicCardAction extends PlatformHumanAction {
 			return;
 		}
 		// プルダウン設定
-		vo.setAryPltPostName(reference().naming().getCodedSelectArray(PlatformConst.NAMING_TYPE_POST,
-				getActivateDate(), true));
+		vo.setAryPltPostName(
+				reference().naming().getCodedSelectArray(PlatformConst.NAMING_TYPE_POST, getActivateDate(), true));
 	}
 	
 	/**
@@ -672,41 +673,42 @@ public class BasicCardAction extends PlatformHumanAction {
 	private void validate() {
 		// VO準備
 		BasicCardVo vo = (BasicCardVo)mospParams.getVo();
-		String[] aryActivateYear = new String[]{ mospParams.getName("ActivateDate", "FrontParentheses", "Year",
-				"BackParentheses") };
-		String[] aryActivateMonth = new String[]{ mospParams.getName("ActivateDate", "FrontParentheses", "Month",
-				"BackParentheses") };
-		String[] aryActivateDay = new String[]{ mospParams.getName("ActivateDate", "FrontParentheses", "Day",
-				"BackParentheses") };
+		String[] aryActivateYear = new String[]{
+			mospParams.getName("ActivateDate", "FrontParentheses", "Year", "BackParentheses") };
+		String[] aryActivateMonth = new String[]{
+			mospParams.getName("ActivateDate", "FrontParentheses", "Month", "BackParentheses") };
+		String[] aryActivateDay = new String[]{
+			mospParams.getName("ActivateDate", "FrontParentheses", "Day", "BackParentheses") };
 		// 必須入力確認
-		InputCheckUtility.checkRequired(vo.getTxtActivateYear(), aryActivateYear, mospParams);
-		InputCheckUtility.checkRequired(vo.getTxtActivateMonth(), aryActivateMonth, mospParams);
-		InputCheckUtility.checkRequired(vo.getTxtActivateDay(), aryActivateDay, mospParams);
+		InputCheckUtility.checkRequired(mospParams, vo.getTxtActivateYear(), aryActivateYear);
+		InputCheckUtility.checkRequired(mospParams, vo.getTxtActivateMonth(), aryActivateMonth);
+		InputCheckUtility.checkRequired(mospParams, vo.getTxtActivateDay(), aryActivateDay);
 		// 数値妥当性確認
-		InputCheckUtility.checkNumber(vo.getTxtActivateYear(), aryActivateYear, mospParams);
-		InputCheckUtility.checkNumber(vo.getTxtActivateMonth(), aryActivateMonth, mospParams);
-		InputCheckUtility.checkNumber(vo.getTxtActivateDay(), aryActivateDay, mospParams);
+		InputCheckUtility.checkNumber(mospParams, vo.getTxtActivateYear(), aryActivateYear);
+		InputCheckUtility.checkNumber(mospParams, vo.getTxtActivateMonth(), aryActivateMonth);
+		InputCheckUtility.checkNumber(mospParams, vo.getTxtActivateDay(), aryActivateDay);
 		// 日付妥当性確認
-		InputCheckUtility.checkDate(vo.getTxtActivateYear(), vo.getTxtActivateMonth(), vo.getTxtActivateDay(),
-				new String[]{ mospParams.getName("ActivateDate"), mospParams.getName("CorrectDate") }, mospParams);
+		InputCheckUtility.checkDate(mospParams, vo.getTxtActivateYear(), vo.getTxtActivateMonth(),
+				vo.getTxtActivateDay(),
+				new String[]{ mospParams.getName("ActivateDate"), mospParams.getName("CorrectDate") });
 		if (mospParams.getCommand().equals(CMD_ADD) || mospParams.getCommand().equals(CMD_UPDATE)) {
-			String[] aryEmployeeCode = new String[]{ mospParams.getName("Employee", "Code") };
+			String[] aryEmployeeCode = new String[]{ PlatformNamingUtility.employeeCode(mospParams) };
 			String[] aryLastName = new String[]{ mospParams.getName("LastName") };
 			// 必須入力確認
-			InputCheckUtility.checkRequired(vo.getTxtEmployeeCode(), aryEmployeeCode, mospParams);
-			InputCheckUtility.checkRequired(vo.getTxtLastName(), aryLastName, mospParams);
+			InputCheckUtility.checkRequired(mospParams, vo.getTxtEmployeeCode(), aryEmployeeCode);
+			InputCheckUtility.checkRequired(mospParams, vo.getTxtLastName(), aryLastName);
 			// コード妥当性確認
-			InputCheckUtility.checkCode(vo.getTxtEmployeeCode(), aryEmployeeCode, mospParams);
+			InputCheckUtility.checkCode(mospParams, vo.getTxtEmployeeCode(), aryEmployeeCode);
 			// TODO ｶﾅ妥当性確認
 			// 文字列長確認
-			InputCheckUtility.checkLength(vo.getTxtEmployeeCode(), 10, mospParams.getName("Employee", "Code"),
-					mospParams);
-			InputCheckUtility.checkLength(vo.getTxtLastName(), 10, mospParams.getName("LastName"), mospParams);
-			InputCheckUtility.checkLength(vo.getTxtFirstName(), 10, mospParams.getName("FirstName"), mospParams);
-			InputCheckUtility.checkLength(vo.getTxtLastKana(), 10,
-					mospParams.getName("LastName", "FrontParentheses", "Kana", "BackParentheses"), mospParams);
-			InputCheckUtility.checkLength(vo.getTxtFirstKana(), 10,
-					mospParams.getName("FirstName", "FrontParentheses", "Kana", "BackParentheses"), mospParams);
+			InputCheckUtility.checkLength(mospParams, vo.getTxtEmployeeCode(), 10,
+					PlatformNamingUtility.employeeCode(mospParams));
+			InputCheckUtility.checkLength(mospParams, vo.getTxtLastName(), 10, mospParams.getName("LastName"));
+			InputCheckUtility.checkLength(mospParams, vo.getTxtFirstName(), 10, mospParams.getName("FirstName"));
+			InputCheckUtility.checkLength(mospParams, vo.getTxtLastKana(), 10,
+					mospParams.getName("LastName", "FrontParentheses", "Kana", "BackParentheses"));
+			InputCheckUtility.checkLength(mospParams, vo.getTxtFirstKana(), 10,
+					mospParams.getName("FirstName", "FrontParentheses", "Kana", "BackParentheses"));
 		}
 	}
 	

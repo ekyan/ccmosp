@@ -34,8 +34,7 @@ import = "jp.mosp.platform.constant.PlatformConst"
 MospParams params = (MospParams)request.getAttribute(MospConst.ATT_MOSP_PARAMS);
 RetirementCardVo vo = (RetirementCardVo)params.getVo();
 %>
-
-<jsp:include page="<%= PlatformHumanConst.PATH_HUMAN_COMMON_INFO_JSP %>" flush="false" />
+<jsp:include page="<%= params.getApplicationProperty(PlatformHumanConst.APP_HUMAN_COMMON_INFO_JSP) %>" flush="false" />
 <div class="List">
 <table class="ListTable" id="tblAddList">
 	<tr>

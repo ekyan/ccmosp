@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE MosP>
+<MosP>
+	
+	<!-- authority -->
+	<Role key="ME10">
+		<RoleAcceptCommand>ME01*</RoleAcceptCommand>
+	</Role>
+	<Role key="ME30">
+		<RoleAcceptCommand>ME*</RoleAcceptCommand>
+	</Role>
+	
+</MosP>

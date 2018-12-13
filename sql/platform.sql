@@ -1,3 +1,190 @@
+CREATE TABLE pfm_postal_code
+(
+  pfm_postal_code_id bigint NOT NULL DEFAULT 0,
+  postal_code character varying(7) NOT NULL DEFAULT ''::character varying,
+  prefecture_code character varying(2) NOT NULL DEFAULT ''::character varying,
+  city_code character varying(3) NOT NULL DEFAULT ''::character varying,
+  city_name character varying(15) NOT NULL DEFAULT ''::character varying,
+  city_kana character varying(30) NOT NULL DEFAULT ''::character varying,
+  address_name character varying(50) NOT NULL DEFAULT ''::character varying,
+  address_kana character varying(100) NOT NULL DEFAULT ''::character varying,
+  inactivate_flag integer NOT NULL DEFAULT 0,
+  delete_flag integer NOT NULL DEFAULT 0, 
+  insert_date timestamp without time zone NOT NULL, 
+  insert_user character varying(50) NOT NULL, 
+  update_date timestamp without time zone NOT NULL, 
+  update_user character varying(50) NOT NULL, 
+  CONSTRAINT pfm_postal_code_pkey PRIMARY KEY (pfm_postal_code_id)
+);
+COMMENT ON TABLE pfm_postal_code IS '郵便番号マスタ';
+COMMENT ON COLUMN pfm_postal_code.pfm_postal_code_id IS 'レコード識別ID';
+COMMENT ON COLUMN pfm_postal_code.postal_code IS '郵便番号';
+COMMENT ON COLUMN pfm_postal_code.prefecture_code IS '都道府県コード';
+COMMENT ON COLUMN pfm_postal_code.city_code IS '市区町村コード';
+COMMENT ON COLUMN pfm_postal_code.city_name IS '市区町村名';
+COMMENT ON COLUMN pfm_postal_code.city_kana IS '市区町村名カナ';
+COMMENT ON COLUMN pfm_postal_code.address_name IS '町域名';
+COMMENT ON COLUMN pfm_postal_code.address_kana IS '町域名カナ';
+COMMENT ON COLUMN pfm_postal_code.inactivate_flag IS '無効フラグ';
+COMMENT ON COLUMN pfm_postal_code.delete_flag IS '削除フラグ';
+COMMENT ON COLUMN pfm_postal_code.insert_date IS '登録日';
+COMMENT ON COLUMN pfm_postal_code.insert_user IS '登録者';
+COMMENT ON COLUMN pfm_postal_code.update_date IS '更新日';
+COMMENT ON COLUMN pfm_postal_code.update_user IS '更新者';
+
+
+CREATE TABLE pfm_bank_base
+(
+  pfm_bank_base_id bigint NOT NULL DEFAULT 0,
+  bank_code character varying(4) NOT NULL DEFAULT ''::character varying,
+  bank_name character varying(32) NOT NULL DEFAULT ''::character varying,
+  bank_name_kana character varying(15) NOT NULL DEFAULT ''::character varying,
+  inactivate_flag integer NOT NULL DEFAULT 0,
+  delete_flag integer NOT NULL DEFAULT 0, 
+  insert_date timestamp without time zone NOT NULL, 
+  insert_user character varying(50) NOT NULL, 
+  update_date timestamp without time zone NOT NULL, 
+  update_user character varying(50) NOT NULL, 
+  CONSTRAINT pfm_bank_base_pkey PRIMARY KEY (pfm_bank_base_id)
+);
+COMMENT ON TABLE pfm_bank_base IS '銀行マスタ';
+COMMENT ON COLUMN pfm_bank_base.pfm_bank_base_id IS 'レコード識別ID';
+COMMENT ON COLUMN pfm_bank_base.bank_code IS '銀行コード';
+COMMENT ON COLUMN pfm_bank_base.bank_name IS '銀行名';
+COMMENT ON COLUMN pfm_bank_base.bank_name_kana IS '銀行名カナ';
+COMMENT ON COLUMN pfm_bank_base.inactivate_flag IS '無効フラグ';
+COMMENT ON COLUMN pfm_bank_base.delete_flag IS '削除フラグ';
+COMMENT ON COLUMN pfm_bank_base.insert_date IS '登録日';
+COMMENT ON COLUMN pfm_bank_base.insert_user IS '登録者';
+COMMENT ON COLUMN pfm_bank_base.update_date IS '更新日';
+COMMENT ON COLUMN pfm_bank_base.update_user IS '更新者';
+
+
+CREATE TABLE pfm_bank_branch
+(
+  pfm_bank_branch_id bigint NOT NULL DEFAULT 0,
+  bank_code  character varying(4) NOT NULL DEFAULT ''::character varying,
+  branch_code character varying(3) NOT NULL DEFAULT ''::character varying,
+  branch_name character varying(50) NOT NULL DEFAULT ''::character varying,
+  branch_kana character varying(15) NOT NULL DEFAULT ''::character varying,
+  branch_address_name character varying(112) NOT NULL DEFAULT ''::character varying,
+  branch_address_kana character varying(80) NOT NULL DEFAULT ''::character varying,
+  branch_phone character varying(17) NOT NULL DEFAULT ''::character varying,
+  inactivate_flag integer NOT NULL DEFAULT 0,
+  delete_flag integer NOT NULL DEFAULT 0, 
+  insert_date timestamp without time zone NOT NULL, 
+  insert_user character varying(50) NOT NULL, 
+  update_date timestamp without time zone NOT NULL, 
+  update_user character varying(50) NOT NULL, 
+  CONSTRAINT pfm_bank_branch_pkey PRIMARY KEY (pfm_bank_branch_id)
+);
+COMMENT ON TABLE pfm_bank_branch IS '銀行支店マスタ';
+COMMENT ON COLUMN pfm_bank_branch.pfm_bank_branch_id IS 'レコード識別ID';
+COMMENT ON COLUMN pfm_bank_branch.bank_code IS '銀行コード';
+COMMENT ON COLUMN pfm_bank_branch.branch_code IS '支店コード';
+COMMENT ON COLUMN pfm_bank_branch.branch_name IS '支店名';
+COMMENT ON COLUMN pfm_bank_branch.branch_kana IS '支店名カナ';
+COMMENT ON COLUMN pfm_bank_branch.branch_address_name IS '支店所在地';
+COMMENT ON COLUMN pfm_bank_branch.branch_address_kana IS '支店所在地カナ';
+COMMENT ON COLUMN pfm_bank_branch.branch_phone IS '支店電話番号';
+COMMENT ON COLUMN pfm_bank_branch.inactivate_flag IS '無効フラグ';
+COMMENT ON COLUMN pfm_bank_branch.delete_flag IS '削除フラグ';
+COMMENT ON COLUMN pfm_bank_branch.insert_date IS '登録日';
+COMMENT ON COLUMN pfm_bank_branch.insert_user IS '登録者';
+COMMENT ON COLUMN pfm_bank_branch.update_date IS '更新日';
+COMMENT ON COLUMN pfm_bank_branch.update_user IS '更新者';
+
+
+CREATE TABLE pfa_account
+(
+  pfa_account_id bigint NOT NULL DEFAULT 0,
+  holder_id character varying(20) NOT NULL DEFAULT ''::character varying,
+  account_type character varying(10) NOT NULL DEFAULT ''::character varying,
+  activate_date date NOT NULL,
+  bank_code character varying(4) NOT NULL DEFAULT ''::character varying,
+  bank_name character varying(32) NOT NULL DEFAULT ''::character varying,
+  branch_code character varying(3) NOT NULL DEFAULT ''::character varying,
+  branch_name character varying(50) NOT NULL DEFAULT ''::character varying,
+  account_class character varying(1) NOT NULL DEFAULT ''::character varying,
+  account_number character varying(7) NOT NULL DEFAULT ''::character varying,
+  account_holder character varying(30) NOT NULL DEFAULT ''::character varying,
+  fixed_payment integer NOT NULL DEFAULT 0,
+  fixed_bonus integer NOT NULL DEFAULT 0,
+  request_type character varying(1) NOT NULL DEFAULT ''::character varying,
+  workflow bigint NOT NULL DEFAULT 0,
+  delete_flag integer NOT NULL DEFAULT 0,
+  insert_date timestamp without time zone NOT NULL,
+  insert_user character varying(50) NOT NULL DEFAULT ''::character varying,
+  update_date timestamp without time zone NOT NULL,
+  update_user character varying(50) NOT NULL DEFAULT ''::character varying,
+  CONSTRAINT pfa_account_pkey PRIMARY KEY (pfa_account_id)
+)
+;
+COMMENT ON TABLE pfa_account IS '口座情報';
+COMMENT ON COLUMN pfa_account.pfa_account_id IS 'レコード識別ID';
+COMMENT ON COLUMN pfa_account.holder_id IS '保持者ID';
+COMMENT ON COLUMN pfa_account.account_type IS '口座区分';
+COMMENT ON COLUMN pfa_account.activate_date IS '有効日';
+COMMENT ON COLUMN pfa_account.bank_code IS '銀行コード';
+COMMENT ON COLUMN pfa_account.bank_name IS '銀行名';
+COMMENT ON COLUMN pfa_account.branch_code IS '支店コード';
+COMMENT ON COLUMN pfa_account.branch_name IS '支店名';
+COMMENT ON COLUMN pfa_account.account_class IS '口座種別(普通/当座)';
+COMMENT ON COLUMN pfa_account.account_number IS '口座番号';
+COMMENT ON COLUMN pfa_account.account_holder IS '口座名義';
+COMMENT ON COLUMN pfa_account.fixed_payment IS '定額(給与)';
+COMMENT ON COLUMN pfa_account.fixed_bonus IS '定額(賞与)';
+COMMENT ON COLUMN pfa_account.request_type IS '申請区分';
+COMMENT ON COLUMN pfa_account.workflow IS 'ワークフロー番号';
+COMMENT ON COLUMN pfa_account.delete_flag IS '削除フラグ';
+COMMENT ON COLUMN pfa_account.insert_date IS '登録日';
+COMMENT ON COLUMN pfa_account.insert_user IS '登録者';
+COMMENT ON COLUMN pfa_account.update_date IS '更新日';
+COMMENT ON COLUMN pfa_account.update_user IS '更新者';
+
+
+CREATE TABLE pfa_address
+(
+  pfa_address_id bigint NOT NULL DEFAULT 0,
+  holder_id character varying(20) NOT NULL DEFAULT ''::character varying,
+  address_type character varying(10) NOT NULL DEFAULT ''::character varying,
+  activate_date date NOT NULL,
+  postal_code_1 character varying(3) NOT NULL DEFAULT ''::character varying,
+  postal_code_2 character varying(4) NOT NULL DEFAULT ''::character varying,
+  prefecture character varying(2) NOT NULL DEFAULT ''::character varying,
+  city_code character varying(3) NOT NULL DEFAULT ''::character varying,
+  address character varying(64) NOT NULL DEFAULT ''::character varying,
+  address_number character varying(64) NOT NULL DEFAULT ''::character varying,
+  building character varying(64) NOT NULL DEFAULT ''::character varying,
+  request_type character varying(10) NOT NULL DEFAULT ''::character varying,
+  delete_flag integer NOT NULL DEFAULT 0,
+  insert_date timestamp without time zone NOT NULL,
+  insert_user character varying(50) NOT NULL DEFAULT ''::character varying,
+  update_date timestamp without time zone NOT NULL,
+  update_user character varying(50) NOT NULL DEFAULT ''::character varying,
+  CONSTRAINT pfa_address_pkey PRIMARY KEY (pfa_address_id)
+)
+;
+COMMENT ON TABLE pfa_address IS '住所情報';
+COMMENT ON COLUMN pfa_address.pfa_address_id IS 'レコード識別ID';
+COMMENT ON COLUMN pfa_address.holder_id IS '保持者ID';
+COMMENT ON COLUMN pfa_address.address_type IS '住所区分';
+COMMENT ON COLUMN pfa_address.activate_date IS '有効日';
+COMMENT ON COLUMN pfa_address.postal_code_1 IS '郵便番号1';
+COMMENT ON COLUMN pfa_address.postal_code_2 IS '郵便番号2';
+COMMENT ON COLUMN pfa_address.prefecture IS '都道府県コード';
+COMMENT ON COLUMN pfa_address.city_code IS '市区町村コード';
+COMMENT ON COLUMN pfa_address.address IS '市区町村';
+COMMENT ON COLUMN pfa_address.address_number IS '番地';
+COMMENT ON COLUMN pfa_address.building IS '建物情報';
+COMMENT ON COLUMN pfa_address.request_type IS '申請区分';
+COMMENT ON COLUMN pfa_address.delete_flag IS '削除フラグ';
+COMMENT ON COLUMN pfa_address.insert_date IS '登録日';
+COMMENT ON COLUMN pfa_address.insert_user IS '登録者';
+COMMENT ON COLUMN pfa_address.update_date IS '更新日';
+COMMENT ON COLUMN pfa_address.update_user IS '更新者';
+
+
 CREATE TABLE pfa_human_concurrent
 (
   pfa_human_concurrent_id bigint NOT NULL DEFAULT 0,
@@ -114,6 +301,40 @@ COMMENT ON COLUMN pfa_human_suspension.update_date IS '更新日';
 COMMENT ON COLUMN pfa_human_suspension.update_user IS '更新者';
 
 
+CREATE TABLE pfa_phone
+(
+  pfa_phone_id bigint NOT NULL DEFAULT 0,
+  holder_id character varying(20) NOT NULL DEFAULT ''::character varying,
+  phone_type character varying(10) NOT NULL DEFAULT ''::character varying,
+  activate_date date NOT NULL,
+  phone_number_1 character varying(5) NOT NULL DEFAULT ''::character varying,
+  phone_number_2 character varying(4) NOT NULL DEFAULT ''::character varying,
+  phone_number_3 character varying(4) NOT NULL DEFAULT ''::character varying,
+  request_type character varying(10) NOT NULL DEFAULT ''::character varying,
+  delete_flag integer NOT NULL DEFAULT 0,
+  insert_date timestamp without time zone NOT NULL,
+  insert_user character varying(50) NOT NULL DEFAULT ''::character varying,
+  update_date timestamp without time zone NOT NULL,
+  update_user character varying(50) NOT NULL DEFAULT ''::character varying,
+  CONSTRAINT pfa_phone_pkey PRIMARY KEY (pfa_phone_id)
+)
+;
+COMMENT ON TABLE pfa_phone IS '電話情報';
+COMMENT ON COLUMN pfa_phone.pfa_phone_id IS 'レコード識別ID';
+COMMENT ON COLUMN pfa_phone.holder_id IS '保持者ID';
+COMMENT ON COLUMN pfa_phone.phone_type IS '電話区分';
+COMMENT ON COLUMN pfa_phone.activate_date IS '有効日';
+COMMENT ON COLUMN pfa_phone.phone_number_1 IS '電話番号1';
+COMMENT ON COLUMN pfa_phone.phone_number_2 IS '電話番号2';
+COMMENT ON COLUMN pfa_phone.phone_number_3 IS '電話番号3';
+COMMENT ON COLUMN pfa_phone.request_type IS '申請区分';
+COMMENT ON COLUMN pfa_phone.delete_flag IS '削除フラグ';
+COMMENT ON COLUMN pfa_phone.insert_date IS '登録日';
+COMMENT ON COLUMN pfa_phone.insert_user IS '登録者';
+COMMENT ON COLUMN pfa_phone.update_date IS '更新日';
+COMMENT ON COLUMN pfa_phone.update_user IS '更新者';
+
+
 CREATE TABLE pfa_user_password
 (
   pfa_user_password_id bigint NOT NULL DEFAULT 0,
@@ -138,6 +359,34 @@ COMMENT ON COLUMN pfa_user_password.insert_date IS '登録日';
 COMMENT ON COLUMN pfa_user_password.insert_user IS '登録者';
 COMMENT ON COLUMN pfa_user_password.update_date IS '更新日';
 COMMENT ON COLUMN pfa_user_password.update_user IS '更新者';
+
+
+CREATE TABLE pfa_user_extra_role
+(
+  pfa_user_extra_role_id bigint NOT NULL DEFAULT 0,
+  user_id character varying(50) NOT NULL DEFAULT ''::character varying,
+  activate_date date NOT NULL,
+  role_type character varying(10) NOT NULL DEFAULT ''::character varying,
+  role_code character varying(10) NOT NULL DEFAULT ''::character varying,
+  delete_flag integer NOT NULL DEFAULT 0,
+  insert_date timestamp without time zone NOT NULL,
+  insert_user character varying(50) NOT NULL DEFAULT ''::character varying,
+  update_date timestamp without time zone NOT NULL,
+  update_user character varying(50) NOT NULL DEFAULT ''::character varying,
+  CONSTRAINT pfa_user_extra_role_pkey PRIMARY KEY (pfa_user_extra_role_id)
+)
+;
+COMMENT ON TABLE pfa_user_extra_role IS 'ユーザ追加ロール情報';
+COMMENT ON COLUMN pfa_user_extra_role.pfa_user_extra_role_id IS 'レコード識別ID';
+COMMENT ON COLUMN pfa_user_extra_role.user_id IS 'ユーザID';
+COMMENT ON COLUMN pfa_user_extra_role.activate_date IS '有効日';
+COMMENT ON COLUMN pfa_user_extra_role.role_type IS 'ロール区分';
+COMMENT ON COLUMN pfa_user_extra_role.role_code IS 'ロールコード';
+COMMENT ON COLUMN pfa_user_extra_role.delete_flag IS '削除フラグ';
+COMMENT ON COLUMN pfa_user_extra_role.insert_date IS '登録日';
+COMMENT ON COLUMN pfa_user_extra_role.insert_user IS '登録者';
+COMMENT ON COLUMN pfa_user_extra_role.update_date IS '更新日';
+COMMENT ON COLUMN pfa_user_extra_role.update_user IS '更新者';
 
 
 CREATE TABLE pfa_human_normal
@@ -756,6 +1005,7 @@ CREATE TABLE pfm_approval_unit
   approver_personal_id text NOT NULL DEFAULT ''::character varying,
   approver_section_code character varying(10) NOT NULL DEFAULT ''::character varying,
   approver_position_code character varying(10) NOT NULL DEFAULT ''::character varying,
+  approver_position_grade character varying(10) NOT NULL DEFAULT ''::character varying,
   route_stage integer NOT NULL DEFAULT 0,
   inactivate_flag integer NOT NULL DEFAULT 0,
   delete_flag integer NOT NULL DEFAULT 0,
@@ -775,6 +1025,7 @@ COMMENT ON COLUMN pfm_approval_unit.unit_type IS 'ユニット区分';
 COMMENT ON COLUMN pfm_approval_unit.approver_personal_id IS '承認者個人ID';
 COMMENT ON COLUMN pfm_approval_unit.approver_section_code IS '承認者所属コード';
 COMMENT ON COLUMN pfm_approval_unit.approver_position_code IS '承認者職位コード';
+COMMENT ON COLUMN pfm_approval_unit.approver_position_grade IS '承認者職位等級範囲';
 COMMENT ON COLUMN pfm_approval_unit.route_stage IS '複数決済';
 COMMENT ON COLUMN pfm_approval_unit.inactivate_flag IS '無効フラグ';
 COMMENT ON COLUMN pfm_approval_unit.delete_flag IS '削除フラグ';
@@ -1090,10 +1341,40 @@ COMMENT ON COLUMN pfa_export_field.update_date IS '更新日';
 COMMENT ON COLUMN pfa_export_field.update_user IS '更新者';
 
 
+CREATE TABLE pfm_app_property
+(
+  pfm_app_property_id bigint NOT NULL DEFAULT 0,
+  app_key text NOT NULL DEFAULT ''::character varying,
+  app_value text DEFAULT ''::character varying,
+  delete_flag integer NOT NULL DEFAULT 0,
+  insert_date timestamp without time zone NOT NULL,
+  insert_user character varying(50) NOT NULL DEFAULT ''::character varying,
+  update_date timestamp without time zone NOT NULL,
+  update_user character varying(50) NOT NULL DEFAULT ''::character varying,
+  CONSTRAINT pfm_app_property_pkey PRIMARY KEY (pfm_app_property_id)
+)
+;
+COMMENT ON TABLE pfm_app_property IS 'アプリケーション設定マスタ';
+COMMENT ON COLUMN pfm_app_property.pfm_app_property_id IS 'レコード識別ID';
+COMMENT ON COLUMN pfm_app_property.app_key IS 'アプリケーション設定キー';
+COMMENT ON COLUMN pfm_app_property.app_value IS 'アプリケーション設定値';
+COMMENT ON COLUMN pfm_app_property.delete_flag IS '削除フラグ';
+COMMENT ON COLUMN pfm_app_property.insert_date IS '登録日';
+COMMENT ON COLUMN pfm_app_property.insert_user IS '登録者';
+COMMENT ON COLUMN pfm_app_property.update_date IS '更新日';
+COMMENT ON COLUMN pfm_app_property.update_user IS '更新者';
+
+
+CREATE SEQUENCE pfm_postal_code_id_seq;
+CREATE SEQUENCE pfm_bank_base_id_seq;
+CREATE SEQUENCE pfm_bank_branch_id_seq;
+CREATE SEQUENCE pfa_account_id_seq;
+CREATE SEQUENCE pfa_address_id_seq;
 CREATE SEQUENCE pfa_human_concurrent_id_seq;
 CREATE SEQUENCE pfa_human_entrance_id_seq; 
 CREATE SEQUENCE pfa_human_retirement_id_seq;
 CREATE SEQUENCE pfa_human_suspension_id_seq;
+CREATE SEQUENCE pfa_user_extra_role_id_seq;
 CREATE SEQUENCE pfa_user_password_id_seq;
 CREATE SEQUENCE pfa_human_normal_id_seq;
 CREATE SEQUENCE pfa_human_history_id_seq;
@@ -1101,6 +1382,7 @@ CREATE SEQUENCE pfa_human_array_id_seq;
 CREATE SEQUENCE pfa_human_binary_normal_id_seq;
 CREATE SEQUENCE pfa_human_binary_history_id_seq;
 CREATE SEQUENCE pfa_human_binary_array_id_seq;
+CREATE SEQUENCE pfa_phone_id_seq;
 CREATE SEQUENCE pfg_general_id_seq;
 CREATE SEQUENCE pfm_employment_contract_id_seq;
 CREATE SEQUENCE pfm_human_id_seq;
@@ -1127,8 +1409,16 @@ CREATE SEQUENCE pfm_human_personal_id_seq;
 CREATE SEQUENCE pft_message_message_no_seq;
 CREATE SEQUENCE pft_sub_approver_sub_approver_no_seq;
 CREATE SEQUENCE pft_workflow_workflow_seq;
+CREATE SEQUENCE pfm_app_property_id_seq;
 
 
+CREATE INDEX pfm_postal_code_index1 ON pfm_postal_code(postal_code);
+CREATE INDEX pfm_bank_base_index1 ON pfm_bank_base(bank_code);
+CREATE INDEX pfm_bank_branch_index1 ON pfm_bank_branch(bank_code);
+CREATE INDEX pfm_bank_branch_index2 ON pfm_bank_branch(branch_code);
+CREATE INDEX pfa_account_index1 ON pfa_account(holder_id, account_type, activate_date);
+CREATE INDEX pfa_account_index2 ON pfa_account(workflow);
+CREATE INDEX pfa_address_index1 ON pfa_address(holder_id, activate_date, address_type);
 CREATE INDEX pfa_approval_route_unit_index1 ON pfa_approval_route_unit(route_code, activate_date);
 CREATE INDEX pfa_export_field_index1 ON pfa_export_field(export_code);
 CREATE INDEX pfa_human_array_index1 ON pfa_human_array(personal_id, human_item_type);
@@ -1142,6 +1432,8 @@ CREATE INDEX pfa_human_normal_index1 ON pfa_human_normal(personal_id, human_item
 CREATE INDEX pfa_human_retirement_index1 ON pfa_human_retirement(personal_id, retirement_date);
 CREATE INDEX pfa_human_suspension_index1 ON pfa_human_suspension(personal_id, start_date, end_date);
 CREATE INDEX pfa_import_field_index1 ON pfa_import_field(import_code);
+CREATE INDEX pfa_phone_index1 ON pfa_phone(holder_id, activate_date, phone_type);
+CREATE INDEX pfa_user_extra_role_index1 ON pfa_user_extra_role(delete_flag, user_id, activate_date);
 CREATE INDEX pfa_user_password_index1 ON pfa_user_password(user_id);
 CREATE INDEX pfg_general_index1 ON pfg_general(general_type);
 CREATE INDEX pfm_approval_route_index1 ON pfm_approval_route(route_code, activate_date);
@@ -1161,19 +1453,8 @@ CREATE INDEX pft_message_index1 ON pft_message(message_no, start_date, end_date)
 CREATE INDEX pft_sub_approver_index1 ON pft_sub_approver(start_date, end_date, sub_approver_id);
 CREATE INDEX pft_workflow_index1 ON pft_workflow(workflow);
 CREATE INDEX pft_workflow_index2 ON pft_workflow(workflow_status);
+CREATE INDEX pft_workflow_index3 ON pft_workflow(personal_id);
 CREATE INDEX pft_workflow_comment_index1 ON pft_workflow_comment(workflow);
+CREATE INDEX pfm_app_property_index1 ON pfm_app_property(delete_flag, app_key);
 
 
-CREATE TABLE pfm_db_version
-(
-  db_version character varying(10) NOT NULL DEFAULT ''::character varying,
-  insert_date timestamp without time zone NOT NULL,
-  CONSTRAINT pfm_db_version_pkey PRIMARY KEY (db_version)
-)
-;
-COMMENT ON TABLE pfm_db_version IS 'DBバージョン情報';
-COMMENT ON COLUMN pfm_db_version.db_version IS 'DBバージョン';
-COMMENT ON COLUMN pfm_db_version.insert_date IS '登録日';
-
-
-INSERT INTO pfm_db_version VALUES('4.3-0', now());

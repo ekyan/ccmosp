@@ -32,6 +32,9 @@ public class AttendanceCardVo extends TimeVo {
 	private String				lblYear;
 	private String				lblMonth;
 	private String				lblDay;
+	private String				lblDayOfTheWeek;
+	// 曜日スタイル。
+	private String				lblWorkDayOfWeekStyle;
 	
 	private String				pltWorkType;
 	private String				txtStartTimeHour;
@@ -42,12 +45,15 @@ public class AttendanceCardVo extends TimeVo {
 	private String				lblEndTime;
 	private String				ckbDirectStart;
 	private String				ckbDirectEnd;
+	private String				ckbForgotRecordWorkStart;
+	private String				ckbNotRecordWorkStart;
 	private String				lblWorkTime;
 	private String				lblUnpaidShortTime;
 	private String				lblApprovalState;
 	private String				lblCorrectionHistory;
 	private String				txtCorrectionReason;
 	private String				txtTimeComment;
+	private String				txtRemarks;
 	
 	private String				lblRestTime;
 	private String				lblOverRestTime;
@@ -154,6 +160,7 @@ public class AttendanceCardVo extends TimeVo {
 	private String				lblSpecificWorkTimeIn;
 	private String				lblSpecificWorkTimeOver;
 	private String				lblLegalWorkTime;
+	private String				lblHolidayWorkTime;
 	private String				lblDecreaseTime;
 	
 	private String				pltAllowance1;
@@ -206,6 +213,7 @@ public class AttendanceCardVo extends TimeVo {
 	private String				lblWorkOnHolidayCmd;
 	
 	private String[]			lblSubHolidayDate;
+	private String[]			lblSubHolidayLength;
 	private String[]			lblSubHolidayWorkDate;
 	private String[]			lblSubHolidayState;
 	private String[]			lblSubHolidayApprover;
@@ -306,6 +314,20 @@ public class AttendanceCardVo extends TimeVo {
 	 */
 	public void setLblDay(String lblDay) {
 		this.lblDay = lblDay;
+	}
+	
+	/**
+	 * @return lblDayOfTheWeek
+	 */
+	public String getLblDayOfTheWeek() {
+		return lblDayOfTheWeek;
+	}
+	
+	/**
+	 * @param lblDayOfTheWeek セットする lblDayOfTheWeek
+	 */
+	public void setLblDayOfTheWeek(String lblDayOfTheWeek) {
+		this.lblDayOfTheWeek = lblDayOfTheWeek;
 	}
 	
 	/**
@@ -435,6 +457,34 @@ public class AttendanceCardVo extends TimeVo {
 	}
 	
 	/**
+	 * @return ckbForgotRecordWorkStart
+	 */
+	public String getCkbForgotRecordWorkStart() {
+		return ckbForgotRecordWorkStart;
+	}
+	
+	/**
+	 * @param ckbForgotRecordWorkStart セットする ckbForgotRecordWorkStart
+	 */
+	public void setCkbForgotRecordWorkStart(String ckbForgotRecordWorkStart) {
+		this.ckbForgotRecordWorkStart = ckbForgotRecordWorkStart;
+	}
+	
+	/**
+	 * @return ckbNotRecordWorkStart
+	 */
+	public String getCkbNotRecordWorkStart() {
+		return ckbNotRecordWorkStart;
+	}
+	
+	/**
+	 * @param ckbNotRecordWorkStart セットする ckbNotRecordWorkStart
+	 */
+	public void setCkbNotRecordWorkStart(String ckbNotRecordWorkStart) {
+		this.ckbNotRecordWorkStart = ckbNotRecordWorkStart;
+	}
+	
+	/**
 	 * @return lblWorkTime
 	 */
 	public String getLblWorkTime() {
@@ -516,6 +566,20 @@ public class AttendanceCardVo extends TimeVo {
 	 */
 	public void setTxtTimeComment(String txtTimeComment) {
 		this.txtTimeComment = txtTimeComment;
+	}
+	
+	/**
+	 * @return txtRemarks
+	 */
+	public String getTxtRemarks() {
+		return txtRemarks;
+	}
+	
+	/**
+	 * @param txtRemarks セットする txtRemarks
+	 */
+	public void setTxtRemarks(String txtRemarks) {
+		this.txtRemarks = txtRemarks;
 	}
 	
 	/**
@@ -1866,6 +1930,20 @@ public class AttendanceCardVo extends TimeVo {
 	}
 	
 	/**
+	 * @return lblHolidayWorkTime
+	 */
+	public String getLblHolidayWorkTime() {
+		return lblHolidayWorkTime;
+	}
+	
+	/**
+	 * @param lblHolidayWorkTime セットする lblHolidayWorkTime
+	 */
+	public void setLblHolidayWorkTime(String lblHolidayWorkTime) {
+		this.lblHolidayWorkTime = lblHolidayWorkTime;
+	}
+	
+	/**
 	 * @return lblDecreaseTime
 	 */
 	public String getLblDecreaseTime() {
@@ -2468,6 +2546,20 @@ public class AttendanceCardVo extends TimeVo {
 	}
 	
 	/**
+	 * @return lblSubHolidayLength
+	 */
+	public String[] getLblSubHolidayLength() {
+		return getStringArrayClone(lblSubHolidayLength);
+	}
+	
+	/**
+	 * @param lblSubHolidayLength セットする lblSubHolidayLength
+	 */
+	public void setLblSubHolidayLength(String[] lblSubHolidayLength) {
+		this.lblSubHolidayLength = getStringArrayClone(lblSubHolidayLength);
+	}
+	
+	/**
 	 * @return lblSubHolidayWorkDate
 	 */
 	public String[] getLblSubHolidayWorkDate() {
@@ -2840,7 +2932,7 @@ public class AttendanceCardVo extends TimeVo {
 	 */
 	@Override
 	public String[][][] getAryApproverInfo() {
-		return aryApproverInfo;
+		return getStringArrayClone(aryApproverInfo);
 	}
 	
 	/**
@@ -2848,7 +2940,7 @@ public class AttendanceCardVo extends TimeVo {
 	 */
 	@Override
 	public void setAryApproverInfo(String[][][] aryApproverInfo) {
-		this.aryApproverInfo = aryApproverInfo;
+		this.aryApproverInfo = getStringArrayClone(aryApproverInfo);
 	}
 	
 	/**
@@ -3123,6 +3215,20 @@ public class AttendanceCardVo extends TimeVo {
 	 */
 	public String getCkbExtraFiled() {
 		return ckbExtraFiled;
+	}
+	
+	/**
+	 * @return lblWorkDayOfWeekStyle
+	 */
+	public String getLblWorkDayOfWeekStyle() {
+		return lblWorkDayOfWeekStyle;
+	}
+	
+	/**
+	 * @param lblWorkDayOfWeekStyle セットする lblWorkDayOfWeekStyle
+	 */
+	public void setLblWorkDayOfWeekStyle(String lblWorkDayOfWeekStyle) {
+		this.lblWorkDayOfWeekStyle = lblWorkDayOfWeekStyle;
 	}
 	
 }

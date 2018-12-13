@@ -15,9 +15,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-/**
- * 
- */
 package jp.mosp.time.dao.settings.impl;
 
 import java.util.ArrayList;
@@ -116,16 +113,6 @@ public class TmmPaidHolidayDao extends PlatformDao implements PaidHolidayDaoInte
 	public static final String	COL_MAX_CARRY_OVER_AMOUNT			= "max_carry_over_amount";
 	
 	/**
-	 * 時間単位繰越。
-	 */
-	public static final String	COL_MAX_CARRY_OVER_TIMES			= "max_carry_over_times";
-	
-	/**
-	 * 時間単位繰越。
-	 */
-	public static final String	COL_HALF_DAY_UNIT_FLAG				= "half_day_unit_flag";
-	
-	/**
 	 * 合計最大保有日数。
 	 */
 	public static final String	COL_TOTAL_MAX_AMOUNT				= "total_max_amount";
@@ -134,6 +121,21 @@ public class TmmPaidHolidayDao extends PlatformDao implements PaidHolidayDaoInte
 	 * 最大繰越年数。
 	 */
 	public static final String	COL_MAX_CARRY_OVER_YEAR				= "max_carry_over_year";
+	
+	/**
+	 * 時間単位繰越。
+	 */
+	public static final String	COL_MAX_CARRY_OVER_TIMES			= "max_carry_over_times";
+	
+	/**
+	 * 半日単位取得。
+	 */
+	public static final String	COL_HALF_DAY_UNIT_FLAG				= "half_day_unit_flag";
+	
+	/**
+	 * 休日出勤取扱。
+	 */
+	public static final String	COL_WORK_ON_HOLIDAY_CALC			= "work_on_holiday_calc";
 	
 	/**
 	 * 基準日(月)。
@@ -181,7 +183,6 @@ public class TmmPaidHolidayDao extends PlatformDao implements PaidHolidayDaoInte
 	@Override
 	public void initDao() {
 		// 処理無し
-		
 	}
 	
 	@Override
@@ -205,6 +206,7 @@ public class TmmPaidHolidayDao extends PlatformDao implements PaidHolidayDaoInte
 		dto.setMaxCarryOverYear(getInt(COL_MAX_CARRY_OVER_YEAR));
 		dto.setMaxCarryOverTimes(getInt(COL_MAX_CARRY_OVER_TIMES));
 		dto.setHalfDayUnit(getInt(COL_HALF_DAY_UNIT_FLAG));
+		dto.setWorkOnHolidayCalc(getInt(COL_WORK_ON_HOLIDAY_CALC));
 		dto.setPointDateMonth(getInt(COL_POINT_DATE_MONTH));
 		dto.setPointDateDay(getInt(COL_POINT_DATE_DAY));
 		dto.setGeneralPointAmount(getInt(COL_GENERAL_POINT_AMOUNT));
@@ -443,6 +445,7 @@ public class TmmPaidHolidayDao extends PlatformDao implements PaidHolidayDaoInte
 		setParam(index++, dto.getMaxCarryOverYear());
 		setParam(index++, dto.getMaxCarryOverTimes());
 		setParam(index++, dto.getHalfDayUnit());
+		setParam(index++, dto.getWorkOnHolidayCalc());
 		setParam(index++, dto.getPointDateMonth());
 		setParam(index++, dto.getPointDateDay());
 		setParam(index++, dto.getGeneralPointAmount());

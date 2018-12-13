@@ -89,7 +89,7 @@ MessageListVo vo = (MessageListVo)params.getVo();
 		<table class="ButtonTable">
 		<tr>
 			<td class="ButtonTd">
-				<button type="button" id="btnSearch" class="Name2Button" onclick="submitForm(event, 'tblSearch', null, '<%= MessageListAction.CMD_SEARCH %>')"><%= params.getName("Search") %></button>
+				<button type="button" id="btnSearch" class="Name2Button" onclick="submitForm(event, 'tblSearch', checkDatesYearMonth, '<%= MessageListAction.CMD_SEARCH %>')"><%= params.getName("Search") %></button>
 			</td>
 		</tr>
 	</table>

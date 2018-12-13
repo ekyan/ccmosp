@@ -37,12 +37,13 @@ import = "jp.mosp.platform.system.constant.PlatformSystemConst"
 import = "jp.mosp.platform.workflow.action.SubApproverSettingAction"
 import = "jp.mosp.platform.workflow.vo.SubApproverSettingVo"
 import = "jp.mosp.platform.utils.PlatformUtility"
+import = "jp.mosp.platform.utils.PlatformNamingUtility"
 %><%
 MospParams params = (MospParams)request.getAttribute(MospConst.ATT_MOSP_PARAMS);
 SubApproverSettingVo vo = (SubApproverSettingVo)params.getVo();
 %>
 <div class="List" id="divEdit">
-	<table class="InputTable">
+	<table class="InputTable" id="subApproverSetting_tblEdit">
 		<tr>
 			<th class="EditTableTh" colspan="4">
 				<jsp:include page="<%= PlatformSystemConst.PATH_SYSTEM_EDIT_HEADER_JSP %>" flush="false" />
@@ -92,7 +93,7 @@ SubApproverSettingVo vo = (SubApproverSettingVo)params.getVo();
 					<%= HtmlUtility.getSelectOption(params, PlatformConst.CODE_KEY_WORKFLOW_TYPE, vo.getPltEditWorkflowType(), false) %>
 				</select>
 			</td>
-			<td class="TitleTd"><label for="txtEditEmployeeCode"><%= params.getName("Agency","Employee","Code") %></label></td>
+			<td class="TitleTd"><label for="txtEditEmployeeCode"><%= params.getName("Agency") + PlatformNamingUtility.employeeCode(params) %></label></td>
 			<td class="InputTd" id="tdNoBorderVertical">
 				<input type="text" class="Code10TextBox" id="txtEditEmployeeCode" name="txtEditEmployeeCode" value="<%= HtmlUtility.escapeHTML(vo.getTxtEditEmployeeCode()) %>"/>&nbsp;
 				<button type="button" class="Name2Button" id="btnEmployeeSearch" onclick="submitForm(event, null, null, '<%= SubApproverSettingAction.CMD_SET_EMPLOYEE %>')"><%= params.getName("Search") %></button>
@@ -122,7 +123,7 @@ SubApproverSettingVo vo = (SubApproverSettingVo)params.getVo();
 	</table>
 </div>
 <div class="List" id="divSearch">
-	<table class="InputTable">
+	<table class="InputTable" id="subApproverSetting_tblSearch">
 		<tr>
 			<th class="ListTableTh" colspan="4">
 				<span class="TitleTh"><%= params.getName("Search") %></span>
@@ -171,7 +172,7 @@ SubApproverSettingVo vo = (SubApproverSettingVo)params.getVo();
 				<th class="ListSortTh"   id="thStartDate"    onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= ActivateDateComparator.class.getName() %>'), '<%= SubApproverSettingAction.CMD_SORT %>')"><%= params.getName("Start","Day")                                          %><%= PlatformUtility.getSortMark(ActivateDateComparator.class.getName() , params) %></th>
 				<th class="ListSortTh"   id="thEndDate"      onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= EndDateComparator     .class.getName() %>'), '<%= SubApproverSettingAction.CMD_SORT %>')"><%= params.getName("End","Day")                                            %><%= PlatformUtility.getSortMark(EndDateComparator     .class.getName() , params) %></th>
 				<th class="ListSortTh"   id="thFlowType"     onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= WorkflowTypeComparator.class.getName() %>'), '<%= SubApproverSettingAction.CMD_SORT %>')"><%= params.getName("Type")                                                 %><%= PlatformUtility.getSortMark(WorkflowTypeComparator.class.getName() , params) %></th>
-				<th class="ListSortTh"   id="thEmployeeCode" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= EmployeeCodeComparator.class.getName() %>'), '<%= SubApproverSettingAction.CMD_SORT %>')"><%= params.getName("Agency","Employee","Code")                             %><%= PlatformUtility.getSortMark(EmployeeCodeComparator.class.getName() , params) %></th>
+				<th class="ListSortTh"   id="thEmployeeCode" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= EmployeeCodeComparator.class.getName() %>'), '<%= SubApproverSettingAction.CMD_SORT %>')"><%= params.getName("Agency") + PlatformNamingUtility.employeeCode(params)                             %><%= PlatformUtility.getSortMark(EmployeeCodeComparator.class.getName() , params) %></th>
 				<th class="ListSortTh"   id="thEmployeeName" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= EmployeeNameComparator.class.getName() %>'), '<%= SubApproverSettingAction.CMD_SORT %>')"><%= params.getName("Agency","FullName")                                    %><%= PlatformUtility.getSortMark(EmployeeNameComparator.class.getName() , params) %></th>
 				<th class="ListSortTh"   id="thSection"      onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= SectionCodeComparator .class.getName() %>'), '<%= SubApproverSettingAction.CMD_SORT %>')"><%= params.getName("Agency","Section")                                     %><%= PlatformUtility.getSortMark(SectionCodeComparator .class.getName() , params) %></th>
 				<th class="ListSortTh"   id="thInactivate"   onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= InactivateComparator  .class.getName() %>'), '<%= SubApproverSettingAction.CMD_SORT %>')"><%= params.getName("EffectivenessExistence","Slash","InactivateExistence") %><%= PlatformUtility.getSortMark(InactivateComparator  .class.getName() , params) %></th>

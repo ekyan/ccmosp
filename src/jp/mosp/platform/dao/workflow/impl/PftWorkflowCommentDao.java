@@ -218,7 +218,7 @@ public class PftWorkflowCommentDao extends PlatformDao implements WorkflowCommen
 			sb.append(deleteFlagOff());
 			sb.append(and());
 			sb.append(equal(COL_WORKFLOW));
-			sb.append(getOrderByColumnDescLimit1(COL_WORKFLOW_DATE));
+			sb.append(getOrderByColumnDescLimit1(COL_PFT_WORKFLOW_COMMENT_ID));
 			prepareStatement(sb.toString());
 			setParam(index++, workflow);
 			executeQuery();
@@ -246,8 +246,7 @@ public class PftWorkflowCommentDao extends PlatformDao implements WorkflowCommen
 			sb.append(equal(COL_WORKFLOW));
 			sb.append(and());
 			sb.append(notEqual(COL_WORKFLOW_STATUS, PlatformConst.CODE_STATUS_DRAFT));
-			sb.append(getOrderByColumn(COL_WORKFLOW_DATE));
-			sb.append(getDesc());
+			sb.append(getOrderByColumnDesc(COL_WORKFLOW_DATE, COL_PFT_WORKFLOW_COMMENT_ID));
 			prepareStatement(sb.toString());
 			setParam(index++, workflow);
 			executeQuery();

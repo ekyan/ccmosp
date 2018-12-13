@@ -27,6 +27,7 @@ import jp.mosp.framework.base.MospParams;
 import jp.mosp.platform.base.PlatformBean;
 import jp.mosp.time.base.TimeBean;
 import jp.mosp.time.bean.SubHolidayRequestReferenceBeanInterface;
+import jp.mosp.time.constant.TimeConst;
 import jp.mosp.time.dao.settings.SubHolidayRequestDaoInterface;
 import jp.mosp.time.dto.settings.SubHolidayRequestDtoInterface;
 
@@ -38,7 +39,7 @@ public class SubHolidayRequestReferenceBean extends TimeBean implements SubHolid
 	/**
 	 * 代休申請DAOクラス。<br>
 	 */
-	SubHolidayRequestDaoInterface	dao;
+	SubHolidayRequestDaoInterface dao;
 	
 	
 	/**
@@ -89,20 +90,26 @@ public class SubHolidayRequestReferenceBean extends TimeBean implements SubHolid
 	}
 	
 	@Override
-	public List<SubHolidayRequestDtoInterface> getSubHolidayRequestList(String personalId, Date workDate,
-			int timesWork, int workDateSubHolidayType) throws MospException {
+	public List<SubHolidayRequestDtoInterface> getSubHolidayRequestList(String personalId, Date workDate, int timesWork,
+			int workDateSubHolidayType) throws MospException {
 		return dao.findForList(personalId, workDate, timesWork, workDateSubHolidayType);
 	}
 	
 	@Override
-	public List<SubHolidayRequestDtoInterface> getSubHolidayRequestList(String personalId, Date firstDate, Date lastDate)
-			throws MospException {
+	public List<SubHolidayRequestDtoInterface> getSubHolidayRequestList(String personalId, Date firstDate,
+			Date lastDate) throws MospException {
 		return dao.findForTerm(personalId, firstDate, lastDate);
 	}
 	
 	@Override
 	public void chkBasicInfo(String personalId, Date targetDate) throws MospException {
-		initial(personalId, targetDate);
+		// 勤怠基本情報確認
+		initial(personalId, targetDate, TimeConst.CODE_FUNCTION_COMPENSATORY_HOLIDAY);
+	}
+	
+	@Override
+	public List<SubHolidayRequestDtoInterface> findForWorkDate(String personalId, Date workDate) throws MospException {
+		return dao.findForWorkDate(personalId, workDate);
 	}
 	
 }

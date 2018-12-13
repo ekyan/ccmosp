@@ -20,7 +20,6 @@ package jp.mosp.time.bean;
 import java.util.List;
 
 import jp.mosp.framework.base.MospException;
-import jp.mosp.framework.base.MospParams;
 import jp.mosp.time.dto.settings.CutoffErrorListDtoInterface;
 import jp.mosp.time.dto.settings.TotalTimeDataDtoInterface;
 
@@ -30,48 +29,96 @@ import jp.mosp.time.dto.settings.TotalTimeDataDtoInterface;
 public interface TotalTimeCalcBeanInterface {
 	
 	/**
-	 * 計算情報を設定する。<br>
-	 * 勤怠集計処理を行う前に、計算年月及び締日コードから必要な情報を設定する。<br>
-	 * @param calculationYear  計算年
-	 * @param calculationMonth 計算月
-	 * @param cutoffCode       締日コード
-	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 * 仮締を行う。<br>
+	 * <br>
+	 * 勤怠集計前の確認、勤怠集計、データの登録を行う。<br>
+	 * 勤怠集計前の確認でエラーがあった場合は、集計時エラー内容情報リストを返す。<br>
+	 * <br>
+	 * 対象年月において対象締日コードが適用されている個人IDに対して処理を行う。<br>
+	 * <br>
+	 * 勤怠集計管理画面等で用いる。<br>
+	 * <br>
+	 * @param targetYear  対象年
+	 * @param targetMonth 対象月
+	 * @param cutoffCode  締日コード
+	 * @return 集計時エラー内容情報リスト
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
-	void setCalculationInfo(int calculationYear, int calculationMonth, String cutoffCode) throws MospException;
+	List<CutoffErrorListDtoInterface> tightening(int targetYear, int targetMonth, String cutoffCode)
+			throws MospException;
 	
 	/**
-	 * 勤怠集計処理を行う。<br>
-	 * {@link TotalTimeCalcBeanInterface#setCalculationInfo(int, int, String)}
-	 * で設定された計算情報を基に、対象個人IDの勤怠集計処理を行う。<br>
-	 * 対象個人IDの集計時にエラーを検知しなければ、勤怠集計データの登録を行う。<br>
-	 * 対象個人IDの集計時に検知したエラー内容のリスト(無ければ空のリスト)を返す。<br>
-	 * 但し、マスタの不備等で計算できなかった場合は、
-	 * {@link MospParams}にエラーメッセージを追加し、nullを返す。
-	 * @param personalId 対象個人ID
-	 * @return 集計エラー内容リスト
-	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 * 仮締を行う。<br>
+	 * <br>
+	 * 勤怠集計前の確認、勤怠集計、データの登録を行う。<br>
+	 * 勤怠集計前の確認でエラーがあった場合は、集計時エラー内容情報リストを返す。<br>
+	 * <br>
+	 * 処理の結果、対象年月において対象締日コードが設定されている社員全員が
+	 * 仮締状態となった場合、対象年月における対象締日コードを仮締とする。<br>
+	 * <br>
+	 * 勤怠集計結果一覧画面等で用いる。<br>
+	 * <br>
+	 * @param aryPersonalId 個人ID配列
+	 * @param targetYear    対象年
+	 * @param targetMonth   対象月
+	 * @param cutoffCode    締日コード
+	 * @return 集計時エラー内容情報リスト
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
-	List<CutoffErrorListDtoInterface> calc(String personalId) throws MospException;
+	List<CutoffErrorListDtoInterface> tightening(String[] aryPersonalId, int targetYear, int targetMonth,
+			String cutoffCode) throws MospException;
 	
 	/**
-	 * 勤怠集計処理をした勤怠集計データを取得する。<br>
-	 * {@link TotalTimeCalcBeanInterface#setCalculationInfo(int, int, String)}
-	 * で設定された計算情報を基に、対象個人IDの勤怠集計処理を行う。<br>
-	 * 但し、マスタの不備等で計算できなかった場合は、nullを返す。
-	 * @param personalId 対象個人ID
-	 * @return 勤怠集計処理をした勤怠集計データ
-	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 * 仮締を行う。<br>
+	 * <br>
+	 * 勤怠集計前の確認、勤怠集計、データの登録を行う。<br>
+	 * 勤怠集計前の確認でエラーがあった場合は、集計時エラー内容情報リストを返す。<br>
+	 * <br>
+	 * 当メソッドは一般社員が自己月締をする際に用いることを想定しており、
+	 * 処理の結果仮に全員が仮締になったとしても、
+	 * 対象年月における対象締日コードを仮締とはしない。<br>
+	 * <br>
+	 * 勤怠一覧画面等で用いる。<br>
+	 * <br>
+	 * @param personalId  個人ID
+	 * @param targetYear  対象年
+	 * @param targetMonth 対象月
+	 * @return 集計時エラー内容情報リスト
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
-	TotalTimeDataDtoInterface getTotaledTimeData(String personalId) throws MospException;
+	List<CutoffErrorListDtoInterface> tightening(String personalId, int targetYear, int targetMonth)
+			throws MospException;
 	
 	/**
-	 * 承認状況取得。
-	 * @param personalId 個人ID
-	 * @param year 年
-	 * @param month 月
-	 * @return 未承認がない場合は0、未承認がある場合は1
-	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 * 勤怠計算を行う。<br>
+	 * <br>
+	 * 勤怠集計前の確認は、行わない。<br>
+	 * 勤怠集計結果一覧画面等で用いる。<br>
+	 * <br>
+	 * @param personalId  個人ID
+	 * @param targetYear  対象年
+	 * @param targetMonth 対象月
+	 * @param cutoffCode  締日コード
+	 * @return 勤怠集計情報
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
-	int getApprovalStatus(String personalId, int year, int month) throws MospException;
+	TotalTimeDataDtoInterface calc(String personalId, int targetYear, int targetMonth, String cutoffCode)
+			throws MospException;
+	
+	/**
+	 * 勤怠計算を行う。<br>
+	 * <br>
+	 * 勤怠集計前の確認は、行わない。<br>
+	 * 部下一覧画面等で用いる。<br>
+	 * <br>
+	 * @param personalId  個人ID配列
+	 * @param targetYear  対象年
+	 * @param targetMonth 対象月
+	 * @param isCompleted 承認済フラグ(true：承認済申請のみ残す、false：申請済申請を残す)
+	 * @return 勤怠集計情報
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	TotalTimeDataDtoInterface calc(String personalId, int targetYear, int targetMonth, boolean isCompleted)
+			throws MospException;
 	
 }

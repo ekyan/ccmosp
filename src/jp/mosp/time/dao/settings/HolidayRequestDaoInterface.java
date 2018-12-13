@@ -49,6 +49,14 @@ public interface HolidayRequestDaoInterface extends BaseDaoInterface {
 	List<HolidayRequestDtoInterface> findForList(String personalId, Date requestDate) throws MospException;
 	
 	/**
+	 * 個人IDで休暇申請リストを取得する。<br>
+	 * @param personalId 個人ID
+	 * @return 休暇申請リスト
+	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
+	 */
+	List<HolidayRequestDtoInterface> findForList(String personalId) throws MospException;
+	
+	/**
 	 * 個人IDと対象期間から休暇申請情報リストを取得する。<br>
 	 * @param personalId 個人ID
 	 * @param firstDate  対象期間初日
@@ -109,6 +117,20 @@ public interface HolidayRequestDaoInterface extends BaseDaoInterface {
 	 */
 	List<HolidayRequestDtoInterface> findForApprovedList(String personalId, Date acquisitionDate, int holidayType1,
 			String holidayType2, Date requestDate) throws MospException;
+	
+	/**
+	 * 承認完了休暇申請リストを取得する。<br>
+	 * @param personalId 個人ID
+	 * @param acquisitionDate 取得日
+	 * @param holidayType1 休暇申請1
+	 * @param holidayType2 休暇申請2
+	 * @param requestStartDate 申請開始日
+	 * @param requestEndDate 申請終了日
+	 * @return 承認完了休暇申請リスト
+	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
+	 */
+	List<HolidayRequestDtoInterface> findForApprovedList(String personalId, Date acquisitionDate, int holidayType1,
+			String holidayType2, Date requestStartDate, Date requestEndDate) throws MospException;
 	
 	/**
 	 * 個人IDと取得日と休暇種別1と休暇種別2と申請日から休暇申請リストを取得する。<br>
@@ -230,4 +252,14 @@ public interface HolidayRequestDaoInterface extends BaseDaoInterface {
 	 */
 	List<HolidayRequestDtoInterface> findForWorkflowStatus(String personalId, int workflowStage, String workflowStatus,
 			String routeCode) throws MospException;
+	
+	/**
+	 * 対象休暇取得日の休暇申請リストを取得する。<br>
+	 * @param personalId 個人ID
+	 * @param acquisitionDate 休暇取得日
+	 * @return 対象休暇取得日の休暇申請リスト
+	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
+	 */
+	List<HolidayRequestDtoInterface> findForAcquisitionList(String personalId, Date acquisitionDate)
+			throws MospException;
 }

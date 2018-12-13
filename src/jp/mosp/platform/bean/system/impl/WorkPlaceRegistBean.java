@@ -37,9 +37,19 @@ import jp.mosp.platform.dto.system.impl.PfmWorkPlaceDto;
 public class WorkPlaceRegistBean extends PlatformBean implements WorkPlaceRegistBeanInterface {
 	
 	/**
+	 * 郵便番号1項目帳。<br>
+	 */
+	protected static final int	LEN_POSTAL_CODE_1	= 3;
+	
+	/**
+	 * 郵便番号2項目帳。<br>
+	 */
+	protected static final int	LEN_POSTAL_CODE_2	= 4;
+	
+	/**
 	 * 勤務地マスタDAOクラス。<br>
 	 */
-	WorkPlaceDaoInterface	dao;
+	WorkPlaceDaoInterface		dao;
 	
 	
 	/**
@@ -329,7 +339,16 @@ public class WorkPlaceRegistBean extends PlatformBean implements WorkPlaceRegist
 	 * @param dto 対象DTO
 	 */
 	protected void validate(WorkPlaceDtoInterface dto) {
-		// TODO 妥当性確認
+		// 郵便番号1が空でない場合
+		if (!dto.getPostalCode1().isEmpty()) {
+			// 3桁か確認
+			checkInputLength(dto.getPostalCode1(), LEN_POSTAL_CODE_1, mospParams.getName("PostalCode") + "(3桁)", null);
+		}
+		// 郵便番号2が空でない場合
+		if (!dto.getPostalCode2().isEmpty()) {
+			// 4桁か確認
+			checkInputLength(dto.getPostalCode2(), LEN_POSTAL_CODE_2, mospParams.getName("PostalCode") + "(4桁)", null);
+		}
 	}
 	
 }

@@ -98,7 +98,8 @@ public class SubHolidayRequestSearchBean extends PlatformBean implements SubHoli
 	@Override
 	public void initBean() throws MospException {
 		subHolidayDao = (SubHolidayRequestDaoInterface)createDao(SubHolidayRequestDaoInterface.class);
-		approvalInfoReference = (ApprovalInfoReferenceBeanInterface)createBean(ApprovalInfoReferenceBeanInterface.class);
+		approvalInfoReference = (ApprovalInfoReferenceBeanInterface)createBean(
+				ApprovalInfoReferenceBeanInterface.class);
 	}
 	
 	/**

@@ -27,6 +27,7 @@ import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.constant.MospConst;
 import jp.mosp.framework.property.MospProperties;
 import jp.mosp.framework.utils.DateUtility;
+import jp.mosp.framework.utils.MospUtility;
 import jp.mosp.framework.utils.TopicPathUtility;
 import jp.mosp.platform.bean.human.HumanReferenceBeanInterface;
 import jp.mosp.platform.comparator.base.EmployeeCodeComparator;
@@ -35,19 +36,15 @@ import jp.mosp.platform.constant.PlatformMessageConst;
 import jp.mosp.platform.dto.human.HumanDtoInterface;
 import jp.mosp.platform.utils.MonthUtility;
 import jp.mosp.time.base.TimeAction;
-import jp.mosp.time.bean.CutoffUtilBeanInterface;
 import jp.mosp.time.bean.SubordinateSearchBeanInterface;
 import jp.mosp.time.bean.TotalTimeCalcBeanInterface;
 import jp.mosp.time.constant.TimeConst;
-import jp.mosp.time.constant.TimeMessageConst;
-import jp.mosp.time.dto.settings.CutoffDtoInterface;
 import jp.mosp.time.dto.settings.SubordinateListDtoInterface;
 import jp.mosp.time.dto.settings.TotalTimeDataDtoInterface;
 import jp.mosp.time.input.action.AttendanceListAction;
 import jp.mosp.time.input.action.ScheduleReferenceAction;
 import jp.mosp.time.management.vo.SubordinateListVo;
 import jp.mosp.time.settings.base.TimeSettingAction;
-import jp.mosp.time.utils.TimeUtility;
 
 /**
  * 勤怠管理権限者が自分の部下の勤怠実績・勤怠予定の確認や勤怠関連項目の代理申請のための画面遷移を行う。<br>
@@ -196,7 +193,7 @@ public class SubordinateListAction extends TimeSettingAction {
 		} else if (mospParams.getCommand().equals(CMD_RE_SHOW)) {
 			// 再表示
 			prepareVo(true, false);
-			search();
+			reShowJudging();
 		} else if (mospParams.getCommand().equals(CMD_TRANSFER)) {
 			// 遷移
 			prepareVo(true, false);
@@ -225,6 +222,20 @@ public class SubordinateListAction extends TimeSettingAction {
 			// 予定簿出力
 			prepareVo();
 			outputScheduleBooks();
+		}
+	}
+	
+	/**
+	 * 再表示処理を行う。<br>
+	 * @throws MospException 例外発生時
+	 */
+	protected void reShowJudging() throws MospException {
+		// APP_VIEW_TOTAL_VALUESがtrueの場合
+		if (mospParams.getApplicationPropertyBool(TimeConst.APP_VIEW_TOTAL_VALUES)) {
+			return;
+		} else {
+			// 再検索
+			search();
 		}
 	}
 	
@@ -273,7 +284,7 @@ public class SubordinateListAction extends TimeSettingAction {
 		// 検索条件確認
 		checkSearchCondition(vo.getTxtSearchEmployeeCode(), vo.getTxtSearchEmployeeName(), vo.getPltSearchWorkPlace(),
 				vo.getPltSearchEmployment(), vo.getPltSearchSection(), vo.getPltSearchPosition(),
-				vo.getPltSearchApproval(), vo.getPltSearchCalc());
+				vo.getPltSearchApproval(), vo.getPltSearchCalc(), vo.getPltSearchHumanType());
 		if (mospParams.hasErrorMessage()) {
 			return;
 		}
@@ -286,23 +297,15 @@ public class SubordinateListAction extends TimeSettingAction {
 		search.setSectionCode(vo.getPltSearchSection());
 		search.setPositionCode(vo.getPltSearchPosition());
 		search.setApproval(vo.getPltSearchApproval());
+		search.setApprovalBeforeDay(vo.getCkbYesterday());
 		search.setCalc(vo.getPltSearchCalc());
+		search.setHumanType(vo.getPltSearchHumanType());
 		search.setStartDate(MonthUtility.getYearMonthTermFirstDate(targetYear, targetMonth, mospParams));
 		search.setEndDate(MonthUtility.getYearMonthTermLastDate(targetYear, targetMonth, mospParams));
 		search.setTargetYear(targetYear);
 		search.setTargetMonth(targetMonth);
-		// 検索結果リスト準備
-		List<SubordinateListDtoInterface> list;
-		// 表示コマンド確認
-		if (vo.getShowCommand().equals(CMD_SHOW_APPROVED)) {
-			// 承認対象検索モードの場合
-			list = search.getApprovableList();
-		} else {
-			// 部下検索モードの場合
-			list = search.getSubordinateList();
-		}
-		// リストから合計を設定
-		setVoTotal(list);
+		// 検索
+		List<SubordinateListDtoInterface> list = search.getSubordinateList();
 		// 検索結果リスト設定
 		vo.setList(list);
 		// デフォルトソートキー及びソート順設定
@@ -329,7 +332,7 @@ public class SubordinateListAction extends TimeSettingAction {
 		// 譲渡Actionクラス名取得
 		String actionName = getTransferredAction();
 		// MosP処理情報に対象個人IDを設定
-		setTargetPersonalId(vo.getAryPersonalId(getTransferredIndex()));
+		setTargetPersonalId(getSelectedPersonalId(getTransferredIndex()));
 		// MosP処理情報に対象年月を設定
 		setTargetYear(getInt(vo.getPltSearchRequestYear()));
 		setTargetMonth(getInt(vo.getPltSearchRequestMonth()));
@@ -340,6 +343,7 @@ public class SubordinateListAction extends TimeSettingAction {
 				// 勤怠一覧画面(勤怠承認モード)へ遷移(連続実行コマンド設定)
 				mospParams.setNextCommand(AttendanceListAction.CMD_SHOW_APPROVAL);
 			} else {
+				mospParams.addGeneralParam(TimeConst.PRM_ROLL_ARRAY, getArray());
 				// 勤怠一覧画面へ遷移(連続実行コマンド設定)
 				mospParams.setNextCommand(AttendanceListAction.CMD_SELECT_SHOW);
 			}
@@ -356,62 +360,29 @@ public class SubordinateListAction extends TimeSettingAction {
 	protected void calc() throws MospException {
 		// VO準備
 		SubordinateListVo vo = (SubordinateListVo)mospParams.getVo();
-		// 選択個人ID配列取得
-		String[] aryPersonalId = vo.getCkbSelect();
-		// 年月を取得
-		int targetYear = getInt(vo.getPltSearchRequestYear());
-		int targetMonth = getInt(vo.getPltSearchRequestMonth());
+		HumanReferenceBeanInterface human = reference().human();
 		// 検索クラス取得
 		SubordinateSearchBeanInterface search = timeReference().subordinateSearch();
+		// 勤怠集計クラス取得
+		TotalTimeCalcBeanInterface total = time().totalTimeCalc();
 		// VOの値を検索クラスへ設定
 		search.setTargetDate(getSearchDate());
-		search.setApproval(vo.getPltSearchApproval());
-		search.setCalc(vo.getPltSearchCalc());
-		// 部下一覧情報リスト準備
-		List<SubordinateListDtoInterface> list = new ArrayList<SubordinateListDtoInterface>();
-		// 締日ユーティリティ取得
-		CutoffUtilBeanInterface cutoffUtil = timeReference().cutoffUtil();
-		// 人事情報参照クラス取得
-		HumanReferenceBeanInterface humanRefer = reference().human();
-		// 集計クラス取得
-		TotalTimeCalcBeanInterface calc = time().totalTimeCalc();
-		// 選択個人ID毎に処理
-		for (String personalId : aryPersonalId) {
-			// 締日情報取得
-			CutoffDtoInterface cutoff = cutoffUtil.getCutoffForPersonalId(personalId, targetYear, targetMonth);
-			// 処理結果確認(締日が取得できなかった場合)
-			if (mospParams.hasErrorMessage()) {
-				return;
-			}
-			// 集計クラスに計算情報を設定
-			calc.setCalculationInfo(targetYear, targetMonth, cutoff.getCutoffCode());
-			// 処理結果確認(集計クラス計算情報設定に失敗した場合)
-			if (mospParams.hasErrorMessage()) {
-				// 登録失敗メッセージ設定
-				addInsertFailedMessage();
-				return;
-			}
-			// 締期間の基準日を取得
-			Date cutoffTermTargetDate = TimeUtility.getCutoffTermTargetDate(cutoff.getCutoffDate(), targetYear,
-					targetMonth);
-			// 勤怠集計処理
-			TotalTimeDataDtoInterface dto = calc.getTotaledTimeData(personalId);
-			// 部下一覧情報取得
-			SubordinateListDtoInterface subordinateListDto = search.getSubordinateListDto(
-					humanRefer.getHumanInfo(personalId, cutoffTermTargetDate), targetYear, targetMonth, dto, "", "");
-			// 部下一覧情報確認
-			if (subordinateListDto != null) {
-				list.add(subordinateListDto);
-			}
+		// 選択された部下一覧情報のリストを取得
+		List<SubordinateListDtoInterface> list = getSelectedListDto();
+		// 選択された部下一覧情報毎に処理
+		for (SubordinateListDtoInterface dto : list) {
+			// 個人ID及び対象年月を取得
+			String personalId = dto.getPersonalId();
+			int targetYear = dto.getTargetYear();
+			int targetMonth = dto.getTargetMonth();
+			// 勤怠集計
+			TotalTimeDataDtoInterface totalTimeDataDto = total.calc(personalId, targetYear, targetMonth, true);
+			// 部下一覧情報に勤怠集計情報を設定
+			search.setTotalTimeData(dto, totalTimeDataDto);
+			HumanDtoInterface humanDto = human.getHumanInfo(dto.getPersonalId(), getSearchDate());
+			// 限度基準情報を設定
+			search.setLimitStandard(dto, humanDto);
 		}
-		// リストが空ならば
-		if (list.isEmpty()) {
-			// 検索結果無しメッセージ設定
-			addNoSearchResultMessage();
-			return;
-		}
-		// リストから合計を設定
-		setVoTotal(list);
 		// 検索結果リスト設定
 		vo.setList(list);
 		// デフォルトソートキー及びソート順設定
@@ -419,6 +390,13 @@ public class SubordinateListAction extends TimeSettingAction {
 		vo.setAscending(false);
 		// ソート
 		sort();
+		// 一覧選択情報初期化
+		initCkbSelect();
+		// 検索結果確認
+		if (list.isEmpty()) {
+			// 検索結果無しメッセージ設定
+			addNoSearchResultMessage();
+		}
 	}
 	
 	/**
@@ -446,7 +424,7 @@ public class SubordinateListAction extends TimeSettingAction {
 		// VO取得
 		SubordinateListVo vo = (SubordinateListVo)mospParams.getVo();
 		// 利用可否確認
-		checkAvailable();
+		checkSubordinateAvailable(getSearchDate());
 		if (mospParams.hasErrorMessage()) {
 			return;
 		}
@@ -486,40 +464,15 @@ public class SubordinateListAction extends TimeSettingAction {
 		vo.setPltSearchSection("");
 		vo.setPltSearchPosition("");
 		vo.setPltSearchApproval("");
+		vo.setCkbYesterday(MospConst.CHECKBOX_OFF);
 		vo.setPltSearchCalc("");
-		// 合計表示
-		vo.setLblTotalWork("");
-		vo.setLblTotalRest("");
-		vo.setLblTotalLate("");
-		vo.setLblTotalLeaveEarly("");
-		vo.setLblTotalOverTimeIn("");
-		vo.setLblTotalOverTimeOut("");
-		vo.setLblTotalWorkOnHoliday("");
-		vo.setLblTotalLateNight("");
-		vo.setLblTimesWork("");
-		vo.setLblTimesLate("");
-		vo.setLblTimesLeaveEarly("");
-		vo.setLblTimesWorkOnHoliday("");
-		vo.setLblTimesLegalHoliday("");
-		vo.setLblTimesPaidHoliday("");
-		vo.setLblTimesSpecialHoloiday("");
-		vo.setLblTimesSubstitute("");
-		vo.setLblTimesSubHoliday("");
-		vo.setLblTimesAbsence("");
-		vo.setLblTimesAllowance1("");
-		vo.setLblTimesAllowance2("");
-		vo.setLblTimesAllowance3("");
-		vo.setLblTimesAllowance4("");
-		vo.setLblTimesAllowance5("");
-		vo.setLblTimesAllowance6("");
-		vo.setLblTimesAllowance7("");
-		vo.setLblTimesAllowance8("");
-		vo.setLblTimesAllowance9("");
-		vo.setLblTimesAllowance10("");
-		vo.setLblTimesOverTimeWork("");
-		vo.setLblTimesSpecificHoliday("");
-		vo.setLblTimesPaidHoloidayTime("");
-		vo.setLblTimesOtherHoloiday("");
+		// 人事検索区分設定(部下)
+		vo.setPltSearchHumanType(String.valueOf(TimeConst.CODE_SUBORDINATE_SEARCH_TYPE_SUBORDINATE));
+		// 社員別勤怠承認画面の場合
+		if (vo.getShowCommand().equals(CMD_SHOW_APPROVED)) {
+			// 人事検索区分再設定(承認すべき申請)
+			vo.setPltSearchHumanType(String.valueOf(TimeConst.CODE_SUBORDINATE_SEARCH_TYPE_APPROVER));
+		}
 		// 有効日モード設定
 		vo.setModeActivateDate(PlatformConst.MODE_ACTIVATE_DATE_CHANGING);
 		// 年月日指定時(システム日付)の基準月を取得
@@ -531,44 +484,13 @@ public class SubordinateListAction extends TimeSettingAction {
 		vo.setPltSearchRequestYear(DateUtility.getStringYear(targetYearMonth));
 		vo.setPltSearchRequestMonth(DateUtility.getStringMonthM(targetYearMonth));
 		// 利用可否確認
-		checkAvailable();
+		checkSubordinateAvailable(getSearchDate());
 		if (mospParams.hasErrorMessage()) {
 			return;
 		}
 		// 有効日モード設定
 		vo.setModeActivateDate(PlatformConst.MODE_ACTIVATE_DATE_FIXED);
 		vo.setJsSearchConditionRequired(isSearchConditionRequired());
-	}
-	
-	/**
-	 * 部下一覧を利用できるかを確認する。<br>
-	 * 所属、職位が設定されていなければ、エラーメッセージを設定する。<br>
-	 * 但し、特権ユーザは無条件で利用可能。<br>
-	 * @throws MospException 人事情報の取得に失敗した場合
-	 */
-	protected void checkAvailable() throws MospException {
-		// ログインユーザのロールを確認
-		if (mospParams.getUserRole().isSuper()) {
-			return;
-		}
-		// ログインユーザの人事情報を取得
-		HumanDtoInterface dto = reference().human().getHumanInfo(mospParams.getUser().getPersonalId(), getSearchDate());
-		// 人事情報確認
-		if (dto == null) {
-			mospParams.addErrorMessage(TimeMessageConst.MSG_UNSETTING, mospParams.getName("Section", "Information"),
-					mospParams.getName("Subordinate", "List"), mospParams.getName("HumanInfo", "Management"));
-			return;
-		}
-		// 所属確認
-		if (dto.getSectionCode() == null || dto.getSectionCode().isEmpty()) {
-			mospParams.addErrorMessage(TimeMessageConst.MSG_UNSETTING, mospParams.getName("Section", "Information"),
-					mospParams.getName("Subordinate", "List"), mospParams.getName("HumanInfo", "Management"));
-		}
-		// 職位確認
-		if (dto.getPositionCode() == null || dto.getPositionCode().isEmpty()) {
-			mospParams.addErrorMessage(TimeMessageConst.MSG_UNSETTING, mospParams.getName("Position", "Information"),
-					mospParams.getName("Subordinate", "List"), mospParams.getName("HumanInfo", "Management"));
-		}
 	}
 	
 	/**
@@ -603,6 +525,10 @@ public class SubordinateListAction extends TimeSettingAction {
 		vo.setAryPltApproval(properties.getCodeArray(TimeConst.CODE_NOT_APPROVED, true));
 		// 締状態
 		vo.setAryPltCalc(properties.getCodeArray(TimeConst.CODE_CUTOFFSTATE, true));
+		// 人事検索区分
+		vo.setAryPltHumanType(properties.getCodeArray(TimeConst.CODE_SUBORDINATE_SEARCH_TYPE, true));
+		// 表示期間の年月プルダウン作成(基準月の年)
+		vo.setAryPltRequestYear(getYearArray(MospUtility.getInt(vo.getPltSearchRequestYear())));
 	}
 	
 	/**
@@ -633,8 +559,6 @@ public class SubordinateListAction extends TimeSettingAction {
 		// VO取得
 		SubordinateListVo vo = (SubordinateListVo)mospParams.getVo();
 		// データ配列初期化
-		String[] aryPersonalId = new String[list.size()];
-		String[] arySubordinateId = new String[list.size()];
 		String[] aryLblEmployeeCode = new String[list.size()];
 		String[] aryLblEmployeeName = new String[list.size()];
 		String[] aryLblSection = new String[list.size()];
@@ -663,9 +587,7 @@ public class SubordinateListAction extends TimeSettingAction {
 			// リストから情報を取得
 			SubordinateListDtoInterface dto = (SubordinateListDtoInterface)list.get(i);
 			// 配列に情報を設定
-			aryPersonalId[i] = dto.getPersonalId();
 			aryLblEmployeeCode[i] = dto.getEmployeeCode();
-			arySubordinateId[i] = aryLblEmployeeCode[i];
 			aryLblEmployeeName[i] = getLastFirstName(dto.getLastName(), dto.getFirstName());
 			aryLblSection[i] = reference().section().getSectionAbbr(dto.getSectionCode(), getSearchDate());
 			aryLblWorkDate[i] = getNumberString(dto.getWorkDate(), 1);
@@ -714,126 +636,6 @@ public class SubordinateListAction extends TimeSettingAction {
 		vo.setClaCalc(claCalc);
 		vo.setAryLblCalc(aryLblCalc);
 		vo.setAryLblCorrection(aryLblCorrection);
-		vo.setAryPersonalId(aryPersonalId);
-	}
-	
-	/**
-	 * VOに設定する。<br>
-	 * @param list 対象リスト
-	 */
-	protected void setVoTotal(List<SubordinateListDtoInterface> list) {
-		// VO取得
-		SubordinateListVo vo = (SubordinateListVo)mospParams.getVo();
-		int totalWork = 0;
-		int totalRest = 0;
-		int totalPrivate = 0;
-		int totalLate = 0;
-		int totalLeaveEarly = 0;
-		int totalLateLeaveEarly = 0;
-		int totalOverTimeIn = 0;
-		int totalOverTimeOut = 0;
-		int totalWorkOnHoliday = 0;
-		int totalLateNight = 0;
-		int timesWork = 0;
-		int timesLate = 0;
-		int timesLeaveEarly = 0;
-		int timesOverTimeWork = 0;
-		int timesWorkOnHoliday = 0;
-		int timesLegalHoliday = 0;
-		int timesSpecificHoliday = 0;
-		double timesSubstitute = 0;
-		double timesPaidHoliday = 0;
-		int timesPaidHoloidayTime = 0;
-		double timesSpecialHoloiday = 0;
-		double timesOtherHoloiday = 0;
-		double timesSubHoliday = 0;
-		double timesAbsence = 0;
-		for (SubordinateListDtoInterface dto : list) {
-			if (dto.getWorkTime() != null) {
-				totalWork += dto.getWorkTime().intValue();
-			}
-			if (dto.getRestTime() != null) {
-				totalRest += dto.getRestTime().intValue();
-			}
-			if (dto.getPrivateTime() != null) {
-				totalPrivate += dto.getPrivateTime().intValue();
-			}
-			if (dto.getLateTime() != null) {
-				totalLate += dto.getLateTime().intValue();
-			}
-			if (dto.getLeaveEarlyTime() != null) {
-				totalLeaveEarly += dto.getLeaveEarlyTime().intValue();
-			}
-			if (dto.getLateLeaveEarlyTime() != null) {
-				totalLateLeaveEarly += dto.getLateLeaveEarlyTime().intValue();
-			}
-			if (dto.getOverTimeIn() != null) {
-				totalOverTimeIn += dto.getOverTimeIn().intValue();
-			}
-			if (dto.getOverTimeOut() != null) {
-				totalOverTimeOut += dto.getOverTimeOut().intValue();
-			}
-			if (dto.getWorkOnHolidayTime() != null) {
-				totalWorkOnHoliday += dto.getWorkOnHolidayTime();
-			}
-			if (dto.getLateNightTime() != null) {
-				totalLateNight += dto.getLateNightTime();
-			}
-			timesWork += dto.getTimesWork();
-			timesLate += dto.getTimesLate();
-			timesLeaveEarly += dto.getTimesLeaveEarly();
-			timesOverTimeWork += dto.getTimesOvertime();
-			timesWorkOnHoliday += dto.getTimesWorkingHoliday();
-			timesLegalHoliday += dto.getTimesLegalHoliday();
-			timesSpecificHoliday += dto.getTimesSpecificHoliday();
-			timesSubstitute += dto.getTimesHolidaySubstitute();
-			if (dto.getPaidHoliday() != null) {
-				timesPaidHoliday += dto.getPaidHoliday().doubleValue();
-			}
-			timesPaidHoloidayTime += dto.getPaidHolidayHour();
-			timesSpecialHoloiday += dto.getTotalSpecialHoliday();
-			timesOtherHoloiday += dto.getTotalOtherHoliday();
-			timesSubHoliday += dto.getTimesCompensation();
-			if (dto.getAbsence() != null) {
-				timesAbsence += dto.getAbsence().doubleValue();
-			}
-		}
-		vo.setLblTotalWork(getTimeDotFormat(totalWork));
-		vo.setLblTotalRest(getTimeDotFormat(totalRest));
-		vo.setLblTotalPrivate(getTimeDotFormat(totalPrivate));
-		vo.setLblTotalLate(getTimeDotFormat(totalLate));
-		vo.setLblTotalLeaveEarly(getTimeDotFormat(totalLeaveEarly));
-		vo.setLblTotalLateLeaveEarly(getTimeDotFormat(totalLateLeaveEarly));
-		vo.setLblTotalOverTimeIn(getTimeDotFormat(totalOverTimeIn));
-		vo.setLblTotalOverTimeOut(getTimeDotFormat(totalOverTimeOut));
-		vo.setLblTotalWorkOnHoliday(getTimeDotFormat(totalWorkOnHoliday));
-		vo.setLblTotalLateNight(getTimeDotFormat(totalLateNight));
-		vo.setLblTimesWork(String.valueOf(timesWork));
-		vo.setLblTimesLate(String.valueOf(timesLate));
-		vo.setLblTimesLeaveEarly(String.valueOf(timesLeaveEarly));
-		vo.setLblTimesOverTimeWork(String.valueOf(timesOverTimeWork));
-		vo.setLblTimesWorkOnHoliday(String.valueOf(timesWorkOnHoliday));
-		vo.setLblTimesLegalHoliday(String.valueOf(timesLegalHoliday));
-		vo.setLblTimesSpecificHoliday(String.valueOf(timesSpecificHoliday));
-		vo.setLblTimesSubstitute(String.valueOf(timesSubstitute));
-		vo.setLblTimesPaidHoliday(getNumberString(timesPaidHoliday, 1));
-		vo.setLblTimesPaidHoloidayTime(String.valueOf(timesPaidHoloidayTime));
-		vo.setLblTimesSpecialHoloiday(getNumberString(timesSpecialHoloiday, 1));
-		vo.setLblTimesOtherHoloiday(getNumberString(timesOtherHoloiday, 1));
-		vo.setLblTimesSubHoliday(getNumberString(timesSubHoliday, 1));
-		vo.setLblTimesAbsence(getNumberString(timesAbsence, 1));
-		// 手当
-		final String hyphen = mospParams.getName("Hyphen");
-		vo.setLblTimesAllowance1(hyphen);
-		vo.setLblTimesAllowance2(hyphen);
-		vo.setLblTimesAllowance3(hyphen);
-		vo.setLblTimesAllowance4(hyphen);
-		vo.setLblTimesAllowance5(hyphen);
-		vo.setLblTimesAllowance6(hyphen);
-		vo.setLblTimesAllowance7(hyphen);
-		vo.setLblTimesAllowance8(hyphen);
-		vo.setLblTimesAllowance9(hyphen);
-		vo.setLblTimesAllowance10(hyphen);
 	}
 	
 	/**
@@ -844,7 +646,7 @@ public class SubordinateListAction extends TimeSettingAction {
 		// VO準備
 		SubordinateListVo vo = (SubordinateListVo)mospParams.getVo();
 		// 個人ID配列取得
-		String[] personalIds = vo.getCkbSelect();
+		String[] personalIds = getSelectedPersonalIds(vo.getCkbSelect());
 		// 対象年月取得(VOから)
 		int year = getInt(vo.getPltSearchRequestYear());
 		int month = getInt(vo.getPltSearchRequestMonth());
@@ -865,7 +667,7 @@ public class SubordinateListAction extends TimeSettingAction {
 		// VO準備
 		SubordinateListVo vo = (SubordinateListVo)mospParams.getVo();
 		// 個人ID配列取得
-		String[] personalIds = vo.getCkbSelect();
+		String[] personalIds = getSelectedPersonalIds(vo.getCkbSelect());
 		// 対象年月取得(VOから)
 		int year = getInt(vo.getPltSearchRequestYear());
 		int month = getInt(vo.getPltSearchRequestMonth());
@@ -890,4 +692,24 @@ public class SubordinateListAction extends TimeSettingAction {
 		return MonthUtility.getYearMonthTargetDate(getInt(vo.getPltSearchRequestYear()),
 				getInt(vo.getPltSearchRequestMonth()), mospParams);
 	}
+	
+	/**
+	 * 選択された部下一覧情報のリストを取得する。<br>
+	 * <br>
+	 * @return 部下一覧情報リスト
+	 */
+	protected List<SubordinateListDtoInterface> getSelectedListDto() {
+		// VO準備
+		SubordinateListVo vo = (SubordinateListVo)mospParams.getVo();
+		// 給与計算結果一覧情報リスト準備
+		List<SubordinateListDtoInterface> selectedList = new ArrayList<SubordinateListDtoInterface>();
+		// 選択されたチェックボックス毎に処理
+		for (String idx : vo.getCkbSelect()) {
+			// 選択された給与計算結果一覧情報を追加
+			selectedList.add((SubordinateListDtoInterface)getSelectedListDto(idx));
+		}
+		// 選択された給与計算結果一覧情報のリストを取得
+		return selectedList;
+	}
+	
 }

@@ -55,7 +55,7 @@ public class SeUtility {
 		try {
 			StringBuffer digest = new StringBuffer();
 			MessageDigest md = MessageDigest.getInstance(MESSAGE_DIGEST_ALGORITHM);
-			byte[] bytes = value.getBytes();
+			byte[] bytes = MospUtility.getBytes(value);
 			md.update(bytes);
 			bytes = md.digest();
 			for (byte c : bytes) {

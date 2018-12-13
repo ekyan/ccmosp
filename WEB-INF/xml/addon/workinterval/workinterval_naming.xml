@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE MosP>
+<!--
+MosP - Mind Open Source Project    http://www.mosp.jp/
+Copyright (C) MIND Co., Ltd.       http://www.e-mind.co.jp/
+
+This program is free software: you can redistribute it and/or
+modify it under the terms of the GNU Affero General Public License
+as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<MosP>
+	<Naming key="jp.mosp.addon.workinterval.settings.vo.WorkIntervalTimeSettingCardVo">
+		勤怠設定詳細
+	</Naming>
+	<Naming key="jp.mosp.addon.workinterval.input.vo.WorkIntervalAttendanceListVo">
+		勤怠一覧
+	</Naming>
+
+	<Naming key="WorkInterval">
+		勤務インターバル
+	</Naming>
+	<Naming key="LimitTime">
+		制限時間
+	</Naming>
+	<Naming key="IntervalShort">
+		イン
+	</Naming>
+	
+</MosP>

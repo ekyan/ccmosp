@@ -155,6 +155,19 @@ public class EmployeeEntity implements EmployeeEntityInterface {
 	}
 	
 	/**
+	 * 対象日における人事情報が存在するかを確認する。<br>
+	 * <br>
+	 * @param targetDate 対象日
+	 * @return 確認結果(true：存在する、false：存在しない)
+	 */
+	public boolean isHumenDtoExist(Date targetDate) {
+		// 人事情報を取得
+		HumanDtoInterface dto = getHumenDto(targetDate);
+		//対象日における人事情報が存在するかを確認
+		return dto != null;
+	}
+	
+	/**
 	 * 対象日における社員コードを取得する。<br>
 	 * <br>
 	 * 人事情報の取得に失敗した場合は、nullを返す。<br>

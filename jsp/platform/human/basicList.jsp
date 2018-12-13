@@ -37,7 +37,7 @@ MospParams params = (MospParams)request.getAttribute(MospConst.ATT_MOSP_PARAMS);
 BasicListVo vo = (BasicListVo)params.getVo();
 %>
 
-<jsp:include page="<%= PlatformHumanConst.PATH_HUMAN_COMMON_INFO_JSP %>" flush="false" />
+<jsp:include page="<%= params.getApplicationProperty(PlatformHumanConst.APP_HUMAN_COMMON_INFO_JSP) %>" flush="false" />
 <div class="List">
 	
 <% for (int i = 0; i < vo.getAryActiveteDate().length; i++) { %>
@@ -50,13 +50,13 @@ BasicListVo vo = (BasicListVo)params.getVo();
 if (vo.getNeedDeleteBasciHistory()) {
 %>
 					<button type="button" id="btnHumenInfo" name="btnDelete" class="Name4Button" onclick="submitTransfer(event, null, checkExtra, new Array('<%= PlatformConst.PRM_TRANSFERRED_INDEX %>', '<%= i %>'), '<%= BasicListAction.CMD_DELETE %>');"
-					><%= params.getName("History") %><%= params.getName("Delete") %></button>
+					><%= params.getName("History" ,"Delete") %></button>
 <%
 }
 %>
 					<button type="button" id="btnHumenInfo" class="Name4Button"
 					onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_INDEX %>', '<%= i %>', '<%= PlatformConst.PRM_TRANSFERRED_ACTION %>',  '<%= BasicCardAction.CMD_EDIT_SELECT %>'), '<%= BasicListAction.CMD_TRANSFER %>');"
-					><%= params.getName("History") %><%= params.getName("Edit") %></button>
+					><%= params.getName("History","Edit") %></button>
 				</span>
 			</th>
 		</tr>
@@ -64,14 +64,14 @@ if (vo.getNeedDeleteBasciHistory()) {
 	<table class="UnderTable">
 		<tr>
 			<td rowspan="2" class="TitleTd" id="titleEmployeeName">
-			<div><%= params.getName("FrontParentheses") %><%= params.getName("Kana") %><%= params.getName("BackParentheses") %></div><div><%= params.getName("FullName") %></div></td>
+			<div><%= params.getName("FrontParentheses","Kana","BackParentheses") %></div><div><%= params.getName("FullName") %></div></td>
 			<td rowspan="2" class="InputTd" id="lblEmployeeName">
 			<div><%= HtmlUtility.escapeHTML(vo.getAryEmployeeKana(i)) %></div><div><%= HtmlUtility.escapeHTML(vo.getAryEmployeeName(i)) %></div></td>
 			<td class="TitleTd" id="tdTitleWorkPlace"><%= params.getName("WorkPlace") %></td>
 			<td class="InputTd" id="lblWorkPlaceName"><%= HtmlUtility.escapeHTML(vo.getAryWorkPlace(i)) %></td>
 		</tr>
 		<tr>
-			<td class="TitleTd" id="tdTitleListBasic"><%= params.getName("Employment") %><%= params.getName("EmploymentContractAbbr") %></td>
+			<td class="TitleTd" id="tdTitleListBasic"><%= params.getName("EmploymentContract") %></td>
 			<td class="InputTd" id="tdEmploymentName"><%= HtmlUtility.escapeHTML(vo.getAryEmployment(i)) %></td>
 		</tr>
 		<tr>
@@ -99,8 +99,8 @@ if (vo.getNeedPost()) {
 
 		<button type="button" id="btnCmd01" class="Name4Button"
 		onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_ACTION %>',  '<%= BasicCardAction.CMD_ADD_SELECT %>'), '<%= BasicListAction.CMD_TRANSFER %>');"
-		><%= params.getName("History") %><%= params.getName("Add") %></button>
+		><%= params.getName("History","Add") %></button>
 		<button type="button" id="btnCmd01" class="Name4Button"
 		onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_ACTION %>', '<%=HumanInfoAction.class.getName() %>'), '<%= BasicListAction.CMD_TRANSFER %>');"
-		><%= params.getName("Information") %><%= params.getName("List") %></button>
+		><%= params.getName("Information","List") %></button>
 </div>

@@ -145,7 +145,7 @@ WorkPlaceMasterVo vo = (WorkPlaceMasterVo)params.getVo();
 		<tr>
 			<td class="TitleTd"><span><label for="txtSearchWorkPlaceKana"><%= params.getName("WorkPlace","Name","FrontParentheses","Kana","BackParentheses") %></label></span></td>
 			<td class="InputTd">
-				<input type="text" class="Kana10TextBox" id="txtSearchWorkPlaceKana" name="txtSearchWorkPlaceKana" value="<%= HtmlUtility.escapeHTML(vo.getTxtSearchWorkPlaceKana()) %>" />
+				<input type="text" class="Kana15TextBox" id="txtSearchWorkPlaceKana" name="txtSearchWorkPlaceKana" value="<%= HtmlUtility.escapeHTML(vo.getTxtSearchWorkPlaceKana()) %>" />
 			</td>
 			<td class="TitleTd"><span><label for="txtSearchWorkPlaceAbbr"><%= params.getName("WorkPlace","Abbreviation") %></label></span></td>
 			<td class="InputTd">

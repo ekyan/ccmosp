@@ -23,18 +23,19 @@ autoFlush    = "false"
 errorPage    = "/jsp/common/error.jsp"
 %><%@ page
 import = "jp.mosp.framework.base.MospParams"
+import = "jp.mosp.framework.base.BaseVo"
 import = "jp.mosp.framework.constant.MospConst"
 import = "jp.mosp.framework.utils.HtmlUtility"
-import = "jp.mosp.platform.base.PlatformVo"
+import = "jp.mosp.framework.utils.MospUtility"
 import = "jp.mosp.platform.constant.PlatformConst"
 import = "jp.mosp.platform.portal.action.LogoutAction"
 %><%
 MospParams params = (MospParams)request.getAttribute(MospConst.ATT_MOSP_PARAMS);
-PlatformVo vo = (PlatformVo)params.getVo();
+BaseVo vo = params.getVo();
 %>
 <div class="MenuButtonBar">
 <%
-if (params.getUser() != null) {
+if (params.getUser() != null && params.getApplicationPropertyBool(MospConst.APP_DISABLE_LOGOUT_BTN) == false) {
 %>
 	<button onclick="doSubmit(document.form, '<%= LogoutAction.CMD_LOGOUT %>')" class="LogoutButton" type="button"><%= params.getName("Logout") %></button>
 <%
@@ -55,7 +56,12 @@ if (params.getUser() != null) {
 }
 if (params.getApplicationPropertyBool(PlatformConst.APP_FORUM_LINK_DISABLED) == false) {
 %>
-	<span class="Forum"><a href="http://www.mospuser.com/" target="_blank"><%= HtmlUtility.escapeHTML(params.getName("QuestionAndAnswer")) %></a></span>
+	<span class="Forum"><a href="http://bbs.mosp.jp/forum/login_page.php" target="_blank"><%= HtmlUtility.escapeHTML(params.getName("QuestionAndAnswer")) %></a></span>
+<%
+}
+for (String[] link : MospUtility.getCodeArray(params, PlatformConst.CODE_KEY_HEADER_LINK , false)) {
+%>
+	<span class="Forum"><a href="<%= link[0] %>" target="_blank"><%= HtmlUtility.escapeHTML(link[1]) %></a></span>
 <%
 }
 %>

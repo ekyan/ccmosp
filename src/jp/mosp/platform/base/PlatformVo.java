@@ -22,6 +22,7 @@ import java.util.List;
 
 import jp.mosp.framework.base.BaseDtoInterface;
 import jp.mosp.framework.base.BaseVo;
+import jp.mosp.platform.constant.PlatformConst;
 
 /**
  * MosPプラットフォームにおける画面の基本情報を格納する。<br>
@@ -152,6 +153,12 @@ public class PlatformVo extends BaseVo {
 	 */
 	private String								prmExtra1;
 	
+	/**
+	 * 追加パラメータ2。<br>
+	 * アドオン等でパラメータを追加する際に用いる。<br>
+	 */
+	private String								prmExtra2;
+	
 	
 	/**
 	 * VOの初期設定を行う。<br>
@@ -188,6 +195,13 @@ public class PlatformVo extends BaseVo {
 	 */
 	public void setModeActivateDate(String modeActivateDate) {
 		this.modeActivateDate = modeActivateDate;
+	}
+	
+	/**
+	 * @return 確認結果(true：有効日モードは決定である、false：変更である)
+	 */
+	public boolean isModeActivateDateFixed() {
+		return modeActivateDate.equals(PlatformConst.MODE_ACTIVATE_DATE_FIXED);
 	}
 	
 	/**
@@ -278,14 +292,14 @@ public class PlatformVo extends BaseVo {
 	 * @return aryAryPltApproverSetting
 	 */
 	public String[][][] getAryApproverInfo() {
-		return aryApproverInfo;
+		return getStringArrayClone(aryApproverInfo);
 	}
 	
 	/**
 	 * @param aryApproverInfo セットする aryApproverInfo
 	 */
 	public void setAryApproverInfo(String[][][] aryApproverInfo) {
-		this.aryApproverInfo = aryApproverInfo;
+		this.aryApproverInfo = getStringArrayClone(aryApproverInfo);
 	}
 	
 	/**
@@ -484,4 +498,17 @@ public class PlatformVo extends BaseVo {
 		this.prmExtra1 = prmExtra1;
 	}
 	
+	/**
+	 * @return prmExtra2
+	 */
+	public String getPrmExtra2() {
+		return prmExtra2;
+	}
+	
+	/**
+	 * @param prmExtra2 セットする prmExtra2
+	 */
+	public void setPrmExtra2(String prmExtra2) {
+		this.prmExtra2 = prmExtra2;
+	}
 }

@@ -63,17 +63,6 @@ public interface RouteApplicationReferenceBeanInterface {
 	RouteApplicationDtoInterface findForKey(String routeApplicationCode, Date activateDate) throws MospException;
 	
 	/**
-	 * 個人ID及び対象日から、適用されている設定を取得する。<br>
-	 * @param personalId 個人ID
-	 * @param targetDate 対象日
-	 * @param workflowType フロー区分
-	 * @return ルート適用マスタDTO
-	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
-	 */
-	RouteApplicationDtoInterface findForPerson(String personalId, Date targetDate, int workflowType)
-			throws MospException;
-	
-	/**
 	 * 期間内に適用されている設定が存在するか確認する。<br>
 	 * @param startDate 期間開始日
 	 * @param endDate 期間終了日
@@ -82,4 +71,5 @@ public interface RouteApplicationReferenceBeanInterface {
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
 	boolean hasPersonalApplication(String personalId, Date startDate, Date endDate) throws MospException;
+	
 }

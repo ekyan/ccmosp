@@ -19,7 +19,10 @@ package jp.mosp.platform.dao.human.impl;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import jp.mosp.framework.base.BaseDto;
 import jp.mosp.framework.base.BaseDtoInterface;
@@ -77,9 +80,12 @@ public class PfaHumanRetirementDao extends PlatformDao implements RetirementDaoI
 		// 処理無し
 	}
 	
+	/**
+	 * @throws MospException アドオンで例外が発生した場合
+	 */
 	@Override
-	public void initDao() {
-		// 処理無し
+	public void initDao() throws MospException {
+		// 処理無し(アドオンで実装)
 	}
 	
 	@Override
@@ -205,23 +211,93 @@ public class PfaHumanRetirementDao extends PlatformDao implements RetirementDaoI
 		setCommonParams(baseDto, isInsert);
 	}
 	
-	/**
-	 * 設定するパラメータは、以下の通り。<br>
-	 * <ul><li>
-	 * 対象日
-	 * </li></ul>
-	 */
 	@Override
-	public String getQueryForRetiredPerson() {
+	public Set<String> findForRetiredPersonalIdSet(Date targetDate, Date startDate, Date endDate) throws MospException {
+		try {
+			index = 1;
+			StringBuffer sb = new StringBuffer();
+			sb.append(select());
+			sb.append(COL_PERSONAL_ID);
+			sb.append(from(TABLE));
+			sb.append(where());
+			sb.append(deleteFlagOff());
+			sb.append(and());
+			sb.append(less(COL_RETIREMENT_DATE));
+			prepareStatement(sb.toString());
+			// 退職
+			if (startDate != null && endDate != null) {
+				setParam(index++, startDate);
+			} else {
+				setParam(index++, targetDate);
+			}
+			executeQuery();
+			return getResultAsSet(COL_PERSONAL_ID);
+		} catch (Throwable e) {
+			throw new MospException(e);
+		} finally {
+			releaseResultSet();
+			releasePreparedStatement();
+		}
+	}
+	
+	@Override
+	public Map<String, RetirementDtoInterface> findForPersonalIds(String[] personalIds) throws MospException {
+		try {
+			// パラメータインデックス準備
+			index = 1;
+			// SQL作成
+			StringBuffer sb = getSelectQuery(getClass());
+			sb.append(where());
+			sb.append(deleteFlagOff());
+			sb.append(in(COL_PERSONAL_ID, personalIds.length));
+			// ステートメント生成
+			prepareStatement(sb.toString());
+			setParamsIn(personalIds);
+			// SQL実行
+			executeQuery();
+			// 結果取得
+			Map<String, RetirementDtoInterface> allmap = new HashMap<String, RetirementDtoInterface>();
+			while (next()) {
+				RetirementDtoInterface dto = castDto(mapping());
+				allmap.put(dto.getPersonalId(), dto);
+			}
+			return allmap;
+		} catch (Throwable e) {
+			throw new MospException(e);
+		} finally {
+			releaseResultSet();
+			releasePreparedStatement();
+		}
+	}
+	
+	@Override
+	public String getQueryForJoinUser(String personalIdColumn) {
+		// SQL作成準備
 		StringBuffer sb = new StringBuffer();
+		sb.append(leftJoin());
+		sb.append(leftParenthesis());
 		sb.append(select());
 		sb.append(COL_PERSONAL_ID);
+		sb.append(asTmpTable(COL_PERSONAL_ID));
+		sb.append(comma());
+		sb.append(COL_RETIREMENT_DATE);
+		sb.append(asTmpTable(COL_RETIREMENT_DATE));
 		sb.append(from(TABLE));
 		sb.append(where());
 		sb.append(deleteFlagOff());
-		sb.append(and());
-		sb.append(less(COL_RETIREMENT_DATE));
+		sb.append(rightParenthesis());
+		sb.append(asTmpTable(TABLE));
+		sb.append(on());
+		sb.append(personalIdColumn);
+		sb.append(equal());
+		sb.append(getExplicitTableColumn(getTmpTable(TABLE), getTmpColumn(COL_PERSONAL_ID)));
+		// SQLを取得
 		return sb.toString();
+	}
+	
+	@Override
+	public String getRetirementDateColumnForJoinUser() {
+		return getTmpColumn(COL_RETIREMENT_DATE);
 	}
 	
 	/**

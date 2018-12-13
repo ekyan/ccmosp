@@ -25,6 +25,7 @@ errorPage    = "/jsp/common/error.jsp"
 import = "jp.mosp.framework.base.MospParams"
 import = "jp.mosp.framework.constant.MospConst"
 import = "jp.mosp.framework.utils.HtmlUtility"
+import = "jp.mosp.framework.utils.CalendarHtmlUtility"
 import = "jp.mosp.time.constant.TimeConst"
 import = "jp.mosp.time.input.action.ScheduleReferenceAction"
 import = "jp.mosp.time.input.vo.ScheduleReferenceVo"
@@ -51,10 +52,11 @@ ScheduleReferenceVo vo = (ScheduleReferenceVo)params.getVo();
 	<table class="DateChangeTable">
 		<tr>
 			<td>
-				<a class="RollLink" id="eventFormer" name="eventFormer" onclick="submitTransfer(event, null, null, new Array('<%= TimeConst.PRM_TRANSFERRED_YEAR %>', '<%= vo.getPrevMonthYear() %>', '<%= TimeConst.PRM_TRANSFERRED_MONTH %>', '<%= vo.getPrevMonthMonth() %>'), '<%= ScheduleReferenceAction.CMD_SEARCH %>');">&lt;&lt;</a>
+				<a class="RollLink" id="eventFormer" onclick="submitTransfer(event, null, null, new Array('<%= TimeConst.PRM_TRANSFERRED_YEAR %>', '<%= vo.getPrevMonthYear() %>', '<%= TimeConst.PRM_TRANSFERRED_MONTH %>', '<%= vo.getPrevMonthMonth() %>'), '<%= ScheduleReferenceAction.CMD_SEARCH %>');">&lt;&lt;<%= params.getName("Ahead","Month") %></a>
 			</td>
 			<td class="RangeSelectTd">
 				&nbsp;
+				<%= CalendarHtmlUtility.getCalendarDiv(CalendarHtmlUtility.TYPE_MONTH, "pltSelect", "", "", false, false, true) %>
 				<select class="Number4PullDown" id="pltSelectYear" name="pltSelectYear">
 					<%= HtmlUtility.getSelectOption(vo.getAryPltSelectYear(), vo.getPltSelectYear()) %>
 				</select>
@@ -66,7 +68,7 @@ ScheduleReferenceVo vo = (ScheduleReferenceVo)params.getVo();
 				<input type="hidden" id ="hdnSearchCommand" value="<%= ScheduleReferenceAction.CMD_SEARCH %>" />
 			</td>
 			<td>
-				<a class="RollLink" id="eventNext" name="eventNext" onclick="submitTransfer(event, null, null, new Array('<%= TimeConst.PRM_TRANSFERRED_YEAR %>', '<%= vo.getNextMonthYear() %>', '<%= TimeConst.PRM_TRANSFERRED_MONTH %>', '<%= vo.getNextMonthMonth() %>'), '<%= ScheduleReferenceAction.CMD_SEARCH %>');">&gt;&gt;</a>
+				<a class="RollLink" id="eventNext" onclick="submitTransfer(event, null, null, new Array('<%= TimeConst.PRM_TRANSFERRED_YEAR %>', '<%= vo.getNextMonthYear() %>', '<%= TimeConst.PRM_TRANSFERRED_MONTH %>', '<%= vo.getNextMonthMonth() %>'), '<%= ScheduleReferenceAction.CMD_SEARCH %>');"><%= params.getName("Next","Month") %>&gt;&gt;</a>
 			</td>
 			<td class="BetweenTd"></td>
 			<td>
@@ -90,10 +92,18 @@ if (vo.getAryLblDate().length == 0) {
 				<th class="ListSelectTh" id="thTime"><%= params.getName("Form") %></th>
 				<th class="ListSelectTh" id="thTime"><%= params.getName("StartWork") %></th>
 				<th class="ListSelectTh" id="thTime"><%= params.getName("EndWork") %></th>
+				<% if(vo.isLblStartRecordTime()){%>
+				<th class="ListSelectTh" id="thTime"><%= params.getName("StartWorkRecordTimeAbbr") %></th>
+				<%} if(vo.isLblEndRecordTime()){ %>
+				<th class="ListSelectTh" id="thTime"><%= params.getName("EndWorkRecordTimeAbbr") %></th>
+				<%} %>
 				<th class="ListSelectTh" id="thTime"><%= params.getName("WorkTime") %></th>
 				<th class="ListSelectTh" id="thTime"><%= params.getName("RestTime") %></th>
 				<th class="ListSelectTh" id="thTime"><%= params.getName("GoingOut") %></th>
 				<th class="ListSelectTh" id="thTime"><%= params.getName("LateLeaveEarly") %></th>
+				<% if(vo.isLblTimesCat()){%>
+				<th class="ListSelectTh" id="thTime"  ><%= params.getName("Cat") %>
+				<%}%>
 				<th class="ListSelectTh" id="thTime"><%= params.getName("Inside","Remainder") %></th>
 				<th class="ListSelectTh" id="thTime"><%= params.getName("LeftOut") %></th>
 				<th class="ListSelectTh" id="thTime"><%= params.getName("WorkingHoliday") %></th>
@@ -110,15 +120,23 @@ for (int i = 0; i < vo.getAryLblDate().length; i++) {
 %>
 			<tr>
 				<td class="ListSelectTd"></td>
-				<td class="ListSelectTd"><%= HtmlUtility.escapeHTML(vo.getAryLblDate     (i)) %></td>
+				<td class="ListSelectTd"  title = "<%= HtmlUtility.escapeHTML(vo.getPltSelectYear() + '/' + vo.getAryLblDate(i)) %>"><%= HtmlUtility.escapeHTML(vo.getAryLblDate     (i)) %></td>
 				<td class="ListSelectTd"><span <%= vo.getAryWorkDayOfWeekStyle(i) %>><%= HtmlUtility.escapeHTML(vo.getAryLblWeek(i)) %></span></td>
 				<td class="ListSelectTd"><%= HtmlUtility.escapeHTML(vo.getAryLblWorkType (i)) %></td>
 				<td class="ListSelectTd"><%= HtmlUtility.escapeHTML(vo.getAryLblStartTime(i)) %></td>
 				<td class="ListSelectTd"><%= HtmlUtility.escapeHTML(vo.getAryLblEndTime  (i)) %></td>
+				<% if(vo.isLblStartRecordTime()){%>
+				<td class="ListSelectTd"><%= params.getName("Hyphen") %></td>
+				<%} if(vo.isLblEndRecordTime()){ %>
+				<td class="ListSelectTd"><%= params.getName("Hyphen") %></td>
+				<%} %>
 				<td class="ListSelectTd"><%= HtmlUtility.escapeHTML(vo.getAryLblWorkTime (i)) %></td>
 				<td class="ListSelectTd"><%= HtmlUtility.escapeHTML(vo.getAryLblRestTime (i)) %></td>
 				<td class="ListSelectTd"><%= params.getName("Hyphen") %></td>
 				<td class="ListSelectTd"><%= params.getName("Hyphen") %></td>
+				<%if(vo.isLblTimesCat()){%>
+				<td class="ListSelectTd"><%= params.getName("Hyphen") %></td>
+				<%}%>
 				<td class="ListSelectTd"><%= params.getName("Hyphen") %></td>
 				<td class="ListSelectTd"><%= params.getName("Hyphen") %></td>
 				<td class="ListSelectTd"><%= params.getName("Hyphen") %></td>
@@ -138,10 +156,18 @@ for (int i = 0; i < vo.getAryLblDate().length; i++) {
 				<th class="ListSelectTh" id="thTime"><%= params.getName("Form") %></th>
 				<th class="ListSelectTh" id="thTime"><%= params.getName("StartWork") %></th>
 				<th class="ListSelectTh" id="thTime"><%= params.getName("EndWork") %></th>
+				<% if(vo.isLblStartRecordTime()){%>
+				<th class="ListSelectTh" id="thTime"><%= params.getName("StartWorkRecordTimeAbbr") %></th>
+				<%} if(vo.isLblEndRecordTime()){ %>
+				<th class="ListSelectTh" id="thTime"><%= params.getName("EndWorkRecordTimeAbbr") %></th>
+				<%} %>
 				<th class="ListSelectTh" id="thTime"><%= params.getName("WorkTime") %></th>
 				<th class="ListSelectTh" id="thTime"><%= params.getName("RestTime") %></th>
 				<th class="ListSelectTh" id="thTime"><%= params.getName("GoingOut") %></th>
 				<th class="ListSelectTh" id="thTime"><%= params.getName("LateLeaveEarly") %></th>
+				<% if(vo.isLblTimesCat()){%>
+				<th class="ListSelectTh" id="thTime"  ><%= params.getName("Cat") %>
+				<%}%>
 				<th class="ListSelectTh" id="thTime"><%= params.getName("Inside","Remainder") %></th>
 				<th class="ListSelectTh" id="thTime"><%= params.getName("LeftOut") %></th>
 				<th class="ListSelectTh" id="thTime"><%= params.getName("WorkingHoliday") %></th>
@@ -155,27 +181,6 @@ for (int i = 0; i < vo.getAryLblDate().length; i++) {
 	</table>
 </div>
 <div class="List">
-	<table class="LeftListTable">
-		<tr>
-			<th class="ListSelectTh" id="thTotalTime" rowspan="2">
-				<div><%= params.getName("SumTotal") %></div>
-				<div><%= params.getName("Time") %></div>
-			</th>
-			<th class="ListSelectTh" id="thTotalTime"            ><%= params.getName("Work"      ) %></th>
-			<th class="ListSelectTh" id="thTotalTime"            ><%= params.getName("RestTime"  ) %></th>
-			<th class="ListSelectTh" id="thTotalTime" rowspan="2"><%= params.getName("Frequency" ) %></th>
-			<th class="ListSelectTh" id="thTotalTime"            ><%= params.getName("GoingWork" ) %></th>
-			<th class="ListSelectTh" id="thTotalTime" rowspan="2"><%= params.getName("Holiday"   ) %></th>
-			<th class="ListSelectTh" id="thTotalTime"            ><%= params.getName("Legal"     ) %></th>
-			<th class="ListSelectTh" id="thTotalTime"            ><%= params.getName("Prescribed") %></th>
-			<td class="Blank" colspan="7" rowspan="2"></td>
-		</tr>
-		<tr>
-			<td class="SelectTd"><%= HtmlUtility.escapeHTML(vo.getLblTotalWork             ()) %></td>
-			<td class="SelectTd"><%= HtmlUtility.escapeHTML(vo.getLblTotalRest             ()) %></td>
-			<td class="SelectTd"><%= HtmlUtility.escapeHTML(vo.getLblTimesWork             ()) %></td>
-			<td class="SelectTd"><%= HtmlUtility.escapeHTML(vo.getLblTimesLegalHoliday     ()) %></td>
-			<td class="SelectTd"><%= HtmlUtility.escapeHTML(vo.getLblTimesPrescribedHoliday()) %></td>
-		</tr>
-	</table>
+	<% String applicationProperty = params.getApplicationProperty("ScheduleReferenceItemJsp"); %>
+	<jsp:include page="<%=	applicationProperty %>" flush="false" />
 </div>

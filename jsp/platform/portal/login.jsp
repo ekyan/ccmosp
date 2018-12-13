@@ -22,12 +22,15 @@ buffer       = "16kb"
 autoFlush    = "false"
 errorPage    = "/jsp/common/error.jsp"
 %><%@ page
-import = "jp.mosp.framework.constant.MospConst"
-import = "jp.mosp.platform.constant.PlatformConst"
-import = "jp.mosp.framework.utils.HtmlUtility"
 import = "jp.mosp.framework.base.MospParams"
+import = "jp.mosp.framework.constant.MospConst"
+import = "jp.mosp.framework.utils.HtmlUtility"
+import = "jp.mosp.platform.constant.PlatformConst"
+import = "jp.mosp.platform.utils.PlatformNamingUtility"
 import = "jp.mosp.platform.portal.action.AuthAction"
+import = "jp.mosp.platform.utils.IpAddressUtility"
 import = "jp.mosp.platform.portal.vo.LoginVo"
+import = "jp.mosp.platform.portal.vo.PasswordChangeVo"
 %><%
 MospParams params = (MospParams)request.getAttribute(MospConst.ATT_MOSP_PARAMS);
 LoginVo vo = (LoginVo)params.getVo();
@@ -50,14 +53,15 @@ if (loginImagePath != null && loginImagePath.isEmpty() == false) {
 	<table class="LoginTable">
 		<tr>
 			<td class="LoginTitle">
-				<label for="txtUserId"><%= params.getName("User") %><%= params.getName("Id") %></label><%= params.getName("Colon") %>
+				<label for="txtUserId"><%= PlatformNamingUtility.userId(params) %></label><%= PlatformNamingUtility.colon(params) %>
 			</td>
 			<td class="LoginInput">
 				<input type="text" class="LoginIdTextBox" id="txtUserId" name="txtUserId" value="<%= HtmlUtility.escapeHTML(vo.getTxtUserId()) %>" />
 			</td>
+		</tr>
 		<tr>
 			<td class="LoginTitle">
-				<label for="txtPassWord"><%= params.getName("Password") %></label><%= params.getName("Colon") %>
+				<label for="txtPassWord"><%= PlatformNamingUtility.password(params) %></label><%= PlatformNamingUtility.colon(params) %>
 			</td>
 			<td class="LoginInput">
 				<input type="password" class="LoginPassTextBox" id="txtPassWord" value="" />
@@ -66,8 +70,53 @@ if (loginImagePath != null && loginImagePath.isEmpty() == false) {
 	</table>
 </div>
 <div class="Button" id="divLoginButton">
-	<button type="submit" class="LoginButton" onclick="return login('<%= AuthAction.CMD_AUTHENTICATE %>')"><%= params.getName("Login") %></button>
+	<button type="submit" class="LoginButton" onclick="return login('<%= AuthAction.CMD_AUTHENTICATE %>')"><%= PlatformNamingUtility.login(params) %></button>
+<%
+if(vo.getLoginExtraButtoun() != null && !vo.getLoginExtraButtoun().isEmpty()) {
+%>
+	<jsp:include page="<%= vo.getLoginExtraButtoun() %>" flush="false" />
+	<input type="hidden" name="loginExtraButtoun" value="<%= vo.getLoginExtraButtoun() %>"/>
+<%
+}
+%>
 </div>
+<%
+if (params.getApplicationPropertyBool(PlatformConst.APP_LOGIN_INITIALIZE_PASSWORD)
+		&& IpAddressUtility.isAddressAvailable(params)) {
+%>
+<div>
+	<p class="PasswordChange">
+		<a onclick="changePassword()">
+			<%= params.getName("IfForgotPassword") %>
+		</a>
+	</p>
+</div>
+<div id="divPasswordChange">
+	<table class="PasswordChangeTable">
+		<tr>
+			<td class="PasswordChangeTitle">
+				<label for="txtPassChangeUserId"><%= PlatformNamingUtility.userId(params) %></label><%= PlatformNamingUtility.colon(params) %>
+			</td>
+			<td class="PasswordChangeInput">
+				<input type="text" class="PassChangeUserIdTextBox" id="txtPassChangeUserId" name="txtPassChangeUserId" value="<%= HtmlUtility.escapeHTML(vo.getTxtPassChangeUserId()) %>" />
+			</td>
+		</tr>
+		<tr>
+			<td class="PasswordChangeTitle">
+				<label for="txtMailAddress"><%= PlatformNamingUtility.mailAddress(params) %></label><%= PlatformNamingUtility.colon(params) %>
+			</td>
+			<td class="PasswordChangeInput">
+				<input type="text" class="PassChangeMailAddressTextBox" id="txtMailAddress" name="txtMailAddress" value="<%= HtmlUtility.escapeHTML(vo.getTxtMailAddress()) %>" />
+			</td>
+		</tr>
+	</table>
+</div>
+<div class="Button" id="divPasswordChangeButton">
+	<button type="button" class="LoginButton" onclick="submitRegist(event, null, checkPasswordChange, '<%= AuthAction.CMD_SEND_MAIL %>')"><%= params.getName(PasswordChangeVo.class.getCanonicalName()) %></button>
+</div>
+<%
+}
+%>
 <div>
 	<table>
 		<tr>

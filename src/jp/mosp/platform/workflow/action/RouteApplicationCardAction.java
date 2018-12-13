@@ -336,6 +336,7 @@ public class RouteApplicationCardAction extends PlatformSystemAction {
 	protected void setActivationDate() throws MospException {
 		// VO取得
 		RouteApplicationCardVo vo = (RouteApplicationCardVo)mospParams.getVo();
+		RouteApplicationReferenceBeanInterface routeApplication = reference().routeApplication();
 		// 現在の有効日モードを確認
 		if (vo.getModeActivateDate().equals(PlatformConst.MODE_ACTIVATE_DATE_CHANGING)) {
 			// 有効日モード設定
@@ -344,8 +345,16 @@ public class RouteApplicationCardAction extends PlatformSystemAction {
 			// 有効日モード設定
 			vo.setModeActivateDate(PlatformConst.MODE_ACTIVATE_DATE_CHANGING);
 		}
+		
 		// プルダウン取得
 		setPulldown();
+		RouteApplicationDtoInterface routeApplicationDto = routeApplication
+			.getRouteApplicationInfo(vo.getTxtApplicationCode(), getEditActivateDate());
+		if (routeApplicationDto == null) {
+			return;
+		}
+		vo.setPltRouteName(routeApplicationDto.getRouteCode());
+		
 	}
 	
 	/**
@@ -464,11 +473,11 @@ public class RouteApplicationCardAction extends PlatformSystemAction {
 		// ルート
 		dto.setRouteCode(vo.getPltRouteName());
 		// フロー区分
-		dto.setWorkflowType(Integer.valueOf(vo.getPltFlowType()));
+		dto.setWorkflowType(getInt(vo.getPltFlowType()));
 		// 無効フラグ
-		dto.setInactivateFlag(Integer.valueOf(vo.getPltEditInactivate()));
+		dto.setInactivateFlag(getInt(vo.getPltEditInactivate()));
 		// ラジオボタン
-		dto.setRouteApplicationType(Integer.valueOf(vo.getRadioSelect()));
+		dto.setRouteApplicationType(getInt(vo.getRadioSelect()));
 		// 承認者所属コード、承認者職位コード、承認者個人ID
 		if (vo.getRadioSelect().equals(PlatformConst.APPLICATION_TYPE_MASTER)) {
 			// 勤務地コード

@@ -19,6 +19,8 @@ package jp.mosp.framework.exporter;
 
 import java.io.Serializable;
 
+import jp.mosp.framework.utils.CapsuleUtility;
+
 /**
  * {@link HumanBinaryExporter}で出力する内容を保持するクラス。
  */
@@ -44,7 +46,7 @@ public class ImageContents implements Serializable {
 	 */
 	public ImageContents(String fileType, byte[] binaryData) {
 		this.fileType = fileType;
-		this.binaryData = binaryData;
+		this.binaryData = CapsuleUtility.getByteArrayClone(binaryData);
 	}
 	
 	/**
@@ -58,7 +60,7 @@ public class ImageContents implements Serializable {
 	 * @return binaryData バイナリデータ
 	 */
 	public byte[] getBinaryData() {
-		return binaryData;
+		return CapsuleUtility.getByteArrayClone(binaryData);
 	}
 	
 }

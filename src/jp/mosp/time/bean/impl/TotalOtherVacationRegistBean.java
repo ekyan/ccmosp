@@ -36,7 +36,7 @@ public class TotalOtherVacationRegistBean extends PlatformBean implements TotalO
 	/**
 	 * 休暇データDAOクラス。<br>
 	 */
-	TotalOtherVacationDaoInterface	dao;
+	TotalOtherVacationDaoInterface dao;
 	
 	
 	/**

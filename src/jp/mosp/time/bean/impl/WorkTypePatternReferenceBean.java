@@ -33,7 +33,7 @@ import jp.mosp.time.dto.settings.WorkTypePatternDtoInterface;
  */
 public class WorkTypePatternReferenceBean extends PlatformBean implements WorkTypePatternReferenceBeanInterface {
 	
-	private WorkTypePatternDaoInterface	dao;
+	private WorkTypePatternDaoInterface dao;
 	
 	
 	/**

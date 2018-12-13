@@ -15,9 +15,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-/**
- * 
- */
 package jp.mosp.time.dto.settings;
 
 import java.util.Date;
@@ -54,6 +51,11 @@ public interface WorkOnHolidayRequestDtoInterface extends BaseDtoInterface, Requ
 	 * @return 振替申請。
 	 */
 	int getSubstitute();
+	
+	/**
+	 * @return 勤務形態コード。
+	 */
+	String getWorkTypeCode();
 	
 	/**
 	 * @return 出勤予定時刻。
@@ -94,6 +96,11 @@ public interface WorkOnHolidayRequestDtoInterface extends BaseDtoInterface, Requ
 	 * @param substitute セットする 振替申請。
 	 */
 	void setSubstitute(int substitute);
+	
+	/**
+	 * @param workTypeCode セットする 勤務形態コード。
+	 */
+	void setWorkTypeCode(String workTypeCode);
 	
 	/**
 	 * @param startTime セットする 出勤予定時刻。

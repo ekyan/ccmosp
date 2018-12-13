@@ -44,26 +44,36 @@ public class TmdTotalLeaveDao extends PlatformDao implements TotalLeaveDaoInterf
 	 * レコード識別ID。
 	 */
 	public static final String	COL_TMD_TOTAL_LEAVE_ID	= "tmd_total_leave_id";
+	
 	/**
 	 * 個人ID。
 	 */
 	public static final String	COL_PERSONAL_ID			= "personal_id";
+	
 	/**
 	 * 年。
 	 */
 	public static final String	COL_CALCULATION_YEAR	= "calculation_year";
+	
 	/**
 	 * 月。
 	 */
 	public static final String	COL_CALCULATION_MONTH	= "calculation_month";
+	
 	/**
 	 * 休暇コード。
 	 */
 	public static final String	COL_HOLIDAY_CODE		= "holiday_code";
+	
 	/**
 	 * 特別休暇日数。
 	 */
 	public static final String	COL_TIMES				= "times";
+	
+	/**
+	 * 特別休暇時間数。
+	 */
+	public static final String	COL_HOURS				= "hours";
 	
 	/**
 	 * キー。
@@ -91,6 +101,7 @@ public class TmdTotalLeaveDao extends PlatformDao implements TotalLeaveDaoInterf
 		dto.setCalculationMonth(getInt(COL_CALCULATION_MONTH));
 		dto.setHolidayCode(getString(COL_HOLIDAY_CODE));
 		dto.setTimes(getDouble(COL_TIMES));
+		dto.setHours(getInt(COL_HOURS));
 		mappingCommonInfo(dto);
 		return dto;
 	}
@@ -150,6 +161,7 @@ public class TmdTotalLeaveDao extends PlatformDao implements TotalLeaveDaoInterf
 		setParam(index++, dto.getCalculationMonth());
 		setParam(index++, dto.getHolidayCode());
 		setParam(index++, dto.getTimes());
+		setParam(index++, dto.getHours());
 		setCommonParams(baseDto, isInsert);
 	}
 	

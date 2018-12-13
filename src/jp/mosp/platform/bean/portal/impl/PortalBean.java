@@ -18,10 +18,10 @@
 package jp.mosp.platform.bean.portal.impl;
 
 import java.sql.Connection;
+import java.util.Set;
 
 import jp.mosp.framework.base.MospParams;
-import jp.mosp.framework.property.RoleMenuProperty;
-import jp.mosp.framework.property.RoleProperty;
+import jp.mosp.framework.utils.RoleUtility;
 import jp.mosp.platform.base.PlatformBean;
 import jp.mosp.platform.portal.action.PortalAction;
 import jp.mosp.platform.portal.vo.PortalVo;
@@ -107,17 +107,15 @@ public abstract class PortalBean extends PlatformBean {
 	 * @param menuKey メニューキー
 	 */
 	protected void setRangeMap(String menuKey) {
-		// ロール設定情報を取得
-		RoleProperty role = mospParams.getUserRole();
-		// ロールメニュー設定情報を取得
-		RoleMenuProperty menu = role.getRoleMenuMap().get(menuKey);
-		// メニュー設定確認
-		if (menu == null) {
-			removeRangeMap();
-			return;
+		// 範囲設定を除去
+		removeRangeMap();
+		// ログインユーザのメニューキー群(インデックス昇順)を取得
+		Set<String> menuKeys = RoleUtility.getUserMenuKeys(mospParams);
+		// 対象メニューキーがログインユーザのメニューキー群に含まれる場合
+		if (menuKeys.contains(menuKey)) {
+			// ログインユーザのロールから操作範囲設定情報群(キー：操作区分)を取得し設定
+			mospParams.getStoredInfo().setRangeMap(RoleUtility.getUserRanges(mospParams, menuKey));
 		}
-		// 範囲情報を取得し設定
-		mospParams.getStoredInfo().setRangeMap(menu.getRangeMap());
 	}
 	
 	/**

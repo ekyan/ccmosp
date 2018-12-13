@@ -40,8 +40,8 @@ public interface TotalAbsenceReferenceBeanInterface {
 	 * @return 勤怠集計欠勤データDTO
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
-	TotalAbsenceDtoInterface findForKey(String personalId, int calculationYear, int calculationMonth, String absenceCode)
-			throws MospException;
+	TotalAbsenceDtoInterface findForKey(String personalId, int calculationYear, int calculationMonth,
+			String absenceCode) throws MospException;
 	
 	/**
 	 * 勤怠集計欠勤データリストを取得する。<br>

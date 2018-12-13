@@ -27,7 +27,7 @@ function onLoadExtra() {
 		setDisabled("txtStartMonth", true);
 		setDisabled("txtEndYear", true);
 		setDisabled("txtEndMonth", true);
-		setDisabled("btnActivateDate", true);
+		setReadOnly("btnActivateDate", true);
 		// 条件編集不可
 		setDisabled("pltWorkPlace", true);
 		setDisabled("pltEmployment", true);
@@ -35,7 +35,7 @@ function onLoadExtra() {
 		setDisabled("pltPosition", true);
 		setDisabled("pltCutoff", true);
 		// 出力ボタン利用不可
-		setDisabled("btnExecute", true);
+		setReadOnly("btnExecute", true);
 	}
 	// 有効日決定状態
 	if (modeActivateDate == MODE_ACTIVATE_DATE_FIXED) {
@@ -48,7 +48,19 @@ function onLoadExtra() {
 	// 有効日変更状態
 	if (modeActivateDate == MODE_ACTIVATE_DATE_CHANGING) {
 		// 出力ボタン利用不可
-		setDisabled("btnExecute", true);
+		setReadOnly("btnExecute", true);
 	}
 	
 }
+
+/**
+* 追加チェックを行う。<br>
+* @param aryMessage エラーメッセージ格納配列
+* @param event イベント
+* @return 無し
+*/
+function checkActivateDateExtra(aryMessage, event) {
+	checkDateYearMonth("txtStartYear", "txtStartMonth", aryMessage);
+	checkDateYearMonth("txtEndYear", "txtEndMonth", aryMessage);
+} 
+

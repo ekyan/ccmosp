@@ -18,6 +18,8 @@
 package jp.mosp.framework.base;
 
 import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * MosPユーザー情報を扱う。<br>
@@ -27,47 +29,81 @@ public class MospUser implements Serializable {
 	private static final long	serialVersionUID	= 8544895877748481588L;
 	
 	/**
-	 * ASPユーザーID。
+	 * ASPユーザーID。<br>
 	 */
 	private String				aspUserId;
 	
 	/**
-	 * JDBCドライバー名。
+	 * JDBCドライバー名。<br>
 	 */
 	private String				dbDriver;
+	
 	/**
-	 * DBURL。
+	 * DBURL。<br>
 	 */
 	private String				dbUrl;
+	
 	/**
-	 * DBユーザーID。
+	 * DBユーザーID。<br>
 	 */
 	private String				dbUser;
+	
 	/**
-	 * DBパスワード。
+	 * DBパスワード。<br>
 	 */
 	private String				dbPass;
 	
 	/**
-	 * ユーザID。
+	 * ユーザID。<br>
 	 */
 	private String				userId;
 	
 	/**
-	 * ロール
+	 * ロール。<br>
 	 */
 	private String				role;
 	
 	/**
-	 * 個人ID。
+	 * 追加ロール群。<br>
+	 * メインのロール{@link MospUser#role}に加えて、追加のロールを設定できる。<br>
+	 * <br>
+	 * 例えば、メインのロールはプラットフォームのロール、
+	 * 追加のロールにパッケージのロールとアドオン独自のロールを設定することで、
+	 * ロールの数を抑えながら柔軟に権限を与えることができる。<br>
+	 * <br>
+	 * 追加ロールを設定した場合、ユーザ単位で見ると、
+	 * ロールの次の要素は全てのロールの要素を足し合わせたものになる。<br>
+	 * ・roleExtra              ロール追加情報<br>
+	 * ・roleMenuMap            ロールメニュー設定情報群<br>
+	 * ・acceptCmdList          ロール実行可能コマンドリスト<br>
+	 * ・rejectCmdList          ロール実行不能コマンドリスト<br>
+	 * ・hiddenDivisionsList    人事汎用管理区分非表示リスト<br>
+	 * ・referenceDivisionsList 人事汎用管理区分参照リスト<br>
+	 * <br>
+	 * ロール実行可能コマンドリストに設定されているコマンドであっても、
+	 * 他の追加ロールでロール実行不能コマンドリストに設定されていた場合、
+	 * そのユーザは当該コマンドを実行することはできない。<br>
+	 * <br>
+	 */
+	private Set<String>			extraRoles;
+	
+	/**
+	 * 個人ID。<br>
 	 */
 	private String				personalId;
 	
 	/**
-	 * ユーザ名。
+	 * ユーザ名。<br>
 	 */
 	private String				userName;
 	
+	
+	/**
+	 * コンストラクタ。<br>
+	 */
+	public MospUser() {
+		extraRoles = new HashSet<String>();
+	}
 	
 	/**
 	 * ASPユーザーIDを取得する。<br>
@@ -201,6 +237,20 @@ public class MospUser implements Serializable {
 	 */
 	public void setRole(String role) {
 		this.role = role;
+	}
+	
+	/**
+	 * @return extraRoles
+	 */
+	public Set<String> getExtraRoles() {
+		return extraRoles;
+	}
+	
+	/**
+	 * @param extraRoles セットする extraRoles
+	 */
+	public void setExtraRoles(Set<String> extraRoles) {
+		this.extraRoles = extraRoles;
 	}
 	
 }

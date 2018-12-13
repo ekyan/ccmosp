@@ -137,6 +137,16 @@ public class MonthUtility {
 	}
 	
 	/**
+	 * 指定年月における最終日を取得する。<br>
+	 * @param targetYear  指定年
+	 * @param targetMonth 指定月
+	 * @return 指定年月における最終日
+	 */
+	public static Date getYearMonthLastDate(int targetYear, int targetMonth) {
+		return getLastDateOfMonth(targetYear, targetMonth);
+	}
+	
+	/**
 	 * 年月指定時の期間の初日を取得する。<br>
 	 * @param targetYear 指定年
 	 * @param targetMonth 指定月
@@ -436,7 +446,7 @@ public class MonthUtility {
 	
 	/**
 	 * 対象日付が含まれる年度を取得する。
-	 * @param date 対象日付	
+	 * @param date 対象日付
 	 * @param mospParams MosP処理情報
 	 * @return 対象日付が含まれる年度
 	 */
@@ -448,6 +458,18 @@ public class MonthUtility {
 		// 年月を取得
 		int year = DateUtility.getYear(targetYearMonth);
 		int month = DateUtility.getMonth(targetYearMonth);
+		// 対象年月が含まれる年度を取得
+		return getFiscalYear(fiscalStartMonth, year, month);
+	}
+	
+	/**
+	 * 対象年月が含まれる年度を取得する。
+	 * @param fiscalStartMonth 年度の開始月
+	 * @param year             対象年
+	 * @param month            対象月
+	 * @return 対象年月が含まれる年度
+	 */
+	public static int getFiscalYear(int fiscalStartMonth, int year, int month) {
 		// MosP処理情報から年度の開始月を取得
 		if (month < fiscalStartMonth) {
 			year--;

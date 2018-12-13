@@ -27,11 +27,11 @@ import java.util.List;
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.base.MospParams;
 import jp.mosp.platform.base.PlatformBean;
-import jp.mosp.platform.dao.workflow.WorkflowDaoInterface;
+import jp.mosp.platform.bean.workflow.WorkflowIntegrateBeanInterface;
 import jp.mosp.time.base.TimeBean;
 import jp.mosp.time.bean.SubstituteReferenceBeanInterface;
+import jp.mosp.time.constant.TimeConst;
 import jp.mosp.time.dao.settings.SubstituteDaoInterface;
-import jp.mosp.time.dao.settings.WorkOnHolidayRequestDaoInterface;
 import jp.mosp.time.dto.settings.SubstituteDtoInterface;
 
 /**
@@ -45,14 +45,9 @@ public class SubstituteReferenceBean extends TimeBean implements SubstituteRefer
 	protected SubstituteDaoInterface			dao;
 	
 	/**
-	 * 休日出勤申請DAO。
+	 * ワークフロー参照クラス。<br>
 	 */
-	protected WorkOnHolidayRequestDaoInterface	workOnHolidayRequestDao;
-	
-	/**
-	 * ワークフローDAO。
-	 */
-	protected WorkflowDaoInterface				workflowDao;
+	protected WorkflowIntegrateBeanInterface	workflow;
 	
 	
 	/**
@@ -74,14 +69,22 @@ public class SubstituteReferenceBean extends TimeBean implements SubstituteRefer
 	@Override
 	public void initBean() throws MospException {
 		dao = (SubstituteDaoInterface)createDao(SubstituteDaoInterface.class);
-		workOnHolidayRequestDao = (WorkOnHolidayRequestDaoInterface)createDao(WorkOnHolidayRequestDaoInterface.class);
-		workflowDao = (WorkflowDaoInterface)createDao(WorkflowDaoInterface.class);
+		workflow = (WorkflowIntegrateBeanInterface)createBean(WorkflowIntegrateBeanInterface.class);
 	}
 	
 	@Override
-	public List<SubstituteDtoInterface> getSubstituteList(String personalId, Date workDate, int timesWork)
-			throws MospException {
-		return dao.findForList(personalId, workDate, timesWork);
+	public SubstituteDtoInterface getSubstituteDto(String personalId, Date workDate) throws MospException {
+		// 振出申請リスト取得
+		List<SubstituteDtoInterface> list = dao.findForWorkDate(personalId, workDate);
+		// 振出申請リスト毎に処理
+		for (SubstituteDtoInterface dto : list) {
+			// 取下の場合
+			if (workflow.isWithDrawn(dto.getWorkflow())) {
+				continue;
+			}
+			return dto;
+		}
+		return null;
 	}
 	
 	@Override
@@ -102,7 +105,8 @@ public class SubstituteReferenceBean extends TimeBean implements SubstituteRefer
 	
 	@Override
 	public void chkBasicInfo(String personalId, Date targetDate) throws MospException {
-		initial(personalId, targetDate);
+		// 勤怠基本情報確認
+		initial(personalId, targetDate, TimeConst.CODE_FUNCTION_WORK_HOLIDAY);
 	}
 	
 	@Override

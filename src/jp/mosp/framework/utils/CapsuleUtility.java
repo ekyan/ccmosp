@@ -19,6 +19,8 @@ package jp.mosp.framework.utils;
 
 import java.util.Date;
 
+import jp.mosp.framework.base.BaseDtoInterface;
+
 /**
  * カプセル化の際に用いる機能を提供する。<br><br>
  */
@@ -56,6 +58,18 @@ public final class CapsuleUtility {
 	}
 	
 	/**
+	 * Integer配列の複製を取得する。
+	 * @param array 対象Integer配列
+	 * @return 複製Integer配列
+	 */
+	public static Integer[] getIntegerArrayClone(Integer[] array) {
+		if (array == null) {
+			return new Integer[0];
+		}
+		return array.clone();
+	}
+	
+	/**
 	 * long配列の複製を取得する。
 	 * @param array 対象long配列
 	 * @return 複製long配列
@@ -68,6 +82,18 @@ public final class CapsuleUtility {
 	}
 	
 	/**
+	 * Long配列の複製を取得する。
+	 * @param array 対象long配列
+	 * @return 複製long配列
+	 */
+	public static Long[] getLongArrayClone(Long[] array) {
+		if (array == null) {
+			return new Long[0];
+		}
+		return array.clone();
+	}
+	
+	/**
 	 * byte配列の複製を取得する。
 	 * @param array 対象byte配列
 	 * @return 複製byte配列
@@ -75,6 +101,42 @@ public final class CapsuleUtility {
 	public static byte[] getByteArrayClone(byte[] array) {
 		if (array == null) {
 			return new byte[0];
+		}
+		return array.clone();
+	}
+	
+	/**
+	 * boolean配列の複製を取得する。
+	 * @param array 対象boolean配列
+	 * @return 複製boolean配列
+	 */
+	public static boolean[] getBooleanArrayClone(boolean[] array) {
+		if (array == null) {
+			return new boolean[0];
+		}
+		return array.clone();
+	}
+	
+	/**
+	 * BaseDtoInterface配列の複製を取得する。
+	 * @param array 対象BaseDtoInterface配列
+	 * @return 複製BaseDtoInterface配列
+	 */
+	public static BaseDtoInterface[] getDtoArrayClone(BaseDtoInterface[] array) {
+		if (array == null) {
+			return new BaseDtoInterface[0];
+		}
+		return array.clone();
+	}
+	
+	/**
+	 * 日付列配列の複製を取得する。
+	 * @param array 対象日付列配列
+	 * @return 複製日付列配列
+	 */
+	public static Date[] getDateArrayClone(Date[] array) {
+		if (array == null) {
+			return new Date[0];
 		}
 		return array.clone();
 	}
@@ -103,4 +165,15 @@ public final class CapsuleUtility {
 		return array.clone();
 	}
 	
+	/**
+	 * 文字列配列の複製を取得する。
+	 * @param array 対象文字列配列
+	 * @return 複製文字列配列
+	 */
+	public static String[][][] getStringArrayClone(String[][][] array) {
+		if (array == null) {
+			return new String[0][0][0];
+		}
+		return array.clone();
+	}
 }

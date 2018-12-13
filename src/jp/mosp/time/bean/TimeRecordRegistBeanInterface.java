@@ -39,6 +39,13 @@ public interface TimeRecordRegistBeanInterface {
 	void insert(TimeRecordDtoInterface dto) throws MospException;
 	
 	/**
+	 * 履歴更新を行う。<br>
+	 * @param dto 対象DTO
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 */
+	void update(TimeRecordDtoInterface dto) throws MospException;
+	
+	/**
 	 * トランザクションをコミットする。<br>
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */

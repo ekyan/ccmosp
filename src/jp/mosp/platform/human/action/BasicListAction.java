@@ -309,8 +309,8 @@ public class BasicListAction extends PlatformHumanAction {
 		vo.setAryPosition(new String[0]);
 		vo.setArySection(new String[0]);
 		vo.setAryPost(new String[0]);
-		vo.setNeedDeleteBasciHistory(mospParams
-			.getApplicationPropertyBool(PlatformConst.APP_HISTORY_BASIC_DELETE_BUTTON));
+		vo.setNeedDeleteBasciHistory(
+				mospParams.getApplicationPropertyBool(PlatformConst.APP_HISTORY_BASIC_DELETE_BUTTON));
 		vo.setNeedPost(mospParams.getApplicationPropertyBool(PlatformConst.APP_ADD_USE_POST));
 	}
 	

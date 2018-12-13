@@ -36,6 +36,8 @@ public class SubordinateListVo extends TimeSettingVo {
 	private String				pltSearchPosition;
 	private String				pltSearchApproval;
 	private String				pltSearchCalc;
+	// 申請者・部下検索プルダウン
+	private String				pltSearchHumanType;
 	
 	private String[]			aryLblEmployeeCode;
 	private String[]			aryLblEmployeeName;
@@ -59,42 +61,6 @@ public class SubordinateListVo extends TimeSettingVo {
 	private String[]			aryLblCorrection;
 	private String[]			aryOvertimeOutStyle;
 	
-	private String				lblTotalWork;
-	private String				lblTotalRest;
-	private String				lblTotalPrivate;
-	private String				lblTotalLate;
-	private String				lblTotalLeaveEarly;
-	private String				lblTotalLateLeaveEarly;
-	private String				lblTotalOverTimeIn;
-	private String				lblTotalOverTimeOut;
-	private String				lblTotalWorkOnHoliday;
-	private String				lblTotalLateNight;
-	private String				lblTimesWork;
-	private String				lblTimesLate;
-	private String				lblTimesLeaveEarly;
-	private String				lblTimesOverTimeWork;
-	private String				lblTimesWorkOnHoliday;
-	private String				lblTimesHoliday;
-	private String				lblTimesLegalHoliday;
-	private String				lblTimesSpecificHoliday;
-	private String				lblTimesPaidHoliday;
-	private String				lblTimesPaidHoloidayTime;
-	private String				lblTimesSpecialHoloiday;
-	private String				lblTimesOtherHoloiday;
-	private String				lblTimesSubstitute;
-	private String				lblTimesSubHoliday;
-	private String				lblTimesAbsence;
-	private String				lblTimesAllowance1;
-	private String				lblTimesAllowance2;
-	private String				lblTimesAllowance3;
-	private String				lblTimesAllowance4;
-	private String				lblTimesAllowance5;
-	private String				lblTimesAllowance6;
-	private String				lblTimesAllowance7;
-	private String				lblTimesAllowance8;
-	private String				lblTimesAllowance9;
-	private String				lblTimesAllowance10;
-	
 	private String[][]			aryPltRequestYear;
 	private String[][]			aryPltRequestMonth;
 	private String[][]			aryPltWorkPlace;
@@ -103,12 +69,15 @@ public class SubordinateListVo extends TimeSettingVo {
 	private String[][]			aryPltPosition;
 	private String[][]			aryPltApproval;
 	private String[][]			aryPltCalc;
+	private String[][]			aryPltHumanType;
 	
 	private String[]			claApploval;
 	private String[]			claCalc;
-	private String[]			aryPersonalId;
 	
 	private boolean				jsSearchConditionRequired;
+	
+	// 未承認検索項目：前日チェックボックス
+	private String				ckbYesterday;
 	
 	/**
 	 * 表示コマンド。<br>
@@ -187,6 +156,13 @@ public class SubordinateListVo extends TimeSettingVo {
 	 */
 	public String getPltSearchCalc() {
 		return pltSearchCalc;
+	}
+	
+	/**
+	 * @return pltSearchHumanType
+	 */
+	public String getPltSearchHumanType() {
+		return pltSearchHumanType;
 	}
 	
 	/**
@@ -365,251 +341,6 @@ public class SubordinateListVo extends TimeSettingVo {
 	}
 	
 	/**
-	 * @return lblTotalWork
-	 */
-	public String getLblTotalWork() {
-		return lblTotalWork;
-	}
-	
-	/**
-	 * @return lblTotalRest
-	 */
-	public String getLblTotalRest() {
-		return lblTotalRest;
-	}
-	
-	/**
-	 * @return lblTotalPrivate
-	 */
-	public String getLblTotalPrivate() {
-		return lblTotalPrivate;
-	}
-	
-	/**
-	 * @return lblTotalLate
-	 */
-	public String getLblTotalLate() {
-		return lblTotalLate;
-	}
-	
-	/**
-	 * @return lblTotalLeaveEarly
-	 */
-	public String getLblTotalLeaveEarly() {
-		return lblTotalLeaveEarly;
-	}
-	
-	/**
-	 * @return lblTotalLateLeaveEarly
-	 */
-	public String getLblTotalLateLeaveEarly() {
-		return lblTotalLateLeaveEarly;
-	}
-	
-	/**
-	 * @return lblTotalOverTimeIn
-	 */
-	public String getLblTotalOverTimeIn() {
-		return lblTotalOverTimeIn;
-	}
-	
-	/**
-	 * @return lblTotalOverTimeOut
-	 */
-	public String getLblTotalOverTimeOut() {
-		return lblTotalOverTimeOut;
-	}
-	
-	/**
-	 * @return lblTotalWorkOnHoliday
-	 */
-	public String getLblTotalWorkOnHoliday() {
-		return lblTotalWorkOnHoliday;
-	}
-	
-	/**
-	 * @return lblTotalLateNight
-	 */
-	public String getLblTotalLateNight() {
-		return lblTotalLateNight;
-	}
-	
-	/**
-	 * @return lblTimesWork
-	 */
-	public String getLblTimesWork() {
-		return lblTimesWork;
-	}
-	
-	/**
-	 * @return lblTimesLate
-	 */
-	public String getLblTimesLate() {
-		return lblTimesLate;
-	}
-	
-	/**
-	 * @return lblTimesLeaveEarly
-	 */
-	public String getLblTimesLeaveEarly() {
-		return lblTimesLeaveEarly;
-	}
-	
-	/**
-	 * @return lblTimesOverTimeWork
-	 */
-	public String getLblTimesOverTimeWork() {
-		return lblTimesOverTimeWork;
-	}
-	
-	/**
-	 * @return lblTimesWorkOnHoliday
-	 */
-	public String getLblTimesWorkOnHoliday() {
-		return lblTimesWorkOnHoliday;
-	}
-	
-	/**
-	 * @return lblTimesHoliday
-	 */
-	public String getLblTimesHoliday() {
-		return lblTimesHoliday;
-	}
-	
-	/**
-	 * @return lblTimesLegalHoliday
-	 */
-	public String getLblTimesLegalHoliday() {
-		return lblTimesLegalHoliday;
-	}
-	
-	/**
-	 * @return lblTimesSpecificHoliday
-	 */
-	public String getLblTimesSpecificHoliday() {
-		return lblTimesSpecificHoliday;
-	}
-	
-	/**
-	 * @return lblTimesPaidHoliday
-	 */
-	public String getLblTimesPaidHoliday() {
-		return lblTimesPaidHoliday;
-	}
-	
-	/**
-	 * @return lblTimesPaidHoloidayTime
-	 */
-	public String getLblTimesPaidHoloidayTime() {
-		return lblTimesPaidHoloidayTime;
-	}
-	
-	/**
-	 * @return lblTimesSpecialHoloiday
-	 */
-	public String getLblTimesSpecialHoloiday() {
-		return lblTimesSpecialHoloiday;
-	}
-	
-	/**
-	 * @return lblTimesOtherHoloiday
-	 */
-	public String getLblTimesOtherHoloiday() {
-		return lblTimesOtherHoloiday;
-	}
-	
-	/**
-	 * @return lblTimesSubstitute
-	 */
-	public String getLblTimesSubstitute() {
-		return lblTimesSubstitute;
-	}
-	
-	/**
-	 * @return lblTimesSubHoliday
-	 */
-	public String getLblTimesSubHoliday() {
-		return lblTimesSubHoliday;
-	}
-	
-	/**
-	 * @return lblTimesAbsence
-	 */
-	public String getLblTimesAbsence() {
-		return lblTimesAbsence;
-	}
-	
-	/**
-	 * @return lblTimesAllowance1
-	 */
-	public String getLblTimesAllowance1() {
-		return lblTimesAllowance1;
-	}
-	
-	/**
-	 * @return lblTimesAllowance2
-	 */
-	public String getLblTimesAllowance2() {
-		return lblTimesAllowance2;
-	}
-	
-	/**
-	 * @return lblTimesAllowance3
-	 */
-	public String getLblTimesAllowance3() {
-		return lblTimesAllowance3;
-	}
-	
-	/**
-	 * @return lblTimesAllowance4
-	 */
-	public String getLblTimesAllowance4() {
-		return lblTimesAllowance4;
-	}
-	
-	/**
-	 * @return lblTimesAllowance5
-	 */
-	public String getLblTimesAllowance5() {
-		return lblTimesAllowance5;
-	}
-	
-	/**
-	 * @return lblTimesAllowance6
-	 */
-	public String getLblTimesAllowance6() {
-		return lblTimesAllowance6;
-	}
-	
-	/**
-	 * @return lblTimesAllowance7
-	 */
-	public String getLblTimesAllowance7() {
-		return lblTimesAllowance7;
-	}
-	
-	/**
-	 * @return lblTimesAllowance8
-	 */
-	public String getLblTimesAllowance8() {
-		return lblTimesAllowance8;
-	}
-	
-	/**
-	 * @return lblTimesAllowance9
-	 */
-	public String getLblTimesAllowance9() {
-		return lblTimesAllowance9;
-	}
-	
-	/**
-	 * @return lblTimesAllowance10
-	 */
-	public String getLblTimesAllowance10() {
-		return lblTimesAllowance10;
-	}
-	
-	/**
 	 * @return aryPltRequestYear
 	 */
 	public String[][] getAryPltRequestYear() {
@@ -663,6 +394,13 @@ public class SubordinateListVo extends TimeSettingVo {
 	 */
 	public String[][] getAryPltCalc() {
 		return getStringArrayClone(aryPltCalc);
+	}
+	
+	/**
+	 * @return aryPltHumanType
+	 */
+	public String[][] getAryPltHumanType() {
+		return getStringArrayClone(aryPltHumanType);
 	}
 	
 	/**
@@ -734,6 +472,13 @@ public class SubordinateListVo extends TimeSettingVo {
 	 */
 	public void setPltSearchCalc(String pltSearchCalc) {
 		this.pltSearchCalc = pltSearchCalc;
+	}
+	
+	/**
+	 * @param pltSearchHumanType セットする pltSearchHumanType
+	 */
+	public void setPltSearchHumanType(String pltSearchHumanType) {
+		this.pltSearchHumanType = pltSearchHumanType;
 	}
 	
 	/**
@@ -880,252 +625,7 @@ public class SubordinateListVo extends TimeSettingVo {
 	 * @param aryOvertimeOutStyle セットする aryOvertimeOutStyle
 	 */
 	public void setAryOvertimeOutStyle(String[] aryOvertimeOutStyle) {
-		this.aryOvertimeOutStyle = aryOvertimeOutStyle;
-	}
-	
-	/**
-	 * @param lblTotalWork セットする lblTotalWork
-	 */
-	public void setLblTotalWork(String lblTotalWork) {
-		this.lblTotalWork = lblTotalWork;
-	}
-	
-	/**
-	 * @param lblTotalRest セットする lblTotalRest
-	 */
-	public void setLblTotalRest(String lblTotalRest) {
-		this.lblTotalRest = lblTotalRest;
-	}
-	
-	/**
-	 * @param lblTotalPrivate セットする lblTotalPrivate
-	 */
-	public void setLblTotalPrivate(String lblTotalPrivate) {
-		this.lblTotalPrivate = lblTotalPrivate;
-	}
-	
-	/**
-	 * @param lblTotalLate セットする lblTotalLate
-	 */
-	public void setLblTotalLate(String lblTotalLate) {
-		this.lblTotalLate = lblTotalLate;
-	}
-	
-	/**
-	 * @param lblTotalLeaveEarly セットする lblTotalLeaveEarly
-	 */
-	public void setLblTotalLeaveEarly(String lblTotalLeaveEarly) {
-		this.lblTotalLeaveEarly = lblTotalLeaveEarly;
-	}
-	
-	/**
-	 * @param lblTotalLateLeaveEarly セットする lblTotalLateLeaveEarly
-	 */
-	public void setLblTotalLateLeaveEarly(String lblTotalLateLeaveEarly) {
-		this.lblTotalLateLeaveEarly = lblTotalLateLeaveEarly;
-	}
-	
-	/**
-	 * @param lblTotalOverTimeIn セットする lblTotalOverTimeIn
-	 */
-	public void setLblTotalOverTimeIn(String lblTotalOverTimeIn) {
-		this.lblTotalOverTimeIn = lblTotalOverTimeIn;
-	}
-	
-	/**
-	 * @param lblTotalOverTimeOut セットする lblTotalOverTimeOut
-	 */
-	public void setLblTotalOverTimeOut(String lblTotalOverTimeOut) {
-		this.lblTotalOverTimeOut = lblTotalOverTimeOut;
-	}
-	
-	/**
-	 * @param lblTotalWorkOnHoliday セットする lblTotalWorkOnHoliday
-	 */
-	public void setLblTotalWorkOnHoliday(String lblTotalWorkOnHoliday) {
-		this.lblTotalWorkOnHoliday = lblTotalWorkOnHoliday;
-	}
-	
-	/**
-	 * @param lblTotalLateNight セットする lblTotalLateNight
-	 */
-	public void setLblTotalLateNight(String lblTotalLateNight) {
-		this.lblTotalLateNight = lblTotalLateNight;
-	}
-	
-	/**
-	 * @param lblTimesWork セットする lblTimesWork
-	 */
-	public void setLblTimesWork(String lblTimesWork) {
-		this.lblTimesWork = lblTimesWork;
-	}
-	
-	/**
-	 * @param lblTimesLate セットする lblTimesLate
-	 */
-	public void setLblTimesLate(String lblTimesLate) {
-		this.lblTimesLate = lblTimesLate;
-	}
-	
-	/**
-	 * @param lblTimesLeaveEarly セットする lblTimesLeaveEarly
-	 */
-	public void setLblTimesLeaveEarly(String lblTimesLeaveEarly) {
-		this.lblTimesLeaveEarly = lblTimesLeaveEarly;
-	}
-	
-	/**
-	 * @param lblTimesOverTimeWork セットする lblTimesOverTimeWork
-	 */
-	public void setLblTimesOverTimeWork(String lblTimesOverTimeWork) {
-		this.lblTimesOverTimeWork = lblTimesOverTimeWork;
-	}
-	
-	/**
-	 * @param lblTimesWorkOnHoliday セットする lblTimesWorkOnHoliday
-	 */
-	public void setLblTimesWorkOnHoliday(String lblTimesWorkOnHoliday) {
-		this.lblTimesWorkOnHoliday = lblTimesWorkOnHoliday;
-	}
-	
-	/**
-	 * @param lblTimesHoliday セットする lblTimesHoliday
-	 */
-	public void setLblTimesHoliday(String lblTimesHoliday) {
-		this.lblTimesHoliday = lblTimesHoliday;
-	}
-	
-	/**
-	 * @param lblTimesLegalHoliday セットする lblTimesLegalHoliday
-	 */
-	public void setLblTimesLegalHoliday(String lblTimesLegalHoliday) {
-		this.lblTimesLegalHoliday = lblTimesLegalHoliday;
-	}
-	
-	/**
-	 * @param lblTimesSpecificHoliday セットする lblTimesSpecificHoliday
-	 */
-	public void setLblTimesSpecificHoliday(String lblTimesSpecificHoliday) {
-		this.lblTimesSpecificHoliday = lblTimesSpecificHoliday;
-	}
-	
-	/**
-	 * @param lblTimesPaidHoliday セットする lblTimesPaidHoliday
-	 */
-	public void setLblTimesPaidHoliday(String lblTimesPaidHoliday) {
-		this.lblTimesPaidHoliday = lblTimesPaidHoliday;
-	}
-	
-	/**
-	 * @param lblTimesPaidHoloidayTime セットする lblTimesPaidHoloidayTime
-	 */
-	public void setLblTimesPaidHoloidayTime(String lblTimesPaidHoloidayTime) {
-		this.lblTimesPaidHoloidayTime = lblTimesPaidHoloidayTime;
-	}
-	
-	/**
-	 * @param lblTimesSpecialHoloiday セットする lblTimesSpecialHoloiday
-	 */
-	public void setLblTimesSpecialHoloiday(String lblTimesSpecialHoloiday) {
-		this.lblTimesSpecialHoloiday = lblTimesSpecialHoloiday;
-	}
-	
-	/**
-	 * @param lblTimesOtherHoloiday セットする lblTimesOtherHoloiday
-	 */
-	public void setLblTimesOtherHoloiday(String lblTimesOtherHoloiday) {
-		this.lblTimesOtherHoloiday = lblTimesOtherHoloiday;
-	}
-	
-	/**
-	 * @param lblTimesSubstitute セットする lblTimesSubstitute
-	 */
-	public void setLblTimesSubstitute(String lblTimesSubstitute) {
-		this.lblTimesSubstitute = lblTimesSubstitute;
-	}
-	
-	/**
-	 * @param lblTimesSubHoliday セットする lblTimesSubHoliday
-	 */
-	public void setLblTimesSubHoliday(String lblTimesSubHoliday) {
-		this.lblTimesSubHoliday = lblTimesSubHoliday;
-	}
-	
-	/**
-	 * @param lblTimesAbsence セットする lblTimesAbsence
-	 */
-	public void setLblTimesAbsence(String lblTimesAbsence) {
-		this.lblTimesAbsence = lblTimesAbsence;
-	}
-	
-	/**
-	 * @param lblTimesAllowance1 セットする lblTimesAllowance1
-	 */
-	public void setLblTimesAllowance1(String lblTimesAllowance1) {
-		this.lblTimesAllowance1 = lblTimesAllowance1;
-	}
-	
-	/**
-	 * @param lblTimesAllowance2 セットする lblTimesAllowance2
-	 */
-	public void setLblTimesAllowance2(String lblTimesAllowance2) {
-		this.lblTimesAllowance2 = lblTimesAllowance2;
-	}
-	
-	/**
-	 * @param lblTimesAllowance3 セットする lblTimesAllowance3
-	 */
-	public void setLblTimesAllowance3(String lblTimesAllowance3) {
-		this.lblTimesAllowance3 = lblTimesAllowance3;
-	}
-	
-	/**
-	 * @param lblTimesAllowance4 セットする lblTimesAllowance4
-	 */
-	public void setLblTimesAllowance4(String lblTimesAllowance4) {
-		this.lblTimesAllowance4 = lblTimesAllowance4;
-	}
-	
-	/**
-	 * @param lblTimesAllowance5 セットする lblTimesAllowance5
-	 */
-	public void setLblTimesAllowance5(String lblTimesAllowance5) {
-		this.lblTimesAllowance5 = lblTimesAllowance5;
-	}
-	
-	/**
-	 * @param lblTimesAllowance6 セットする lblTimesAllowance6
-	 */
-	public void setLblTimesAllowance6(String lblTimesAllowance6) {
-		this.lblTimesAllowance6 = lblTimesAllowance6;
-	}
-	
-	/**
-	 * @param lblTimesAllowance7 セットする lblTimesAllowance7
-	 */
-	public void setLblTimesAllowance7(String lblTimesAllowance7) {
-		this.lblTimesAllowance7 = lblTimesAllowance7;
-	}
-	
-	/**
-	 * @param lblTimesAllowance8 セットする lblTimesAllowance8
-	 */
-	public void setLblTimesAllowance8(String lblTimesAllowance8) {
-		this.lblTimesAllowance8 = lblTimesAllowance8;
-	}
-	
-	/**
-	 * @param lblTimesAllowance9 セットする lblTimesAllowance9
-	 */
-	public void setLblTimesAllowance9(String lblTimesAllowance9) {
-		this.lblTimesAllowance9 = lblTimesAllowance9;
-	}
-	
-	/**
-	 * @param lblTimesAllowance10 セットする lblTimesAllowance10
-	 */
-	public void setLblTimesAllowance10(String lblTimesAllowance10) {
-		this.lblTimesAllowance10 = lblTimesAllowance10;
+		this.aryOvertimeOutStyle = getStringArrayClone(aryOvertimeOutStyle);
 	}
 	
 	/**
@@ -1185,6 +685,13 @@ public class SubordinateListVo extends TimeSettingVo {
 	}
 	
 	/**
+	 * @param aryPltHumanType セットする aryPltHumanType
+	 */
+	public void setAryPltHumanType(String[][] aryPltHumanType) {
+		this.aryPltHumanType = getStringArrayClone(aryPltHumanType);
+	}
+	
+	/**
 	 * @param idx インデックス
 	 * @return claApploval
 	 */
@@ -1215,21 +722,6 @@ public class SubordinateListVo extends TimeSettingVo {
 	}
 	
 	/**
-	 * @param idx インデックス
-	 * @return personalId
-	 */
-	public String getAryPersonalId(int idx) {
-		return aryPersonalId[idx];
-	}
-	
-	/**
-	 * @param aryPersonalId セットする aryPersonalId
-	 */
-	public void setAryPersonalId(String[] aryPersonalId) {
-		this.aryPersonalId = getStringArrayClone(aryPersonalId);
-	}
-	
-	/**
 	 * @return jsSearchConditionRequired
 	 */
 	public boolean isJsSearchConditionRequired() {
@@ -1255,6 +747,20 @@ public class SubordinateListVo extends TimeSettingVo {
 	 */
 	public void setShowCommand(String showCommand) {
 		this.showCommand = showCommand;
+	}
+	
+	/**
+	 * @return ckbYesterday
+	 */
+	public String getCkbYesterday() {
+		return ckbYesterday;
+	}
+	
+	/**
+	 * @param ckbYesterday セットする ckbYesterday
+	 */
+	public void setCkbYesterday(String ckbYesterday) {
+		this.ckbYesterday = ckbYesterday;
 	}
 	
 }

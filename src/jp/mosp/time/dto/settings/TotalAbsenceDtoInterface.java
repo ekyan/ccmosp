@@ -83,4 +83,14 @@ public interface TotalAbsenceDtoInterface extends BaseDtoInterface {
 	 * @param times セットする 欠勤日数。
 	 */
 	void setTimes(double times);
+	
+	/**
+	 * @return 欠勤時間数。
+	 */
+	int getHours();
+	
+	/**
+	 * @param hours セットする 欠勤時間数。
+	 */
+	void setHours(int hours);
 }

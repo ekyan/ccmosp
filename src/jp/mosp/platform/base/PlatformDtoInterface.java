@@ -17,26 +17,10 @@
  */
 package jp.mosp.platform.base;
 
-import java.util.Date;
-
-import jp.mosp.framework.base.BaseDtoInterface;
-
 /**
  * プラットフォーム共通DTOインターフェース。<br>
  */
-public interface PlatformDtoInterface extends BaseDtoInterface {
-	
-	/**
-	 * 有効日を取得する。
-	 * @return 有効日
-	 */
-	Date getActivateDate();
-	
-	/**
-	 * 有効日を設定する。
-	 * @param activateDate セットする有効日
-	 */
-	void setActivateDate(Date activateDate);
+public interface PlatformDtoInterface extends ActivateDtoInterface {
 	
 	/**
 	 * 無効フラグを取得する。

@@ -63,10 +63,6 @@ public class TmmLimitStandardDto extends BaseDto implements LimitStandardDtoInte
 	 * 時間外警告時間
 	 */
 	private int					warningTime;
-	/**
-	 * 無効フラグ
-	 */
-	private int					inactivateFlag;
 	
 	
 	@Override
@@ -135,18 +131,8 @@ public class TmmLimitStandardDto extends BaseDto implements LimitStandardDtoInte
 	}
 	
 	@Override
-	public int getInactivateFlag() {
-		return inactivateFlag;
-	}
-	
-	@Override
 	public void setActivateDate(Date activateDate) {
 		this.activateDate = getDateClone(activateDate);
-	}
-	
-	@Override
-	public void setInactivateFlag(int inactivateFlag) {
-		this.inactivateFlag = inactivateFlag;
 	}
 	
 }

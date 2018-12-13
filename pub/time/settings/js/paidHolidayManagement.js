@@ -35,14 +35,14 @@ function onLoadExtra() {
 		setReadOnly("txtSearchActivateMonth", true);
 		setReadOnly("txtSearchActivateDay", true);
 		// 検索ボタン利用可
-		setDisabled("btnSearch", false);
+		setReadOnly("btnSearch", false);
 	} else {
 		// 有効日編集可
 		setReadOnly("txtSearchActivateYear", false);
 		setReadOnly("txtSearchActivateMonth", false);
 		setReadOnly("txtSearchActivateDay", false);
 		// 検索ボタン利用不可
-		setDisabled("btnSearch", true);
+		setReadOnly("btnSearch", true);
 	}
 }
 

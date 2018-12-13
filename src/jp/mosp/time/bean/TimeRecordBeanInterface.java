@@ -1,3 +1,20 @@
+/*
+ * MosP - Mind Open Source Project    http://www.mosp.jp/
+ * Copyright (C) MIND Co., Ltd.       http://www.e-mind.co.jp/
+ * 
+ * This program is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU Affero General Public License
+ * as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package jp.mosp.time.bean;
 
 import java.util.Date;
@@ -20,9 +37,10 @@ public interface TimeRecordBeanInterface {
 	 * <br>
 	 * @param personalId 対象個人ID
 	 * @param recordTime 打刻日時
+	 * @return recordTime 打刻日時
 	 * @throws MospException インスタンスの取得及びSQL実行に失敗した場合
 	 */
-	void recordStartWork(String personalId, Date recordTime) throws MospException;
+	Date recordStartWork(String personalId, Date recordTime) throws MospException;
 	
 	/**
 	 * 終業を打刻する。<br>
@@ -43,9 +61,10 @@ public interface TimeRecordBeanInterface {
 	 * <br>
 	 * @param personalId 対象個人ID
 	 * @param recordTime 打刻日時
+	 * @return recordTime 打刻日時
 	 * @throws MospException インスタンスの取得及びSQL実行に失敗した場合
 	 */
-	void recordEndWork(String personalId, Date recordTime) throws MospException;
+	Date recordEndWork(String personalId, Date recordTime) throws MospException;
 	
 	/**
 	 * 休憩入を打刻する。<br>
@@ -53,9 +72,10 @@ public interface TimeRecordBeanInterface {
 	 * <br>
 	 * @param personalId 対象個人ID
 	 * @param recordTime 打刻日時
+	 * @return recordTime 打刻日時
 	 * @throws MospException インスタンスの取得及びSQL実行に失敗した場合
 	 */
-	void recordStartRest(String personalId, Date recordTime) throws MospException;
+	Date recordStartRest(String personalId, Date recordTime) throws MospException;
 	
 	/**
 	 * 休憩戻を打刻する。<br>
@@ -63,9 +83,10 @@ public interface TimeRecordBeanInterface {
 	 * <br>
 	 * @param personalId 対象個人ID
 	 * @param recordTime 打刻日時
+	 * @return recordTime 打刻日時
 	 * @throws MospException インスタンスの取得及びSQL実行に失敗した場合
 	 */
-	void recordEndRest(String personalId, Date recordTime) throws MospException;
+	Date recordEndRest(String personalId, Date recordTime) throws MospException;
 	
 	/**
 	 * 定時終業を打刻する。<br>
@@ -84,9 +105,10 @@ public interface TimeRecordBeanInterface {
 	 * <br>
 	 * @param personalId 対象個人ID
 	 * @param recordTime 打刻日時
+	 * @return recordTime 打刻日時
 	 * @throws MospException インスタンスの取得及びSQL実行に失敗した場合
 	 */
-	void recordRegularEnd(String personalId, Date recordTime) throws MospException;
+	Date recordRegularEnd(String personalId, Date recordTime) throws MospException;
 	
 	/**
 	 * 残業有終業を打刻する。<br>
@@ -120,49 +142,55 @@ public interface TimeRecordBeanInterface {
 	 * <br>
 	 * @param personalId 対象個人ID
 	 * @param recordTime 打刻日時
+	 * @return recordTime 打刻日時
 	 * @throws MospException インスタンスの取得及びSQL実行に失敗した場合
 	 */
-	void recordRegularWork(String personalId, Date recordTime) throws MospException;
+	Date recordRegularWork(String personalId, Date recordTime) throws MospException;
 	
 	/**
 	 * 始業を打刻する。<br>
 	 * ログインユーザの個人ID及びシステム日付で、打刻する。<br>
 	 * 詳細は、{@link TimeRecordBeanInterface#recordStartWork(String, Date)}参照。<br>
+	 * @return 打刻日時(秒含む)<br>
 	 * @throws MospException インスタンスの取得及びSQL実行に失敗した場合
 	 */
-	void recordStartWork() throws MospException;
+	Date recordStartWork() throws MospException;
 	
 	/**
 	 * 終業を打刻する。<br>
 	 * ログインユーザの個人ID及びシステム日付で、打刻する。<br>
 	 * 詳細は、{@link TimeRecordBeanInterface#recordEndWork(String, Date)}参照。<br>
+	 * @return 打刻日時(秒含む)<br>
 	 * @throws MospException インスタンスの取得及びSQL実行に失敗した場合
 	 */
-	void recordEndWork() throws MospException;
+	Date recordEndWork() throws MospException;
 	
 	/**
 	 * 休憩入を打刻する。<br>
 	 * ログインユーザの個人ID及びシステム日付で、打刻する。<br>
 	 * 詳細は、{@link TimeRecordBeanInterface#recordStartRest(String, Date)}参照。<br>
+	 * @return 打刻日時(秒含む)<br>
 	 * @throws MospException インスタンスの取得及びSQL実行に失敗した場合
 	 */
-	void recordStartRest() throws MospException;
+	Date recordStartRest() throws MospException;
 	
 	/**
 	 * 休憩戻を打刻する。<br>
 	 * ログインユーザの個人ID及びシステム日付で、打刻する。<br>
 	 * 詳細は、{@link TimeRecordBeanInterface#recordEndRest(String, Date)}参照。<br>
+	 * @return 打刻日時(秒含む)<br>
 	 * @throws MospException インスタンスの取得及びSQL実行に失敗した場合
 	 */
-	void recordEndRest() throws MospException;
+	Date recordEndRest() throws MospException;
 	
 	/**
 	 * 定時終業を打刻する。<br>
 	 * ログインユーザの個人ID及びシステム日付で、打刻する。<br>
 	 * 詳細は、{@link TimeRecordBeanInterface#recordRegularEnd(String, Date)}参照。<br>
+	 * @return 打刻日時(秒含む)<br>
 	 * @throws MospException インスタンスの取得及びSQL実行に失敗した場合
 	 */
-	void recordRegularEnd() throws MospException;
+	Date recordRegularEnd() throws MospException;
 	
 	/**
 	 * 残業有終業を打刻する。<br>
@@ -176,8 +204,9 @@ public interface TimeRecordBeanInterface {
 	 * 出勤を打刻する。<br>
 	 * ログインユーザの個人ID及びシステム日付で、打刻する。<br>
 	 * 詳細は、{@link TimeRecordBeanInterface#recordRegularWork(String, Date)}参照。<br>
+	 * @return 打刻日時(秒含む)<br>
 	 * @throws MospException インスタンスの取得及びSQL実行に失敗した場合
 	 */
-	void recordRegularWork() throws MospException;
+	Date recordRegularWork() throws MospException;
 	
 }

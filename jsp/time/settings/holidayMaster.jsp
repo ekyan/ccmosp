@@ -28,6 +28,7 @@ import = "jp.mosp.framework.utils.HtmlUtility"
 import = "jp.mosp.platform.comparator.base.ActivateDateComparator"
 import = "jp.mosp.platform.comparator.base.InactivateComparator"
 import = "jp.mosp.platform.constant.PlatformConst"
+import = "jp.mosp.platform.utils.PlatformNamingUtility"
 import = "jp.mosp.platform.utils.PlatformUtility"
 import = "jp.mosp.time.comparator.settings.HolidayMasterContinuousAcquisitionComparator"
 import = "jp.mosp.time.comparator.settings.HolidayMasterHolidayAbbrComparator"
@@ -73,26 +74,26 @@ HolidayMasterVo vo = (HolidayMasterVo)params.getVo();
 						<%= HtmlUtility.getSelectOption(params, TimeConst.CODE_KEY_HOLIDAY_TYPE_MASTER, vo.getPltEditHolidayType(), false) %>
 					</select>
 				</td>
-				<td class="TitleTd"><span class="RequiredLabel">*&nbsp;</span><label for="txtEditHolidayCode"><%= params.getName("Vacation","Code") %></label></td>
+				<td class="TitleTd"><%= HtmlUtility.getRequiredMark() %><label for="txtEditHolidayCode"><%= params.getName("Vacation","Code") %></label></td>
 				<td class="InputTd">
 					<input type="text" class="Code2RequiredTextBox" id="txtEditHolidayCode" name="txtEditHolidayCode" value="<%= HtmlUtility.escapeHTML(vo.getTxtEditHolidayCode()) %>" />
 				</td>
 			</tr>
 			<tr>
 				<td class="TitleTd">
-					<span class="RequiredLabel">*&nbsp;</span><label for="txtEditHolidayName"><%= params.getName("Vacation","Name") %></label>
+					<%= HtmlUtility.getRequiredMark() %><label for="txtEditHolidayName"><%= params.getName("Vacation","Name") %></label>
 				</td>
 				<td class="InputTd">
 					<input type="text" class="Name15RequiredTextBox" id="txtEditHolidayName" name="txtEditHolidayName" value="<%= HtmlUtility.escapeHTML(vo.getTxtEditHolidayName()) %>" />
 				</td>
 				<td class="TitleTd">
-					<span class="RequiredLabel">*&nbsp;</span><label for="txtEditHolidayAbbr"><%= params.getName("Vacation","Abbreviation") %></label>
+					<%= HtmlUtility.getRequiredMark() %><label for="txtEditHolidayAbbr"><%= params.getName("Vacation","Abbreviation") %></label>
 				</td>
 				<td class="InputTd">
 					<input type="text" class="Byte6RequiredTextBox" id="txtEditHolidayAbbr" name="txtEditHolidayAbbr" value="<%= HtmlUtility.escapeHTML(vo.getTxtEditHolidayAbbr()) %>" />
 				</td>
 				<td class="TitleTd">
-					<span class="RequiredLabel">*&nbsp;</span><label for="txtEditHolidayGiving"><%= params.getName("Standard","Giving","Days") %></label>
+					<%= HtmlUtility.getRequiredMark() %><label for="txtEditHolidayGiving"><%= params.getName("Standard","Giving","Days") %></label>
 				</td>
 				<td class="InputTd">
 					<input type="text" class="Numeric4RequiredTextBox" id="txtEditHolidayGiving" name="txtEditHolidayGiving" value="<%= HtmlUtility.escapeHTML(vo.getTxtEditHolidayGiving()) %>" />&nbsp;<%= params.getName("Day") %>
@@ -101,7 +102,7 @@ HolidayMasterVo vo = (HolidayMasterVo)params.getVo();
 			</tr>
 			<tr>
 				<td class="TitleTd">
-					<span class="RequiredLabel">*&nbsp;</span><label for="txtEditHolidayLimit"><%= params.getName("Acquisition","TimeLimit") %></label>
+					<%= HtmlUtility.getRequiredMark() %><label for="txtEditHolidayLimit"><%= params.getName("Acquisition","TimeLimit") %></label>
 				</td>
 				<td class="InputTd">
 					<input type="text" class="Number2RequiredTextBox" id="txtEditHolidayLimitMonth" name="txtEditHolidayLimitMonth" value="<%= HtmlUtility.escapeHTML(vo.getTxtEditHolidayLimitMonth()) %>" />&nbsp;<%= params.getName("Months") %>
@@ -113,14 +114,18 @@ HolidayMasterVo vo = (HolidayMasterVo)params.getVo();
 						<%= HtmlUtility.getSelectOption(params, TimeConst.CODE_KEY_HALF_HOLIDAY_REQUEST, vo.getPltEditHalfHolidayRequest(), false) %>
 					</select>
 				</td>
+				<td class="TitleTd"><span class="RequiredLabel"></span><%= params.getName("Time","Unit","Acquisition") %></td>
+				<td class="InputTd">
+					<%= HtmlUtility.getSelectTag(params, "Name2PullDown", "pltEditHourlyHoliday", "pltEditHourlyHoliday", vo.getPltEditHourlyHoliday(), PlatformConst.CODE_KEY_INACTIVATE_FLAG, false, false) %>
+				</td>
+			</tr>
+			<tr>
 				<td class="TitleTd"><%= params.getName("Continuousness","Acquisition") %></td>
 				<td class="InputTd">
 					<select class="Name2PullDown" id="pltEditContinue" name="pltEditContinue">
 						<%= HtmlUtility.getSelectOption(params, TimeConst.CODE_KEY_CONTINUE, vo.getPltEditContinue(), false) %>
 					</select>
 				</td>
-			</tr>
-			<tr>
 				<td class="TitleTd"><%= params.getName("GoingWork","Rate","Calc") %></td>
 				<td class="InputTd">
 					<select class="Name5PullDown" id="pltEditPaidHolidayCalc" name="pltEditPaidHolidayCalc">
@@ -133,21 +138,21 @@ HolidayMasterVo vo = (HolidayMasterVo)params.getVo();
 						<%= HtmlUtility.getSelectOption(params, TimeConst.CODE_KEY_SALARY_PAY_TYPE, vo.getPltEditSalary(), false) %>
 					</select>
 				</td>
+			</tr>
+			<tr>
 				<td class="TitleTd"><%= params.getName("Reason", "Input") %></td>
 				<td class="InputTd">
 					<select class="Name2PullDown" id="pltEditReasonType" name="pltEditReasonType">
 						<%= HtmlUtility.getSelectOption(params, TimeConst.CODE_KEY_REASON_TYPE, vo.getPltEditReasonType(), false) %>
 					</select>
 				</td>
-			</tr>
-			<tr>
 				<td class="TitleTd"><%= params.getName("Effectiveness","Slash","Inactivate") %></td>
 				<td class="InputTd">
 					<select class="Name2PullDown" id="pltEditInactivate" name="pltEditInactivate">
 						<%= HtmlUtility.getSelectOption(params, PlatformConst.CODE_KEY_INACTIVATE_FLAG, vo.getPltEditInactivate(), false) %>
 					</select>
 				</td>
-				<td class="Blank" colspan="4"></td>
+				<td class="Blank" colspan="2"></td>
 			</tr>
 		</tbody>
 	</table>
@@ -164,13 +169,13 @@ HolidayMasterVo vo = (HolidayMasterVo)params.getVo();
 		<thead>
 			<tr>
 				<th class="ListTableTh" colspan="10">
-					<span class="TitleTh"><%= params.getName("Search") %></span>
+					<span class="TitleTh"><%= PlatformNamingUtility.search(params) %></span>
 				</th>
 			</tr>
 		</thead>
 		<tbody>
 			<tr>
-				<td class="TitleTd"><span class="RequiredLabel">*&nbsp;</span><%= params.getName("ActivateDate") %></td>
+				<td class="TitleTd"><%= HtmlUtility.getRequiredMark() %><%= params.getName("ActivateDate") %></td>
 				<td class="InputTd" colspan="3">
 					<input type="text" class="Number4RequiredTextBox" id="txtSearchActivateYear" name="txtSearchActivateYear" value="<%= HtmlUtility.escapeHTML(vo.getTxtSearchActivateYear()) %>" />
 					<label for="txtSearchActivateYear"><%= params.getName("Year") %></label>
@@ -200,7 +205,7 @@ HolidayMasterVo vo = (HolidayMasterVo)params.getVo();
 	<table class="ButtonTable">
 		<tr>
 			<td class="ButtonTd" id="divSearch">
-				<button type="button" id="btnSearch" class="Name2Button" onclick="submitForm(event, 'divSearch', null, '<%= HolidayMasterAction.CMD_SEARCH %>')"><%= params.getName("Search") %></button>
+				<button type="button" id="btnSearch" class="Name2Button" onclick="submitForm(event, 'divSearch', null, '<%= HolidayMasterAction.CMD_SEARCH %>')"><%= PlatformNamingUtility.search(params) %></button>
 			</td>
 		</tr>
 	</table>

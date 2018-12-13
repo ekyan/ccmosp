@@ -20,6 +20,7 @@
  */
 package jp.mosp.time.bean;
 
+import java.util.Date;
 import java.util.List;
 
 import jp.mosp.framework.base.MospException;
@@ -38,6 +39,19 @@ public interface TotalTimeEmployeeTransactionRegistBeanInterface {
 	
 	/**
 	 * 仮締を行う。<br>
+	 * <br>
+	 * @param personalId       個人ID
+	 * @param calculationYear  集計年
+	 * @param calculationMonth 集計付
+	 * @param cutoffCode       締日コード
+	 * @param calculationDate  計算年月
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 */
+	void draft(String personalId, int calculationYear, int calculationMonth, String cutoffCode, Date calculationDate)
+			throws MospException;
+	
+	/**
+	 * 仮締を行う。<br>
 	 * @param personalIdList 個人IDリスト
 	 * @param calculationYear 集計年
 	 * @param calculationMonth 集計月
@@ -45,17 +59,6 @@ public interface TotalTimeEmployeeTransactionRegistBeanInterface {
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
 	void draft(List<String> personalIdList, int calculationYear, int calculationMonth, String cutoffCode)
-			throws MospException;
-	
-	/**
-	 * 確定を行う。<br>
-	 * @param personalIdList 個人IDリスト
-	 * @param calculationYear 集計年
-	 * @param calculationMonth 集計月
-	 * @param cutoffCode 締日コード
-	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
-	 */
-	void regist(List<String> personalIdList, int calculationYear, int calculationMonth, String cutoffCode)
 			throws MospException;
 	
 	/**
@@ -67,17 +70,6 @@ public interface TotalTimeEmployeeTransactionRegistBeanInterface {
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
 	void draftRelease(List<String> personalIdList, int calculationYear, int calculationMonth, String cutoffCode)
-			throws MospException;
-	
-	/**
-	 * 確定解除を行う。<br>
-	 * @param personalIdList 個人IDリスト
-	 * @param calculationYear 集計年
-	 * @param calculationMonth 集計月
-	 * @param cutoffCode 締日コード
-	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
-	 */
-	void registRelease(List<String> personalIdList, int calculationYear, int calculationMonth, String cutoffCode)
 			throws MospException;
 	
 }

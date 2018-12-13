@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 <%@ page
 language = "java"
 pageEncoding = "UTF-8"
-buffer = "256kb"
+buffer = "2048kb"
 autoFlush = "false"
 errorPage = "/jsp/common/error.jsp"
 %><%@ page
@@ -34,7 +34,7 @@ import = "jp.mosp.platform.human.vo.ConcurrentCardVo"
 MospParams params = (MospParams)request.getAttribute(MospConst.ATT_MOSP_PARAMS);
 ConcurrentCardVo vo = (ConcurrentCardVo)params.getVo();
 %>
-<jsp:include page="<%= PlatformHumanConst.PATH_HUMAN_COMMON_INFO_JSP %>" flush="false" />
+<jsp:include page="<%= params.getApplicationProperty(PlatformHumanConst.APP_HUMAN_COMMON_INFO_JSP) %>" flush="false" />
 <div class="List">
 	<table class="ListTable" id="tblNowPosition">
 		<tr>

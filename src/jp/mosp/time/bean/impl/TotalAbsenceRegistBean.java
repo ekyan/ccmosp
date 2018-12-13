@@ -39,7 +39,7 @@ public class TotalAbsenceRegistBean extends PlatformBean implements TotalAbsence
 	/**
 	 * 勤怠集計欠勤データDAOクラス。<br>
 	 */
-	TotalAbsenceDaoInterface	dao;
+	TotalAbsenceDaoInterface dao;
 	
 	
 	/**

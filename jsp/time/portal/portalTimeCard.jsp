@@ -26,6 +26,7 @@ import = "jp.mosp.framework.base.MospParams"
 import = "jp.mosp.framework.constant.MospConst"
 import = "jp.mosp.platform.portal.action.PortalAction"
 import = "jp.mosp.platform.portal.vo.PortalVo"
+import = "jp.mosp.time.constant.TimeConst"
 import = "jp.mosp.time.portal.bean.impl.PortalTimeCardBean"
 %><%
 MospParams params = (MospParams)request.getAttribute(MospConst.ATT_MOSP_PARAMS);
@@ -39,7 +40,7 @@ int restButton = Integer.parseInt(vo.getPortalParameter(PortalTimeCardBean.PRM_R
 <div id="divTimeCard">
 	<table class="Time">
 		<tr>
-			<td class="TimeCardDateTd"><span id="lblTimeCardYear"></span><%= params.getName("Year") %><span id="lblTimeCardMonth"></span><%= params.getName("Month") %><span id="lblTimeCardDate"></span><%= params.getName("Day") %><%= params.getName("FrontParentheses") %><span id="lblTimeCardWeekdays"></span><%= params.getName("BackParentheses") %></td>
+			<td class="TimeCardDateTd"><span id="lblTimeCardDate"></span></td>
 			<td rowspan="2">
 				<table>
 					<tr>
@@ -89,35 +90,50 @@ if (restButton == 1 && timeButton != 4) {
 		</tr>
 		<tr>
 			<td class="TimeCardTimeTd">
-				<span id="lblTimeCardHours" ></span><%= params.getName("SingleColon") %><span id="lblTimeCardMinutes"></span><%= params.getName("SingleColon") %><span id="lblTimeCardSeconds"></span>
+				<span id="lblTimeCardTime"></span>
 			</td>
 		</tr>
 	</table>
 
-
-
-
+<%
+if (params.getApplicationPropertyBool(TimeConst.APP_VIEW_PORTAL_TIME)) {
+%>
 <script language="Javascript">
 <!--
 var timeCardTime = new Date();
 var srvTime = parseInt(jsTime);
 var weeks = new Array('<%= params.getName("SundayAbbr") %>','<%= params.getName("MondayAbbr") %>','<%= params.getName("TuesdayAbbr") %>','<%= params.getName("WednesdayAbbr") %>','<%= params.getName("ThursdayAbbr") %>','<%= params.getName("FridayAbbr") %>','<%= params.getName("SaturdayAbbr") %>');
-function timeCard(){
+function timeCard() {
 	srvTime = srvTime +1000;
 	timeCardTime.setTime(srvTime);
-	setInnerHtml("lblTimeCardYear", timeCardTime.getFullYear());
-	setInnerHtml("lblTimeCardMonth", timeCardZeroSuppress(timeCardTime.getMonth()+1));
-	setInnerHtml("lblTimeCardDate", timeCardZeroSuppress(timeCardTime.getDate()));
-	setInnerHtml("lblTimeCardWeekdays", weeks[timeCardTime.getDay()]);	
-	setInnerHtml("lblTimeCardHours", timeCardZeroSuppress(timeCardTime.getHours()));
-	setInnerHtml("lblTimeCardMinutes", timeCardZeroSuppress(timeCardTime.getMinutes()));
-	setInnerHtml("lblTimeCardSeconds",timeCardZeroSuppress(timeCardTime.getSeconds()));	
+	setInnerHtml("lblTimeCardDate", getDate(timeCardTime));
+	setInnerHtml("lblTimeCardTime", getTime(timeCardTime));
 }
 timeCard();
 window.setInterval(timeCard,1000);
 
+function getDate(date) {
+	return date.getFullYear()
+	+ "<%= params.getName("Year") %>"
+	+ timeCardZeroSuppress(date.getMonth() + 1)
+	+ "<%= params.getName("Month") %>"
+	+ timeCardZeroSuppress(date.getDate())
+	+ "<%= params.getName("Day") %>"
+	+ "<%= params.getName("FrontParentheses") %>"
+	+ weeks[date.getDay()]
+	+ "<%= params.getName("BackParentheses") %>";
+}
+
+function getTime(date) {
+	return timeCardZeroSuppress(date.getHours())
+	+ "<%= params.getName("SingleColon") %>"
+	+ timeCardZeroSuppress(date.getMinutes())
+	+ "<%= params.getName("SingleColon") %>"
+	+ timeCardZeroSuppress(date.getSeconds());
+}
+
 function timeCardZeroSuppress(time) {
-	if (time < 10){
+	if (time < 10) {
 		return "0" + time;
 	}
 	return time;
@@ -125,6 +141,9 @@ function timeCardZeroSuppress(time) {
 //-->
 
 </script>
+<%
+}
+%>
 <script language="Javascript">
 <!--
 
@@ -133,6 +152,6 @@ function applicationCheck() {
 }
 
 //-->
-	
+
 </script>
 </div>

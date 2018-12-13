@@ -20,12 +20,12 @@
  */
 package jp.mosp.time.dto.settings;
 
-import jp.mosp.platform.base.PlatformDtoInterface;
+import jp.mosp.platform.base.ActivateDtoInterface;
 
 /**
  * 限度基準マスタDTOインターフェース
  */
-public interface LimitStandardDtoInterface extends PlatformDtoInterface {
+public interface LimitStandardDtoInterface extends ActivateDtoInterface {
 	
 	/**
 	 * @return レコード識別ID。

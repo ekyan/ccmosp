@@ -123,8 +123,16 @@ for (int i = 0; i < vo.getAryLblInactivate().length; i++) {
 				<td class="ListSelectTd"><%= HtmlUtility.escapeHTML(vo.getAryLblType      (i)) %></td>
 				<td class="ListSelectTd"><%= HtmlUtility.escapeHTML(vo.getAryLblHeader    (i)) %></td>
 				<td class="ListSelectTd"><%= HtmlUtility.escapeHTML(vo.getAryLblInactivate(i)) %></td>
-				<td class="ListSelectTd"><input type="radio" class="RadioButton" name="radSelect" value="<%= HtmlUtility.escapeHTML(vo.getAryLblCode(i)) %>" <%= HtmlUtility.getChecked(vo.getRadSelect().equals(vo.getAryLblCode(i))) %>
+				<td class="ListSelectTd">
+<%
+//無効の場合
+if(vo.getAryLblInactivate(i).equals(params.getName("Effectiveness"))){
+%>
+					<input type="radio" class="RadioButton" name="radSelect" value="<%= HtmlUtility.escapeHTML(vo.getAryLblCode(i)) %>" <%= HtmlUtility.getChecked(vo.getRadSelect().equals(vo.getAryLblCode(i))) %>
 					onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_CODE %>', '<%= vo.getAryLblCode(i) %>'), '<%= vo.getSetExportCommand() %>');">
+<%
+}
+%>
 				</td>
 			</tr>
 <%

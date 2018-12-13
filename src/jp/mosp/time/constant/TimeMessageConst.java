@@ -172,6 +172,11 @@ public final class TimeMessageConst {
 	public static final String	MSG_SETTING_APPLICATION_DEFECT						= "TMW0246";
 	
 	/**
+	 * 勤務時間外に設定されている場合のエラーメッセージ。<br>
+	 */
+	public static final String	MSG_TIME_OUT_EXCEPT									= "TMW0247";
+	
+	/**
 	 * 振替可能な期間を超過している場合のエラーメッセージ。<br>
 	 */
 	public static final String	MSG_TRANSFER_DAY_EXCESS								= "TMW0248";
@@ -247,6 +252,11 @@ public final class TimeMessageConst {
 	public static final String	MSG_NOT_EXIST_WITH_PAY_VACATION_GRANT				= "TMW0263";
 	
 	/**
+	 * 勤務形態設定の変更を促すエラーメッセージ。<br>
+	 */
+	public static final String	MSG_NOT_WORK_TYPE_INFO								= "TMW0264";
+	
+	/**
 	 * プルダウン存在チェックエラーメッセージ。<br>
 	 */
 	public static final String	MSG_WORKFORM_EXISTENCE2								= "TMW0265";
@@ -312,6 +322,12 @@ public final class TimeMessageConst {
 	public static final String	MSG_REQUEST_CHECK_10								= "TMW0279";
 	
 	/**
+	 * メッセージコード(終了が開始よりも前の場合)。<br>
+	 * %1%終了は%2%開始より後となるようにしてください。<br>
+	 */
+	public static final String	MSG_W_END_BEFORE_START								= "TMW0280";
+	
+	/**
 	 * 遅刻、早退時間が限度時間を超えた場合エラーメッセージ。<br>
 	 */
 	public static final String	MSG_TARGET_DATE_TARDINESS_LEAVE_EARLY_LIMIT_OVER	= "TMW0282";
@@ -362,11 +378,6 @@ public final class TimeMessageConst {
 	public static final String	MSG_FILE_REPETITION									= "TMW0307";
 	
 	/**
-	 * 有給休暇付与設定情報取得エラーメッセージ。<br>
-	 */
-	public static final String	MSG_NOT_EXIST_HOLIDAY_INFO							= "TMW0308";
-	
-	/**
 	 * 申請時のエラーメッセージ。<br>
 	 */
 	public static final String	MSG_REQUEST_CHECK_12								= "TMW0309";
@@ -415,7 +426,7 @@ public final class TimeMessageConst {
 	 * 時短時間の重複チェックエラーメッセージ。<br>
 	 */
 	public static final String	MSG_SHORT_TIME_DUPLICATION_CHECK					= "TMW0320";
-
+	
 	/**
 	 * 分単位休暇全休チェックのエラーメッセージ。<br>
 	 */
@@ -432,9 +443,54 @@ public final class TimeMessageConst {
 	public static final String	MSG_DRAFT_MINUTELY_HOLIDAY							= "TMW0326";
 	
 	/**
+	 * 原因のため実行できないエラーメッセージ
+	 */
+	public static final String	MSG_REASON_NOT_ACTION								= "TMW0333";
+	
+	/**
+	 * 振替申請時、半振休に全日の申請をおこなうエラーメッセージ。
+	 */
+	public static final String	MSG_ALL_DAYS_APPLICATION_IN_HALF_HOLIDAY			= "TMW0334";
+	
+	/**
+	 * 半振休時の申請の時、勤務形態が違うエラーメッセージ。
+	 */
+	public static final String	MSG_HALF_HOLIDAY_WORK_TYPE_ERROR					= "TMW0335";
+	
+	/**
+	 * ボタン押下していないエラーメッセージ。<br>
+	 */
+	public static final String	MSG_EFFECTIVE_BOTTOUN								= "TMW0336";
+	
+	/**
+	 * 勤怠申請が存在するときのエラーメッセージ。<br>
+	 */
+	public static final String	MSG_ATTENDANCE_DELETE								= "TMW0337";
+	
+	/**
 	 * 汎用エラーメッセージ。
 	 */
 	public static final String	MSG_GENERAL_ERROR									= "TMW0327";
+	
+	/**
+	 * 申請時のエラーメッセージ。(半休+半休の場合)<br>
+	 */
+	public static final String	MSG_REQUEST_CHECK_13								= "TMW0338";
+	
+	/**
+	 * 特別休暇、その他休暇付与において付与内容が重複している場合のエラーメッセージ。<br>
+	 */
+	public static final String	MSG_HOLIDAY_DUPLICATE								= "TMW0339";
+	
+	/**
+	 * 時間休が勤務時間外で申請された場合のエラーメッセージ。<br>
+	 */
+	public static final String	MSG_TIME_HOLIDAY_CHECK								= "TMW0340";
+	
+	/**
+	 * 終業時刻が翌日の始業時刻を超えていた場合のエラーメッセージ。<br>
+	 */
+	public static final String	MSG_END_TIME_CHECK									= "TMW0341";
 	
 	/**
 	 * 打刻成功時のメッセージ。<br>
@@ -445,5 +501,15 @@ public final class TimeMessageConst {
 	 * 半休申請時のメッセージ。<br>
 	 */
 	public static final String	MSG_HALF_HOLIDAY_REQUEST							= "TMI0002";
+	
+	/**
+	 * 登録をしていない時のメッセージ。<br>
+	 */
+	public static final String	MSG_UNREGISTERED_NOTIS								= "TMI0005";
+	
+	/**
+	 * 半振出申請時のメッセージ。<br>
+	 */
+	public static final String	MSG_HALF_SUBHOLIDAY_REQUEST							= "TMI0006";
 	
 }

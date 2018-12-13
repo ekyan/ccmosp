@@ -118,9 +118,10 @@ public class SubApproverSearchBean extends PlatformHumanBean implements SubAppro
 		// 人事マスタDAO準備
 		HumanDaoInterface humanDao = (HumanDaoInterface)createDao(HumanDaoInterface.class);
 		// 所属名称プルダウン準備
-		SectionReferenceBeanInterface section = (SectionReferenceBeanInterface)createBean(SectionReferenceBeanInterface.class);
-		String[][] sectionArray = section.getNameSelectArray(
-				MonthUtility.getYearMonthTargetDate(targetYear, targetMonth, mospParams), false, null);
+		SectionReferenceBeanInterface section = (SectionReferenceBeanInterface)createBean(
+				SectionReferenceBeanInterface.class);
+		String[][] sectionArray = section
+			.getNameSelectArray(MonthUtility.getYearMonthTargetDate(targetYear, targetMonth, mospParams), false, null);
 		// 検索リストDTOに変換
 		for (SubApproverDtoInterface dto : list) {
 			// 検索リストDTO取得

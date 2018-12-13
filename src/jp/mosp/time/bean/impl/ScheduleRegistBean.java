@@ -44,9 +44,24 @@ import jp.mosp.time.dto.settings.impl.TmmScheduleDto;
 public class ScheduleRegistBean extends PlatformBean implements ScheduleRegistBeanInterface {
 	
 	/**
+	 * カレンダコード項目長。<br>
+	 */
+	protected static final int	LEN_CALENDER_CODE	= 10;
+	
+	/**
+	 * カレンダ名称項目長。<br>
+	 */
+	protected static final int	LEN_CALENDER_NAME	= 15;
+	
+	/**
+	 * カレンダ略称項目長(バイト数)。<br>
+	 */
+	protected static final int	LEN_CALENDER_ABBR	= 6;
+	
+	/**
 	 * カレンダマスタDAOクラス。<br>
 	 */
-	ScheduleDaoInterface	dao;
+	ScheduleDaoInterface		dao;
 	
 	
 	/**
@@ -316,7 +331,19 @@ public class ScheduleRegistBean extends PlatformBean implements ScheduleRegistBe
 	 * @param dto 対象DTO
 	 */
 	protected void validate(ScheduleDtoInterface dto) {
-		// TODO 妥当性確認
+		// カレンダコード
+		String scheduleCodeName = mospParams.getName("Calendar", "Code");
+		checkRequired(dto.getScheduleCode(), scheduleCodeName, null);
+		checkLength(dto.getScheduleCode(), LEN_CALENDER_CODE, scheduleCodeName, null);
+		// カレンダ名称
+		String calenderName = mospParams.getName("Calendar", "Name");
+		checkRequired(dto.getScheduleName(), calenderName, null);
+		checkLength(dto.getScheduleName(), LEN_CALENDER_NAME, calenderName, null);
+		// カレンダ略称
+		String calendarAbbr = mospParams.getName("Calendar", "Abbreviation");
+		checkRequired(dto.getScheduleAbbr(), calendarAbbr, null);
+		// バイト数(表示上)確認(所属略称)
+		checkByteLength(dto.getScheduleAbbr(), LEN_CALENDER_ABBR, calendarAbbr, null);
 	}
 	
 	/**
@@ -373,7 +400,8 @@ public class ScheduleRegistBean extends PlatformBean implements ScheduleRegistBe
 		// 削除対象の有効日以前で最新の設定適用マスタリストを取得
 		List<ApplicationDtoInterface> appList = appDao.findForActivateDate(dto.getActivateDate());
 		// 無効期間で設定適用マスタ履歴情報を取得(対象DTOの有効日～次の履歴の有効日)
-		appList.addAll(appDao.findForTerm(dto.getActivateDate(), getNextActivateDate(dto.getActivateDate(), list)));
+		appList
+			.addAll(appDao.findForCheckTerm(dto.getActivateDate(), getNextActivateDate(dto.getActivateDate(), list)));
 		return appList;
 	}
 	

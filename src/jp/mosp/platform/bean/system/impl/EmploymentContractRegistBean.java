@@ -39,7 +39,7 @@ public class EmploymentContractRegistBean extends PlatformBean implements Employ
 	/**
 	 * 雇用契約マスタDAOクラス。<br>
 	 */
-	protected EmploymentContractDaoInterface	dao;
+	protected EmploymentContractDaoInterface dao;
 	
 	
 	/**

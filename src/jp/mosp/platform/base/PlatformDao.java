@@ -84,7 +84,7 @@ public abstract class PlatformDao extends BaseDao {
 	 * @param cls 対象クラス
 	 * @return 検索条件
 	 */
-	public static <T>T getSearchParam(Map<String, Object> params, String key, Class<T> cls) {
+	public static <T> T getSearchParam(Map<String, Object> params, String key, Class<T> cls) {
 		Object obj = params.get(key);
 		if (obj != null) {
 			return cls.cast(obj);

@@ -34,7 +34,7 @@ import jp.mosp.platform.dto.human.ConcurrentDtoInterface;
  */
 public class ConcurrentReferenceBean extends BaseBean implements ConcurrentReferenceBeanInterface {
 	
-	private ConcurrentDaoInterface	concurrentDao;
+	private ConcurrentDaoInterface concurrentDao;
 	
 	
 	/**

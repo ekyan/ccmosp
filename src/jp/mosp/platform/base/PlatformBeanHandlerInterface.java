@@ -25,9 +25,14 @@ import jp.mosp.platform.bean.file.HumanImportBeanInterface;
 import jp.mosp.platform.bean.file.ImportBeanInterface;
 import jp.mosp.platform.bean.file.ImportFieldRegistBeanInterface;
 import jp.mosp.platform.bean.file.ImportRegistBeanInterface;
+import jp.mosp.platform.bean.file.PositionImportBeanInterface;
 import jp.mosp.platform.bean.file.SectionImportBeanInterface;
+import jp.mosp.platform.bean.file.TemplateOutputBeanInterface;
+import jp.mosp.platform.bean.file.UserExtraRoleImportBeanInterface;
 import jp.mosp.platform.bean.file.UserImportBeanInterface;
 import jp.mosp.platform.bean.file.UserPasswordImportBeanInterface;
+import jp.mosp.platform.bean.human.AccountRegistBeanInterface;
+import jp.mosp.platform.bean.human.AddressRegistBeanInterface;
 import jp.mosp.platform.bean.human.ConcurrentRegistBeanInterface;
 import jp.mosp.platform.bean.human.EntranceRegistBeanInterface;
 import jp.mosp.platform.bean.human.HistoryBasicDeleteBeanInterface;
@@ -38,23 +43,29 @@ import jp.mosp.platform.bean.human.HumanBinaryNormalRegistBeanInterface;
 import jp.mosp.platform.bean.human.HumanHistoryRegistBeanInterface;
 import jp.mosp.platform.bean.human.HumanNormalRegistBeanInterface;
 import jp.mosp.platform.bean.human.HumanRegistBeanInterface;
+import jp.mosp.platform.bean.human.PhoneRegistBeanInterface;
 import jp.mosp.platform.bean.human.RetirementRegistBeanInterface;
 import jp.mosp.platform.bean.human.SuspensionRegistBeanInterface;
+import jp.mosp.platform.bean.mail.MailBeanInterface;
 import jp.mosp.platform.bean.message.MessageRegistBeanInterface;
 import jp.mosp.platform.bean.portal.AuthBeanInterface;
+import jp.mosp.platform.bean.portal.MospUserBeanInterface;
 import jp.mosp.platform.bean.portal.PasswordCheckBeanInterface;
 import jp.mosp.platform.bean.portal.PortalBeanInterface;
 import jp.mosp.platform.bean.portal.UserCheckBeanInterface;
+import jp.mosp.platform.bean.system.AppPropertyRegistBeanInterface;
+import jp.mosp.platform.bean.system.BankBaseRegistBeanInterface;
+import jp.mosp.platform.bean.system.BankBranchRegistBeanInterface;
 import jp.mosp.platform.bean.system.EmploymentContractRegistBeanInterface;
 import jp.mosp.platform.bean.system.GeneralRegistBeanInterface;
 import jp.mosp.platform.bean.system.IcCardRegistBeanInterface;
 import jp.mosp.platform.bean.system.NamingRegistBeanInterface;
 import jp.mosp.platform.bean.system.PlatformMasterCheckBeanInterface;
 import jp.mosp.platform.bean.system.PositionRegistBeanInterface;
+import jp.mosp.platform.bean.system.PostalCodeRegistBeanInterface;
 import jp.mosp.platform.bean.system.ReceptionIcCardRegistBeanInterface;
 import jp.mosp.platform.bean.system.SectionRegistBeanInterface;
-import jp.mosp.platform.bean.system.UserMasterRegistBeanInterface;
-import jp.mosp.platform.bean.system.UserPasswordRegistBeanInterface;
+import jp.mosp.platform.bean.system.UserAccountRegistBeanInterface;
 import jp.mosp.platform.bean.system.WorkPlaceRegistBeanInterface;
 import jp.mosp.platform.bean.workflow.ApprovalRouteRegistBeanInterface;
 import jp.mosp.platform.bean.workflow.ApprovalRouteUnitRegistBeanInterface;
@@ -76,6 +87,13 @@ public interface PlatformBeanHandlerInterface extends BaseBeanHandlerInterface {
 	AuthBeanInterface auth() throws MospException;
 	
 	/**
+	 * MosPユーザ設定クラスを取得する。<br>
+	 * @return MosPユーザ設定クラス
+	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
+	 */
+	MospUserBeanInterface mospUser() throws MospException;
+	
+	/**
 	 * @return ユーザ確認
 	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
 	 */
@@ -94,18 +112,11 @@ public interface PlatformBeanHandlerInterface extends BaseBeanHandlerInterface {
 	PlatformMasterCheckBeanInterface masterCheck() throws MospException;
 	
 	/**
-	 * ユーザパスワード情報登録クラスを取得する。<br>
-	 * @return ユーザパスワード情報登録クラス
+	 * ユーザアカウント情報登録処理を取得する。
+	 * @return ユーザアカウント情報登録処理
 	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
 	 */
-	UserPasswordRegistBeanInterface userPasswordRegist() throws MospException;
-	
-	/**
-	 * ユーザマスタ登録クラスを取得する。
-	 * @return ユーザマスタ登録クラス
-	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
-	 */
-	UserMasterRegistBeanInterface userMasterRegist() throws MospException;
+	UserAccountRegistBeanInterface userAccountRegist() throws MospException;
 	
 	/**
 	 * 雇用契約マスタ登録クラスを取得する。
@@ -141,6 +152,27 @@ public interface PlatformBeanHandlerInterface extends BaseBeanHandlerInterface {
 	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
 	 */
 	NamingRegistBeanInterface namingRegist() throws MospException;
+	
+	/**
+	 * 郵便番号マスタ登録クラスを取得する。
+	 * @return 郵便番号マスタ登録クラス
+	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
+	 */
+	PostalCodeRegistBeanInterface postalCodeRegist() throws MospException;
+	
+	/**
+	 * 銀行マスタ登録クラスを取得する。
+	 * @return 銀行マスタ登録クラス
+	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
+	 */
+	BankBaseRegistBeanInterface bankBaseRegist() throws MospException;
+	
+	/**
+	 * 銀行支店マスタ登録クラスを取得する。
+	 * @return 銀行支店マスタ登録クラス
+	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
+	 */
+	BankBranchRegistBeanInterface bankBranchRegist() throws MospException;
 	
 	/**
 	 * 人事マスタ登録クラスを取得する。
@@ -183,6 +215,27 @@ public interface PlatformBeanHandlerInterface extends BaseBeanHandlerInterface {
 	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
 	 */
 	ConcurrentRegistBeanInterface concurrentRegist() throws MospException;
+	
+	/**
+	 * 住所情報登録クラスを取得する。
+	 * @return 住所情報登録クラス
+	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
+	 */
+	AddressRegistBeanInterface addressRegist() throws MospException;
+	
+	/**
+	 * 電話情報登録クラスを取得する。
+	 * @return 電話情報登録クラス
+	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
+	 */
+	PhoneRegistBeanInterface phoneRegist() throws MospException;
+	
+	/**
+	 * 口座情報登録クラスを取得する。<br>
+	 * @return 口座情報登録クラス
+	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
+	 */
+	AccountRegistBeanInterface accountRegist() throws MospException;
 	
 	/**
 	 * ICカードマスタ情報登録クラスを取得する。
@@ -318,6 +371,13 @@ public interface PlatformBeanHandlerInterface extends BaseBeanHandlerInterface {
 	ExportFieldRegistBeanInterface exportFieldRegist() throws MospException;
 	
 	/**
+	 * テンプレート出力クラスを取得する。
+	 * @return テンプレート出力クラス
+	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
+	 */
+	TemplateOutputBeanInterface templateOutput() throws MospException;
+	
+	/**
 	 * インポートマスタ登録クラスを取得する。
 	 * @return インポートマスタ登録クラス
 	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
@@ -346,11 +406,25 @@ public interface PlatformBeanHandlerInterface extends BaseBeanHandlerInterface {
 	UserImportBeanInterface userImport() throws MospException;
 	
 	/**
+	 * ユーザ追加ロールインポート処理を取得する。
+	 * @return ユーザ追加ロールインポート処理
+	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
+	 */
+	UserExtraRoleImportBeanInterface userExtraRoleImport() throws MospException;
+	
+	/**
 	 * 所属マスタインポートクラスを取得する。
 	 * @return 所属マスタインポートクラス
 	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
 	 */
 	SectionImportBeanInterface sectionImport() throws MospException;
+	
+	/**
+	 * 職位マスタインポートクラスを取得する。
+	 * @return 職位マスタインポートクラス
+	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
+	 */
+	PositionImportBeanInterface positionImport() throws MospException;
 	
 	/**
 	 * ユーザパスワード情報インポートクラスを取得する。
@@ -374,6 +448,13 @@ public interface PlatformBeanHandlerInterface extends BaseBeanHandlerInterface {
 	ImportBeanInterface unitPersonImport() throws MospException;
 	
 	/**
+	 * メールクラスを取得する。
+	 * @return メールクラス
+	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
+	 */
+	MailBeanInterface mail() throws MospException;
+	
+	/**
 	 * ポータル用Beanクラスを取得する。
 	 * @param className クラス名
 	 * @return ポータル用Beanクラス
@@ -388,5 +469,12 @@ public interface PlatformBeanHandlerInterface extends BaseBeanHandlerInterface {
 	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
 	 */
 	HistoryBasicDeleteBeanInterface historyBasicDelete(String className) throws MospException;
+	
+	/**
+	 * アプリケーション設定情報登録処理を取得する。<br>
+	 * @return アプリケーション設定情報登録処理
+	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
+	 */
+	AppPropertyRegistBeanInterface appPropertyRegist() throws MospException;
 	
 }

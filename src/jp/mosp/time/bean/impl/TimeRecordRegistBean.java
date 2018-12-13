@@ -36,7 +36,7 @@ public class TimeRecordRegistBean extends PlatformBean implements TimeRecordRegi
 	/**
 	 * 打刻データDAOクラス。<br>
 	 */
-	private TimeRecordDaoInterface	dao;
+	private TimeRecordDaoInterface dao;
 	
 	
 	/**
@@ -83,6 +83,26 @@ public class TimeRecordRegistBean extends PlatformBean implements TimeRecordRegi
 		dao.insert(dto);
 	}
 	
+	@Override
+	public void update(TimeRecordDtoInterface dto) throws MospException {
+		// DTOの妥当性確認
+		validate(dto);
+		if (mospParams.hasErrorMessage()) {
+			return;
+		}
+		// 履歴更新情報の検証
+		checkUpdate(dto);
+		if (mospParams.hasErrorMessage()) {
+			return;
+		}
+		// 論理削除
+		logicalDelete(dao, dto.getTmdTimeRecordId());
+		// レコード識別ID最大値をインクリメントしてDTOに設定
+		dto.setTmdTimeRecordId(dao.nextRecordId());
+		// 登録処理
+		dao.insert(dto);
+	}
+	
 	/**
 	 * 登録情報の妥当性を確認する。
 	 * @param dto 対象DTO
@@ -97,8 +117,18 @@ public class TimeRecordRegistBean extends PlatformBean implements TimeRecordRegi
 	 */
 	protected void checkInsert(TimeRecordDtoInterface dto) throws MospException {
 		// 対象レコードが重複していないかを確認
-		checkDuplicateInsert(dao.findForKey(dto.getPersonalId(), dto.getWorkDate(), dto.getTimesWork(),
-				dto.getRecordType()));
+		checkDuplicateInsert(
+				dao.findForKey(dto.getPersonalId(), dto.getWorkDate(), dto.getTimesWork(), dto.getRecordType()));
+	}
+	
+	/**
+	 * 履歴更新時の確認処理を行う。<br>
+	 * @param dto 対象DTO
+	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
+	 */
+	protected void checkUpdate(TimeRecordDtoInterface dto) throws MospException {
+		// 対象レコード識別IDのデータが削除されていないかを確認
+		checkExclusive(dao, dto.getTmdTimeRecordId());
 	}
 	
 	@Override

@@ -18,7 +18,6 @@
 package jp.mosp.time.bean.impl;
 
 import java.sql.Connection;
-import java.util.ArrayList;
 import java.util.List;
 
 import jp.mosp.framework.base.BaseDtoInterface;
@@ -48,7 +47,6 @@ import jp.mosp.time.dao.settings.DifferenceRequestDaoInterface;
 import jp.mosp.time.dto.settings.AttendanceDtoInterface;
 import jp.mosp.time.dto.settings.DifferenceRequestDtoInterface;
 import jp.mosp.time.dto.settings.HolidayRequestDtoInterface;
-import jp.mosp.time.dto.settings.WorkOnHolidayRequestDtoInterface;
 import jp.mosp.time.dto.settings.impl.TmdDifferenceRequestDto;
 
 /**
@@ -138,14 +136,17 @@ public class DifferenceRequestRegistBean extends TimeBean implements DifferenceR
 	@Override
 	public void initBean() throws MospException {
 		dao = (DifferenceRequestDaoInterface)createDao(DifferenceRequestDaoInterface.class);
-		differenceReference = (DifferenceRequestReferenceBeanInterface)createBean(DifferenceRequestReferenceBeanInterface.class);
+		differenceReference = (DifferenceRequestReferenceBeanInterface)createBean(
+				DifferenceRequestReferenceBeanInterface.class);
 		workflowDao = (WorkflowDaoInterface)createDao(WorkflowDaoInterface.class);
 		workflowReference = (WorkflowReferenceBeanInterface)createBean(WorkflowReferenceBeanInterface.class);
 		workflowIntegrate = (WorkflowIntegrateBeanInterface)createBean(WorkflowIntegrateBeanInterface.class);
 		workflowRegist = (WorkflowRegistBeanInterface)createBean(WorkflowRegistBeanInterface.class);
-		workflowCommentRegist = (WorkflowCommentRegistBeanInterface)createBean(WorkflowCommentRegistBeanInterface.class);
+		workflowCommentRegist = (WorkflowCommentRegistBeanInterface)createBean(
+				WorkflowCommentRegistBeanInterface.class);
 		attendanceDao = (AttendanceDaoInterface)createDao(AttendanceDaoInterface.class);
-		approvalInfoReference = (ApprovalInfoReferenceBeanInterface)createBean(ApprovalInfoReferenceBeanInterface.class);
+		approvalInfoReference = (ApprovalInfoReferenceBeanInterface)createBean(
+				ApprovalInfoReferenceBeanInterface.class);
 		cutoffUtil = (CutoffUtilBeanInterface)createBean(CutoffUtilBeanInterface.class);
 		scheduleUtil = (ScheduleUtilBeanInterface)createBean(ScheduleUtilBeanInterface.class);
 		requestUtil = (RequestUtilBeanInterface)createBean(RequestUtilBeanInterface.class);
@@ -183,8 +184,7 @@ public class DifferenceRequestRegistBean extends TimeBean implements DifferenceR
 		}
 		// Bean初期化
 		workflowRegist = (WorkflowRegistBeanInterface)createBean(WorkflowRegistBeanInterface.class);
-		// 処理ワークフロー情報リスト準備
-		List<WorkflowDtoInterface> workflowList = new ArrayList<WorkflowDtoInterface>();
+		// 時差出勤申請情報レコード識別ID毎に処理
 		for (long id : idArray) {
 			// DTOの準備
 			BaseDtoInterface baseDto = findForKey(dao, id, true);
@@ -203,9 +203,8 @@ public class DifferenceRequestRegistBean extends TimeBean implements DifferenceR
 			// 申請
 			workflowRegist.appli(workflowDto, dto.getPersonalId(), dto.getRequestDate(),
 					PlatformConst.WORKFLOW_TYPE_TIME, null);
-			// 処理ワークフロー情報リストへ追加
+			// 処理ワークフロー情報が存在する場合
 			if (workflowDto != null) {
-				workflowList.add(workflowDto);
 				// 勤怠下書
 				draftAttendance(dto);
 			}
@@ -285,9 +284,7 @@ public class DifferenceRequestRegistBean extends TimeBean implements DifferenceR
 			workflowDto = workflowRegist.withdrawn(workflowDto);
 			if (workflowDto != null) {
 				// ワークフローコメント登録
-				workflowCommentRegist.addComment(
-						workflowDto,
-						mospParams.getUser().getPersonalId(),
+				workflowCommentRegist.addComment(workflowDto, mospParams.getUser().getPersonalId(),
 						mospParams.getProperties().getMessage(PlatformMessageConst.MSG_PROCESS_SUCCEED,
 								new String[]{ mospParams.getName("TakeDown") }));
 			}
@@ -360,10 +357,8 @@ public class DifferenceRequestRegistBean extends TimeBean implements DifferenceR
 	
 	@Override
 	public void checkCancelAppli(DifferenceRequestDtoInterface dto) throws MospException {
-		checkTemporaryClosingFinal(dto);
-		if (approvalInfoReference.isExistAttendanceTargetDate(dto.getPersonalId(), dto.getRequestDate())) {
-			addOthersRequestErrorMessage(dto.getRequestDate(), mospParams.getName("WorkManage"));
-		}
+		// 承認解除時のチェック
+		checkCancel(dto);
 	}
 	
 	@Override
@@ -392,8 +387,27 @@ public class DifferenceRequestRegistBean extends TimeBean implements DifferenceR
 	}
 	
 	@Override
-	public void checkCancel(DifferenceRequestDtoInterface dto) {
-		// 現在処理無し。処理が必要になった場合追加される予定。
+	public void checkCancel(DifferenceRequestDtoInterface dto) throws MospException {
+		// 締処理確認
+		checkTemporaryClosingFinal(dto);
+		// 勤怠申請確認
+		if (approvalInfoReference.isExistAttendanceTargetDate(dto.getPersonalId(), dto.getRequestDate())) {
+			addOthersRequestErrorMessage(dto.getRequestDate(), mospParams.getName("WorkManage"));
+		}
+		// 各種申請情報取得
+		requestUtil.setRequests(dto.getPersonalId(), dto.getRequestDate());
+		// 時差出勤申請（取下、下書以外）取得
+		List<HolidayRequestDtoInterface> holidayList = requestUtil.getHolidayList(false);
+		// 休暇申請毎に処理
+		for (HolidayRequestDtoInterface holidayDto : holidayList) {
+			// 時間休でない場合
+			if (holidayDto.getHolidayRange() != TimeConst.CODE_HOLIDAY_RANGE_TIME) {
+				// 処理なし
+				continue;
+			}
+			// エラーメッセージ追加
+			addOthersRequestErrorMessage(dto.getRequestDate(), mospParams.getName("Vacation"));
+		}
 	}
 	
 	@Override
@@ -401,27 +415,22 @@ public class DifferenceRequestRegistBean extends TimeBean implements DifferenceR
 		// 各種申請情報取得
 		requestUtil.setRequests(dto.getPersonalId(), dto.getRequestDate());
 		// 勤務形態コードを取得
-		String workTypeCode = scheduleUtil.getScheduledWorkTypeCode(dto.getPersonalId(), dto.getRequestDate());
+		String workTypeCode = scheduleUtil.getScheduledWorkTypeCode(dto.getPersonalId(), dto.getRequestDate(),
+				requestUtil);
 		if (mospParams.hasErrorMessage()) {
 			return;
 		}
-		// カレンダの勤務形態が法定休日又は所定休日の場合
+		// 勤務形態が法定休日又は所定休日の場合
 		if (TimeConst.CODE_HOLIDAY_LEGAL_HOLIDAY.equals(workTypeCode)
 				|| TimeConst.CODE_HOLIDAY_PRESCRIBED_HOLIDAY.equals(workTypeCode)) {
-			// 下書、取下でない休日出勤申請情報取得
-			WorkOnHolidayRequestDtoInterface workOnHolidayRequestDto = requestUtil.getWorkOnHolidayDto(false);
-			// 休日出勤申請の場合
-			if (workOnHolidayRequestDto != null
-					&& workOnHolidayRequestDto.getSubstitute() == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_OFF) {
-				addDifferenceTargetDateRequestErrorMessage(dto.getRequestDate());
-				return;
-			}
-			// 承認済かつ振替出勤申請の休日出勤申請情報がない場合
-			if (requestUtil.getWorkOnHolidayDto(true) == null) {
-				// 法定休日又は所定休日の場合
-				addDifferenceTargetWorkDateHolidayErrorMessage(dto.getRequestDate());
-				return;
-			}
+			addDifferenceTargetWorkDateHolidayErrorMessage(dto.getRequestDate());
+			return;
+		}
+		if (TimeConst.CODE_WORK_ON_PRESCRIBED_HOLIDAY.equals(workTypeCode)
+				|| TimeConst.CODE_WORK_ON_LEGAL_HOLIDAY.equals(workTypeCode)) {
+			// 所定休出、法定休出の場合
+			addDifferenceTargetDateRequestErrorMessage(dto.getRequestDate());
+			return;
 		}
 //		if (requestUtil.checkHolidayRangeHoliday(requestUtil.getHolidayList(false)) == TimeConst.CODE_HOLIDAY_RANGE_ALL) {
 //			// 下書、取下でない休暇申請情報がある場合

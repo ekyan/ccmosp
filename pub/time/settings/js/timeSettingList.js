@@ -31,7 +31,7 @@ function onLoadExtra() {
 		setReadOnly("txtSearchActivateDay", true);
 	} else {
 		// 登録ボタン利用不可
-		setDisabled("btnRegist", true);
+		setReadOnly("btnRegist", true);
 	}
 }
 

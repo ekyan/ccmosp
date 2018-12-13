@@ -37,24 +37,11 @@ public interface ScheduleDateReferenceBeanInterface {
 	 * カレンダコードと対象日と日からカレンダ日マスタを取得。
 	 * </p>
 	 * @param scheduleCode カレンダコード
-	 * @param targetDate 対象年月日
 	 * @param scheduleDate 日
 	 * @return カレンダ日マスタ
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
-	ScheduleDateDtoInterface getScheduleDateInfo(String scheduleCode, Date targetDate, Date scheduleDate)
-			throws MospException;
-	
-	/**
-	 * カレンダ日マスタからレコードを取得する。<br>
-	 * カレンダコード、有効日、日で合致するレコードが無い場合、nullを返す。<br>
-	 * @param scheduleCode カレンダコード
-	 * @param activateDate 有効日
-	 * @param scheduleDate 日
-	 * @return カレンダ日マスタDTO
-	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
-	 */
-	ScheduleDateDtoInterface findForKey(String scheduleCode, Date activateDate, Date scheduleDate) throws MospException;
+	ScheduleDateDtoInterface getScheduleDateInfo(String scheduleCode, Date scheduleDate) throws MospException;
 	
 	/**
 	 * カレンダ日マスタからレコードを取得する。<br>
@@ -77,19 +64,6 @@ public interface ScheduleDateReferenceBeanInterface {
 	
 	/**
 	 * カレンダ日マスタからレコードを取得する。<br>
-	 * 年度(activateDate)ありで取得する。<br>
-	 * @param scheduleCode カレンダコード
-	 * @param activateDate 有効日
-	 * @param startDate 開始日
-	 * @param endDate 終了日
-	 * @return カレンダ日マスタDTOリスト
-	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
-	 */
-	List<ScheduleDateDtoInterface> findForList(String scheduleCode, Date activateDate, Date startDate, Date endDate)
-			throws MospException;
-	
-	/**
-	 * カレンダ日マスタからレコードを取得する。<br>
 	 * 年度(activateDate)なしで取得する。<br>
 	 * @param scheduleCode カレンダコード
 	 * @param startDate 開始日
@@ -98,15 +72,6 @@ public interface ScheduleDateReferenceBeanInterface {
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
 	List<ScheduleDateDtoInterface> findForList(String scheduleCode, Date startDate, Date endDate) throws MospException;
-	
-	/**
-	 * カレンダーコードにおいて対象日が、所定又は法定休日であるか確認する。
-	 * @param scheduleCode カレンダコード
-	 * @param targetDate 対象日
-	 * @return 確認結果(true：所定又は法定休日の場合、false：所定又は法定休日以外の場合)
-	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
-	 */
-	boolean isHoliday(String scheduleCode, Date targetDate) throws MospException;
 	
 	/**
 	 * カレンダ日の存在チェック。<br>

@@ -37,6 +37,7 @@ import = "jp.mosp.platform.comparator.workflow.RouteApplicationReferenceRouteNam
 import = "jp.mosp.platform.comparator.workflow.RouteApplicationReferenceRouteStageComparator"
 import = "jp.mosp.platform.workflow.action.RouteApplicationReferenceAction"
 import = "jp.mosp.platform.workflow.vo.RouteApplicationReferenceVo"
+import = "jp.mosp.platform.utils.PlatformNamingUtility"
 %><%
 MospParams params = (MospParams)request.getAttribute(MospConst.ATT_MOSP_PARAMS);
 RouteApplicationReferenceVo vo = (RouteApplicationReferenceVo)params.getVo();
@@ -59,7 +60,7 @@ RouteApplicationReferenceVo vo = (RouteApplicationReferenceVo)params.getVo();
 					<button type="button" class="Name2Button" onclick="submitForm(event, 'divSearchActiveDate', null, '<%=RouteApplicationReferenceAction.CMD_SET_ACTIVATION_DATE%>')"><%=vo.getModeActivateDate().equals(PlatformConst.MODE_ACTIVATE_DATE_FIXED) ? params.getName("Change") : params.getName("Decision")%></button>
 				</div>
 			</td>
-			<td class="TitleTd"><label for="txtSearchEmployeeCode"><%=params.getName("Employee","Code")%></label></td>
+			<td class="TitleTd"><label for="txtSearchEmployeeCode"><%=PlatformNamingUtility.employeeCode(params)%></label></td>
 			<td class="InputTd" id="EmployeeCodeSearch">
 				<input type="text" class="Code10TextBox" id="txtSearchEmployeeCode" name="txtSearchEmployeeCode" value="<%=HtmlUtility.escapeHTML(vo.getTxtSearchEmployeeCode())%>" />
 			</td>
@@ -119,7 +120,7 @@ RouteApplicationReferenceVo vo = (RouteApplicationReferenceVo)params.getVo();
 			<td class="Blank" colspan="2" rowspan="2"></td>
 		</tr>
 		<tr>
-			<td class="TitleTd"><label for="txtSearchApproverCode"><%= params.getName("Approver","Employee","Code") %></label></td>
+			<td class="TitleTd"><label for="txtSearchApproverCode"><%= params.getName("Approver") + PlatformNamingUtility.employeeCode(params) %></label></td>
 			<td class="InputTd"><input type="text" class="Code10TextBox" id="txtSearchApproverCode" name="txtSearchApproverCode" value="<%= HtmlUtility.escapeHTML(vo.getTxtSearchApproverCode()) %>"/></td>
 			<td class="TitleTd"><label for="txtSearchApproverName"><%= params.getName("Approver","FullName") %></label></td>
 			<td class="InputTd"><input type="text" class="Name15TextBox" id="txtSearchApproverName" name="txtSearchApproverName" value="<%= HtmlUtility.escapeHTML(vo.getTxtSearchApproverName()) %>"/></td>
@@ -138,7 +139,7 @@ RouteApplicationReferenceVo vo = (RouteApplicationReferenceVo)params.getVo();
 	<table class="LeftListTable" id="list">
 		<thead>
 			<tr>
-				<th class="ListSortTh" id="thEmployeeCode" onclick="submitTransfer(event, null, null, new Array('<%=PlatformConst.PRM_TRANSFERRED_SORT_KEY%>', '<%=EmployeeCodeComparator.class.getName()%>'), '<%=RouteApplicationReferenceAction.CMD_SORT%>')"><%=params.getName("Employee","Code")%><%=PlatformUtility.getSortMark(EmployeeCodeComparator.class.getName(), params)%></th>
+				<th class="ListSortTh" id="thEmployeeCode" onclick="submitTransfer(event, null, null, new Array('<%=PlatformConst.PRM_TRANSFERRED_SORT_KEY%>', '<%=EmployeeCodeComparator.class.getName()%>'), '<%=RouteApplicationReferenceAction.CMD_SORT%>')"><%=PlatformNamingUtility.employeeCode(params)%><%=PlatformUtility.getSortMark(EmployeeCodeComparator.class.getName(), params)%></th>
 				<th class="ListSortTh" id="thEmployeeName" onclick="submitTransfer(event, null, null, new Array('<%=PlatformConst.PRM_TRANSFERRED_SORT_KEY%>', '<%=EmployeeNameComparator.class.getName()%>'), '<%=RouteApplicationReferenceAction.CMD_SORT%>')"><%=params.getName("FullName")%><%=PlatformUtility.getSortMark(EmployeeNameComparator.class.getName(), params)%></th>
 				<th class="ListSortTh" id="thRouteApplicationCode" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= RouteApplicationReferenceRouteApplicationCodeComparator.class.getName() %>'), '<%= RouteApplicationReferenceAction.CMD_SORT %>')"><%= params.getName("Apply","Code")%><%= PlatformUtility.getSortMark(RouteApplicationReferenceRouteApplicationCodeComparator.class.getName(), params) %></th>
 				<th class="ListSortTh" id="thRouteApplicationName" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= RouteApplicationReferenceRouteApplicationNameComparator.class.getName() %>'), '<%= RouteApplicationReferenceAction.CMD_SORT %>')"><%= params.getName("Apply","Name")%><%= PlatformUtility.getSortMark(RouteApplicationReferenceRouteApplicationNameComparator.class.getName(), params) %></th>

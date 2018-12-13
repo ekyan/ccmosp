@@ -70,12 +70,12 @@ public class PortalAttendanceCheckBean extends PortalBean implements PortalBeanI
 	/**
 	 * 勤怠未入力時の確認メッセージ。
 	 */
-	public static String								MSG_NO_APPLI_TIME_WORK			= "TMW0287";
+	public static final String							MSG_NO_APPLI_TIME_WORK			= "TMW0287";
 	
 	/**
 	 * 確認メッセージ。
 	 */
-	public static String								MSG_CONFIRM						= "TMI0003";
+	public static final String							MSG_CONFIRM						= "TMI0003";
 	
 	/**
 	 * ポータルパラメータキー(ログイン直後メッセージ)。
@@ -104,7 +104,8 @@ public class PortalAttendanceCheckBean extends PortalBean implements PortalBeanI
 		// 処理無し
 		entranceRefer = (EntranceReferenceBeanInterface)createBean(EntranceReferenceBeanInterface.class);
 		cutoffUtill = (CutoffUtilBeanInterface)createBean(CutoffUtilBeanInterface.class);
-		totalTimeEmployeeRefer = (TotalTimeEmployeeTransactionReferenceBeanInterface)createBean(TotalTimeEmployeeTransactionReferenceBeanInterface.class);
+		totalTimeEmployeeRefer = (TotalTimeEmployeeTransactionReferenceBeanInterface)createBean(
+				TotalTimeEmployeeTransactionReferenceBeanInterface.class);
 		attendanceList = (AttendanceListReferenceBeanInterface)createBean(AttendanceListReferenceBeanInterface.class);
 	}
 	
@@ -169,8 +170,8 @@ public class PortalAttendanceCheckBean extends PortalBean implements PortalBeanI
 			int totalTimeYear = totalTimeEmployeeDto.getCalculationYear();
 			int totalTimeMounth = totalTimeEmployeeDto.getCalculationMonth();
 			// 締め期間終了日の次の日を期間初日に設定
-			Date startDate = DateUtility.addDay(
-					TimeUtility.getCutoffLastDate(cutoffDto.getCutoffDate(), totalTimeYear, totalTimeMounth), 1);
+			Date startDate = DateUtility
+				.addDay(TimeUtility.getCutoffLastDate(cutoffDto.getCutoffDate(), totalTimeYear, totalTimeMounth), 1);
 			// 入社日が締め期間終了日の次の日を期間初日より遅い場合
 			if (entranceDate.after(startDate)) {
 				// 入社日を締期間初日に設定

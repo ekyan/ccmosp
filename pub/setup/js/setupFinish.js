@@ -24,4 +24,7 @@ function onLoadExtra(){
 	if (getFormValue("Name8Button") == "") {
 		setFocus("Name8Button");
 	}
+	if (getFormValue("Name6Button") == "") {
+		setFocus("Name6Button");
+	}
 }

@@ -38,7 +38,7 @@ public class TotalOtherVacationReferenceBean extends PlatformBean implements Tot
 	/**
 	 * 勤怠集計データDAOクラス。<br>
 	 */
-	TotalOtherVacationDaoInterface	totalOtherVacationDao;
+	TotalOtherVacationDaoInterface totalOtherVacationDao;
 	
 	
 	/**

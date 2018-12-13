@@ -135,6 +135,12 @@ public interface AttendanceListReferenceBeanInterface {
 	Date getLastDate();
 	
 	/**
+	 * 対象締期間初日を取得する。<br>
+	 * @return 対象締期間初日
+	 */
+	Date getFirstDate();
+	
+	/**
 	 * 対象年を取得する。<br>
 	 * @return 対象年
 	 */
@@ -162,5 +168,11 @@ public interface AttendanceListReferenceBeanInterface {
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
 	List<Date> getNotAttendanceAppliList(String personalId, Date startDate, Date endDate) throws MospException;
+	
+	/**
+	 * 半日勤務形態略称長を設定する。<br>
+	 * @param halfWorkTypeLength 半日勤務形態略称長
+	 */
+	void setHalfWorkTypeLength(int halfWorkTypeLength);
 	
 }

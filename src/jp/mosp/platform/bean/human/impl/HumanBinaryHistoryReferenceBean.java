@@ -19,49 +19,25 @@ package jp.mosp.platform.bean.human.impl;
 
 import java.sql.Connection;
 import java.util.Date;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.base.MospParams;
-import jp.mosp.framework.property.ConventionProperty;
 import jp.mosp.platform.base.PlatformBean;
 import jp.mosp.platform.bean.human.HumanBinaryHistoryReferenceBeanInterface;
-import jp.mosp.platform.bean.human.HumanGeneralBeanInterface;
 import jp.mosp.platform.dao.human.HumanBinaryHistoryDaoInterface;
 import jp.mosp.platform.dto.human.HumanBinaryHistoryDtoInterface;
 
 /**
  * 人事汎用バイナリ履歴情報参照クラス。
  */
-public class HumanBinaryHistoryReferenceBean extends HumanGeneralBean implements
-		HumanBinaryHistoryReferenceBeanInterface {
+public class HumanBinaryHistoryReferenceBean extends HumanGeneralBean
+		implements HumanBinaryHistoryReferenceBeanInterface {
 	
 	/**
 	 * 人事汎用履歴情報DAO。
 	 */
-	protected HumanBinaryHistoryDaoInterface	dao;
-	
-	/**
-	 * 人事汎用管理機能クラス。
-	 */
-	protected HumanGeneralBeanInterface			humanGeneral;
-	
-	/**
-	 * 人事汎用項目区分設定情報。
-	 */
-	protected ConventionProperty				conventionProperty;
-	
-	/**
-	 * 人事有効日履歴情報汎用マップ。
-	 */
-	LinkedHashMap<String, Map<String, String>>	historyHumanInfoMap;
-	
-	/**
-	 * 人事履歴情報汎用マップ準備。
-	 */
-	Map<String, String>							historyMap;
+	protected HumanBinaryHistoryDaoInterface dao;
 	
 	
 	/**
@@ -84,7 +60,6 @@ public class HumanBinaryHistoryReferenceBean extends HumanGeneralBean implements
 	public void initBean() throws MospException {
 		super.initBean();
 		dao = (HumanBinaryHistoryDaoInterface)createDao(HumanBinaryHistoryDaoInterface.class);
-		humanGeneral = (HumanGeneralBeanInterface)createBean(HumanGeneralBeanInterface.class);
 	}
 	
 	@Override
@@ -103,6 +78,17 @@ public class HumanBinaryHistoryReferenceBean extends HumanGeneralBean implements
 	public HumanBinaryHistoryDtoInterface findForKey(String personalId, String humanItemType, Date activateDate)
 			throws MospException {
 		return dao.findForKey(personalId, humanItemType, activateDate);
+	}
+	
+	@Override
+	public HumanBinaryHistoryDtoInterface findForKey(Long id, boolean isUpdate) throws MospException {
+		return (HumanBinaryHistoryDtoInterface)dao.findForKey(id, isUpdate);
+	}
+	
+	@Override
+	public List<HumanBinaryHistoryDtoInterface> findForActivateDate(String personalId, Date activateDate)
+			throws MospException {
+		return dao.findForActivateDate(personalId, activateDate);
 	}
 	
 }

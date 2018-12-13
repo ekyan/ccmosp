@@ -15,9 +15,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-/**
- * 
- */
 package jp.mosp.time.bean.impl;
 
 import java.sql.Connection;
@@ -44,7 +41,8 @@ import jp.mosp.time.dto.settings.impl.TmtPaidHolidayTransactionDto;
 /**
  * 有給休暇手動付与登録クラス。
  */
-public class PaidHolidayTransactionRegistBean extends PlatformBean implements PaidHolidayTransactionRegistBeanInterface {
+public class PaidHolidayTransactionRegistBean extends PlatformBean
+		implements PaidHolidayTransactionRegistBeanInterface {
 	
 	/**
 	 * 有給休暇トランザクションDAOクラス。
@@ -197,8 +195,8 @@ public class PaidHolidayTransactionRegistBean extends PlatformBean implements Pa
 		int generalWorkHour = 8;
 		ApplicationDtoInterface applicationDto = application.findForPerson(dto.getPersonalId(), dto.getActivateDate());
 		if (applicationDto != null) {
-			generalWorkHour = timeSetting
-				.getGeneralWorkHour(applicationDto.getWorkSettingCode(), dto.getActivateDate());
+			generalWorkHour = timeSetting.getGeneralWorkHour(applicationDto.getWorkSettingCode(),
+					dto.getActivateDate());
 		}
 		double holdDay = 0;
 		int holdHour = 0;
@@ -230,11 +228,9 @@ public class PaidHolidayTransactionRegistBean extends PlatformBean implements Pa
 		}
 		if (paidHolidayDataDto != null) {
 			// 申請取得
-			Map<String, Object> map = holidayRequest
-				.getRequestDayHour(dto.getPersonalId(), dto.getAcquisitionDate(), Integer.parseInt(mospParams
-					.getProperties().getCodeArray(TimeConst.CODE_HOLIDAY_TYPE, false)[0][0]), mospParams
-					.getProperties().getCodeArray(TimeConst.CODE_HOLIDAY_TYPE2_WITHPAY, false)[0][0],
-						paidHolidayDataDto.getActivateDate(), dto.getAcquisitionDate());
+			Map<String, Object> map = holidayRequest.getRequestDayHour(dto.getPersonalId(), dto.getAcquisitionDate(),
+					TimeConst.CODE_HOLIDAYTYPE_HOLIDAY, Integer.toString(TimeConst.CODE_HOLIDAYTYPE_STOCK),
+					paidHolidayDataDto.getActivateDate(), dto.getAcquisitionDate());
 			requestDay = ((Double)map.get(TimeConst.CODE_REQUEST_DAY)).doubleValue();
 			requestHour = ((Integer)map.get(TimeConst.CODE_REQUEST_HOUR)).intValue();
 		}

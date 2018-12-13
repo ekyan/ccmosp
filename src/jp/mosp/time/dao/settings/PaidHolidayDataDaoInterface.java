@@ -19,7 +19,6 @@ package jp.mosp.time.dao.settings;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 import jp.mosp.framework.base.BaseDaoInterface;
 import jp.mosp.framework.base.MospException;
@@ -41,6 +40,14 @@ public interface PaidHolidayDataDaoInterface extends BaseDaoInterface {
 	 */
 	PaidHolidayDataDtoInterface findForKey(String personalId, Date activateDate, Date acquisitionDate)
 			throws MospException;
+	
+	/**
+	 * 有効日から有給休暇データリストを取得する。<br>
+	 * @param targetDate 対象日
+	 * @return 有給休暇データリスト
+	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
+	 */
+	List<PaidHolidayDataDtoInterface> findForList(Date targetDate) throws MospException;
 	
 	/**
 	 * 個人IDと有効日から有給休暇データリストを取得する。<br>
@@ -75,30 +82,39 @@ public interface PaidHolidayDataDaoInterface extends BaseDaoInterface {
 			throws MospException;
 	
 	/**
-	 * 有給休暇データリスト取得。
-	 * <p>
-	 * 個人IDと有効日から有給休暇データリストを取得する。
-	 * </p>
+	 * 有給休暇データリスト取得。<br>
+	 * 個人IDと対象日から有給休暇データリストを取得する。<br>
+	 * 付与日が対象日以前であり、期限日が対象日以降である、
+	 * 有給休暇データを取得する。<br>
 	 * @param personalId 個人ID
-	 * @param activateDate 有効日
+	 * @param targetDate 対象日
 	 * @return 有給休暇データDTOリスト
 	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
 	 */
-	List<PaidHolidayDataDtoInterface> findForInfoList(String personalId, Date activateDate) throws MospException;
+	List<PaidHolidayDataDtoInterface> findForInfoList(String personalId, Date targetDate) throws MospException;
 	
 	/**
-	 * 有給休暇データリスト取得。
-	 * <p>
-	 * 個人IDと有効日から有給休暇データリストを取得する。
-	 * </p>
+	 * 有給休暇データリストを取得する。<br>
+	 * 個人IDと対象日から全ての有給休暇データリストを取得する。<br>
+	 * <br>
+	 * 但し、期限日が対象日より前の情報は、取得対象外とする。<br>
+	 * <br>
 	 * @param personalId 個人ID
-	 * @param firstDate 対象年月日
-	 * @param lastDate 対象年月日
+	 * @param targetDate 対象日
 	 * @return 有給休暇データDTOリスト
 	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
 	 */
-	List<PaidHolidayDataDtoInterface> findForInfoList(String personalId, Date firstDate, Date lastDate)
-			throws MospException;
+	List<PaidHolidayDataDtoInterface> findForInfoAllList(String personalId, Date targetDate) throws MospException;
+	
+	/**
+	 * 有給休暇データリスト取得。<br>
+	 * 次年度以降の有給休暇データリストを取得する。<br>
+	 * @param personalId 個人ID
+	 * @param targetDate 対象日
+	 * @return 有給休暇データリスト
+	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
+	 */
+	List<PaidHolidayDataDtoInterface> findForNextInfoList(String personalId, Date targetDate) throws MospException;
 	
 	/**
 	 * 有給休暇データ取得。
@@ -120,21 +136,26 @@ public interface PaidHolidayDataDaoInterface extends BaseDaoInterface {
 			throws MospException;
 	
 	/**
-	 * 条件による検索。
-	 * <p>
-	 * 検索条件から有給休暇データリストを取得する。
-	 * </p>
-	 * @param param 検索条件
-	 * @return 有給休暇データリスト
+	 * 個人IDと期間から期限が切れる有給休暇情報リストを取得する。<br>
+	 * 対象期間内に期限日がある有給休暇情報リストを取得する。
+	 * @param personalId 個人ID
+	 * @param startDate 期間開始日
+	 * @param endDate 期間終了日
+	 * @return 期限が切れる有給休暇情報リスト
 	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
 	 */
-	@Deprecated
-	List<PaidHolidayDataDtoInterface> findForSearch(Map<String, Object> param) throws MospException;
+	public List<PaidHolidayDataDtoInterface> getExpiredList(String personalId, Date startDate, Date endDate)
+			throws MospException;
 	
 	/**
-	 * 検索条件取得。
-	 * @return 有給休暇データ検索条件マップ
+	 * 個人IDと期間から有給休暇情報リストを取得する。<br>
+	 * 付与日が対象期間内の有給休暇情報リストを取得する。
+	 * @param personalId 個人ID
+	 * @param startDate 期間開始日
+	 * @param endDate 期間終了日
+	 * @return 期間内に付与された有給休暇情報リスト
+	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
 	 */
-	@Deprecated
-	Map<String, Object> getParamsMap();
+	public List<PaidHolidayDataDtoInterface> findForAcquisitionList(String personalId, Date startDate, Date endDate)
+			throws MospException;
 }

@@ -47,6 +47,8 @@ import jp.mosp.time.settings.vo.PaidHolidayListVo;
  * </li><li>
  * {@link #CMD_SORT}
  * </li><li>
+ * {@link #CMD_PAGE}
+ * </li><li>
  * {@link #CMD_BATCH_UPDATE}
  * </li></ul>
  */
@@ -177,7 +179,7 @@ public class PaidHolidayListAction extends TimeSettingAction {
 		vo.setTxtSearchPaidHolidayName("");
 		vo.setTxtSearchPaidHolidayAbbr("");
 		vo.setPltSearchInactivate(String.valueOf(MospConst.DELETE_FLAG_OFF));
-		vo.setPltSearchPaidHolidayType("0");
+		vo.setPltSearchPaidHolidayType("");
 		// 一括更新項目設定 
 		vo.setTxtUpdateActivateYear(DateUtility.getStringYear(date));
 		vo.setTxtUpdateActivateMonth(DateUtility.getStringMonth(date));

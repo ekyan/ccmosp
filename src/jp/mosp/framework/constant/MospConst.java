@@ -31,6 +31,21 @@ public class MospConst {
 	
 	
 	/**
+	 * 文字列(空文字)。<br>
+	 */
+	public static final String	STR_EMPTY				= "";
+	
+	/**
+	 * 文字列(半角空白)。
+	 */
+	public static final String	STR_SB_SPACE			= " ";
+	
+	/**
+	 * 文字列(全角空白)。
+	 */
+	public static final String	STR_DB_SPACE			= "　";
+	
+	/**
 	 * 無効フラグ(OFF)。<br>
 	 */
 	public static final int		INACTIVATE_FLAG_OFF		= 0;
@@ -90,36 +105,72 @@ public class MospConst {
 	public static final String	PRM_CMD					= "cmd";
 	
 	/**
+	 * パラメータID(APIBeanのモデルキー)。<br>
+	 */
+	public static final String	PRM_API					= "api";
+	
+	/**
 	 * パラメータID(ページ選択インデックス)。<br>
 	 */
 	public static final String	PRM_SELECT_INDEX		= "selectIndex";
 	
 	/**
-	 *  MosP属性名(MosPパラメータ)。<br>
+	 * パラメータID(初期変数)。<br>
+	 */
+	public static final String	PRM_INITIAL_ARG			= "arg";
+	
+	/**
+	 * MosP属性名(MosPパラメータ)。<br>
 	 */
 	public static final String	ATT_MOSP_PARAMS			= "mospParams";
 	
 	/**
-	 *  MosP属性名(マルチパートデータのリスト)。<br>
+	 * MosP属性名(マルチパートデータのリスト)。<br>
 	 */
 	public static final String	ATT_MULTIPART_LIST		= "multipartList";
 	
 	// 属性名(request.getHeader)
 	/**
-	 *  MosP属性名(USER-AGENT)。<br>
+	 * MosP属性名(USER-AGENT)。<br>
 	 */
 	public static final String	ATT_USER_AGENT			= "USER-AGENT";
 	
 	/**
-	 *  MosP属性名(REMOTE-ADDR)。<br>
+	 * MosP属性名(REMOTE-ADDR)。<br>
 	 */
 	public static final String	ATT_REMOTE_ADDR			= "REMOTE-ADDR";
 	
+	/**
+	 * MosP属性名(REQUEST-METHOD)。<br>
+	 */
+	public static final String	ATT_HTTP_METHOD			= "HTTP-METHOD";
+	
+	/**
+	 * MosP属性名(REQUEST-URL)。<br>
+	 */
+	public static final String	ATT_REQUEST_URL			= "REQUEST-URL";
+	
+	/**
+	 * MosP属性名(REQUEST-QUERY)。<br>
+	 */
+	public static final String	ATT_REQUEST_QUERY		= "REQUEST-QUERY";
+	
+	/**
+	 * MosP属性名(REFERER)。<br>
+	 */
+	public static final String	REFERER					= "Referer";
+	
 	// プロパティ名(public)
 	/**
-	 *  MosPアプリケーション設定キー(アプリケーションルートの絶対パス)。<br>
+	 * MosPアプリケーション設定キー(アプリケーションルートの絶対パス)。<br>
 	 */
 	public static final String	APP_DOCBASE				= "Docbase";
+	
+	/**
+	 * MosPアプリケーション設定キー(設定ファイル読込時間)。<br>
+	 * JavaScriptファイルやCSSファイルへのリンクに用いられる(キャッシュ対策)。<br>
+	 */
+	public static final String	APP_PROPERTY_TIME		= "PropertyTime";
 	
 	/**
 	 * MosPアプリケーション設定キー(文字コード)
@@ -137,14 +188,33 @@ public class MospConst {
 	public static final String	APP_PROPERTY_SEPARATOR	= ",";
 	
 	/**
-	 *  MosPアプリケーション設定キー(アプリケーションのタイトル)。<br>
+	 * MosPアプリケーション設定キー(favicon)。<br>
+	 */
+	public static final String	APP_FAVICON_IMAGE		= "FaviconImage";
+	
+	/**
+	 * MosPアプリケーション設定キー(タイトル接頭辞)。<br>
+	 * HTMLのtitleタグ(template.jsp)で用いられる。<br>
+	 */
+	public static final String	APP_TITLE_PREFIX		= "TitlePrefix";
+	
+	/**
+	 * MosPアプリケーション設定キー(アプリケーションのタイトル)。<br>
+	 * HTMLのtitleタグ(template.jsp)で用いられる。<br>
+	 * ヘッダ(header.jsp)で用いられる。<br>
 	 */
 	public static final String	APP_TITLE				= "Title";
 	
 	/**
-	 *  MosPアプリケーション設定キー(アプリケーションのバージョン)。<br>
+	 * MosPアプリケーション設定キー(アプリケーションのバージョン)。<br>
+	 * HTMLのtitleタグ(template.jsp)で用いられる。<br>
 	 */
 	public static final String	APP_VERSION				= "Version";
+	
+	/**
+	 * MosPアプリケーション設定キー(ログアウトボタン非表示)。<br>
+	 */
+	public static final String	APP_DISABLE_LOGOUT_BTN	= "DisableLogoutButton";
 	
 	/**
 	 * 操作区分(参照)。
@@ -166,6 +236,16 @@ public class MospConst {
 	 *  公開ディレクトリのパス。<br>
 	 */
 	public static final String	URL_PUB					= "../pub/";
+	
+	/**
+	 * HTTPメソッド(GET)。
+	 */
+	public static final String	HTTP_METHOD_GET			= "GET";
+	
+	/**
+	 * HTTPメソッド(POST)。
+	 */
+	public static final String	HTTP_METHOD_POST		= "POST";
 	
 	// 入力制限
 	/**

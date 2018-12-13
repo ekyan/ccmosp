@@ -92,6 +92,11 @@ public class HumanListVo extends PlatformVo {
 	 */
 	private String[][]			aryPltEmployment;
 	
+	/**
+	 * フリーワード検索プルダウンリスト
+	 */
+	private String[][]			aryPltFreeWordTypes;
+	
 	
 	/**
 	 * @param txtActivateYear セットする txtActivateYear
@@ -625,6 +630,20 @@ public class HumanListVo extends PlatformVo {
 	 */
 	public void setJsSearchConditionRequired(boolean jsSearchConditionRequired) {
 		this.jsSearchConditionRequired = jsSearchConditionRequired;
+	}
+	
+	/**
+	 * @param aryPltFreeWordTypes セットする aryPltFreeWordTypes
+	 */
+	public void setAryPltFreeWordTypes(String[][] aryPltFreeWordTypes) {
+		this.aryPltFreeWordTypes = getStringArrayClone(aryPltFreeWordTypes);
+	}
+	
+	/**
+	 * @return aryPltFreeWordTypes
+	 */
+	public String[][] getAryPltFreeWordTypes() {
+		return getStringArrayClone(aryPltFreeWordTypes);
 	}
 	
 }

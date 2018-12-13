@@ -42,7 +42,7 @@ public class ScheduleDateRegistBean extends PlatformBean implements ScheduleDate
 	/**
 	 * カレンダ日マスタDAOクラス。<br>
 	 */
-	ScheduleDateDaoInterface	dao;
+	ScheduleDateDaoInterface dao;
 	
 	
 	/**
@@ -125,6 +125,17 @@ public class ScheduleDateRegistBean extends PlatformBean implements ScheduleDate
 			if (mospParams.hasErrorMessage()) {
 				return;
 			}
+			// 登録済情報取得
+			ScheduleDateDtoInterface oldDto = dao.findForKey(dto.getScheduleCode(), dto.getScheduleDate());
+			if (oldDto != null) {
+				// 入力値を更新しているか確認
+				boolean workType = oldDto.getWorkTypeCode().equals(dto.getWorkTypeCode());
+				boolean remark = oldDto.getRemark().equals(dto.getRemark());
+				// 更新していない場合
+				if (workType && remark) {
+					continue;
+				}
+			}
 			// 論理削除
 			logicalDelete(dao, dto.getTmmScheduleDateId());
 			// レコード識別ID最大値をインクリメントしてDTOに設定
@@ -165,7 +176,7 @@ public class ScheduleDateRegistBean extends PlatformBean implements ScheduleDate
 	 */
 	protected void checkInsert(ScheduleDateDtoInterface dto) throws MospException {
 		// 対象レコードの有効日が重複していないかを確認
-		checkDuplicateInsert(dao.findForHistory(dto.getScheduleCode(), dto.getScheduleDate()));
+		checkDuplicateInsert(dao.findForKey(dto.getScheduleCode(), dto.getScheduleDate()));
 	}
 	
 	/**
@@ -175,18 +186,7 @@ public class ScheduleDateRegistBean extends PlatformBean implements ScheduleDate
 	 */
 	protected void checkAdd(ScheduleDateDtoInterface dto) throws MospException {
 		// 対象レコード識別IDのデータが削除されていないかを確認
-		checkDuplicateScheduleAdd(dao.findForKey(dto.getScheduleCode(), dto.getActivateDate(), dto.getScheduleDate()));
-		// 無効フラグ確認
-		if (isDtoActivate(dto)) {
-			return;
-		}
-		// 履歴追加対象コードの履歴情報を取得
-		List<ScheduleDateDtoInterface> list = dao.findForHistory(dto.getScheduleCode(), dto.getScheduleDate());
-		// 生じる無効期間による履歴追加確認要否を取得
-		if (!needCheckTermForAdd(dto, list)) {
-			// 無効期間は発生しない
-			return;
-		}
+		checkDuplicateScheduleAdd(dao.findForKey(dto.getScheduleCode(), dto.getScheduleDate()));
 	}
 	
 	/**
@@ -216,18 +216,6 @@ public class ScheduleDateRegistBean extends PlatformBean implements ScheduleDate
 	protected void checkDelete(ScheduleDateDtoInterface dto) throws MospException {
 		// 対象レコード識別IDのデータが削除されていないかを確認
 		checkExclusive(dao, dto.getTmmScheduleDateId());
-		// 対象DTOの無効フラグ確認
-		if (!isDtoActivate(dto)) {
-			// 削除対象が無効であれば無効期間は発生しない
-			return;
-		}
-		// 削除対象コードの履歴情報を取得
-		List<ScheduleDateDtoInterface> list = dao.findForHistory(dto.getScheduleCode(), dto.getScheduleDate());
-		// 生じる無効期間による削除確認要否を取得
-		if (!needCheckTermForDelete(dto, list)) {
-			// 無効期間は発生しない
-			return;
-		}
 	}
 	
 	/**
@@ -248,7 +236,49 @@ public class ScheduleDateRegistBean extends PlatformBean implements ScheduleDate
 	 * @param dto 対象DTO
 	 */
 	protected void validate(ScheduleDateDtoInterface dto) {
-		// TODO 妥当性確認
+		// カレンダコード
+		String scheduleCodeName = mospParams.getName("Calendar", "Code");
+		checkRequired(dto.getScheduleCode(), scheduleCodeName, null);
+	}
+	
+	@Override
+	public void allReflectionRegist(List<ScheduleDateDtoInterface> list) throws MospException {
+		// カレンダ日情報毎に処理
+		for (ScheduleDateDtoInterface dto : list) {
+			// DTO妥当性確認
+			validate(dto);
+			if (mospParams.hasErrorMessage()) {
+				return;
+			}
+			// 登録済情報取得
+			ScheduleDateDtoInterface oldDto = dao.findForKey(dto.getScheduleCode(), dto.getScheduleDate());
+			if (oldDto == null) {
+				// 新規登録情報の検証
+				checkInsert(dto);
+				if (mospParams.hasErrorMessage()) {
+					return;
+				}
+			} else {
+				// 履歴更新情報の検証
+				checkUpdate(dto);
+				if (mospParams.hasErrorMessage()) {
+					return;
+				}
+				// 入力値を更新しているか確認
+				boolean workType = oldDto.getWorkTypeCode().equals(dto.getWorkTypeCode());
+				boolean remark = oldDto.getRemark().equals(dto.getRemark());
+				// 更新していない場合
+				if (workType && remark) {
+					continue;
+				}
+				// 論理削除
+				logicalDelete(dao, dto.getTmmScheduleDateId());
+			}
+			// レコード識別ID最大値をインクリメントしてDTOに設定
+			dto.setTmmScheduleDateId(dao.nextRecordId());
+			// 登録処理
+			dao.insert(dto);
+		}
 	}
 	
 }

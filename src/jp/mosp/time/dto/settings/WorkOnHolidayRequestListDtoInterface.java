@@ -15,9 +15,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-/**
- * 
- */
 package jp.mosp.time.dto.settings;
 
 import java.util.Date;
@@ -38,6 +35,11 @@ public interface WorkOnHolidayRequestListDtoInterface extends RequestListDtoInte
 	Date getRequestDate();
 	
 	/**
+	 * @return 勤務形態コード。
+	 */
+	String getWorkTypeCode();
+	
+	/**
 	 * @return 出勤予定時刻。
 	 */
 	Date getStartTime();
@@ -53,24 +55,27 @@ public interface WorkOnHolidayRequestListDtoInterface extends RequestListDtoInte
 	String getRequestReason();
 	
 	/**
-	 * @return 振替日1。
+	 * @return 振替日。
 	 */
-	Date getSubstituteDate1();
+	Date getSubstituteDate();
 	
 	/**
-	 * @return 振替範囲1。
+	 * 1：全日
+	 * 2：午前
+	 * 3：午後
+	 * @return 振替範囲。
 	 */
-	int getSubstituteRange1();
+	int getSubstituteRange();
 	
 	/**
-	 * @return 振替日2。
+	 * 1：全日振出
+	 * 2：休出
+	 * 3：半振出午前
+	 * 4：半振出午後
+	 * 5：勤務形態変更有(全日)
+	 * @return 振替申請。（区分）
 	 */
-	Date getSubstituteDate2();
-	
-	/**
-	 * @return 振替範囲2。
-	 */
-	int getSubstituteRange2();
+	int getSubstitute();
 	
 	/**
 	 * @param tmdWorkOnHolidayRequestId セットする レコード識別ID。
@@ -81,6 +86,11 @@ public interface WorkOnHolidayRequestListDtoInterface extends RequestListDtoInte
 	 * @param requestDate セットする 申請日。
 	 */
 	void setRequestDate(Date requestDate);
+	
+	/**
+	 * @param workTypeCode セットする 勤務形態コード。
+	 */
+	void setWorkTypeCode(String workTypeCode);
 	
 	/**
 	 * @param startTime セットする 出勤予定時刻。
@@ -98,23 +108,26 @@ public interface WorkOnHolidayRequestListDtoInterface extends RequestListDtoInte
 	void setRequestReason(String requestReason);
 	
 	/**
-	 * @param substituteDate1 セットする 振替日1。
+	 * @param substituteDate セットする 振替日。
 	 */
-	void setSubstituteDate1(Date substituteDate1);
+	void setSubstituteDate(Date substituteDate);
 	
 	/**
-	 * @param substituteRange1 セットする 振替範囲1。
+	 * 1：全日
+	 * 2：午前
+	 * 3：午後
+	 * @param substituteRange セットする 振替範囲。
 	 */
-	void setSubstituteRange1(int substituteRange1);
+	void setSubstituteRange(int substituteRange);
 	
 	/**
-	 * @param substituteDate2 セットする 振替日2。
+	 * 1：全日振出
+	 * 2：休出
+	 * 3：半振出午前
+	 * 4：半振出午後
+	 * 5：勤務形態変更有(全日)
+	 * @param substitute セットする 振替申請。（区分）
 	 */
-	void setSubstituteDate2(Date substituteDate2);
-	
-	/**
-	 * @param substituteRange2 セットする 振替範囲2。
-	 */
-	void setSubstituteRange2(int substituteRange2);
+	void setSubstitute(int substitute);
 	
 }

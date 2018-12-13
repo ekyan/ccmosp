@@ -31,13 +31,13 @@ import jp.mosp.time.dto.settings.StockHolidayTransactionDtoInterface;
 /**
  * ストック休暇トランザクション参照クラス。
  */
-public class StockHolidayTransactionReferenceBean extends PlatformBean implements
-		StockHolidayTransactionReferenceBeanInterface {
+public class StockHolidayTransactionReferenceBean extends PlatformBean
+		implements StockHolidayTransactionReferenceBeanInterface {
 	
 	/**
 	 * ストック休暇トランザクションDAO。
 	 */
-	private StockHolidayTransactionDaoInterface	dao;
+	private StockHolidayTransactionDaoInterface dao;
 	
 	
 	/**

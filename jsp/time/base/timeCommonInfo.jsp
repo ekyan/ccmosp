@@ -26,12 +26,13 @@ import = "jp.mosp.framework.base.MospParams"
 import = "jp.mosp.framework.constant.MospConst"
 import = "jp.mosp.framework.utils.HtmlUtility"
 import = "jp.mosp.time.base.TimeVo"
+import = "jp.mosp.platform.utils.PlatformNamingUtility"
 %><%
 MospParams params = (MospParams)request.getAttribute(MospConst.ATT_MOSP_PARAMS);
 TimeVo vo = (TimeVo)params.getVo();
 %>
 	<td class="EmployeeCodeTd">
-		<%= params.getName("Employee") %><%= params.getName("Code") %><%= params.getName("Colon") %><%= HtmlUtility.escapeHTML(vo.getLblEmployeeCode()) %>
+		<%= PlatformNamingUtility.employeeCode(params) %><%= params.getName("Colon") %><%= HtmlUtility.escapeHTML(vo.getLblEmployeeCode()) %>
 	</td>
 	<td class="EmployeeNameTd">
 		<%= params.getName("FullName") %><%= params.getName("Colon") %><%= HtmlUtility.escapeHTML(vo.getLblEmployeeName()) %>

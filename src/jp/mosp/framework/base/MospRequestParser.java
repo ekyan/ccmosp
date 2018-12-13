@@ -17,6 +17,7 @@
  */
 package jp.mosp.framework.base;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -44,7 +45,7 @@ public class MospRequestParser {
 	/**
 	 * リクエスト文字エンコーディング。
 	 */
-	protected static String	encoding;
+	private static String encoding;
 	
 	
 	/**
@@ -130,8 +131,8 @@ public class MospRequestParser {
 		try {
 			// パラメータ設定
 			fileMap.put(item.getFieldName(), item.getInputStream());
-			// ファイル名取得及び設定
-			String[] fileName = { item.getName() };
+			// ファイル名取得及び設定 ※ブラウザによってはフルパスを取得してしまうことを考慮
+			String[] fileName = { (new File(item.getName())).getName() };
 			parameterMap.put(item.getFieldName(), fileName);
 		} catch (IOException e) {
 			throw new MospException(e, ExceptionConst.EX_FAIL_PARSE_MULTI, null);

@@ -26,7 +26,6 @@ import jp.mosp.framework.base.MospException;
 import jp.mosp.platform.comparator.human.HumanPositionGradeComparator;
 import jp.mosp.platform.constant.PlatformConst;
 import jp.mosp.platform.dto.human.HumanDtoInterface;
-import jp.mosp.platform.dto.workflow.RouteApplicationDtoInterface;
 import jp.mosp.platform.dto.workflow.WorkflowDtoInterface;
 
 /**
@@ -89,17 +88,6 @@ public interface WorkflowIntegrateBeanInterface {
 	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
 	 */
 	Set<String> getApproverUnitSet(String personalId, Date targetDate) throws MospException;
-	
-	/**
-	 * 個人ID及び対象日から、適用されている設定を取得する。<br>
-	 * @param personalId 個人ID
-	 * @param targetDate 対象日
-	 * @param workflowType フロー区分
-	 * @return ルート適用マスタDTO
-	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
-	 */
-	RouteApplicationDtoInterface findForPerson(String personalId, Date targetDate, int workflowType)
-			throws MospException;
 	
 	/**
 	 * 対象ワークフローにおいて、対象個人IDが操作権を持つかどうかを確認する。<br>
@@ -296,6 +284,13 @@ public interface WorkflowIntegrateBeanInterface {
 	 * @return 確認結果(true：解除承認可能である、false：解除承認可能でない)
 	 */
 	boolean isCancelApprovable(WorkflowDtoInterface dto);
+	
+	/**
+	 * 対象ワークフローが解除承認可能であるかを確認する。<br>
+	 * @param dto 対象ワークフロー情報
+	 * @return 確認結果(true：解除承認可能である、false：解除承認可能でない)
+	 */
+	boolean isCancelWithDrawnApprovable(WorkflowDtoInterface dto);
 	
 	/**
 	 * 対象日におけるユニットに設定されている承認者を取得する。<br>

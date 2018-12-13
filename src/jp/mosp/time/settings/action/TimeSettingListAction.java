@@ -182,7 +182,8 @@ public class TimeSettingListAction extends TimeSettingAction {
 	}
 	
 	/**
-	 * @throws MospException 例外処理が発生した場合 
+	 * 検索をする。
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
 	protected void search() throws MospException {
 		// VO準備
@@ -241,15 +242,6 @@ public class TimeSettingListAction extends TimeSettingAction {
 		TimeBeanHandlerInterface time = time();
 		// 勤怠設定管理情報
 		time.timeSettingRegist().update(getIdArray(vo.getCkbSelect()), getUpdateActivateDate(),
-				getInt(vo.getPltUpdateInactivate()));
-		// 一括更新結果確認
-		if (mospParams.hasErrorMessage()) {
-			// 更新失敗メッセージ設定
-			addUpdateFailedMessage();
-			return;
-		}
-		// 限度基準管理情報
-		time.limitStandardRegist().update(getIdArray(vo.getCkbSelect()), getUpdateActivateDate(),
 				getInt(vo.getPltUpdateInactivate()));
 		// 一括更新結果確認
 		if (mospParams.hasErrorMessage()) {

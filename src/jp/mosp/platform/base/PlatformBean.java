@@ -19,6 +19,7 @@ package jp.mosp.platform.base;
 
 import java.sql.Connection;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -37,10 +38,17 @@ import jp.mosp.framework.utils.DateUtility;
 import jp.mosp.framework.utils.MessageUtility;
 import jp.mosp.framework.utils.MospUtility;
 import jp.mosp.framework.utils.ValidateUtility;
+import jp.mosp.platform.constant.PlatformConst;
 import jp.mosp.platform.constant.PlatformMessageConst;
+import jp.mosp.platform.dao.human.ConcurrentDaoInterface;
+import jp.mosp.platform.dao.human.EntranceDaoInterface;
 import jp.mosp.platform.dao.human.HumanDaoInterface;
+import jp.mosp.platform.dto.base.PersonalIdDtoInterface;
+import jp.mosp.platform.dto.human.ConcurrentDtoInterface;
+import jp.mosp.platform.dto.human.EntranceDtoInterface;
 import jp.mosp.platform.dto.human.HumanDtoInterface;
 import jp.mosp.platform.utils.PlatformMessageUtility;
+import jp.mosp.platform.utils.PlatformNamingUtility;
 import jp.mosp.platform.utils.PlatformUtility;
 
 /**
@@ -50,20 +58,10 @@ import jp.mosp.platform.utils.PlatformUtility;
 public abstract class PlatformBean extends BaseBean {
 	
 	/**
-	 * 文字列(半角空白)。
-	 */
-	protected static final String	STR_SB_SAPCE	= " ";
-	
-	/**
-	 * 文字列(全角空白)。
-	 */
-	protected static final String	STR_DB_SAPCE	= "　";
-	
-	/**
 	 * 区切文字(データ)。<br>
 	 * 入力の際の区切文字として用いる。<br>
 	 */
-	protected static final String	SEPARATOR_DATA	= ",";
+	protected static final String SEPARATOR_DATA = ",";
 	
 	
 	/**
@@ -120,13 +118,13 @@ public abstract class PlatformBean extends BaseBean {
 		// 対象DTO存在確認
 		if (!list.isEmpty()) {
 			// 対象DTOが存在する場合
-			mospParams.addErrorMessage(PlatformMessageConst.MSG_REG_DUPLICATE);
+			PlatformMessageUtility.addErrorDuplicate(mospParams);
 		}
 	}
 	
 	/**
 	 * 重複確認(新規登録用)を行う。<br>
-	 * 対象DTOリストのサイズが0でない場合は、
+	 * 対象DTOがnullでない場合は、
 	 * {@link #mospParams}にエラーメッセージを追加する。<br>
 	 * @param dto 対象となるDTO
 	 */
@@ -134,7 +132,7 @@ public abstract class PlatformBean extends BaseBean {
 		// 対象DTO存在確認
 		if (dto != null) {
 			// 対象DTOが存在する場合
-			mospParams.addErrorMessage(PlatformMessageConst.MSG_REG_DUPLICATE);
+			PlatformMessageUtility.addErrorDuplicate(mospParams);
 		}
 	}
 	
@@ -194,7 +192,7 @@ public abstract class PlatformBean extends BaseBean {
 	protected void validateAryId(long[] aryId) {
 		// 存在確認
 		if (aryId == null || aryId.length == 0) {
-			mospParams.addErrorMessage(PlatformMessageConst.MSG_CHECK);
+			PlatformMessageUtility.addErrorRequireCheck(mospParams);
 		}
 	}
 	
@@ -219,6 +217,25 @@ public abstract class PlatformBean extends BaseBean {
 		// 無効期間で人事履歴情報を取得(対象DTOの有効日～次の履歴の有効日)
 		humanList.addAll(humanDao.findForTerm(dto.getActivateDate(), getNextActivateDate(dto.getActivateDate(), list)));
 		return humanList;
+	}
+	
+	/**
+	 * 確認すべき兼務情報リストを取得する。<br>
+	 * 対象DTOの有効日～対象DTOの次の履歴の有効日に有効日が含まれる兼務情報リストを取得する。<br>
+	 * 各種マスタ操作時に生じる無効期間におけるコード使用確認等で用いられる。<br>
+	 * @param dto 対象DTO
+	 * @param list 対象コード履歴リスト
+	 * @return 兼務情報リスト
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	protected List<ConcurrentDtoInterface> getConcurrentListForCheck(PlatformDtoInterface dto,
+			List<? extends PlatformDtoInterface> list) throws MospException {
+		// 人事マスタDAO取得
+		ConcurrentDaoInterface concurrentDao = (ConcurrentDaoInterface)createDao(ConcurrentDaoInterface.class);
+		// 削除対象の有効日以前で最新の兼務情報を取得
+		List<ConcurrentDtoInterface> concurrentList = concurrentDao.findForTerm(dto.getActivateDate(),
+				getNextActivateDate(dto.getActivateDate(), list));
+		return concurrentList;
 	}
 	
 	/**
@@ -339,6 +356,25 @@ public abstract class PlatformBean extends BaseBean {
 	}
 	
 	/**
+	 * 個人ID及び対象日時点から、入社しているか確認する。<br>
+	 * @param personalId 個人ID
+	 * @param targetDate 対象日
+	 * @return 確認結果(true：入社している、false：入社していない)
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	protected boolean isEntered(String personalId, Date targetDate) throws MospException {
+		// 人事入社情報DAO準備
+		EntranceDaoInterface entranceDao = (EntranceDaoInterface)createDao(EntranceDaoInterface.class);
+		EntranceDtoInterface dto = entranceDao.findForInfo(personalId);
+		// 情報がないまたは入社日がない場合
+		if (dto == null || dto.getEntranceDate() == null) {
+			return false;
+		}
+		// 入社日より対象日が後の場合true
+		return targetDate.compareTo(dto.getEntranceDate()) >= 0;
+	}
+	
+	/**
 	 * 個人ID及び対象日から、対象日以前で最新の人事マスタ情報を取得する。<br>
 	 * @param personalId 個人ID
 	 * @param targetDate 対象日
@@ -359,33 +395,20 @@ public abstract class PlatformBean extends BaseBean {
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
 	protected HumanDtoInterface getUserHumanInfo(Date targetDate) throws MospException {
+		// 対象日が存在しない場合
 		if (targetDate == null) {
-			return getUserHumanInfo();
+			// 対象日としてシステム日付を設定
+			targetDate = getSystemDate();
 		}
-		// ユーザ情報確認
+		// ログインユーザ情報が存在しない場合
 		if (mospParams.getUser() == null) {
+			// nullを取得
 			return null;
 		}
 		// ユーザの個人IDを取得
 		String personalId = mospParams.getUser().getPersonalId();
-		// システム日付における人事情報を取得
+		// 対象日における人事情報を取得
 		return getHumanInfo(personalId, targetDate);
-	}
-	
-	/**
-	 * ログインユーザのシステム日付における人事マスタ情報を取得する。<br>
-	 * @return 人事マスタ情報
-	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
-	 */
-	protected HumanDtoInterface getUserHumanInfo() throws MospException {
-		// ユーザ情報確認
-		if (mospParams.getUser() == null) {
-			return null;
-		}
-		// ユーザの個人IDを取得
-		String personalId = mospParams.getUser().getPersonalId();
-		// システム日付における人事情報を取得
-		return getHumanInfo(personalId, getSystemDate());
 	}
 	
 	/**
@@ -589,7 +612,7 @@ public abstract class PlatformBean extends BaseBean {
 	 * @return 確認結果(true：有効、false：無効)
 	 */
 	protected boolean isDtoActivate(BaseDtoInterface dto) {
-		return ((PlatformDtoInterface)dto).getInactivateFlag() == MospConst.INACTIVATE_FLAG_OFF;
+		return PlatformUtility.isDtoActivate((PlatformDtoInterface)dto);
 	}
 	
 	/**
@@ -913,11 +936,11 @@ public abstract class PlatformBean extends BaseBean {
 		sb.append(code);
 		// 全角空白設定
 		for (int i = 0; i < doubleBytes; i++) {
-			sb.append(STR_DB_SAPCE);
+			sb.append(MospConst.STR_DB_SPACE);
 		}
 		// 半角空白設定
 		for (int i = 0; i < singleBytes; i++) {
-			sb.append(STR_SB_SAPCE);
+			sb.append(MospConst.STR_SB_SPACE);
 		}
 		// 名称付加
 		sb.append(name);
@@ -991,6 +1014,28 @@ public abstract class PlatformBean extends BaseBean {
 	}
 	
 	/**
+	 * 重複がない区切り文字データに変更する。<br>
+	 * 区切り文字データ内で値が重複している場合、
+	 * 重複がない区切り文字データに変更する。<br>
+	 * @param values 重複している値
+	 * @param separator 区切文字
+	 * @return 重複がない区切り文字データ
+	 */
+	protected String overlapValue(String values, String separator) {
+		List<String> idList = new ArrayList<String>();
+		// 個人ID毎に確認
+		for (String value : asList(values, separator)) {
+			// 値がない場合
+			if (idList.contains(value)) {
+				continue;
+			}
+			// 値追加
+			idList.add(value);
+		}
+		return toSeparatedString(idList, separator);
+	}
+	
+	/**
 	 * 連番(文字列)をフォーマットの形式で発行する。<br>
 	 * @param sequenceNo 連番値
 	 * @param format    連番フォーマット
@@ -1010,7 +1055,7 @@ public abstract class PlatformBean extends BaseBean {
 	 */
 	protected Integer getInteger(String value) {
 		try {
-			return new Integer(value);
+			return Integer.valueOf(value);
 		} catch (NumberFormatException e) {
 			return null;
 		}
@@ -1042,6 +1087,24 @@ public abstract class PlatformBean extends BaseBean {
 		if (ValidateUtility.chkRequired(value) == false) {
 			// エラーメッセージ追加
 			addRequiredErrorMessage(fieldName, row);
+		}
+	}
+	
+	/**
+	 * 文字列長(入力文字数)を確認する。<br>
+	 * 妥当でない場合は、MosP処理情報にエラーメッセージが加えられる。<br>
+	 * @param value     確認対象文字列
+	 * @param length 文字数
+	 * @param fieldName 確認対象フィールド名
+	 * @param row       行インデックス
+	 */
+	protected void checkInputLength(String value, int length, String fieldName, Integer row) {
+		// 文字列長(入力文字数)確認
+		if (ValidateUtility.chkInputLength(value, length) == false) {
+			// エラーメッセージ追加
+			String[] rep = { fieldName, String.valueOf(length) };
+			// 桁数エラー
+			mospParams.addErrorMessage(PlatformMessageConst.MSG_DIGIT_NUMBER, rep);
 		}
 	}
 	
@@ -1084,6 +1147,21 @@ public abstract class PlatformBean extends BaseBean {
 	 * @param fieldName 確認対象フィールド名
 	 * @param row       行インデックス
 	 */
+	protected void checkMailAddress(String value, String fieldName, Integer row) {
+		// 文字列長(最大文字数)確認
+		if (ValidateUtility.chkRegex("[!#-9A-~]+@+[A-Za-z0-9]+.+[^.]$", value) == false) {
+			// エラーメッセージ追加
+			addUserIdErrorMessage(fieldName, row);
+		}
+	}
+	
+	/**
+	 * 対象文字列が半角英数字又は記号(-_.@)であることを確認する。<br>
+	 * 妥当でない場合は、MosP処理情報にエラーメッセージが加えられる。<br>
+	 * @param value     確認対象文字列
+	 * @param fieldName 確認対象フィールド名
+	 * @param row       行インデックス
+	 */
 	protected void checkUserId(String value, String fieldName, Integer row) {
 		// 文字列長(最大文字数)確認
 		if (ValidateUtility.chkRegex("[._@A-Za-z0-9-]*", value) == false) {
@@ -1108,6 +1186,21 @@ public abstract class PlatformBean extends BaseBean {
 	}
 	
 	/**
+	 * 対象文字列が半角数字であることを確認する。<br>
+	 * 妥当でない場合は、MosP処理情報にエラーメッセージが加えられる。<br>
+	 * @param value     確認対象文字列
+	 * @param fieldName 確認対象フィールド名
+	 * @param row       行インデックス
+	 */
+	protected void checkTypeNumber(String value, String fieldName, Integer row) {
+		// 文字列長(最大文字数)確認
+		if (ValidateUtility.chkRegex("[0-9]*", value) == false) {
+			// エラーメッセージ追加
+			addTypeNumberErrorMessage(fieldName, row);
+		}
+	}
+	
+	/**
 	 * 対象文字列が半角英数字であることを確認する。<br>
 	 * 妥当でない場合は、MosP処理情報にエラーメッセージが加えられる。<br>
 	 * @param value     確認対象文字列
@@ -1119,6 +1212,39 @@ public abstract class PlatformBean extends BaseBean {
 		if (ValidateUtility.chkRegex("[｡-ﾟ -~]*", value) == false) {
 			// エラーメッセージ追加
 			addTypeKanaErrorMessage(fieldName, row);
+		}
+	}
+	
+	/**
+	 * 対象文字列が利用可能文字列であることを確認する。<br>
+	 * 妥当でない場合は、MosP処理情報にエラーメッセージが加えられる。<br>
+	 * @param value      確認対象文字列
+	 * @param availables 利用可能文字列リスト
+	 * @param fieldName  確認対象フィールド名
+	 * @param row        行インデックス
+	 */
+	protected void checkAvailableChars(String value, List<String> availables, String fieldName, Integer row) {
+		// 利用可能文字列リストに確認対象文字列が含まれない場合
+		if (availables.contains(value) == false) {
+			// エラーメッセージ追加
+			PlatformMessageUtility.addErrorAvailableChars(mospParams, fieldName, availables, row);
+		}
+	}
+	
+	/**
+	 * 対象文字列が小数であることを確認する。<br>
+	 * 妥当でない場合は、MosP処理情報にエラーメッセージが加えられる。<br>
+	 * @param value        確認対象文字列
+	 * @param integerDigit 整数部桁数
+	 * @param decimalDigit 小数部桁数
+	 * @param fieldName    確認対象フィールド名
+	 * @param row          行インデックス
+	 */
+	protected void checDecimal(String value, int integerDigit, int decimalDigit, String fieldName, Integer row) {
+		// 小数を確認
+		if (ValidateUtility.chkDecimal(value, integerDigit, decimalDigit) == false) {
+			// エラーメッセージ追加
+			PlatformMessageUtility.addErrorCheckDecimal(mospParams, fieldName, integerDigit, decimalDigit, row);
 		}
 	}
 	
@@ -1261,6 +1387,16 @@ public abstract class PlatformBean extends BaseBean {
 	}
 	
 	/**
+	 * 登録情報の文字列が半角数字でない場合のエラーメッセージを追加する。<br>
+	 * 行インデックスがnullでない場合、エラーメッセージに行番号が加えられる。<br>
+	 * @param fieldName 対象フィールド名
+	 * @param row       対象行インデックス
+	 */
+	protected void addTypeNumberErrorMessage(String fieldName, Integer row) {
+		mospParams.addErrorMessage(PlatformMessageConst.MSG_NUMBER_CHECK_AMP, getRowedFieldName(fieldName, row));
+	}
+	
+	/**
 	 * 登録情報の文字列がカナでない場合のエラーメッセージを追加する。<br>
 	 * 行インデックスがnullでない場合、エラーメッセージに行番号が加えられる。<br>
 	 * @param fieldName 対象フィールド名
@@ -1275,13 +1411,6 @@ public abstract class PlatformBean extends BaseBean {
 	 */
 	protected void addExclusiveErrorMessage() {
 		mospParams.addErrorMessage(PlatformMessageConst.MSG_UPDATE_OTHER_USER);
-	}
-	
-	/**
-	 * 社員が入社していない場合のエラーメッセージを設定する。<br>
-	 */
-	protected void addNotEntranceErrorMessage() {
-		mospParams.addErrorMessage(PlatformMessageConst.MSG_EMPLOYEE_IS_NOT, mospParams.getName("Joined"));
 	}
 	
 	/**
@@ -1328,7 +1457,7 @@ public abstract class PlatformBean extends BaseBean {
 	 * @return 社員コード名称
 	 */
 	protected String getNameEmployeeCode() {
-		return mospParams.getName("Employee", "Code");
+		return PlatformNamingUtility.employeeCode(mospParams);
 	}
 	
 	/**
@@ -1336,7 +1465,7 @@ public abstract class PlatformBean extends BaseBean {
 	 * @return 有効日名称
 	 */
 	protected String getNameActivateDate() {
-		return mospParams.getName("ActivateDate");
+		return PlatformNamingUtility.activateDate(mospParams);
 	}
 	
 	/**
@@ -1355,4 +1484,95 @@ public abstract class PlatformBean extends BaseBean {
 		return mospParams.getName("Position");
 	}
 	
+	/**
+	 * 一度に取得する個人情報の最大数の取得を取得する。<br>
+	 * @return 一度に取得する個人情報の最大数
+	 */
+	protected int getPersonalIdsMaxIndex() {
+		return mospParams.getApplicationProperty(PlatformConst.APP_PERSONAL_IDS_MAX_INDEX,
+				PlatformConst.DEFAULT_PERSONAL_IDS_MAX_INDEX_VALUE);
+	}
+	
+	/**
+	 * 個人ID配列を取得する。<br>
+	 * @param srcArray  ソース個人ID配列
+	 * @param fromIndex 配列の開始位置
+	 * @param length    配列の長さ
+	 * @return 個人ID配列
+	 */
+	protected String[] getPersonalIds(String[] srcArray, int fromIndex, int length) {
+		int toIndex = fromIndex + length;
+		if (toIndex > srcArray.length) {
+			toIndex = srcArray.length;
+		}
+		String[] personalIds = new String[toIndex - fromIndex];
+		for (int cnt = 0; cnt < personalIds.length; cnt++) {
+			personalIds[cnt] = srcArray[fromIndex + cnt];
+		}
+		return personalIds;
+	}
+	
+	/**
+	 * 個人ID配列を取得する。<br>
+	 * @param personalIdList ソース個人IDリスト
+	 * @param fromIndex      配列の開始位置
+	 * @param length         配列の長さ
+	 * @return 個人ID配列
+	 */
+	protected String[] getPersonalIdsSubList(List<String> personalIdList, int fromIndex, int length) {
+		return getPersonalIds(personalIdList.toArray(new String[personalIdList.size()]), fromIndex, length);
+	}
+	
+	/**
+	 * 個人ID配列を取得する。<br>
+	 * @param list 対象リスト(個人IDを有するDTOのリスト)
+	 * @return 個人ID配列
+	 */
+	protected String[] getPersonalIds(List<? extends PersonalIdDtoInterface> list) {
+		// 個人IDリストを準備
+		List<String> personalIds = new ArrayList<String>();
+		// 情報毎に処理
+		for (PersonalIdDtoInterface dto : list) {
+			personalIds.add(dto.getPersonalId());
+		}
+		// 個人ID配列を取得
+		return MospUtility.toArray(personalIds);
+	}
+	
+	/**
+	 * 個人ID配列を取得する。<br>
+	 * @param list      対象リスト(個人IDを有するDTOのリスト)
+	 * @param fromIndex 配列の開始位置
+	 * @param length    配列の長さ
+	 * @return 個人ID配列
+	 */
+	protected String[] getPersonalIds(List<? extends PersonalIdDtoInterface> list, int fromIndex, int length) {
+		int toIndex = fromIndex + length;
+		if (toIndex > list.size()) {
+			toIndex = list.size();
+		}
+		// 個人IDリストを準備
+		List<String> personalIds = new ArrayList<String>();
+		// 情報毎に処理
+		for (PersonalIdDtoInterface dto : list.subList(fromIndex, toIndex)) {
+			personalIds.add(dto.getPersonalId());
+		}
+		// 個人ID配列を取得
+		return MospUtility.toArray(personalIds);
+	}
+	
+	/**
+	 * 部分リストを取得する。<br>
+	 * @param list      ソースリスト
+	 * @param fromIndex 開始位置
+	 * @param length    長さ
+	 * @return 部分リスト
+	 */
+	protected List<?> getSubList(List<?> list, int fromIndex, int length) {
+		int toIndex = fromIndex + length;
+		if (toIndex > list.size()) {
+			toIndex = list.size();
+		}
+		return list.subList(fromIndex, toIndex);
+	}
 }

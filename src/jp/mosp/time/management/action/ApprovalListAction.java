@@ -32,8 +32,6 @@ import jp.mosp.time.base.TimeAction;
 import jp.mosp.time.bean.ApprovalInfoReferenceBeanInterface;
 import jp.mosp.time.comparator.settings.ManagementRequestRequestDateComparator;
 import jp.mosp.time.constant.TimeConst;
-import jp.mosp.time.dto.settings.ApplicationDtoInterface;
-import jp.mosp.time.dto.settings.LimitStandardDtoInterface;
 import jp.mosp.time.dto.settings.ManagementRequestListDtoInterface;
 import jp.mosp.time.input.action.ApprovalHistoryAction;
 import jp.mosp.time.management.vo.ApprovalListVo;
@@ -265,7 +263,8 @@ public class ApprovalListAction extends TimeAction {
 		// 機能コードをVOに設定
 		vo.setFunctionCode(functionCode);
 		List<ManagementRequestListDtoInterface> list = null;
-		if (PlatformConst.CODE_STATUS_CANCEL_APPLY.equals(approvalType)) {
+		if (PlatformConst.CODE_STATUS_CANCEL_APPLY.equals(approvalType)
+				|| PlatformConst.CODE_STATUS_CANCEL_WITHDRAWN_APPLY.equals(approvalType)) {
 			list = approvalRef.getApprovableList(cancelableMap, subCancelableMap, "");
 		} else {
 			// 機能コードで承認可能勤怠申請情報リストを取得
@@ -301,6 +300,7 @@ public class ApprovalListAction extends TimeAction {
 			// 承認履歴画面へ遷移(連続実行コマンド設定)
 			mospParams.setNextCommand(vo.getAryLblRequestTypeHistoryCmd(getTransferredIndex()));
 		} else if (actionName.equals(ApprovalCardAction.class.getName())) {
+			mospParams.addGeneralParam(TimeConst.PRM_ROLL_ARRAY, getArray());
 			// 承認管理詳細画面へ遷移(連続実行コマンド設定)
 			mospParams.setNextCommand(vo.getAryLblRequestTypeCmd(getTransferredIndex()));
 		}
@@ -412,7 +412,6 @@ public class ApprovalListAction extends TimeAction {
 		String[] aryLblRequestFunctionCode = new String[list.size()];
 		String[] aryLblRequestTypeCmd = new String[list.size()];
 		String[] aryLblRequestTypeHistoryCmd = new String[list.size()];
-		String[] aryLblWrokflow = new String[list.size()];
 		String[] aryState = new String[list.size()];
 		String[] aryStage = new String[list.size()];
 		long[] aryWorkflow = new long[list.size()];
@@ -425,28 +424,6 @@ public class ApprovalListAction extends TimeAction {
 		for (BaseDtoInterface baseDto : list) {
 			// リストから情報を取得
 			ManagementRequestListDtoInterface dto = (ManagementRequestListDtoInterface)baseDto;
-			// 限度基準を取得
-			ApplicationDtoInterface appDto = timeReference().application().findForPerson(dto.getPersonalId(), date);
-			// 限度基準が無い場合は残業時間の判定はないので各数値に1000を代入する
-			int overWrokTimeWrn = 1000;
-			int overWrokTimeInf = 1000;
-			if (appDto != null) {
-				LimitStandardDtoInterface limitDto = timeReference().limitStandard().getLimitStandardInfo(
-						appDto.getApplicationCode(), date, "month1");
-				if (limitDto != null) {
-					overWrokTimeWrn = limitDto.getWarningTime();
-					overWrokTimeInf = limitDto.getAttentionTime();
-				}
-			}
-			// 社員の残業時間を取得するメソッドが必要 → 現状は必要なし
-			int overWorkTime = 0;
-			if (overWrokTimeWrn < overWorkTime) {
-				aryClasOverTimeIn[i] = "style=\"background-color: red\"";
-			} else if (overWrokTimeInf < overWorkTime) {
-				aryClasOverTimeIn[i] = "style=\"background-color: yellow\"";
-			} else {
-				aryClasOverTimeIn[i] = "";
-			}
 			// 配列に情報を設定
 			aryLblEmployeeCode[i] = dto.getEmployeeCode();
 			aryLblEmployeeName[i] = getLastFirstName(dto.getLastName(), dto.getFirstName());
@@ -457,14 +434,14 @@ public class ApprovalListAction extends TimeAction {
 			aryLblRequestFunctionCode[i] = dto.getRequestType();
 			aryLblRequestDate[i] = DateUtility.getStringDateAndDay(dto.getRequestDate());
 			aryRequestDate[i] = DateUtility.getStringDate(dto.getRequestDate());
-			aryLblRequestInfo[i] = dto.getRequestInfo();
+			aryLblRequestInfo[i] = getRequestInfo(dto);
 			aryLblState[i] = getStatusStageValueView(dto.getState(), dto.getStage());
 			aryStateStyle[i] = getStatusColor(dto.getState());
-			aryLblWrokflow[i] = String.valueOf(dto.getWorkflow());
 			aryState[i] = String.valueOf(dto.getState());
 			aryStage[i] = String.valueOf(dto.getStage());
 			aryWorkflow[i] = dto.getWorkflow();
 			aryBackColor[i] = setBackColor(dto.getPersonalId(), dto.getRequestDate(), dto.getRequestType());
+			aryClasOverTimeIn[i] = "";
 			i++;
 		}
 		// データをVOに設定

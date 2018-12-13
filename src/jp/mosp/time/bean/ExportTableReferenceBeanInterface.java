@@ -20,6 +20,7 @@
  */
 package jp.mosp.time.bean;
 
+import java.util.Date;
 import java.util.List;
 
 import jp.mosp.framework.base.MospException;
@@ -82,8 +83,25 @@ public interface ExportTableReferenceBeanInterface {
 	void setSectionCode(String sectionCode);
 	
 	/**
+	 * @param ckbNeedLowerSection セットする ckbNeedLowerSection
+	 */
+	void setCkbNeedLowerSection(int ckbNeedLowerSection);
+	
+	/**
 	 * @param positionCode セットする positionCode
 	 */
 	void setPositionCode(String positionCode);
+	
+	/**
+	 * @param personalId 個人ID
+	 * @param acquisitionDate 有給休暇付与日
+	 * @param fieldName 項目名(日数or時間数)
+	 * @param status 承認状態 true：承認済のみ false:下書、取下以外
+	 * @return 有給休暇残日数
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 * 
+	 */
+	String getCarryoverTime(String personalId, Date acquisitionDate, String fieldName, boolean status)
+			throws MospException;
 	
 }

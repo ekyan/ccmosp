@@ -47,7 +47,7 @@ public abstract class PlatformSystemAction extends PlatformAction {
 	 * ページの先頭へDIV(HTML)のID。<br>
 	 * スクロール先として設定するのに、用いる。<br>
 	 */
-	protected static final String	HID_DIV_MOVE_UP	= "divMoveUp";
+	protected static final String HID_DIV_MOVE_UP = "divMoveUp";
 	
 	
 	/**
@@ -165,6 +165,55 @@ public abstract class PlatformSystemAction extends PlatformAction {
 		vo.setModeCardEdit(PlatformConst.MODE_CARD_EDIT_INSERT);
 		// 有効無効フラグ設定
 		vo.setPltEditInactivate(String.valueOf(MospConst.DELETE_FLAG_OFF));
+	}
+	
+	/**
+	 * VOから編集モードを取得する。<br>
+	 * @return 編集モード
+	 */
+	protected String getModeCardEdit() {
+		// VO取得
+		PlatformSystemVo vo = (PlatformSystemVo)mospParams.getVo();
+		// 編集モードを取得
+		return vo.getModeCardEdit() == null ? "" : vo.getModeCardEdit();
+	}
+	
+	/**
+	 * 編集モードが新規登録モードであるかを確認する。<br>
+	 * @return 確認結果(true：新規登録モードである、false：そうでない)
+	 */
+	protected boolean isInsertMode() {
+		// 編集モードが新規登録モードであるかを確認
+		return getModeCardEdit().equals(PlatformConst.MODE_CARD_EDIT_INSERT);
+	}
+	
+	/**
+	 * 編集モードが履歴編集モードであるかを確認する。<br>
+	 * @return 確認結果(true：履歴編集モードである、false：そうでない)
+	 */
+	protected boolean isEditMode() {
+		// 編集モードが履歴編集モードであるかを確認
+		return getModeCardEdit().equals(PlatformConst.MODE_CARD_EDIT_EDIT);
+	}
+	
+	/**
+	 * 編集モードが履歴追加モードであるかを確認する。<br>
+	 * @return 確認結果(true：履歴追加モードである、false：そうでない)
+	 */
+	protected boolean isAddMode() {
+		// 編集モードが履歴追加モードであるかを確認
+		return getModeCardEdit().equals(PlatformConst.MODE_CARD_EDIT_ADD);
+	}
+	
+	/**
+	 * VOからレコード識別IDを取得する。<br>
+	 * @return コード識別ID
+	 */
+	protected long getRecordId() {
+		// VO取得
+		PlatformSystemVo vo = (PlatformSystemVo)mospParams.getVo();
+		// レコード識別ID取得
+		return vo.getRecordId();
 	}
 	
 	/**

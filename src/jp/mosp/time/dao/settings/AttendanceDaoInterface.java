@@ -96,4 +96,15 @@ public interface AttendanceDaoInterface extends BaseDaoInterface {
 	List<AttendanceDtoInterface> findForWorkflowStatus(String personalId, int workflowStage, String workflowStatus,
 			String routeCode) throws MospException;
 	
+	/**
+	 * 再申請対象エクスポート用の勤怠情報を取得する。<br>
+	 * @param personalId 個人ID
+	 * @param firstDate 初日
+	 * @param lastDate 末日
+	 * @return 勤怠情報リスト
+	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
+	 */
+	List<AttendanceDtoInterface> findForReapplicationExport(String personalId, Date firstDate, Date lastDate)
+			throws MospException;
+	
 }

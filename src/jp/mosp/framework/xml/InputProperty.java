@@ -20,22 +20,22 @@ package jp.mosp.framework.xml;
 import jp.mosp.framework.property.BaseProperty;
 
 /**
- * 人事汎用入力形式設定情報を格納する。
+ * 人事汎用入力形式設定情報を格納する。<br>
  */
 public class InputProperty implements BaseProperty {
 	
 	/**
-	 * 人事汎用入力形式。
+	 * 人事汎用入力形式。<br>
 	 */
 	private final String	key;
 	
 	/**
-	 * 
+	 * 区分。<br>
 	 */
 	private final String	type;
 	
 	/**
-	 * 
+	 * 項目長。<br>
 	 */
 	private final int		maxlength;
 	
@@ -63,7 +63,7 @@ public class InputProperty implements BaseProperty {
 	/**
 	 * 人事汎用入力形式設定情報を生成する。
 	 * @param key 人事汎用入力形式
-	 * @param type
+	 * @param type 区分
 	 */
 	public InputProperty(String key, String type) {
 		this.key = key;
@@ -77,8 +77,8 @@ public class InputProperty implements BaseProperty {
 	/**
 	 * 
 	 * @param key 人事汎用入力形式
-	 * @param type
-	 * @param maxlength
+	 * @param type 区分
+	 * @param maxlength 項目長
 	 * @param css       CSS
 	 * @param codeKey   MosPコードキー
 	 * @param namingKey 名称区分

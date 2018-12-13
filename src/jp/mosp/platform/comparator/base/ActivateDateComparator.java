@@ -20,15 +20,15 @@ package jp.mosp.platform.comparator.base;
 import java.util.Comparator;
 import java.util.Date;
 
-import jp.mosp.platform.base.PlatformDtoInterface;
+import jp.mosp.platform.base.ActivateDtoInterface;
 
 /**
  * 有効日による比較クラス。<br>
  */
-public class ActivateDateComparator implements Comparator<PlatformDtoInterface> {
+public class ActivateDateComparator implements Comparator<ActivateDtoInterface> {
 	
 	@Override
-	public int compare(PlatformDtoInterface dto1, PlatformDtoInterface dto2) {
+	public int compare(ActivateDtoInterface dto1, ActivateDtoInterface dto2) {
 		Date date1 = dto1.getActivateDate();
 		Date date2 = dto2.getActivateDate();
 		if (date1 == null && date2 == null) {

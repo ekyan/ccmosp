@@ -20,6 +20,7 @@ package jp.mosp.platform.dto.system.impl;
 import java.util.Date;
 
 import jp.mosp.framework.base.BaseDto;
+import jp.mosp.framework.utils.CapsuleUtility;
 import jp.mosp.platform.dto.system.GeneralDtoInterface;
 
 /**
@@ -92,7 +93,7 @@ public class GeneralDto extends BaseDto implements GeneralDtoInterface {
 	
 	@Override
 	public Date getGeneralDate() {
-		return generalDate;
+		return getDateClone(generalDate);
 	}
 	
 	@Override
@@ -102,7 +103,7 @@ public class GeneralDto extends BaseDto implements GeneralDtoInterface {
 	
 	@Override
 	public Date getGeneralTime() {
-		return generalTime;
+		return getDateClone(generalTime);
 	}
 	
 	@Override
@@ -132,7 +133,7 @@ public class GeneralDto extends BaseDto implements GeneralDtoInterface {
 	
 	@Override
 	public void setGeneralDate(Date generalDate) {
-		this.generalDate = generalDate;
+		this.generalDate = getDateClone(generalDate);
 	}
 	
 	@Override
@@ -142,7 +143,7 @@ public class GeneralDto extends BaseDto implements GeneralDtoInterface {
 	
 	@Override
 	public void setGeneralTime(Date generalTime) {
-		this.generalTime = generalTime;
+		this.generalTime = getDateClone(generalTime);
 	}
 	
 	@Override
@@ -157,12 +158,12 @@ public class GeneralDto extends BaseDto implements GeneralDtoInterface {
 	
 	@Override
 	public byte[] getGeneralBinary() {
-		return generalBinary;
+		return CapsuleUtility.getByteArrayClone(generalBinary);
 	}
 	
 	@Override
 	public void setGeneralBinary(byte[] generalBinary) {
-		this.generalBinary = generalBinary;
+		this.generalBinary = CapsuleUtility.getByteArrayClone(generalBinary);
 	}
 	
 }

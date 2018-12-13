@@ -28,14 +28,14 @@ import java.util.Set;
 import jp.mosp.framework.base.BaseDto;
 import jp.mosp.framework.base.BaseDtoInterface;
 import jp.mosp.framework.base.MospException;
-import jp.mosp.framework.constant.MospConst;
 import jp.mosp.framework.utils.DateUtility;
+import jp.mosp.framework.utils.RoleUtility;
 import jp.mosp.platform.base.PlatformDao;
 import jp.mosp.platform.dao.human.HumanDaoInterface;
+import jp.mosp.platform.dao.system.UserExtraRoleDaoInterface;
 import jp.mosp.platform.dao.system.UserMasterDaoInterface;
 import jp.mosp.platform.dto.system.UserMasterDtoInterface;
 import jp.mosp.platform.dto.system.impl.PfmUserDto;
-import jp.mosp.platform.utils.PlatformUtility;
 
 /**
  * ユーザマスタDAOクラス。
@@ -43,38 +43,43 @@ import jp.mosp.platform.utils.PlatformUtility;
 public class PfmUserDao extends PlatformDao implements UserMasterDaoInterface {
 	
 	/**
+	 * ユーザ追加ロール情報DAO(サブクエリ等取得用)。<br>
+	 */
+	protected UserExtraRoleDaoInterface	userExtraRoleDao;
+	
+	/**
 	 * pfm_user(ユーザマスタ)。
 	 */
-	public static final String	TABLE				= "pfm_user";
+	public static final String			TABLE				= "pfm_user";
 	/**
 	 * pfm_user_id(レコード識別ID)。
 	 */
-	public static final String	COL_PFM_USER_ID		= "pfm_user_id";
+	public static final String			COL_PFM_USER_ID		= "pfm_user_id";
 	/**
 	 * user_id(ユーザID)。
 	 */
-	public static final String	COL_USER_ID			= "user_id";
+	public static final String			COL_USER_ID			= "user_id";
 	/**
 	 * activate_date(有効日)。
 	 */
-	public static final String	COL_ACTIVATE_DATE	= "activate_date";
+	public static final String			COL_ACTIVATE_DATE	= "activate_date";
 	/**
 	 * personal_id(個人ID)。
 	 */
-	public static final String	COL_PERSONAL_ID		= "personal_id";
+	public static final String			COL_PERSONAL_ID		= "personal_id";
 	/**
 	 * role_code(ロールコード)。
 	 */
-	public static final String	COL_ROLE_CODE		= "role_code";
+	public static final String			COL_ROLE_CODE		= "role_code";
 	/**
 	 * inactivate_flag(無効フラグ)。
 	 */
-	public static final String	COL_INACTIVATE_FLAG	= "inactivate_flag";
+	public static final String			COL_INACTIVATE_FLAG	= "inactivate_flag";
 	
 	/**
 	 * KEY_1 = pfm_user_id(レコード識別ID)。
 	 */
-	public static final String	KEY_1				= COL_PFM_USER_ID;
+	public static final String			KEY_1				= COL_PFM_USER_ID;
 	
 	
 	/**
@@ -87,6 +92,15 @@ public class PfmUserDao extends PlatformDao implements UserMasterDaoInterface {
 	@Override
 	public void initDao() {
 		// 処理無し
+	}
+	
+	/**
+	 * サブクエリ等を取得するためのDAOクラスを設定する。<br>
+	 * @throws MospException インスタンスの取得に失敗した場合
+	 */
+	protected void setDaoInstances() throws MospException {
+		// インスタンス生成(サブクエリ等を取得するためのDAOクラス生成)
+		userExtraRoleDao = (UserExtraRoleDaoInterface)loadDao(UserExtraRoleDaoInterface.class);
 	}
 	
 	@Override
@@ -231,42 +245,6 @@ public class PfmUserDao extends PlatformDao implements UserMasterDaoInterface {
 			prepareStatement(sb.toString());
 			setParam(index++, personalId);
 			executeQuery();
-			return mappingAll();
-		} catch (Throwable e) {
-			throw new MospException(e);
-		} finally {
-			releaseResultSet();
-			releasePreparedStatement();
-		}
-	}
-	
-	@Override
-	public List<UserMasterDtoInterface> findForRole(String roleCode, Date activateDate) throws MospException {
-		try {
-			index = 1;
-			StringBuffer sb = getSelectQuery(getClass());
-			// 有効日以前で最新の情報を取得
-			sb.append(getQueryForMaxActivateDate(TABLE, COL_USER_ID, COL_ACTIVATE_DATE));
-			sb.append(where());
-			sb.append(deleteFlagOff());
-			// ロールコード指定
-			if (roleCode.isEmpty() == false) {
-				sb.append(and());
-				sb.append(equal(COL_ROLE_CODE));
-			}
-			// 有効なユーザのみ抽出
-			sb.append(and());
-			sb.append(COL_INACTIVATE_FLAG + " = " + MospConst.DELETE_FLAG_OFF);
-			// ステートメント生成
-			prepareStatement(sb.toString());
-			// パラメータ設定
-			setParam(index++, activateDate);
-			if (roleCode.isEmpty() == false) {
-				setParam(index++, roleCode);
-			}
-			// 実行
-			executeQuery();
-			// 結果取得
 			return mappingAll();
 		} catch (Throwable e) {
 			throw new MospException(e);
@@ -429,14 +407,16 @@ public class PfmUserDao extends PlatformDao implements UserMasterDaoInterface {
 	}
 	
 	@Override
-	public String getQueryForApprover(String targetColumn) {
+	public String getQueryForApprover(String targetColumn) throws MospException {
 		// SQL作成準備
 		StringBuffer sb = new StringBuffer();
 		// 承認ロール取得及び確認
-		Set<String> approverRoleSet = PlatformUtility.getApproverRoleSet(mospParams);
+		Set<String> approverRoleSet = RoleUtility.getApproverRoles(mospParams);
 		if (approverRoleSet.isEmpty()) {
 			return sb.toString();
 		}
+		// サブクエリ等を取得するためのDAOクラスを設定
+		setDaoInstances();
 		// SQL作成
 		sb.append(and());
 		sb.append(targetColumn);
@@ -449,6 +429,8 @@ public class PfmUserDao extends PlatformDao implements UserMasterDaoInterface {
 		sb.append(from(TABLE));
 		// 有効日における最新の情報を抽出する条件SQLを追加
 		sb.append(getQueryForMaxActivateDate(TABLE, COL_USER_ID, COL_ACTIVATE_DATE));
+		// 追加ロールコードを付加するSQLを追加
+		sb.append(userExtraRoleDao.getQueryForJoinUser(COL_USER_ID, COL_ACTIVATE_DATE));
 		// WHERE部追加
 		sb.append(where());
 		// 削除されていない情報のみ抽出
@@ -458,6 +440,8 @@ public class PfmUserDao extends PlatformDao implements UserMasterDaoInterface {
 		// 承認権限保持条件SQL追加
 		for (int i = 0; i < approverRoleSet.size(); i++) {
 			sb.append(equal(COL_ROLE_CODE));
+			sb.append(or());
+			sb.append(equal(userExtraRoleDao.getRoleCodeColumnForJoinUser()));
 			if (i < approverRoleSet.size() - 1) {
 				sb.append(or());
 			}
@@ -470,7 +454,7 @@ public class PfmUserDao extends PlatformDao implements UserMasterDaoInterface {
 	@Override
 	public int setParamsForApprover(int index, Date targetDate, PreparedStatement ps) throws MospException {
 		// 承認ロール取得及び確認
-		Set<String> approverRoleSet = PlatformUtility.getApproverRoleSet(mospParams);
+		Set<String> approverRoleSet = RoleUtility.getApproverRoles(mospParams);
 		if (approverRoleSet.isEmpty()) {
 			return index;
 		}
@@ -479,6 +463,7 @@ public class PfmUserDao extends PlatformDao implements UserMasterDaoInterface {
 		// 承認ロール条件パラメータ設定
 		setParam(idx++, targetDate, false, ps);
 		for (String approverRole : approverRoleSet) {
+			setParam(idx++, approverRole, ps);
 			setParam(idx++, approverRole, ps);
 		}
 		// インデックス返却
@@ -499,5 +484,4 @@ public class PfmUserDao extends PlatformDao implements UserMasterDaoInterface {
 	protected UserMasterDtoInterface castDto(BaseDtoInterface baseDto) {
 		return (UserMasterDtoInterface)baseDto;
 	}
-	
 }

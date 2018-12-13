@@ -82,7 +82,7 @@ if (vo.getModeCardEdit().equals(PlatformConst.MODE_CARD_EDIT_INSERT)) {
 	<table class="ListTable">
 		<thead>
 			<tr>
-				<th class="ListTableTh" colspan="5">
+				<th class="ListTableTh" colspan="6">
 					<span class="TitleTh"><%= params.getName("PaidVacation", "Giving", "Days", "Correction") %></span>
 				</th>
 			</tr>
@@ -96,6 +96,7 @@ if (vo.getModeCardEdit().equals(PlatformConst.MODE_CARD_EDIT_INSERT)) {
 				<th class="TitleTd">
 					<span class="RequiredLabel">*&nbsp;</span><label for="aryTxtGrantDays<%= vo.getAryLblGrantDate().length - 1 %>"><%= params.getName("Giving", "Days") %></label>
 				</th>
+				<th class="TitleTd"></th>
 			</tr>
 <%
 for (int i = 0; i < vo.getAryLblGrantDate().length; i++) {
@@ -108,6 +109,15 @@ for (int i = 0; i < vo.getAryLblGrantDate().length; i++) {
 				<td class="ListSelectTd">
 					<input type="text" name="aryTxtGrantDays" id="aryTxtGrantDays<%= i %>" class="Number2RequiredTextBox" value="<%= HtmlUtility.escapeHTML(vo.getAryTxtGrantDays()[i]) %>">
 					<%= params.getName("Day") %>
+				</td>
+				<td class="ListSelectTd">
+<%
+if(vo.getAryRecordId()[i] != 0){
+%>
+					<button type="button" class="Name2Button" id="btnDelete" onclick="submitTransfer(event, null, confirmCalc, new Array('<%= PlatformConst.PRM_TRANSFERRED_INDEX %>', '<%= i %>'), '<%= PaidHolidayDataGrantCardAction.CMD_DELETE %>');"><%= params.getName("Delete") %></button>
+<%
+}
+%>
 				</td>
 			</tr>
 <%

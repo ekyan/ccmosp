@@ -23,13 +23,16 @@ package jp.mosp.time.dto.settings;
 import java.util.Date;
 
 import jp.mosp.framework.base.BaseDtoInterface;
+import jp.mosp.platform.base.RecordDtoInterface;
 import jp.mosp.platform.dto.base.RequestDtoInterface;
+import jp.mosp.platform.dto.base.WorkflowNumberDtoInterface;
 import jp.mosp.time.dto.base.HolidayRangeDtoInterface;
 
 /**
  * 休暇申請DTOインターフェース
  */
-public interface HolidayRequestDtoInterface extends BaseDtoInterface, RequestDtoInterface, HolidayRangeDtoInterface {
+public interface HolidayRequestDtoInterface extends BaseDtoInterface, RecordDtoInterface, WorkflowNumberDtoInterface,
+		RequestDtoInterface, HolidayRangeDtoInterface {
 	
 	/**
 	 * @return レコード識別ID。

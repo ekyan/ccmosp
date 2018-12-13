@@ -32,12 +32,13 @@ import jp.mosp.time.dto.settings.WorkTypeChangeRequestDtoInterface;
 /**
  * 勤務形態変更申請参照クラス。
  */
-public class WorkTypeChangeRequestReferenceBean extends TimeBean implements WorkTypeChangeRequestReferenceBeanInterface {
+public class WorkTypeChangeRequestReferenceBean extends TimeBean
+		implements WorkTypeChangeRequestReferenceBeanInterface {
 	
 	/**
 	 * 勤務形態変更申請DAOクラス。<br>
 	 */
-	protected WorkTypeChangeRequestDaoInterface	dao;
+	protected WorkTypeChangeRequestDaoInterface dao;
 	
 	
 	/**

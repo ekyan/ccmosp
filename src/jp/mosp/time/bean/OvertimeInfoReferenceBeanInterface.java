@@ -28,19 +28,19 @@ import jp.mosp.framework.base.MospException;
 public interface OvertimeInfoReferenceBeanInterface {
 	
 	/**
-	 * 残業申請可能時間(1週間)を取得する。<br><br>
+	 * 残業申請可能時間(1週間：文字列)を取得する。<br><br>
 	 * @param personalId 個人ID
-	 * @return 残業申請可能時間(1週間)
+	 * @return 残業申請可能時間(1週間：文字列)
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
-	int getPossibleTime1Week(String personalId) throws MospException;
+	String getStringPossibleTime1Week(String personalId) throws MospException;
 	
 	/**
-	 * 残業申請可能時間(1ヶ月)を取得する。<br><br>
+	 * 残業申請可能時間(1ヶ月：文字列)を取得する。<br><br>
 	 * @param personalId 個人ID
-	 * @return 残業申請可能時間(1週間)
+	 * @return 残業申請可能時間(1ヶ月：文字列)
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
-	int getPossibleTime1Month(String personalId) throws MospException;
+	String getStringPossibleTime1Month(String personalId) throws MospException;
 	
 }

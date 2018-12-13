@@ -21,24 +21,29 @@
 package jp.mosp.time.bean.impl;
 
 import java.sql.Connection;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.base.MospParams;
+import jp.mosp.framework.constant.MospConst;
+import jp.mosp.framework.utils.MospUtility;
 import jp.mosp.platform.base.PlatformBean;
+import jp.mosp.platform.utils.PlatformUtility;
 import jp.mosp.time.bean.HolidayDataReferenceBeanInterface;
 import jp.mosp.time.dao.settings.HolidayDataDaoInterface;
 import jp.mosp.time.dto.settings.HolidayDataDtoInterface;
 
 /**
- * 休暇データ参照クラス。
+ * 休暇付与情報参照処理。<br>
  */
 public class HolidayDataReferenceBean extends PlatformBean implements HolidayDataReferenceBeanInterface {
 	
 	/**
 	 * 休暇データDAO。
 	 */
-	private HolidayDataDaoInterface	dao;
+	private HolidayDataDaoInterface dao;
 	
 	
 	/**
@@ -63,15 +68,55 @@ public class HolidayDataReferenceBean extends PlatformBean implements HolidayDat
 	}
 	
 	@Override
-	public HolidayDataDtoInterface findForInfo(String personalId, Date activateDate, String holidayCode, int holidayType)
-			throws MospException {
+	public HolidayDataDtoInterface findForInfo(String personalId, Date activateDate, String holidayCode,
+			int holidayType) throws MospException {
 		return dao.findForInfo(personalId, activateDate, holidayCode, holidayType);
 	}
 	
 	@Override
-	public HolidayDataDtoInterface findForKey(String employeeCode, Date activateDate, String holidayCode,
+	public HolidayDataDtoInterface findForKey(String personalId, Date activateDate, String holidayCode, int holidayType)
+			throws MospException {
+		return dao.findForKey(personalId, activateDate, holidayCode, holidayType);
+	}
+	
+	@Override
+	public List<HolidayDataDtoInterface> findForInfoList(String personalId, Date targetDate, String inactivateFlag,
 			int holidayType) throws MospException {
-		return dao.findForKey(employeeCode, activateDate, holidayCode, holidayType);
+		return dao.findForInfoList(personalId, targetDate, inactivateFlag, holidayType);
+	}
+	
+	@Override
+	public List<HolidayDataDtoInterface> getActiveList(String personalId, Date targetDate, int holidayType)
+			throws MospException {
+		return findForInfoList(personalId, targetDate, String.valueOf(MospConst.DELETE_FLAG_OFF), holidayType);
+	}
+	
+	@Override
+	public List<HolidayDataDtoInterface> findPersonTerm(String personalId, Date firstDate, Date lastDate,
+			int holidayType) throws MospException {
+		return dao.findPersonTerm(personalId, firstDate, lastDate, holidayType);
+	}
+	
+	@Override
+	public List<HolidayDataDtoInterface> getActiveListForTerm(String personalId, Date firstDate, Date lastDate,
+			int holidayType, String holidayCode) throws MospException {
+		// 休暇付与情報リストを準備
+		List<HolidayDataDtoInterface> list = new ArrayList<HolidayDataDtoInterface>();
+		// 対象期間内に付与された休暇付与情報毎に処理
+		for (HolidayDataDtoInterface dto : findPersonTerm(personalId, firstDate, lastDate, holidayType)) {
+			// 無効でない場合
+			if (PlatformUtility.isDtoActivate(dto) == false) {
+				// 次の休暇付与情報へ
+				continue;
+			}
+			// 休暇コードが同じである場合
+			if (MospUtility.isEqual(holidayCode, dto.getHolidayCode())) {
+				// 休暇付与情報リストに追加
+				list.add(dto);
+			}
+		}
+		// 休暇付与情報リストを取得
+		return list;
 	}
 	
 }

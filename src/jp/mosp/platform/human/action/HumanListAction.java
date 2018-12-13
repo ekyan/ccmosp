@@ -338,7 +338,6 @@ public class HumanListAction extends PlatformHumanAction {
 		// VO取得
 		HumanListVo vo = (HumanListVo)mospParams.getVo();
 		// 配列の初期化
-		String[] aryPfmHumanId = new String[humanList.size()];
 		String[] aryEmployeeCode = new String[humanList.size()];
 		String[] aryEmployeeName = new String[humanList.size()];
 		String[] aryEmployeeKana = new String[humanList.size()];
@@ -353,7 +352,6 @@ public class HumanListAction extends PlatformHumanAction {
 			// 人事一覧情報取得
 			HumanListDtoInterface humanDto = (HumanListDtoInterface)humanList.get(i);
 			// 配列に設定
-			aryPfmHumanId[i] = humanDto.getPfmHumanId();
 			aryEmployeeCode[i] = humanDto.getEmployeeCode();
 			aryEmployeeName[i] = MospUtility.getHumansName(humanDto.getFirstName(), humanDto.getLastName());
 			aryEmployeeKana[i] = MospUtility.getHumansName(humanDto.getFirstKana(), humanDto.getLastKana());
@@ -411,13 +409,18 @@ public class HumanListAction extends PlatformHumanAction {
 			return;
 		}
 		// プルダウン取得及び設定
-		vo.setAryPltWorkPlace(reference().workPlace().getCodedAbbrSelectArray(targetDate, true,
-				MospConst.OPERATION_TYPE_REFER));
+		vo.setAryPltWorkPlace(
+				reference().workPlace().getCodedAbbrSelectArray(targetDate, true, MospConst.OPERATION_TYPE_REFER));
 		vo.setAryPltEmployment(reference().employmentContract().getCodedAbbrSelectArray(targetDate, true,
 				MospConst.OPERATION_TYPE_REFER));
-		vo.setAryPltSectionAbbr(reference().section().getCodedSelectArray(targetDate, true,
-				MospConst.OPERATION_TYPE_REFER));
-		vo.setAryPltPosition(reference().position().getCodedSelectArray(targetDate, true,
-				MospConst.OPERATION_TYPE_REFER));
+		vo.setAryPltSectionAbbr(
+				reference().section().getCodedSelectArray(targetDate, true, MospConst.OPERATION_TYPE_REFER));
+		vo.setAryPltPosition(
+				reference().position().getCodedSelectArray(targetDate, true, MospConst.OPERATION_TYPE_REFER));
+		
+		// 人事汎用のみで使用されるためプルダウン化
+		vo.setAryPltFreeWordTypes(getCodeArrayForHumanGeneral(PlatformConst.CODE_KEY_FREE_WORD_TYPE, false));
+		
 	}
+	
 }

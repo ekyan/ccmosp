@@ -27,6 +27,7 @@ import = "jp.mosp.framework.constant.MospConst"
 import = "jp.mosp.framework.utils.HtmlUtility"
 import = "jp.mosp.platform.human.base.PlatformHumanVo"
 import = "jp.mosp.platform.human.constant.PlatformHumanConst"
+import = "jp.mosp.platform.utils.PlatformNamingUtility"
 %><%
 MospParams params = (MospParams)request.getAttribute(MospConst.ATT_MOSP_PARAMS);
 PlatformHumanVo vo = (PlatformHumanVo)params.getVo();
@@ -51,7 +52,7 @@ if (vo.getLblBackEmployeeCode() != null && vo.getLblBackEmployeeCode().isEmpty()
 }
 %>
 			</td>
-			<td class="RollTd">&nbsp;<%= params.getName("Employee") %><%= params.getName("Code") %>&nbsp;</td>
+			<td class="RollTd">&nbsp;<%= PlatformNamingUtility.employeeCode(params) %>&nbsp;</td>
 			<td class="RollTd" id="tdNextButton">
 <%
 if (vo.getLblNextEmployeeCode() != null && vo.getLblNextEmployeeCode().isEmpty() == false) {
@@ -67,7 +68,7 @@ if (vo.getLblNextEmployeeCode() != null && vo.getLblNextEmployeeCode().isEmpty()
 	<table class="EmployeeCodeSearchTable">
 		<tr>
 			<td class="EmployeeCodeLabelTd" id = "EmployeeCodeLabelTd">
-				<label for="txtSearchEmployeeCode"><%= params.getName("Employee") %><%= params.getName("Code") %></label><%= params.getName("Colon") %>
+				<label for="txtSearchEmployeeCode"><%= PlatformNamingUtility.employeeCode(params) %></label><%= params.getName("Colon") %>
 				<input type="text" class="Code10RequiredTextBox" id="txtSearchEmployeeCode" name="txtSearchEmployeeCode" value="<%= HtmlUtility.escapeHTML(vo.getTxtSearchEmployeeCode()) %>" />&nbsp;
 				<button type="button" id="btnHumenInfo" class="Name2Button"
 					onclick="submitTransfer(event, null, checkCommonSearchEmployee, new Array('<%= PlatformHumanConst.PRM_TRANSFER_SEARCH_MODE %>','<%= PlatformHumanConst.SEARCH_EMPLOYEE_CODE %>'), '<%= HtmlUtility.escapeHTML(vo.getCmdSaerch()) %>');">
@@ -84,7 +85,7 @@ if (vo.getLblNextEmployeeCode() != null && vo.getLblNextEmployeeCode().isEmpty()
 	<table class="EmployeeCodeLabelTable" id="tblEmployeeCodeLabel">
 		<tr>
 			<td class="EmployeeCodeTd">
-				<%= params.getName("Employee") %><%= params.getName("Code") %><%= params.getName("Colon") %><%= HtmlUtility.escapeHTML(vo.getEmployeeCode()) %>
+				<%= PlatformNamingUtility.employeeCode(params) %><%= params.getName("Colon") %><%= HtmlUtility.escapeHTML(vo.getEmployeeCode()) %>
 			</td>
 			<td class="EmployeeNameTd">
 				<%= params.getName("Employee") %><%= params.getName("FirstName") %><%= params.getName("Colon") %><%= HtmlUtility.escapeHTML(vo.getLblEmployeeName()) %>

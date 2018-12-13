@@ -15,9 +15,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-/**
- * 
- */
 package jp.mosp.time.dao.settings.impl;
 
 import java.util.ArrayList;
@@ -70,6 +67,10 @@ public class TmdWorkOnHolidayRequestDao extends PlatformDao implements WorkOnHol
 	 */
 	public static final String		COL_SUBSTITUTE						= "substitute";
 	/**
+	 * 勤務形態コード
+	 */
+	public static final String		COL_WORK_TYPE_CODE					= "work_type_code";
+	/**
 	 * 出勤予定時刻
 	 */
 	public static final String		COL_START_TIME						= "start_time";
@@ -90,6 +91,7 @@ public class TmdWorkOnHolidayRequestDao extends PlatformDao implements WorkOnHol
 	 * キー。
 	 */
 	public static final String		KEY_1								= COL_TMD_WORK_ON_HOLIDAY_REQUEST_ID;
+	
 	private WorkflowDaoInterface	workflowDao;
 	
 	
@@ -113,6 +115,7 @@ public class TmdWorkOnHolidayRequestDao extends PlatformDao implements WorkOnHol
 		dto.setTimesWork(getInt(COL_TIMES_WORK));
 		dto.setWorkOnHolidayType(getString(COL_WORK_ON_HOLIDAY_TYPE));
 		dto.setSubstitute(getInt(COL_SUBSTITUTE));
+		dto.setWorkTypeCode(getString(COL_WORK_TYPE_CODE));
 		dto.setStartTime(getTimestamp(COL_START_TIME));
 		dto.setEndTime(getTimestamp(COL_END_TIME));
 		dto.setRequestReason(getString(COL_REQUEST_REASON));
@@ -267,6 +270,9 @@ public class TmdWorkOnHolidayRequestDao extends PlatformDao implements WorkOnHol
 			sb.append(and());
 			sb.append(greaterEqual(COL_REQUEST_DATE));
 			sb.append(getOrderByColumn(COL_REQUEST_DATE));
+			sb.append(comma());
+			sb.append(COL_WORKFLOW);
+			sb.append(getDesc());
 			prepareStatement(sb.toString());
 			setParam(index++, personalId);
 			setParam(index++, lastDate, false);
@@ -327,6 +333,7 @@ public class TmdWorkOnHolidayRequestDao extends PlatformDao implements WorkOnHol
 		setParam(index++, dto.getTimesWork());
 		setParam(index++, dto.getWorkOnHolidayType());
 		setParam(index++, dto.getSubstitute());
+		setParam(index++, dto.getWorkTypeCode());
 		setParam(index++, dto.getStartTime(), true);
 		setParam(index++, dto.getEndTime(), true);
 		setParam(index++, dto.getRequestReason());

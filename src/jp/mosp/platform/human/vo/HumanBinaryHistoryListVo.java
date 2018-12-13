@@ -18,6 +18,8 @@
 package jp.mosp.platform.human.vo;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import jp.mosp.platform.human.base.PlatformHumanVo;
 
@@ -39,6 +41,18 @@ public class HumanBinaryHistoryListVo extends PlatformHumanVo {
 	// 削除：履歴が一つだけしかない時の削除要否フラグ
 	private Boolean				jsIsLastHistory;
 	
+	private Map<Date, Long>		hidRecordIdMap;
+	
+	
+	/**
+	 * VOの初期設定を行う。<br>
+	 * <br>
+	 */
+	public HumanBinaryHistoryListVo() {
+		super();
+		// ポータルパラメータマップ、ポータルJSPリストを初期化
+		hidRecordIdMap = new HashMap<Date, Long>();
+	}
 	
 	/**
 	 * @param aryActiveteDate セットする aryActiveteDate
@@ -154,14 +168,14 @@ public class HumanBinaryHistoryListVo extends PlatformHumanVo {
 	 * @param activeDate セットする activeDate
 	 */
 	public void setActiveDate(Date activeDate) {
-		this.activeDate = activeDate;
+		this.activeDate = getDateClone(activeDate);
 	}
 	
 	/**
 	 * @return activeDate
 	 */
 	public Date getActiveDate() {
-		return activeDate;
+		return getDateClone(activeDate);
 	}
 	
 	/**
@@ -176,6 +190,29 @@ public class HumanBinaryHistoryListVo extends PlatformHumanVo {
 	 */
 	public boolean getJsIsLastHistory() {
 		return jsIsLastHistory;
+	}
+	
+	/**
+	 * @return hidRecordIdMap
+	 */
+	public Map<Date, Long> getHidRecordIdMap() {
+		return hidRecordIdMap;
+	}
+	
+	/**
+	 * マップ追加
+	 * @param date 有効日
+	 * @param id レコード識別ID
+	 */
+	public void putHidRecordIdMap(Date date, Long id) {
+		hidRecordIdMap.put(date, id);
+	}
+	
+	/**
+	 * @param hidRecordIdMap セットする hidRecordIdMap
+	 */
+	public void setHidRecordIdMap(Map<Date, Long> hidRecordIdMap) {
+		this.hidRecordIdMap = hidRecordIdMap;
 	}
 	
 }

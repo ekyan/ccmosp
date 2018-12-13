@@ -21,6 +21,7 @@
 package jp.mosp.time.dao.settings;
 
 import java.util.List;
+import java.util.Map;
 
 import jp.mosp.framework.base.BaseDaoInterface;
 import jp.mosp.framework.base.MospException;
@@ -53,5 +54,27 @@ public interface TotalTimeDataDaoInterface extends BaseDaoInterface {
 	 */
 	List<TotalTimeDataDtoInterface> findForList(String[] personalIdArray, int calculationYear, int calculationMonth)
 			throws MospException;
+	
+	/**
+	 * 年度の勤怠集計マップ（キー:月）を取得する。<br>
+	 * 統計情報で使用する。<br>
+	 * @param personalId 個人ID
+	 * @param startYear 開始年度年
+	 * @param startMonth 開始年度月
+	 * @param endYear 終了年度年
+	 * @param endMonth 終了年度月
+	 * @return 年度の勤怠集計リスト
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	Map<Integer, TotalTimeDataDtoInterface> findFiscalMap(String personalId, int startYear, int startMonth, int endYear,
+			int endMonth) throws MospException;
+	
+	/**
+	 * 勤怠集計情報が存在する最小の年を取得する。<br>
+	 * 勤怠集計情報が存在しない場合、0を返す。<br>
+	 * @return 勤怠集計情報が存在する最小の年
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	int getMinYear() throws MospException;
 	
 }

@@ -1,17 +1,17 @@
 /*
  * MosP - Mind Open Source Project    http://www.mosp.jp/
  * Copyright (C) MIND Co., Ltd.       http://www.e-mind.co.jp/
- * 
+ *
  * This program is free software: you can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License
  * as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -51,120 +51,136 @@ import jp.mosp.time.dto.settings.SubstituteDtoInterface;
 import jp.mosp.time.dto.settings.WorkOnHolidayRequestDtoInterface;
 import jp.mosp.time.dto.settings.WorkTypeChangeRequestDtoInterface;
 import jp.mosp.time.entity.RequestEntity;
+import jp.mosp.time.entity.RequestEntityInterface;
 
 /**
  * 申請ユーティリティクラス。<br>
  */
 public class RequestUtilBean extends TimeBean implements RequestUtilBeanInterface {
-	
+
 	/**
 	 * 休暇申請参照クラス。
 	 */
 	HolidayRequestReferenceBeanInterface			holidayRequestRefer;
-	
+
 	/**
 	 * 残業申請参照クラス。
 	 */
 	OvertimeRequestReferenceBeanInterface			overtimeRequestRefer;
-	
+
 	/**
 	 * 休日出勤申請参照クラス。
 	 */
 	WorkOnHolidayRequestReferenceBeanInterface		workOnHolidayRefer;
-	
+
 	/**
 	 * 振替休日申請参照クラス。
 	 */
 	SubstituteReferenceBeanInterface				substituteRefer;
-	
+
 	/**
 	 * 代休申請参照クラス。
 	 */
 	SubHolidayRequestReferenceBeanInterface			subHolidayRequestRefer;
-	
+
 	/**
 	 * 時差出勤申請参照クラス。
 	 */
 	DifferenceRequestReferenceBeanInterface			differenceRequestRefer;
-	
+
 	/**
 	 * 勤務形態変更申請参照クラス。
 	 */
 	WorkTypeChangeRequestReferenceBeanInterface		workTypeChangeRequestRefer;
-	
+
 	/**
 	 * 勤怠データ参照クラス。<br>
 	 */
 	AttendanceReferenceBeanInterface				attendanceReference;
-	
+
 	/**
 	 * ワークフロー情報参照クラス。
 	 */
 	WorkflowReferenceBeanInterface					workflowReference;
-	
+
 	/**
 	 * ワークフロー統合クラス。
 	 */
 	WorkflowIntegrateBeanInterface					workflowIntegrate;
-	
+
 	/**
 	 * カレンダユーティリティクラス。
 	 */
 	ScheduleUtilBeanInterface						scheduleUtil;
-	
+
 	/**
 	 * 休暇申請情報リスト。
 	 */
 	protected List<HolidayRequestDtoInterface>		holidayRequestList;
-	
+
 	/**
 	 * 残業申請情報リスト。
 	 */
 	protected List<OvertimeRequestDtoInterface>		overTimeRequestList;
-	
+
 	/**
 	 * 振替休日情報リスト。
 	 */
 	protected List<SubstituteDtoInterface>			substituteList;
-	
+
 	/**
 	 * 代休申請情報リスト。
 	 */
 	protected List<SubHolidayRequestDtoInterface>	subHolidayRequestList;
-	
+
 	/**
 	 * 休日出勤情報。
 	 */
 	protected WorkOnHolidayRequestDtoInterface		workOnHolidayDto;
-	
+
 	/**
 	 * 時差出勤情報。
 	 */
 	protected DifferenceRequestDtoInterface			differenceDto;
-	
+
 	/**
 	 * 勤務形態変更情報。
 	 */
 	protected WorkTypeChangeRequestDtoInterface		workTypeChangeDto;
-	
+
 	/**
 	 * 勤怠情報。
 	 */
 	protected AttendanceDtoInterface				attendanceDto;
-	
+
+	/**
+	 * ワークフローマップ
+	 */
+	protected Map<Long, WorkflowDtoInterface>		workflowMap;
+
+	/**
+	 * 振替日の予定勤務形態。
+	 */
+	protected String								substitutedWorkTypeCode;
+
+	/**
+	 * カレンダの予定勤務形態。
+	 */
+	protected String								scheduledWorkTypeCode;
+
 	/**
 	 * 休暇範囲(午前休かつ午後休)。
 	 */
-	protected int									CODE_HOLIDAY_RANGE_AM_PM	= 5;
-	
-	
+	protected static final int						CODE_HOLIDAY_RANGE_AM_PM	= 5;
+
+
 	/**
 	 * {@link RequestUtilBean}を生成する。<br>
 	 */
 	public RequestUtilBean() {
 		// 処理無し
 	}
-	
+
 	/**
 	 * {@link TimeBean#TimeBean(MospParams, Connection)}を実行する。<br>
 	 * @param mospParams MosP処理情報
@@ -173,23 +189,29 @@ public class RequestUtilBean extends TimeBean implements RequestUtilBeanInterfac
 	protected RequestUtilBean(MospParams mospParams, Connection connection) {
 		super(mospParams, connection);
 	}
-	
+
 	@Override
 	public void initBean() throws MospException {
 		// 各種クラスの取得
-		holidayRequestRefer = (HolidayRequestReferenceBeanInterface)createBean(HolidayRequestReferenceBeanInterface.class);
-		workOnHolidayRefer = (WorkOnHolidayRequestReferenceBeanInterface)createBean(WorkOnHolidayRequestReferenceBeanInterface.class);
+		holidayRequestRefer = (HolidayRequestReferenceBeanInterface)createBean(
+				HolidayRequestReferenceBeanInterface.class);
+		workOnHolidayRefer = (WorkOnHolidayRequestReferenceBeanInterface)createBean(
+				WorkOnHolidayRequestReferenceBeanInterface.class);
 		substituteRefer = (SubstituteReferenceBeanInterface)createBean(SubstituteReferenceBeanInterface.class);
-		overtimeRequestRefer = (OvertimeRequestReferenceBeanInterface)createBean(OvertimeRequestReferenceBeanInterface.class);
-		differenceRequestRefer = (DifferenceRequestReferenceBeanInterface)createBean(DifferenceRequestReferenceBeanInterface.class);
-		workTypeChangeRequestRefer = (WorkTypeChangeRequestReferenceBeanInterface)createBean(WorkTypeChangeRequestReferenceBeanInterface.class);
+		overtimeRequestRefer = (OvertimeRequestReferenceBeanInterface)createBean(
+				OvertimeRequestReferenceBeanInterface.class);
+		differenceRequestRefer = (DifferenceRequestReferenceBeanInterface)createBean(
+				DifferenceRequestReferenceBeanInterface.class);
+		workTypeChangeRequestRefer = (WorkTypeChangeRequestReferenceBeanInterface)createBean(
+				WorkTypeChangeRequestReferenceBeanInterface.class);
 		attendanceReference = (AttendanceReferenceBeanInterface)createBean(AttendanceReferenceBeanInterface.class);
 		workflowReference = (WorkflowReferenceBeanInterface)createBean(WorkflowReferenceBeanInterface.class);
 		workflowIntegrate = (WorkflowIntegrateBeanInterface)createBean(WorkflowIntegrateBeanInterface.class);
-		subHolidayRequestRefer = (SubHolidayRequestReferenceBeanInterface)createBean(SubHolidayRequestReferenceBeanInterface.class);
+		subHolidayRequestRefer = (SubHolidayRequestReferenceBeanInterface)createBean(
+				SubHolidayRequestReferenceBeanInterface.class);
 		scheduleUtil = (ScheduleUtilBeanInterface)createBean(ScheduleUtilBeanInterface.class);
 	}
-	
+
 	@Override
 	public void setRequests(String personalId, Date targetDate) throws MospException {
 		// 休暇申請リスト取得
@@ -208,14 +230,16 @@ public class RequestUtilBean extends TimeBean implements RequestUtilBeanInterfac
 		workTypeChangeDto = workTypeChangeRequestRefer.findForKeyOnWorkflow(personalId, targetDate);
 		// 勤怠情報取得
 		attendanceDto = attendanceReference.findForKey(personalId, targetDate, TimeBean.TIMES_WORK_DEFAULT);
+		// ワークフロー情報初期化
+		workflowMap = new HashMap<Long, WorkflowDtoInterface>();
 	}
-	
+
 	@Override
 	public List<SubstituteDtoInterface> getSubstituteList(boolean status) throws MospException {
 		// リスト準備
 		List<SubstituteDtoInterface> completedSubstitute = new ArrayList<SubstituteDtoInterface>();
 		// 情報リストがない場合
-		if (substituteList.isEmpty()) {
+		if (substituteList == null || substituteList.isEmpty()) {
 			return completedSubstitute;
 		}
 		// 振替申請リスト毎に処理
@@ -240,13 +264,13 @@ public class RequestUtilBean extends TimeBean implements RequestUtilBeanInterfac
 		// 承認済の振替申請リスト
 		return completedSubstitute;
 	}
-	
+
 	@Override
 	public List<OvertimeRequestDtoInterface> getOverTimeList(boolean status) throws MospException {
 		// リスト準備
 		List<OvertimeRequestDtoInterface> completedOvertime = new ArrayList<OvertimeRequestDtoInterface>();
 		// 情報リストがない場合
-		if (overTimeRequestList.isEmpty()) {
+		if (overTimeRequestList == null || overTimeRequestList.isEmpty()) {
 			return completedOvertime;
 		}
 		// 残業申請リスト毎に処理
@@ -271,13 +295,13 @@ public class RequestUtilBean extends TimeBean implements RequestUtilBeanInterfac
 		// 承認済の残業申請リスト
 		return completedOvertime;
 	}
-	
+
 	@Override
 	public List<SubHolidayRequestDtoInterface> getSubHolidayList(boolean status) throws MospException {
 		// リスト準備
 		List<SubHolidayRequestDtoInterface> completedsubHoliday = new ArrayList<SubHolidayRequestDtoInterface>();
 		// 情報リストがない場合
-		if (subHolidayRequestList.isEmpty()) {
+		if (subHolidayRequestList == null || subHolidayRequestList.isEmpty()) {
 			return completedsubHoliday;
 		}
 		// 代休申請リスト毎に処理
@@ -302,13 +326,13 @@ public class RequestUtilBean extends TimeBean implements RequestUtilBeanInterfac
 		// 承認済の代休申請リスト
 		return completedsubHoliday;
 	}
-	
+
 	@Override
 	public List<HolidayRequestDtoInterface> getHolidayList(boolean status) throws MospException {
 		// リスト準備
 		List<HolidayRequestDtoInterface> completedHoliday = new ArrayList<HolidayRequestDtoInterface>();
 		// 情報リストがない場合
-		if (holidayRequestList.isEmpty()) {
+		if (holidayRequestList == null || holidayRequestList.isEmpty()) {
 			return completedHoliday;
 		}
 		// 休暇申請リスト毎に処理
@@ -333,7 +357,7 @@ public class RequestUtilBean extends TimeBean implements RequestUtilBeanInterfac
 		// 承認済の休暇申請リスト
 		return completedHoliday;
 	}
-	
+
 	@Override
 	public DifferenceRequestDtoInterface getDifferenceDto(boolean status) throws MospException {
 		// 時差出勤申請情報がない場合
@@ -356,7 +380,7 @@ public class RequestUtilBean extends TimeBean implements RequestUtilBeanInterfac
 		}
 		return null;
 	}
-	
+
 	@Override
 	public WorkTypeChangeRequestDtoInterface getWorkTypeChangeDto(boolean status) throws MospException {
 		// 勤務形態変更申請情報がない場合
@@ -377,7 +401,7 @@ public class RequestUtilBean extends TimeBean implements RequestUtilBeanInterfac
 		}
 		return null;
 	}
-	
+
 	@Override
 	public WorkOnHolidayRequestDtoInterface getWorkOnHolidayDto(boolean status) throws MospException {
 		// 休日出勤申請情報がない場合
@@ -400,7 +424,7 @@ public class RequestUtilBean extends TimeBean implements RequestUtilBeanInterfac
 		}
 		return null;
 	}
-	
+
 	@Override
 	public AttendanceDtoInterface getDraftAttendance() throws MospException {
 		// 勤怠情報がない場合
@@ -413,7 +437,7 @@ public class RequestUtilBean extends TimeBean implements RequestUtilBeanInterfac
 		}
 		return null;
 	}
-	
+
 	@Override
 	public AttendanceDtoInterface getFirstRevertedAttendance() throws MospException {
 		// 勤怠情報がない場合
@@ -426,7 +450,7 @@ public class RequestUtilBean extends TimeBean implements RequestUtilBeanInterfac
 		}
 		return null;
 	}
-	
+
 	@Override
 	public AttendanceDtoInterface getApplicatedAttendance() throws MospException {
 		// 勤怠情報がない場合
@@ -449,7 +473,7 @@ public class RequestUtilBean extends TimeBean implements RequestUtilBeanInterfac
 		}
 		return attendanceDto;
 	}
-	
+
 	@Override
 	public HolidayRequestDtoInterface getCompletedHolidayRangeAll() throws MospException {
 		// 承認済休暇情報取得
@@ -467,7 +491,7 @@ public class RequestUtilBean extends TimeBean implements RequestUtilBeanInterfac
 		}
 		return null;
 	}
-	
+
 	@Override
 	public SubHolidayRequestDtoInterface getCompletedSubHolidayRangeAll() throws MospException {
 		// 承認済休暇情報取得
@@ -485,7 +509,7 @@ public class RequestUtilBean extends TimeBean implements RequestUtilBeanInterfac
 		}
 		return null;
 	}
-	
+
 	@Override
 	public SubstituteDtoInterface getCompletedSubstituteRangeAll() throws MospException {
 		// 承認済休暇情報取得
@@ -506,7 +530,7 @@ public class RequestUtilBean extends TimeBean implements RequestUtilBeanInterfac
 		}
 		return null;
 	}
-	
+
 	@Override
 	public boolean isHolidayAllDay(boolean status) throws MospException {
 		// 午前休・午後休フラグ準備
@@ -587,7 +611,7 @@ public class RequestUtilBean extends TimeBean implements RequestUtilBeanInterfac
 		}
 		return false;
 	}
-	
+
 	@Override
 	public int checkHolidayRangeHoliday(List<HolidayRequestDtoInterface> holidayRequestList) {
 		// 休暇範囲準備
@@ -630,7 +654,7 @@ public class RequestUtilBean extends TimeBean implements RequestUtilBeanInterfac
 		}
 		return range;
 	}
-	
+
 	@Override
 	public int checkHolidayRangeSubstitute(List<SubstituteDtoInterface> substituteList) throws MospException {
 		// 休暇範囲準備
@@ -639,22 +663,21 @@ public class RequestUtilBean extends TimeBean implements RequestUtilBeanInterfac
 		if (substituteList.isEmpty()) {
 			return range;
 		}
-		// 更に承認済の振替又は休日出勤がされている場合
-		if (getWorkOnHolidayDto(true) != null) {
-			return range;
-		}
+
 		// 情報リスト毎に処理
 		for (SubstituteDtoInterface substituteDto : substituteList) {
 			// 全休の場合
 			if (substituteDto.getSubstituteRange() == TimeConst.CODE_HOLIDAY_RANGE_ALL) {
-				return TimeConst.CODE_HOLIDAY_RANGE_ALL;
+				range = TimeConst.CODE_HOLIDAY_RANGE_ALL;
+				break;
 			}
 			// 午前休の場合
 			if (substituteDto.getSubstituteRange() == TimeConst.CODE_HOLIDAY_RANGE_AM) {
 				// 午前休かつ午後休も申請されている場合
 				if (range == TimeConst.CODE_HOLIDAY_RANGE_PM) {
 					// 午前休かつ午後休
-					return CODE_HOLIDAY_RANGE_AM_PM;
+					range = CODE_HOLIDAY_RANGE_AM_PM;
+					break;
 				}
 				// 午前休
 				range = TimeConst.CODE_HOLIDAY_RANGE_AM;
@@ -665,15 +688,69 @@ public class RequestUtilBean extends TimeBean implements RequestUtilBeanInterfac
 				// 午前休かつ午後休も申請されている場合
 				if (range == TimeConst.CODE_HOLIDAY_RANGE_AM) {
 					// 午前休かつ午後休
-					return CODE_HOLIDAY_RANGE_AM_PM;
+					range = CODE_HOLIDAY_RANGE_AM_PM;
+					break;
 				}
 				// 午後休
 				range = TimeConst.CODE_HOLIDAY_RANGE_PM;
 			}
 		}
+		// 更に承認済の振替又は休日出勤がされている場合
+		// 休日出勤申請情報で対象承認状況の情報を取得
+		WorkOnHolidayRequestDtoInterface workOnHolidayDto = getWorkOnHolidayDto(true);
+		// 振替の振替でない場合
+		if (workOnHolidayDto == null) {
+			return range;
+		}
+		// 振替の振替の範囲
+		int poneRange = workOnHolidayDto.getSubstitute();
+		// 休日出勤申請があり、振替(全日)又は休日出勤の場合
+		if (poneRange == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_ON
+				|| poneRange == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_OFF
+				|| poneRange == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_ON_WORK_TYPE_CHANGE) {
+			return 0;
+		}
+		// 振替出勤（午前）の場合
+		if (poneRange == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_AM) {
+			switch (range) {
+				// 全休の場合
+
+				case TimeConst.CODE_HOLIDAY_RANGE_ALL:
+				case CODE_HOLIDAY_RANGE_AM_PM:
+					// 午後休
+					range = TimeConst.CODE_HOLIDAY_RANGE_PM;
+					break;
+				// 午前休の場合
+				case TimeConst.CODE_HOLIDAY_RANGE_AM:
+					// 休みなし
+					range = 0;
+					break;
+				default:
+					break;
+			}
+		}
+		// 振替出勤（午後）の場合
+		if (poneRange == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_PM) {
+			switch (range) {
+				// 全休の場合
+				case TimeConst.CODE_HOLIDAY_RANGE_ALL:
+				case CODE_HOLIDAY_RANGE_AM_PM:
+					// 午前休
+					range = TimeConst.CODE_HOLIDAY_RANGE_AM;
+					break;
+				// 午後休の場合
+				case TimeConst.CODE_HOLIDAY_RANGE_PM:
+					// 休みなし
+					range = 0;
+					break;
+				default:
+					break;
+			}
+		}
+
 		return range;
 	}
-	
+
 	@Override
 	public int checkHolidayRangeSubHoliday(List<SubHolidayRequestDtoInterface> subHolidayList) {
 		// 休暇範囲準備
@@ -711,11 +788,13 @@ public class RequestUtilBean extends TimeBean implements RequestUtilBeanInterfac
 		}
 		return range;
 	}
-	
+
 	@Override
 	public RequestEntity getRequestEntity(String personalId, Date targetDate) throws MospException {
 		// 申請エンティティ準備
-		RequestEntity requestEntity = new RequestEntity(personalId, targetDate);
+		RequestEntity requestEntity = (RequestEntity)createObject(RequestEntityInterface.class);
+		requestEntity.setPersonalId(personalId);
+		requestEntity.setTargetDate(targetDate);
 		// 申請情報取得
 		setRequests(personalId, targetDate);
 		// 申請情報設定
@@ -730,42 +809,95 @@ public class RequestUtilBean extends TimeBean implements RequestUtilBeanInterfac
 		// ワークフロー情報取得
 		requestEntity.setWorkflowMap(getWorkflowMap());
 		// 申請日の予定勤務形態を取得及び設定
-		requestEntity.setScheduledWorkTypeCode(scheduleUtil.getScheduledWorkTypeCode(personalId, targetDate));
+		requestEntity.setScheduledWorkTypeCode(getScheduledWorkTypeCode(personalId, targetDate));
 		// 振替出勤日の予定勤務形態を取得及び設定
 		requestEntity.setSubstitutedWorkTypeCode(getSubstitutedWorkTypeCode());
 		return requestEntity;
 	}
-	
+
+	/**
+	 * 申請日の予定勤務形態を取得及び設定を行う。
+	 * @param personalId 個人ID
+	 * @param targetDate 対象日
+	 * @return 申請日の予定勤務形態
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 *
+	 */
+	protected String getScheduledWorkTypeCode(String personalId, Date targetDate) throws MospException {
+		// 存在する場合
+		if (scheduledWorkTypeCode != null) {
+			return scheduledWorkTypeCode;
+		}
+		// 勤務形態コードを取得
+		scheduledWorkTypeCode = scheduleUtil.getScheduledWorkTypeCode(personalId, targetDate);
+		return scheduledWorkTypeCode;
+	}
+
 	/**
 	 * 振替休日の予定勤務形態を取得する。<br>
-	 * 振出・休出申請(振替出勤)情報が存在しない場合は、空文字を返す。<br>
+	 * <br>
+	 * 振出・休出申請(振替申請：全日か午前か午後)により
+	 * 振り替えた出勤日の予定勤務形態コードを取得する。<br>
+	 * <br>
+	 * 振出・休出申請情報が存在しない場合は、空文字を返す。<br>
 	 * <br>
 	 * @return 振替出勤日の予定勤務形態
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
 	protected String getSubstitutedWorkTypeCode() throws MospException {
-		// 振出・休出申請(振替出勤)情報確認
-		if (workOnHolidayDto == null
-				|| workOnHolidayDto.getSubstitute() != TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_ON) {
-			return "";
+		// 存在する場合
+		if (substitutedWorkTypeCode != null) {
+			return substitutedWorkTypeCode;
 		}
+		// 初期化
+		substitutedWorkTypeCode = "";
+		// 振出・休出申請が存在しない場合
+		if (workOnHolidayDto == null) {
+			// 空文字を取得
+			return substitutedWorkTypeCode;
+		}
+		// 振替申請フラグと休出種別確認を取得
+		int substitute = workOnHolidayDto.getSubstitute();
+		String workOnHolidayType = workOnHolidayDto.getWorkOnHolidayType();
+		// 休日出勤の場合
+		if (substitute == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_OFF) {
+			// 法定休出の場合
+			if (workOnHolidayType.equals(TimeConst.CODE_HOLIDAY_LEGAL_HOLIDAY)) {
+				// 法定休日出勤を取得
+				substitutedWorkTypeCode = TimeConst.CODE_WORK_ON_LEGAL_HOLIDAY;
+				return substitutedWorkTypeCode;
+			}
+			// 所定休出の場合
+			if (workOnHolidayType.equals(TimeConst.CODE_HOLIDAY_PRESCRIBED_HOLIDAY)) {
+				// 所定休日出勤を取得
+				substitutedWorkTypeCode = TimeConst.CODE_WORK_ON_PRESCRIBED_HOLIDAY;
+				return substitutedWorkTypeCode;
+			}
+		}
+		// 振替出勤(勤務形態変更)の場合
+		if (substitute == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_ON_WORK_TYPE_CHANGE) {
+			// 振替勤務形態コードを取得
+			substitutedWorkTypeCode = workOnHolidayDto.getWorkTypeCode();
+			return substitutedWorkTypeCode;
+		}
+		// 振替出勤(全休か午前か午後)の場合
 		// 個人ID取得
 		String personalId = workOnHolidayDto.getPersonalId();
 		// 振替出勤日取得
 		Date workDate = workOnHolidayDto.getRequestDate();
 		// 振替出勤日で振替休日情報取得
-		List<SubstituteDtoInterface> list = substituteRefer.getSubstituteList(personalId, workDate,
-				TimeBean.TIMES_WORK_DEFAULT);
+		SubstituteDtoInterface substituteDto = substituteRefer.getSubstituteDto(personalId, workDate);
 		// 振替休日情報確認
-		for (SubstituteDtoInterface dto : list) {
+		if (substituteDto != null) {
 			// 振替日を取得
-			Date substituteDate = dto.getSubstituteDate();
+			Date substituteDate = substituteDto.getSubstituteDate();
 			// 振替日の予定勤務形態を取得
-			return scheduleUtil.getScheduledWorkTypeCode(personalId, substituteDate);
+			substitutedWorkTypeCode = scheduleUtil.getScheduledWorkTypeCode(personalId, substituteDate);
+			return substitutedWorkTypeCode;
 		}
-		return "";
+		return substitutedWorkTypeCode;
 	}
-	
+
 	/**
 	 * ワークフロー情報群を取得する。<br>
 	 * 設定されている申請情報のワークフロー番号につき、ワークフロー情報を取得する。<br>
@@ -774,8 +906,12 @@ public class RequestUtilBean extends TimeBean implements RequestUtilBeanInterfac
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
 	protected Map<Long, WorkflowDtoInterface> getWorkflowMap() throws MospException {
+		// 存在する場合
+		if (workflowMap != null && !workflowMap.isEmpty()) {
+			return workflowMap;
+		}
 		// ワークフロー情報群の準備
-		Map<Long, WorkflowDtoInterface> workflowMap = new HashMap<Long, WorkflowDtoInterface>();
+		workflowMap = new HashMap<Long, WorkflowDtoInterface>();
 		// 申請毎にワークフロー情報を取得してワークフロー情報群に設定
 		// 休暇申請リスト取得
 		for (HolidayRequestDtoInterface dto : holidayRequestList) {

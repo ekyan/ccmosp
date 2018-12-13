@@ -40,6 +40,7 @@ import = "jp.mosp.time.comparator.settings.CutoffErrorListStateComparator"
 import = "jp.mosp.time.comparator.settings.CutoffErrorListSectionAbbrComparator"
 import = "jp.mosp.time.comparator.settings.CutoffErrorListTypeComparator"
 import = "jp.mosp.time.comparator.settings.CutoffErrorListWorkPlaceAbbrComparator"
+import = "jp.mosp.platform.utils.PlatformNamingUtility"
 %><%
 MospParams params = (MospParams)request.getAttribute(MospConst.ATT_MOSP_PARAMS);
 CutoffErrorListVo vo = (CutoffErrorListVo)params.getVo();
@@ -51,7 +52,7 @@ CutoffErrorListVo vo = (CutoffErrorListVo)params.getVo();
 		<thead>
 			<tr>
 				<th class="ListSortTh" id="thDate" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= CutoffErrorListDateComparator.class.getName() %>'), '<%= CutoffErrorListAction.CMD_SORT %>')"><%= params.getName("Date") %><%= PlatformUtility.getSortMark(CutoffErrorListDateComparator.class.getName(), params) %></th>
-				<th class="ListSortTh" id="thEmployeeCode" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= CutoffErrorListEmployeeCodeComparator.class.getName() %>'), '<%= CutoffErrorListAction.CMD_SORT %>')"><%= params.getName("Employee") %><%= params.getName("Code") %><%= PlatformUtility.getSortMark(CutoffErrorListEmployeeCodeComparator.class.getName(), params) %></th>
+				<th class="ListSortTh" id="thEmployeeCode" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= CutoffErrorListEmployeeCodeComparator.class.getName() %>'), '<%= CutoffErrorListAction.CMD_SORT %>')"><%= PlatformNamingUtility.employeeCode(params) %><%= PlatformUtility.getSortMark(CutoffErrorListEmployeeCodeComparator.class.getName(), params) %></th>
 				<th class="ListSortTh" id="thEmployeeName" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= CutoffErrorListEmployeeNameComparator.class.getName() %>'), '<%= CutoffErrorListAction.CMD_SORT %>')"><%= params.getName("Employee") %><%= params.getName("FirstName") %><%= PlatformUtility.getSortMark(CutoffErrorListEmployeeNameComparator.class.getName(), params) %></th>
 				<th class="ListSortTh" id="thWorkType" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= CutoffErrorListWorkPlaceAbbrComparator.class.getName() %>'), '<%= CutoffErrorListAction.CMD_SORT %>')"><%= params.getName("WorkPlace") %><%= PlatformUtility.getSortMark(CutoffErrorListWorkPlaceAbbrComparator.class.getName(), params) %></th>
 				<th class="ListSortTh" id="thEmployment" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= CutoffErrorListEmploymentAbbrComparator.class.getName() %>'), '<%= CutoffErrorListAction.CMD_SORT %>')"><%= params.getName("EmploymentContract") %><%= PlatformUtility.getSortMark(CutoffErrorListEmploymentAbbrComparator.class.getName(), params) %></th>

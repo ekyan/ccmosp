@@ -87,7 +87,7 @@ SectionMasterVo vo = (SectionMasterVo)params.getVo();
 if (vo.getUseDisplay()) {
 %>
 		<tr>
-			<td class="TitleTd"><span class="RequiredLabel">*&nbsp;</span><span><label for="txtEditSectionDisplay"><%= params.getName("Section","Display","Name") %></label></span></td>
+			<td class="TitleTd"><span><label for="txtEditSectionDisplay"><%= params.getName("Section","Display","Name") %></label></span></td>
 			<td class="InputTd">
 				<input type="text" class="Name16RequiredTextBox" id="txtEditSectionDisplay" name="txtEditSectionDisplay" value="<%= HtmlUtility.escapeHTML(vo.getTxtEditSectionDisplay()) %>"/>
 			</td>

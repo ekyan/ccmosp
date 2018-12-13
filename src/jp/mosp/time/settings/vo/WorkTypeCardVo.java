@@ -73,6 +73,7 @@ public class WorkTypeCardVo extends TimeSettingVo {
 	private String				txtHalfRestStartMinute;
 	private String				txtHalfRestEndHour;
 	private String				txtHalfRestEndMinute;
+	private String				pltAutoBeforeOverWork;
 	
 	/**
 	 * 直行。
@@ -1034,6 +1035,20 @@ public class WorkTypeCardVo extends TimeSettingVo {
 	 */
 	public void setTmmWorkTypeItemId(long[] tmmWorkTypeItemId) {
 		this.tmmWorkTypeItemId = getLongArrayClone(tmmWorkTypeItemId);
+	}
+	
+	/**
+	 * @return 前残業自動有効区分
+	 */
+	public String getPltAutoBeforeOverWork() {
+		return pltAutoBeforeOverWork;
+	}
+	
+	/**
+	 * @param pltAutoBeforeOverWork セットする pltAutoBeforeOverWork
+	 */
+	public void setPltAutoBeforeOverWork(String pltAutoBeforeOverWork) {
+		this.pltAutoBeforeOverWork = pltAutoBeforeOverWork;
 	}
 	
 }

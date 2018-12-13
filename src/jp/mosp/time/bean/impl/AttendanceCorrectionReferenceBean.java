@@ -23,8 +23,10 @@ import java.util.List;
 
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.base.MospParams;
+import jp.mosp.framework.utils.MospUtility;
 import jp.mosp.platform.base.PlatformBean;
 import jp.mosp.platform.utils.MonthUtility;
+import jp.mosp.platform.utils.PlatformNamingUtility;
 import jp.mosp.time.bean.AttendanceCorrectionReferenceBeanInterface;
 import jp.mosp.time.bean.HolidayReferenceBeanInterface;
 import jp.mosp.time.bean.WorkTypeReferenceBeanInterface;
@@ -34,12 +36,13 @@ import jp.mosp.time.dto.settings.AttendanceCorrectionDtoInterface;
 import jp.mosp.time.dto.settings.GoOutDtoInterface;
 import jp.mosp.time.dto.settings.RestDtoInterface;
 import jp.mosp.time.dto.settings.TotalTimeCorrectionDtoInterface;
+import jp.mosp.time.utils.TimeNamingUtility;
 
 /**
  * 勤怠データ修正情報参照クラス。
  */
-public class AttendanceCorrectionReferenceBean extends PlatformBean implements
-		AttendanceCorrectionReferenceBeanInterface {
+public class AttendanceCorrectionReferenceBean extends PlatformBean
+		implements AttendanceCorrectionReferenceBeanInterface {
 	
 	/**
 	 * 勤怠データ修正情報DAOクラス。<br>
@@ -334,8 +337,8 @@ public class AttendanceCorrectionReferenceBean extends PlatformBean implements
 	@Override
 	public String getHistoryAttendanceAggregateName(TotalTimeCorrectionDtoInterface dto) throws MospException {
 		// 計算年月における基準日取得
-		Date date = MonthUtility
-			.getYearMonthTargetDate(dto.getCalculationYear(), dto.getCalculationMonth(), mospParams);
+		Date date = MonthUtility.getYearMonthTargetDate(dto.getCalculationYear(), dto.getCalculationMonth(),
+				mospParams);
 		String type = dto.getCorrectionType();
 		if (type.equals(TimeConst.CODE_TOTALTIME_ITEM_NAME_WORKTIME)) {
 			return mospParams.getName("Work", "Time");
@@ -700,18 +703,55 @@ public class AttendanceCorrectionReferenceBean extends PlatformBean implements
 		if (codeArray.length >= 2) {
 			String arrayType = codeArray[0];
 			String arrayCode = codeArray[1];
-			if (TimeConst.CODE_TOTALTIME_ITEM_NAME_TOTALLEAVE.equals(arrayType)) {
-				// 特別休暇
-				return holidayReference.getHolidayAbbr(arrayCode, date, 2);
-			} else if (TimeConst.CODE_TOTALTIME_ITEM_NAME_OTHERVACATION.equals(arrayType)) {
-				// その他休暇
-				return holidayReference.getHolidayAbbr(arrayCode, date, 3);
-			} else if (TimeConst.CODE_TOTALTIME_ITEM_NAME_ABSENCE.equals(arrayType)) {
-				// 欠勤
-				return holidayReference.getHolidayAbbr(arrayCode, date, 4);
+			// 修正箇所区分を確認
+			if (MospUtility.isEqual(arrayType, TimeConst.CODE_TOTALTIME_ITEM_NAME_TOTALLEAVE)) {
+				// 特別休暇日数である場合
+				return getHolidayName(arrayCode, date, TimeConst.CODE_HOLIDAYTYPE_SPECIAL, true);
+			} else if (MospUtility.isEqual(arrayType, TimeConst.CODE_TOTALTIME_ITEM_NAME_TOTALLEAVEHOUR)) {
+				// 特別休暇時間である場合
+				return getHolidayName(arrayCode, date, TimeConst.CODE_HOLIDAYTYPE_SPECIAL, false);
+			} else if (MospUtility.isEqual(arrayType, TimeConst.CODE_TOTALTIME_ITEM_NAME_OTHERVACATION)) {
+				// その他休暇日数である場合
+				return getHolidayName(arrayCode, date, TimeConst.CODE_HOLIDAYTYPE_OTHER, true);
+			} else if (MospUtility.isEqual(arrayType, TimeConst.CODE_TOTALTIME_ITEM_NAME_OTHERVACATIONHOUR)) {
+				// その他休暇時間である場合
+				return getHolidayName(arrayCode, date, TimeConst.CODE_HOLIDAYTYPE_OTHER, false);
+			} else if (MospUtility.isEqual(arrayType, TimeConst.CODE_TOTALTIME_ITEM_NAME_ABSENCE)) {
+				// 欠勤日数である場合
+				return getHolidayName(arrayCode, date, TimeConst.CODE_HOLIDAYTYPE_ABSENCE, true);
+			} else if (MospUtility.isEqual(arrayType, TimeConst.CODE_TOTALTIME_ITEM_NAME_ABSENCEHOUR)) {
+				// 欠勤時間である場合
+				return getHolidayName(arrayCode, date, TimeConst.CODE_HOLIDAYTYPE_ABSENCE, false);
 			}
 		}
 		return type;
+	}
+	
+	/**
+	 * 修正箇所名称(休暇略称日数or時間)を取得する。<br>
+	 * @param holidayCode 休暇コード
+	 * @param targetDate  対象日
+	 * @param holidayType 休暇区分
+	 * @param isDays      日数フラグ(true：日数、false：時間)
+	 * @return 修正箇所名称(休暇略称日数or時間)
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	protected String getHolidayName(String holidayCode, Date targetDate, int holidayType, boolean isDays)
+			throws MospException {
+		// 文字列を準備
+		StringBuilder sb = new StringBuilder();
+		// 休暇略称を取得し設定
+		sb.append(holidayReference.getHolidayAbbr(holidayCode, targetDate, holidayType));
+		// 日数フラグを確認
+		if (isDays) {
+			// 日数を設定
+			sb.append(TimeNamingUtility.days(mospParams));
+		} else {
+			// 時間を設定
+			sb.append(PlatformNamingUtility.time(mospParams));
+		}
+		// 修正箇所名称(休暇略称日数or時間)を取得
+		return sb.toString();
 	}
 	
 	@Override

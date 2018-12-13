@@ -19,8 +19,10 @@ package jp.mosp.time.bean;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import jp.mosp.framework.base.MospException;
+import jp.mosp.platform.dto.human.HumanDtoInterface;
 import jp.mosp.time.dto.settings.StockHolidayDataDtoInterface;
 
 /**
@@ -59,6 +61,18 @@ public interface StockHolidayInfoReferenceBeanInterface {
 	 */
 	List<StockHolidayDataDtoInterface> getStockHolidayPossibleRequest(String personalId, Date targetDate)
 			throws MospException;
+	
+	/**
+	 * 前年度残、今年度付与日数、対象期間利用(休暇申請)日数を取得する。<br>
+	 * 統計情報一覧で使用する。<br>
+	 * @param humanDto    人事基本情報
+	 * @param displayYear 表示年度
+	 * @param targetDate  対象日
+	 * @return 前年度残、 今年度付与日数、対象期間利用(休暇申請)日数
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	Map<String, Object> getSubordinateFiscalStockHolidayInfo(HumanDtoInterface humanDto, int displayYear,
+			Date targetDate) throws MospException;
 	
 	/**
 	 * ストック休暇残日数を取得する。<br><br>
@@ -100,5 +114,15 @@ public interface StockHolidayInfoReferenceBeanInterface {
 	 */
 	StockHolidayDataDtoInterface getNewStockHolidayInfo(String personalId, Date activateDate, double day)
 			throws MospException;
+	
+	/**
+	 * 対象期間内のストック休暇残日数を取得する。<br>
+	 * @param personalId 個人ID
+	 * @param startDate 対象期間開始日
+	 * @param endDate 対象期間終了日
+	 * @return ストック休暇残日数+今年度付与日数
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	double getStockPaidInfo(String personalId, Date startDate, Date endDate) throws MospException;
 	
 }

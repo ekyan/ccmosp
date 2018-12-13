@@ -43,7 +43,7 @@ AttendanceHistoryVo vo = (AttendanceHistoryVo)params.getVo();
 if (params.getCommand().equals(AttendanceHistoryAction.CMD_SELECT_SHOW) || params.getCommand().equals(AttendanceHistoryAction.CMD_RE_SHOW)) {
 %>
 <div class="FixList">
-	<table class="ListTable">
+	<table class="ListTable" id="attendanceHistory_tblAttendance">
 		<thead>
 			<tr>
 				<th class="ListSelectTh" id="thDate"><%= params.getName("Work") %><%= params.getName("Day") %></th>

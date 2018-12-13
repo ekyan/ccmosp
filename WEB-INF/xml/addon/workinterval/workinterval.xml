@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE MosP>
+<!--
+MosP - Mind Open Source Project    http://www.mosp.jp/
+Copyright (C) MIND Co., Ltd.       http://www.e-mind.co.jp/
+
+This program is free software: you can redistribute it and/or
+modify it under the terms of the GNU Affero General Public License
+as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<MosP>
+	<!-- ポータルBeanクラス群 -->
+	<Application key="PortalBeans">
+		jp.mosp.time.portal.bean.impl.PortalTimeCardBean,
+		jp.mosp.platform.bean.portal.impl.PortalMessageBean,
+		jp.mosp.addon.workinterval.portal.bean.impl.PortalWorkIntervalAttendanceListBean,
+		jp.mosp.time.portal.bean.impl.PortalApprovalListBean
+	</Application>
+	
+	
+	<!-- メール定義。 表題、テンプレートファイル名-->
+	<Application key="mailLimit">
+		勤務間インターバル限度時間突破通知,mail_under_limit.vm
+	</Application>
+	<Application key="mailAttention">
+		勤務間インターバル注意時間突破通知,mail_under_attention.vm
+	</Application>
+	<Application key="mailWarning">
+		勤務間インターバル警告時間突破通知,mail_under_warning.vm
+	</Application>
+</MosP>

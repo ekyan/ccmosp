@@ -135,8 +135,8 @@ public class TotalTimeTransactionSearchBean extends PlatformBean implements Tota
 			totalTimeCutoffListDto.setCutoffAbbr(dto.getCutoffAbbr());
 			totalTimeCutoffListDto.setCutoffDate(dto.getCutoffDate());
 			totalTimeCutoffListDto.setCutoffState(0);
-			TotalTimeDtoInterface totalTimeDto = totalTimeDao
-				.findForKey(requestYear, requestMonth, dto.getCutoffCode());
+			TotalTimeDtoInterface totalTimeDto = totalTimeDao.findForKey(requestYear, requestMonth,
+					dto.getCutoffCode());
 			if (totalTimeDto != null) {
 				totalTimeCutoffListDto.setCutoffState(totalTimeDto.getCutoffState());
 			}

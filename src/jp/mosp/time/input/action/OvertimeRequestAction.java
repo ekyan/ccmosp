@@ -361,8 +361,8 @@ public class OvertimeRequestAction extends TimeAction {
 		// 締日ユーティリティー取得
 		CutoffUtilBeanInterface cutoffUtil = timeReference().cutoffUtil();
 		// 締日情報取得
-		CutoffDtoInterface startMonthCutoffDto = cutoffUtil
-			.getCutoffForPersonalId(vo.getPersonalId(), year, startMonth);
+		CutoffDtoInterface startMonthCutoffDto = cutoffUtil.getCutoffForPersonalId(vo.getPersonalId(), year,
+				startMonth);
 		if (mospParams.hasErrorMessage()) {
 			// 検索結果無しメッセージ設定
 			addNoSearchResultMessage();
@@ -394,7 +394,7 @@ public class OvertimeRequestAction extends TimeAction {
 		// ソート
 		sort();
 		// 検索結果確認
-		if (list.isEmpty()) {
+		if (list.isEmpty() && mospParams.getCommand().equals(CMD_SEARCH)) {
 			// 検索結果無しメッセージ設定
 			addNoSearchResultMessage();
 		}
@@ -431,9 +431,7 @@ public class OvertimeRequestAction extends TimeAction {
 				PlatformConst.WORKFLOW_TYPE_TIME);
 		if (workflowDto != null) {
 			// ワークフローコメント登録
-			platform().workflowCommentRegist().addComment(
-					workflowDto,
-					mospParams.getUser().getPersonalId(),
+			platform().workflowCommentRegist().addComment(workflowDto, mospParams.getUser().getPersonalId(),
 					mospParams.getProperties().getMessage(PlatformMessageConst.MSG_PROCESS_SUCCEED,
 							new String[]{ mospParams.getName("WorkPaper") }));
 			// ワークフロー番号セット
@@ -543,8 +541,8 @@ public class OvertimeRequestAction extends TimeAction {
 		if (isDraft) {
 			// 下書の場合は削除する
 			workflowRegist.delete(workflowDto);
-			workflowCommentRegist.deleteList(reference().workflowComment().getWorkflowCommentList(
-					workflowDto.getWorkflow()));
+			workflowCommentRegist
+				.deleteList(reference().workflowComment().getWorkflowCommentList(workflowDto.getWorkflow()));
 			regist.delete(dto);
 		} else {
 			// 下書でない場合は取下する
@@ -552,9 +550,7 @@ public class OvertimeRequestAction extends TimeAction {
 			workflowDto = workflowRegist.withdrawn(workflowDto);
 			if (workflowDto != null) {
 				// ワークフローコメント登録
-				workflowCommentRegist.addComment(
-						workflowDto,
-						mospParams.getUser().getPersonalId(),
+				workflowCommentRegist.addComment(workflowDto, mospParams.getUser().getPersonalId(),
 						mospParams.getProperties().getMessage(PlatformMessageConst.MSG_PROCESS_SUCCEED,
 								new String[]{ mospParams.getName("TakeDown") }));
 			}
@@ -649,6 +645,7 @@ public class OvertimeRequestAction extends TimeAction {
 		}
 		dto.setPersonalId(vo.getPersonalId());
 		dto.setRequestDate(getEditRequestDate());
+		dto.setOvertimeType(getInt(vo.getPltEditOverTimeType()));
 		regist.checkSetRequestDate(dto);
 		if (mospParams.hasErrorMessage()) {
 			// 決定失敗メッセージ設定
@@ -777,6 +774,8 @@ public class OvertimeRequestAction extends TimeAction {
 	public void setDefaultValues() throws MospException {
 		// VO準備
 		OvertimeRequestVo vo = (OvertimeRequestVo)mospParams.getVo();
+		// VOから個人IDを取得
+		String personalId = vo.getPersonalId();
 		OvertimeInfoReferenceBeanInterface overtimeInfo = timeReference().overtimeInfo();
 		// システム日付取得
 		Date date = getSystemDate();
@@ -803,7 +802,7 @@ public class OvertimeRequestAction extends TimeAction {
 		vo.setPltSearchScheduleOver("");
 		vo.setPltSearchOverTimeType("");
 		// 申請残業年月日が含まれる締月を取得し検索条件に設定
-		Date searchDate = timeReference().cutoffUtil().getCutoffMonth(vo.getPersonalId(), date);
+		Date searchDate = timeReference().cutoffUtil().getCutoffMonth(personalId, date);
 		vo.setPltSearchRequestYear(DateUtility.getStringYear(searchDate));
 		vo.setPltSearchRequestMonth(DateUtility.getStringMonthM(searchDate));
 		// 承認者欄の初期化
@@ -824,21 +823,11 @@ public class OvertimeRequestAction extends TimeAction {
 		vo.setJsBeforeOvertimeFlag("0");
 		
 		// 申請可能時間表示
-		vo.setLblRemainderWeek(getTimeTimeFormat(0));
-		vo.setLblRemainderMonth(getTimeTimeFormat(0));
-		String remainderWeek = getTimeTimeFormat(overtimeInfo.getPossibleTime1Week(vo.getPersonalId()));
-		if (mospParams.hasErrorMessage()) {
-			return;
-		}
-		String remainderMonth = getTimeTimeFormat(overtimeInfo.getPossibleTime1Month(vo.getPersonalId()));
-		if (mospParams.hasErrorMessage()) {
-			return;
-		}
-		vo.setLblRemainderWeek(remainderWeek);
-		vo.setLblRemainderMonth(remainderMonth);
-		// 
-		Integer beforeOvertimeFlag = timeReference().timeSetting()
-			.getBeforeOvertimeFlag(vo.getPersonalId(), targetDate);
+		vo.setLblRemainderWeek(overtimeInfo.getStringPossibleTime1Week(personalId));
+		vo.setLblRemainderMonth(overtimeInfo.getStringPossibleTime1Month(personalId));
+		//
+		Integer beforeOvertimeFlag = timeReference().timeSetting().getBeforeOvertimeFlag(vo.getPersonalId(),
+				targetDate);
 		// 勤務前残業のチェック
 		if (null != beforeOvertimeFlag && 1 == beforeOvertimeFlag) {
 			// 無効に設定
@@ -861,7 +850,7 @@ public class OvertimeRequestAction extends TimeAction {
 	/**
 	 * プルダウン設定
 	 */
-	private void setPulldown() {
+	protected void setPulldown() {
 		// VO準備
 		OvertimeRequestVo vo = (OvertimeRequestVo)mospParams.getVo();
 		int editRequestYear = DateUtility.getYear(getSystemDate());
@@ -992,8 +981,8 @@ public class OvertimeRequestAction extends TimeAction {
 		dto.setTmdOvertimeRequestId(vo.getRecordId());
 		dto.setPersonalId(vo.getPersonalId());
 		dto.setRequestDate(getEditRequestDate());
-		int workRequestTime = (Integer.parseInt(vo.getPltEditRequestHour()) * TimeConst.CODE_DEFINITION_HOUR)
-				+ Integer.parseInt(vo.getPltEditRequestMinute());
+		int workRequestTime = (getInt(vo.getPltEditRequestHour()) * TimeConst.CODE_DEFINITION_HOUR)
+				+ getInt(vo.getPltEditRequestMinute());
 		dto.setRequestTime(workRequestTime);
 		dto.setOvertimeType(Integer.parseInt(vo.getPltEditOverTimeType()));
 		dto.setRequestReason(vo.getTxtEditRequestReason());

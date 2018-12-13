@@ -56,7 +56,8 @@ public class OrangeSignalUtility {
 	 * @return 解析結果(文字列配列のリスト)
 	 * @throws MospException 入出力例外が発生した場合
 	 */
-	public static List<String[]> parse(InputStream requestedFile, OrangeSignalParams orangeParams) throws MospException {
+	public static List<String[]> parse(InputStream requestedFile, OrangeSignalParams orangeParams)
+			throws MospException {
 		try {
 			return Csv.load(requestedFile, orangeParams.getEncoding(), getCsvConfig(orangeParams),
 					new StringArrayListHandler());
@@ -92,6 +93,10 @@ public class OrangeSignalUtility {
 		CsvConfig csvConfig = new CsvConfig(separator, quote, escape);
 		// 空行無視設定
 		csvConfig.setIgnoreEmptyLines(orangeParams.isIgnoreEmptyLines());
+		// 囲み文字無視設定
+		csvConfig.setQuoteDisabled(orangeParams.getQuoteDisabled());
+		// 改行文字列
+		csvConfig.setLineSeparator(orangeParams.getLineSeparator());
 		return csvConfig;
 	}
 	

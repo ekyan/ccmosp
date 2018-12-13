@@ -70,8 +70,8 @@ public interface PaidHolidayTransactionDaoInterface extends BaseDaoInterface {
 	 * @return 有給休暇トランザクションリスト
 	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
 	 */
-	List<PaidHolidayTransactionDtoInterface> findForInfoList(String personalId, Date activateDate, String inactivateFlag)
-			throws MospException;
+	List<PaidHolidayTransactionDtoInterface> findForInfoList(String personalId, Date activateDate,
+			String inactivateFlag) throws MospException;
 	
 	/**
 	 * 検索条件取得。
@@ -87,17 +87,6 @@ public interface PaidHolidayTransactionDaoInterface extends BaseDaoInterface {
 	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
 	 */
 	List<PaidHolidayTransactionDtoInterface> findForList(String personalId, Date activateDate) throws MospException;
-	
-	/**
-	 * 個人IDと有効日から有給休暇トランザクション情報リストを取得する。<br>
-	 * @param personalId 個人ID
-	 * @param firstDate 対象年月日
-	 * @param lastDate 対象年月日
-	 * @return 有給休暇トランザクション情報リスト
-	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
-	 */
-	List<PaidHolidayTransactionDtoInterface> findForList(String personalId, Date firstDate, Date lastDate)
-			throws MospException;
 	
 	/**
 	 * 個人IDから有給休暇トランザクション情報リストを取得する。<br>
@@ -140,6 +129,16 @@ public interface PaidHolidayTransactionDaoInterface extends BaseDaoInterface {
 	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
 	 */
 	List<PaidHolidayTransactionDtoInterface> findPersonTerm(String personalId, Date startDate, Date endDate)
+			throws MospException;
+	
+	/**
+	 * 個人IDと取得日から有給休暇トランザクション情報リストを取得する。<br>
+	 * @param personalId 個人ID
+	 * @param acquisitionDate 取得日
+	 * @return 有給休暇トランザクション情報リスト
+	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
+	 */
+	List<PaidHolidayTransactionDtoInterface> findForAcquisitionList(String personalId, Date acquisitionDate)
 			throws MospException;
 	
 }

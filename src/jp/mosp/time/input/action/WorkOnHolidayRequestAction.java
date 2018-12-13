@@ -23,6 +23,7 @@ import java.util.List;
 import jp.mosp.framework.base.BaseDtoInterface;
 import jp.mosp.framework.base.BaseVo;
 import jp.mosp.framework.base.MospException;
+import jp.mosp.framework.constant.MospConst;
 import jp.mosp.framework.utils.DateUtility;
 import jp.mosp.platform.bean.workflow.WorkflowCommentRegistBeanInterface;
 import jp.mosp.platform.bean.workflow.WorkflowRegistBeanInterface;
@@ -37,13 +38,16 @@ import jp.mosp.time.bean.CutoffUtilBeanInterface;
 import jp.mosp.time.bean.RequestUtilBeanInterface;
 import jp.mosp.time.bean.ScheduleDateReferenceBeanInterface;
 import jp.mosp.time.bean.ScheduleReferenceBeanInterface;
+import jp.mosp.time.bean.SubstituteReferenceBeanInterface;
 import jp.mosp.time.bean.SubstituteRegistBeanInterface;
 import jp.mosp.time.bean.TimeSettingReferenceBeanInterface;
 import jp.mosp.time.bean.WorkOnHolidayRequestRegistBeanInterface;
 import jp.mosp.time.bean.WorkOnHolidayRequestSearchBeanInterface;
+import jp.mosp.time.bean.WorkTypeReferenceBeanInterface;
 import jp.mosp.time.comparator.settings.WorkOnHolidayRequestRequestDateComparator;
 import jp.mosp.time.comparator.settings.WorkOnHolidayRequestSubstituteDate1Comparator;
 import jp.mosp.time.constant.TimeConst;
+import jp.mosp.time.constant.TimeMessageConst;
 import jp.mosp.time.dto.settings.ApplicationDtoInterface;
 import jp.mosp.time.dto.settings.CutoffDtoInterface;
 import jp.mosp.time.dto.settings.ScheduleDateDtoInterface;
@@ -52,6 +56,7 @@ import jp.mosp.time.dto.settings.SubstituteDtoInterface;
 import jp.mosp.time.dto.settings.TimeSettingDtoInterface;
 import jp.mosp.time.dto.settings.WorkOnHolidayRequestDtoInterface;
 import jp.mosp.time.dto.settings.WorkOnHolidayRequestListDtoInterface;
+import jp.mosp.time.dto.settings.WorkTypeDtoInterface;
 import jp.mosp.time.input.vo.WorkOnHolidayRequestVo;
 
 /**
@@ -266,7 +271,7 @@ public class WorkOnHolidayRequestAction extends TimeAction {
 			prepareVo();
 			withdrawn();
 		} else if (mospParams.getCommand().equals(CMD_SORT)) {
-			// ソート 
+			// ソート
 			prepareVo();
 			sort();
 		} else if (mospParams.getCommand().equals(CMD_PAGE)) {
@@ -364,13 +369,13 @@ public class WorkOnHolidayRequestAction extends TimeAction {
 			date = getSystemDate();
 		}
 		// 検索条件のプルダウン設定
-		vo.setAryPltSearchSubstituteRange(mospParams.getProperties().getCodeArray(TimeConst.CODE_SUBSTITUTE1_RANGE,
-				true));
+		vo.setAryPltSearchSubstituteRange(
+				mospParams.getProperties().getCodeArray(TimeConst.CODE_SUBSTITUTE1_RANGE, true));
 		vo.setAryPltSearchState(mospParams.getProperties().getCodeArray(TimeConst.CODE_APPROVAL_STATE, true));
 		vo.setAryPltSearchRequestYear(getYearArray(DateUtility.getYear(date)));
 		vo.setAryPltSearchRequestMonth(getMonthArray(true));
-		vo.setAryPltEditSubstitute1Range(mospParams.getProperties().getCodeArray(TimeConst.CODE_SUBSTITUTE1_RANGE,
-				false));
+		vo.setAryPltEditSubstitute1Range(
+				mospParams.getProperties().getCodeArray(TimeConst.CODE_SUBSTITUTE1_RANGE, false));
 		// 勤務予定時刻
 		vo.setAryPltEditStartHour(getHourArray());
 		// 分は15分単位
@@ -414,8 +419,8 @@ public class WorkOnHolidayRequestAction extends TimeAction {
 		if (mospParams.hasErrorMessage()) {
 			return;
 		}
-		vo.setAryPltEditEndHour(getHourArray(DateUtility.getHour(timeSettingDto.getStartDayTime())
-				+ TimeConst.TIME_DAY_ALL_HOUR, true));
+		vo.setAryPltEditEndHour(getHourArray(
+				DateUtility.getHour(timeSettingDto.getStartDayTime()) + TimeConst.TIME_DAY_ALL_HOUR, true));
 	}
 	
 	/**
@@ -442,8 +447,8 @@ public class WorkOnHolidayRequestAction extends TimeAction {
 		// 締日ユーティリティー取得
 		CutoffUtilBeanInterface cutoffUtil = timeReference().cutoffUtil();
 		// 締日情報取得
-		CutoffDtoInterface startMonthCutoffDto = cutoffUtil
-			.getCutoffForPersonalId(vo.getPersonalId(), year, startMonth);
+		CutoffDtoInterface startMonthCutoffDto = cutoffUtil.getCutoffForPersonalId(vo.getPersonalId(), year,
+				startMonth);
 		if (mospParams.hasErrorMessage()) {
 			// 検索結果無しメッセージ設定
 			addNoSearchResultMessage();
@@ -475,7 +480,7 @@ public class WorkOnHolidayRequestAction extends TimeAction {
 		// ソート
 		sort();
 		// 検索結果確認
-		if (list.isEmpty()) {
+		if (list.isEmpty() && mospParams.getCommand().equals(CMD_SEARCH)) {
 			// 検索結果無しメッセージ設定
 			addNoSearchResultMessage();
 		}
@@ -501,8 +506,10 @@ public class WorkOnHolidayRequestAction extends TimeAction {
 		// 妥当性チェック
 		regist.validate(dto);
 		regist.checkDraft(dto);
-		boolean substituteFlag = vo.getPltEditSubstitute().equals(
-				String.valueOf(TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_ON));
+		boolean substituteFlag = Integer.toString(TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_ON)
+			.equals(vo.getPltEditSubstitute())
+				|| Integer.toString(TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_ON_WORK_TYPE_CHANGE)
+					.equals(vo.getPltEditSubstitute());
 		// 振替休日DTOの準備
 		SubstituteDtoInterface substituteDto = null;
 		if (substituteFlag) {
@@ -518,7 +525,7 @@ public class WorkOnHolidayRequestAction extends TimeAction {
 			}
 			// 振替休日1の妥当性チェック
 			substituteRegist.validate(substituteDto);
-			substituteRegist.checkRegist(substituteDto, null);
+			substituteRegist.checkRegist(substituteDto);
 		}
 		// 登録クラスの取得。
 		WorkflowRegistBeanInterface workflowRegist = platform().workflowRegist();
@@ -534,9 +541,7 @@ public class WorkOnHolidayRequestAction extends TimeAction {
 				PlatformConst.WORKFLOW_TYPE_TIME);
 		if (workflowDto != null) {
 			// ワークフローコメント登録
-			platform().workflowCommentRegist().addComment(
-					workflowDto,
-					mospParams.getUser().getPersonalId(),
+			platform().workflowCommentRegist().addComment(workflowDto, mospParams.getUser().getPersonalId(),
 					mospParams.getProperties().getMessage(PlatformMessageConst.MSG_PROCESS_SUCCEED,
 							new String[]{ mospParams.getName("WorkPaper") }));
 			// ワークフロー番号セット
@@ -585,12 +590,60 @@ public class WorkOnHolidayRequestAction extends TimeAction {
 		// 登録クラス取得
 		WorkOnHolidayRequestRegistBeanInterface regist = time().workOnHolidayRequestRegist();
 		SubstituteRegistBeanInterface substituteRegist = time().substituteRegist();
-		AttendanceTransactionRegistBeanInterface attendanceTransactionRegist = time().attendanceTransactionRegist();
 		// DTOの準備
 		WorkOnHolidayRequestDtoInterface dto = timeReference().workOnHolidayRequest().findForKey(vo.getRecordId());
 		if (dto == null) {
 			dto = regist.getInitDto();
 		}
+		// 振替休日DTOの準備
+		SubstituteDtoInterface substituteDto = null;
+		if (Integer.toString(TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_ON).equals(vo.getPltEditSubstitute())
+				|| Integer.toString(TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_ON_WORK_TYPE_CHANGE)
+					.equals(vo.getPltEditSubstitute())) {
+			// 振り替える場合
+			substituteDto = substituteRegist.getInitDto();
+		}
+		// 申請処理
+		appli(dto, substituteDto);
+		// 登録結果確認
+		if (mospParams.hasErrorMessage()) {
+			return;
+		}
+		// コミット
+		commit();
+		// 申請成功メッセージ設定
+		addAppliMessage();
+		// 半振出の場合
+		if (vo.isModeHalfSubstitute()) {
+			// 振替日の勤怠が削除されるメッセージ追加
+			mospParams.addMessage(TimeMessageConst.MSG_HALF_SUBHOLIDAY_REQUEST);
+		}
+		// 登録結果確認
+		if (!mospParams.hasErrorMessage()) {
+			// 登録が成功した場合、初期状態に戻す。
+			insertMode();
+			// 申請年月日が含まれる締月を取得し検索条件に設定
+			Date searchDate = timeReference().cutoffUtil().getCutoffMonth(dto.getPersonalId(), dto.getRequestDate());
+			vo.setPltSearchRequestYear(DateUtility.getStringYear(searchDate));
+			vo.setPltSearchRequestMonth(DateUtility.getStringMonthM(searchDate));
+			search();
+		}
+	}
+	
+	/**
+	 * 申請処理を行う。<br>
+	 * @param dto 振出・休出DTO
+	 * @param substituteDto 振替休日DTO
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	protected void appli(WorkOnHolidayRequestDtoInterface dto, SubstituteDtoInterface substituteDto)
+			throws MospException {
+		// VO準備
+		WorkOnHolidayRequestVo vo = (WorkOnHolidayRequestVo)mospParams.getVo();
+		// 登録クラス取得
+		WorkOnHolidayRequestRegistBeanInterface regist = time().workOnHolidayRequestRegist();
+		SubstituteRegistBeanInterface substituteRegist = time().substituteRegist();
+		
 		// DTOに値を設定
 		setWorkOnHolidayDtoFields(dto);
 		// 申請の相関チェック
@@ -601,25 +654,23 @@ public class WorkOnHolidayRequestAction extends TimeAction {
 			return;
 		}
 		// 振出・休出フラグ
-		boolean substituteFlag = vo.getPltEditSubstitute().equals(
-				String.valueOf(TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_ON));
-		// 振替休日DTOの準備
-		SubstituteDtoInterface substituteDto = null;
+		boolean substituteFlag = Integer.toString(TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_ON)
+			.equals(vo.getPltEditSubstitute())
+				|| Integer.toString(TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_ON_WORK_TYPE_CHANGE)
+					.equals(vo.getPltEditSubstitute());
 		if (substituteFlag) {
-			// 振り替える場合
-			substituteDto = substituteRegist.getInitDto();
 			// 振替休日DTOに値を設定
 			setSubstituteDtoFields(substituteDto);
 			substituteDto.setWorkflow(dto.getWorkflow());
 			// 振替休日の相関チェック
-			substituteRegist.checkRegist(substituteDto, null);
+			substituteRegist.checkRegist(substituteDto);
 			if (mospParams.hasErrorMessage()) {
 				// 登録失敗メッセージ設定
 				addInsertFailedMessage();
 				return;
 			}
-			// 振替日に勤怠申請情報(下書)を削除
-			time().attendanceRegist().delete(substituteDto.getPersonalId(), substituteDto.getSubstituteDate());
+			// 振替日の勤怠申請情報を削除する。
+			substituteAttendanceDelete(substituteDto);
 		}
 		// 登録クラスの取得
 		WorkflowRegistBeanInterface workflowRegist = platform().workflowRegist();
@@ -644,33 +695,37 @@ public class WorkOnHolidayRequestAction extends TimeAction {
 			// 登録
 			regist.regist(dto);
 			substituteRegist.delete(workflowDto.getWorkflow());
-			if (substituteFlag) {
-				// 振り替える場合
-				substituteRegist.insert(substituteDto);
-				// 勤怠トランザクション登録
-				attendanceTransactionRegist.regist(substituteDto);
-			}
+			// 振替休日登録
+			registSubstitute(substituteFlag, substituteDto);
 		}
-		// 登録結果確認
-		if (mospParams.hasErrorMessage()) {
-			// 登録失敗メッセージ設定
-			addInsertFailedMessage();
-			return;
+	}
+	
+	/**
+	 * 振替休日登録
+	 * @param substituteFlag 振替出勤判定：true:振替あり、false:振替無し
+	 * @param substituteDto 振替休日DTO
+	 * @throws MospException インスタンスの生成或いはSQLの実行に失敗した場合
+	 */
+	protected void registSubstitute(boolean substituteFlag, SubstituteDtoInterface substituteDto) throws MospException {
+		AttendanceTransactionRegistBeanInterface attendanceTransactionRegist = time().attendanceTransactionRegist();
+		SubstituteRegistBeanInterface substituteRegist = time().substituteRegist();
+		if (substituteFlag) {
+			// 振り替える場合
+			substituteRegist.insert(substituteDto);
+			// 勤怠トランザクション登録
+			attendanceTransactionRegist.regist(substituteDto);
 		}
-		// コミット
-		commit();
-		// 申請成功メッセージ設定
-		addAppliMessage();
-		// 登録結果確認
-		if (!mospParams.hasErrorMessage()) {
-			// 登録が成功した場合、初期状態に戻す。
-			insertMode();
-			// 申請年月日が含まれる締月を取得し検索条件に設定
-			Date searchDate = timeReference().cutoffUtil().getCutoffMonth(dto.getPersonalId(), dto.getRequestDate());
-			vo.setPltSearchRequestYear(DateUtility.getStringYear(searchDate));
-			vo.setPltSearchRequestMonth(DateUtility.getStringMonthM(searchDate));
-			search();
-		}
+		
+	}
+	
+	/**
+	 * 振替日の勤怠申請情報を削除する。<br>
+	 * @param substituteDto 振替休日DTO
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	protected void substituteAttendanceDelete(SubstituteDtoInterface substituteDto) throws MospException {
+		// 振替日に勤怠申請情報(下書)を削除
+		time().attendanceRegist().delete(substituteDto.getPersonalId(), substituteDto.getSubstituteDate());
 	}
 	
 	/**
@@ -681,40 +736,25 @@ public class WorkOnHolidayRequestAction extends TimeAction {
 		// VO準備
 		WorkOnHolidayRequestVo vo = (WorkOnHolidayRequestVo)mospParams.getVo();
 		WorkOnHolidayRequestRegistBeanInterface regist = time().workOnHolidayRequestRegist();
-		WorkflowRegistBeanInterface workflowRegist = platform().workflowRegist();
-		WorkflowCommentRegistBeanInterface workflowCommentRegist = platform().workflowCommentRegist();
 		// DTOの準備
 		WorkOnHolidayRequestDtoInterface dto = timeReference().workOnHolidayRequest().findForKey(vo.getRecordId());
-		// 存在確認
+		// 存在確認(エラー時はポータルへ遷移)
 		checkSelectedDataExist(dto);
 		// 取下の相関チェック
 		regist.checkWithdrawn(dto);
 		// ワークフロー取得
 		WorkflowDtoInterface workflowDto = reference().workflow().getLatestWorkflowInfo(dto.getWorkflow());
-		// 存在確認
+		// 存在確認(エラー時はポータルへ遷移)
 		checkSelectedDataExist(workflowDto);
+		// 状態判定
 		boolean isDraft = PlatformConst.CODE_STATUS_DRAFT.equals(workflowDto.getWorkflowStatus());
+		// 取下実行
 		if (isDraft) {
-			long workflow = workflowDto.getWorkflow();
-			// 下書の場合は削除する
-			workflowRegist.delete(workflowDto);
-			workflowCommentRegist.deleteList(reference().workflowComment().getWorkflowCommentList(workflow));
-			regist.delete(dto);
-			time().substituteRegist().delete(workflow);
+			// 下書きの場合、削除
+			delete(dto, workflowDto);
 		} else {
-			// 下書でない場合は取下する
-			// ワークフロー登録
-			workflowDto = workflowRegist.withdrawn(workflowDto);
-			if (workflowDto != null) {
-				// ワークフローコメント登録
-				workflowCommentRegist.addComment(
-						workflowDto,
-						mospParams.getUser().getPersonalId(),
-						mospParams.getProperties().getMessage(PlatformMessageConst.MSG_PROCESS_SUCCEED,
-								new String[]{ mospParams.getName("TakeDown") }));
-			}
-			// 取下時の勤怠データ削除
-			time().attendanceRegist().delete(dto.getPersonalId(), dto.getRequestDate());
+			// 取下げ処理
+			withdrawn(dto, workflowDto);
 		}
 		// 削除結果確認
 		if (mospParams.hasErrorMessage()) {
@@ -722,8 +762,7 @@ public class WorkOnHolidayRequestAction extends TimeAction {
 			addDeleteHistoryFailedMessage();
 			return;
 		}
-		// コミット
-		commit();
+		// メッセージ設定
 		if (isDraft) {
 			// 削除成功メッセージ設定
 			addDeleteMessage();
@@ -731,14 +770,59 @@ public class WorkOnHolidayRequestAction extends TimeAction {
 			// 取下成功メッセージ設定
 			addTakeDownMessage();
 		}
+		// コミット
+		commit();
 		// 新規登録モード設定(編集領域をリセット)
 		insertMode();
 		// 申請年月日が含まれる締月を取得し検索条件に設定
 		Date searchDate = timeReference().cutoffUtil().getCutoffMonth(dto.getPersonalId(), dto.getRequestDate());
 		vo.setPltSearchRequestYear(DateUtility.getStringYear(searchDate));
 		vo.setPltSearchRequestMonth(DateUtility.getStringMonthM(searchDate));
+		
 		// 検索
 		search();
+	}
+	
+	/**
+	 * 下書時の削除処理
+	 * @param dto 振出休出申請DTO
+	 * @param workflowDto ワークフローDTO
+	 * @throws MospException インスタンスの生成或いはSQLの実行に失敗した場合
+	 */
+	protected void delete(WorkOnHolidayRequestDtoInterface dto, WorkflowDtoInterface workflowDto) throws MospException {
+		WorkOnHolidayRequestRegistBeanInterface regist = time().workOnHolidayRequestRegist();
+		WorkflowRegistBeanInterface workflowRegist = platform().workflowRegist();
+		WorkflowCommentRegistBeanInterface workflowCommentRegist = platform().workflowCommentRegist();
+		long workflow = workflowDto.getWorkflow();
+		// 下書の場合は削除する
+		workflowRegist.delete(workflowDto);
+		workflowCommentRegist.deleteList(reference().workflowComment().getWorkflowCommentList(workflow));
+		regist.delete(dto);
+		time().substituteRegist().delete(workflow);
+		
+	}
+	
+	/**
+	 * 取下処理
+	 * @param dto 振出休出申請DTO
+	 * @param workflowDto ワークフローDTO
+	 * @throws MospException インスタンスの生成或いはSQLの実行に失敗した場合
+	 */
+	protected void withdrawn(WorkOnHolidayRequestDtoInterface dto, WorkflowDtoInterface workflowDto)
+			throws MospException {
+		WorkflowRegistBeanInterface workflowRegist = platform().workflowRegist();
+		WorkflowCommentRegistBeanInterface workflowCommentRegist = platform().workflowCommentRegist();
+		// 下書でない場合は取下する
+		// ワークフロー登録
+		workflowDto = workflowRegist.withdrawn(workflowDto);
+		if (workflowDto != null) {
+			// ワークフローコメント登録
+			workflowCommentRegist.addComment(workflowDto, mospParams.getUser().getPersonalId(),
+					mospParams.getProperties().getMessage(PlatformMessageConst.MSG_PROCESS_SUCCEED,
+							new String[]{ mospParams.getName("TakeDown") }));
+		}
+		// 取下時の勤怠データ削除
+		time().attendanceRegist().delete(dto.getPersonalId(), dto.getRequestDate());
 	}
 	
 	/**
@@ -764,8 +848,8 @@ public class WorkOnHolidayRequestAction extends TimeAction {
 	protected void batchWithdrawn() throws MospException {
 		// VO取得
 		WorkOnHolidayRequestVo vo = (WorkOnHolidayRequestVo)mospParams.getVo();
-		// 一括更新処理
-		time().workOnHolidayRequestRegist().withdrawn(getIdArray(vo.getCkbSelect()));
+		// 一括取下
+		batchWithdrawn(getIdArray(vo.getCkbSelect()));
 		// 一括更新結果確認
 		if (mospParams.hasErrorMessage()) {
 			// 更新失敗メッセージ設定
@@ -787,6 +871,17 @@ public class WorkOnHolidayRequestAction extends TimeAction {
 	}
 	
 	/**
+	 * 一括取下処理
+	 * @param aryId 識別ID配列
+	 * @throws MospException インスタンスの生成或いはSQLの実行に失敗した場合
+	 */
+	protected void batchWithdrawn(long[] aryId) throws MospException {
+		// 一括更新処理
+		time().workOnHolidayRequestRegist().withdrawn(aryId);
+		
+	}
+	
+	/**
 	 * 有効日(編集)設定処理を行う。<br>
 	 * 保持有効日モードを確認し、モード及びプルダウンの再設定を行う。<br>
 	 * @throws MospException プルダウンの取得に失敗した場合
@@ -797,10 +892,11 @@ public class WorkOnHolidayRequestAction extends TimeAction {
 		// 休日出勤申請登録クラスを取得
 		WorkOnHolidayRequestRegistBeanInterface regist = time().workOnHolidayRequestRegist();
 		// 現在の有効日モードを確認
+		// 変更モードの場合
 		if (vo.getModeActivateDate().equals(PlatformConst.MODE_ACTIVATE_DATE_CHANGING)) {
-			// 変更モードの場合
 			// 承認者用プルダウンの作成
-			if (setApproverPullDown(vo.getPersonalId(), getEditRequestDate(), PlatformConst.WORKFLOW_TYPE_TIME) == false) {
+			if (setApproverPullDown(vo.getPersonalId(), getEditRequestDate(),
+					PlatformConst.WORKFLOW_TYPE_TIME) == false) {
 				return;
 			}
 			// 休日出勤申請取得
@@ -813,17 +909,17 @@ public class WorkOnHolidayRequestAction extends TimeAction {
 			dto.setPersonalId(vo.getPersonalId());
 			dto.setRequestDate(getEditRequestDate());
 			dto.setWorkOnHolidayType(getScheduledWorkTypeCode());
-			dto.setSubstitute(Integer.parseInt(vo.getPltEditSubstitute()));
+			// // 振替出勤の場合
 			if (Integer.toString(TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_ON).equals(vo.getPltEditSubstitute())) {
-				// 振替出勤の場合
-				if (vo.getPltEditSubstituteWorkRange() != null
-						&& !vo.getPltEditSubstituteWorkRange().isEmpty()
-						&& (Integer.toString(TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_AM).equals(
-								vo.getPltEditSubstituteWorkRange()) || Integer.toString(
-								TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_PM)
-							.equals(vo.getPltEditSubstituteWorkRange()))) {
-					// 午前又は午後の場合
-					dto.setSubstitute(Integer.parseInt(vo.getPltEditSubstituteWorkRange()));
+				// 振替申請区分取得
+				String editWorkRange = vo.getPltEditSubstituteWorkRange();
+				// 午前又は午後の場合
+				if (editWorkRange != null && !editWorkRange.isEmpty()
+						&& (Integer.toString(TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_AM).equals(editWorkRange)
+								|| Integer.toString(TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_PM)
+									.equals(editWorkRange))) {
+					// 振替申請区分設定
+					dto.setSubstitute(getInt(editWorkRange));
 				}
 			} else if (Integer.toString(TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_OFF)
 				.equals(vo.getPltEditSubstitute())) {
@@ -840,10 +936,8 @@ public class WorkOnHolidayRequestAction extends TimeAction {
 				addFixFailedMessage();
 				return;
 			}
-//			vo.setPltEditSubstitute1Range(String.valueOf(TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_ON));
-//			if (mospParams.hasErrorMessage()) {
-//				return;
-//			}
+			// 勤務形態プルダウン設定
+			setWorkTypePulldown();
 			// 有効日モード設定
 			vo.setModeActivateDate(PlatformConst.MODE_ACTIVATE_DATE_FIXED);
 			transferDay();
@@ -879,6 +973,8 @@ public class WorkOnHolidayRequestAction extends TimeAction {
 		vo.setComparatorName(WorkOnHolidayRequestSubstituteDate1Comparator.class.getName());
 		// プルダウン設定
 		setPulldown();
+		// 勤務形態プルダウン設定
+		setWorkTypePulldown();
 		// 基本情報チェック
 		if (null != getEditRequestDate()) {
 			timeReference().workOnHolidayRequest().chkBasicInfo(vo.getPersonalId(), getEditRequestDate());
@@ -921,11 +1017,8 @@ public class WorkOnHolidayRequestAction extends TimeAction {
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
 	protected void batchUpdate() throws MospException {
-		// VO準備
-		WorkOnHolidayRequestVo vo = (WorkOnHolidayRequestVo)mospParams.getVo();
 		// 一括更新処理
-		// ワークフローの更新のみ
-		time().workOnHolidayRequestRegist().update(getIdArray(vo.getCkbSelect()));
+		update();
 		// 一括更新結果確認
 		if (mospParams.hasErrorMessage()) {
 			// 更新失敗メッセージ設定
@@ -940,6 +1033,18 @@ public class WorkOnHolidayRequestAction extends TimeAction {
 		insertMode();
 		// 検索
 		search();
+	}
+	
+	/**
+	 * 一括更新処理を行う。<br>
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	protected void update() throws MospException {
+		// VO準備
+		WorkOnHolidayRequestVo vo = (WorkOnHolidayRequestVo)mospParams.getVo();
+		// 一括更新処理
+		// ワークフローの更新のみ
+		time().workOnHolidayRequestRegist().update(getIdArray(vo.getCkbSelect()));
 	}
 	
 	/**
@@ -963,8 +1068,8 @@ public class WorkOnHolidayRequestAction extends TimeAction {
 		// VO準備
 		WorkOnHolidayRequestVo vo = (WorkOnHolidayRequestVo)mospParams.getVo();
 		// 同日付に時差出勤が申請されているか確認する。
-		getDifferenceRequest1(vo.getPersonalId(),
-				getDate(vo.getPltEditSubstitute1Year(), vo.getPltEditSubstitute1Month(), vo.getPltEditSubstitute1Day()));
+		getDifferenceRequest1(vo.getPersonalId(), getDate(vo.getPltEditSubstitute1Year(),
+				vo.getPltEditSubstitute1Month(), vo.getPltEditSubstitute1Day()));
 	}
 	
 	/**
@@ -977,11 +1082,13 @@ public class WorkOnHolidayRequestAction extends TimeAction {
 		// VO準備
 		WorkOnHolidayRequestVo vo = (WorkOnHolidayRequestVo)mospParams.getVo();
 		// 履歴編集対象取得
-		WorkOnHolidayRequestDtoInterface dto = timeReference().workOnHolidayRequest().findForKeyOnWorkflow(
-				vo.getPersonalId(), requestDate);
-		List<SubstituteDtoInterface> list = timeReference().substitute().getSubstituteList(dto.getWorkflow());
-		// 存在確認
+		WorkOnHolidayRequestDtoInterface dto = timeReference().workOnHolidayRequest()
+			.findForKeyOnWorkflow(vo.getPersonalId(), requestDate);
+		// dto存在確認
 		checkSelectedDataExist(dto);
+		// 振替休日データリストを取得
+		List<SubstituteDtoInterface> list = timeReference().substitute().getSubstituteList(dto.getWorkflow());
+		// list存在確認
 		checkSelectedDataExist(list);
 		// VOにセット
 		setVoFields(dto);
@@ -1072,7 +1179,7 @@ public class WorkOnHolidayRequestAction extends TimeAction {
 		String[] aryLblRequestDate = new String[list.size()];
 		String[] aryLblRequestTime = new String[list.size()];
 		String[] aryLblRequestReason = new String[list.size()];
-		String[] aryLblSubstitute1Date = new String[list.size()];
+		String[] aryLblSubstituteDate = new String[list.size()];
 		String[] aryLblWorkflowStatus = new String[list.size()];
 		String[] aryStatusStyle = new String[list.size()];
 		String[] aryLblApproverName = new String[list.size()];
@@ -1086,11 +1193,12 @@ public class WorkOnHolidayRequestAction extends TimeAction {
 			// 配列に情報を設定
 			aryCkbRecordId[i] = String.valueOf(dto.getTmdWorkOnHolidayRequestId());
 			aryLblRequestDate[i] = getStringDateAndDay(dto.getRequestDate());
-			aryLblRequestTime[i] = getTimeWaveFormat(dto.getStartTime(), dto.getEndTime(), dto.getRequestDate());
+			aryLblRequestTime[i] = getScheduleForList(dto);
 			aryLblRequestReason[i] = dto.getRequestReason();
-			StringBuffer substitute1 = new StringBuffer();
-			substitute1.append(getStringDateAndDay(dto.getSubstituteDate1()));
-			aryLblSubstitute1Date[i] = substitute1.toString();
+			StringBuffer substitute = new StringBuffer();
+			substitute.append(getStringDateAndDay(dto.getSubstituteDate()));
+			aryLblSubstituteDate[i] = substitute.toString() + MospConst.STR_SB_SPACE
+					+ getRangeName(dto.getSubstituteRange());
 			aryLblWorkflowStatus[i] = getStatusStageValueView(dto.getState(), dto.getStage());
 			aryStatusStyle[i] = getStatusColor(dto.getState());
 			aryLblOnOff[i] = getButtonOnOff(dto.getState(), dto.getStage());
@@ -1103,13 +1211,78 @@ public class WorkOnHolidayRequestAction extends TimeAction {
 		vo.setAryLblWorkDate(aryLblRequestDate);
 		vo.setAryLblRequestTime(aryLblRequestTime);
 		vo.setAryLblRequestReason(aryLblRequestReason);
-		vo.setAryLblSubstituteDate1(aryLblSubstitute1Date);
+		vo.setAryLblSubstituteDate1(aryLblSubstituteDate);
 		vo.setAryLblState(aryLblWorkflowStatus);
 		vo.setAryStateStyle(aryStatusStyle);
 		vo.setAryLblApprover(aryLblApproverName);
 		vo.setAryLblOnOff(aryLblOnOff);
 		vo.setAryWorkflowStatus(aryWorkflowStatus);
 		vo.setAryWorkflow(aryWorkflow);
+	}
+	
+	/**
+	 * 予定を取得する。<br>
+	 * @param dto 対象DTO
+	 * @return 予定
+	 * @throws MospException 例外発生時
+	 */
+	protected String getScheduleForList(WorkOnHolidayRequestListDtoInterface dto) throws MospException {
+		// VO取得
+		WorkOnHolidayRequestVo vo = (WorkOnHolidayRequestVo)mospParams.getVo();
+		// クラス準備
+		ApplicationReferenceBeanInterface application = timeReference().application();
+		ScheduleReferenceBeanInterface schedule = timeReference().schedule();
+		ScheduleDateReferenceBeanInterface scheduleDate = timeReference().scheduleDate();
+		WorkTypeReferenceBeanInterface workType = timeReference().workType();
+		SubstituteReferenceBeanInterface substitute = timeReference().substitute();
+		// 休日出勤の場合
+		if (dto.getRequestDate() != null && dto.getStartTime() != null && dto.getEndTime() != null) {
+			// 時刻取得
+			return getTimeWaveFormat(dto.getStartTime(), dto.getEndTime(), dto.getRequestDate());
+		}
+		// 予定値準備
+		String scheduleValue = "";
+		// 振替出勤(勤務形態変更なし)・振替出勤(勤務形態変更あり)の場合
+		String workTypeCode = dto.getWorkTypeCode();
+		Date targetDate = dto.getRequestDate();
+		// 振替出勤(勤務形態変更なし)の場合
+		if (workTypeCode.isEmpty()) {
+			// ワークフロー番号から振替休日データリストを取得
+			List<SubstituteDtoInterface> list = substitute.getSubstituteList(dto.getWorkflow());
+			if (list.isEmpty()) {
+				return scheduleValue;
+			}
+			targetDate = list.get(0).getSubstituteDate();
+			// 設定適用取得
+			ApplicationDtoInterface applicationDto = application.findForPerson(vo.getPersonalId(), targetDate);
+			if (applicationDto == null) {
+				return scheduleValue;
+			}
+			// カレンダ情報取得
+			ScheduleDtoInterface scheduleDto = schedule.getScheduleInfo(applicationDto.getScheduleCode(), targetDate);
+			if (scheduleDto == null) {
+				return scheduleValue;
+			}
+			// カレンダ日情報取得
+			ScheduleDateDtoInterface scheduleDateDto = scheduleDate.getScheduleDateInfo(scheduleDto.getScheduleCode(),
+					targetDate);
+			if (scheduleDateDto == null) {
+				return scheduleValue;
+			}
+			// 勤務形態コード取得
+			workTypeCode = scheduleDateDto.getWorkTypeCode();
+			
+		}
+		WorkTypeDtoInterface workTypeDto = workType.findForInfo(workTypeCode, targetDate);
+		if (workTypeDto == null) {
+			return scheduleValue;
+		}
+		// 予定値設定
+		scheduleValue = workTypeDto.getWorkTypeAbbr();
+		// 振替申請（区分）名称取得
+		String range = getSubstituteName(dto.getSubstitute());
+		// 勤務形態略称
+		return scheduleValue + MospConst.STR_SB_SPACE + range;
 	}
 	
 	/**
@@ -1128,7 +1301,7 @@ public class WorkOnHolidayRequestAction extends TimeAction {
 		if (mospParams.hasErrorMessage()) {
 			return;
 		}
-		// 
+		//
 		int substitute = Integer.parseInt(vo.getPltEditSubstitute());
 		// VOの値をDTOに設定
 		dto.setTmdWorkOnHolidayRequestId(vo.getRecordId());
@@ -1138,19 +1311,27 @@ public class WorkOnHolidayRequestAction extends TimeAction {
 		dto.setWorkOnHolidayType(workTypeCode);
 		dto.setRequestReason(vo.getTxtEditRequestReason());
 		dto.setSubstitute(substitute);
+		dto.setWorkTypeCode("");
+		// 振替出勤(勤務形態変更あり)の場合
+		if (Integer.toString(TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_ON_WORK_TYPE_CHANGE)
+			.equals(vo.getPltEditSubstitute())) {
+			// 勤務形態コード設定
+			dto.setWorkTypeCode(vo.getPltEditWorkType());
+		}
 		dto.setStartTime(null);
 		dto.setEndTime(null);
+		// 振替出勤の場合
 		if (substitute == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_ON) {
-			// 振替出勤の場合
 			if (vo.getPltEditSubstituteWorkRange() == null || vo.getPltEditSubstituteWorkRange().isEmpty()) {
 				return;
 			}
-			if (Integer.toString(TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_AM).equals(
-					vo.getPltEditSubstituteWorkRange())
-					|| Integer.toString(TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_PM).equals(
-							vo.getPltEditSubstituteWorkRange())) {
-				// 午前又は午後の場合
-				dto.setSubstitute(Integer.parseInt(vo.getPltEditSubstituteWorkRange()));
+			// 午前又は午後の場合
+			if (Integer.toString(TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_AM)
+				.equals(vo.getPltEditSubstituteWorkRange())
+					|| Integer.toString(TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_PM)
+						.equals(vo.getPltEditSubstituteWorkRange())) {
+				// 振替区分設定
+				dto.setSubstitute(getInt(vo.getPltEditSubstituteWorkRange()));
 			}
 		} else if (substitute == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_OFF) {
 			// 休日出勤の場合
@@ -1163,8 +1344,8 @@ public class WorkOnHolidayRequestAction extends TimeAction {
 			int endMinute = Integer.parseInt(vo.getPltEditEndMinute());
 			dto.setStartTime(DateUtility.getDateTime(year, month, day, startHour, startMinute));
 			long endTime = requestDate.getTime();
-			endTime += endHour * 3600000;
-			endTime += endMinute * 3600000 / TimeConst.CODE_DEFINITION_HOUR;
+			endTime += endHour * (long)DateUtility.TIME_HOUR_MILLI_SEC;
+			endTime += endMinute * DateUtility.TIME_HOUR_MILLI_SEC / TimeConst.CODE_DEFINITION_HOUR;
 			dto.setEndTime(new Date(endTime));
 		}
 	}
@@ -1188,12 +1369,12 @@ public class WorkOnHolidayRequestAction extends TimeAction {
 				vo.getPltEditSubstitute1Day()));
 		dto.setSubstituteType(workTypeCode);
 		dto.setSubstituteRange(1);
-		if (Integer.parseInt(vo.getPltEditSubstitute()) == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_ON
-				&& (Integer.toString(TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_AM).equals(
-						vo.getPltEditSubstituteWorkRange()) || Integer.toString(
-						TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_PM).equals(vo.getPltEditSubstituteWorkRange()))) {
+		if (getInt(vo.getPltEditSubstitute()) == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_ON && (Integer
+			.toString(TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_AM).equals(vo.getPltEditSubstituteWorkRange())
+				|| Integer.toString(TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_PM)
+					.equals(vo.getPltEditSubstituteWorkRange()))) {
 			// 午前又は午後の場合
-			dto.setSubstituteRange(Integer.parseInt(vo.getPltEditSubstitute1Range()));
+			dto.setSubstituteRange(getInt(vo.getPltEditSubstitute1Range()));
 		}
 		dto.setWorkDate(getEditRequestDate());
 		dto.setTimesWork(TimeBean.TIMES_WORK_DEFAULT);
@@ -1246,6 +1427,32 @@ public class WorkOnHolidayRequestAction extends TimeAction {
 	}
 	
 	/**
+	 * 勤務形態プルダウンを設定する。<br>
+	 * @throws MospException 例外発生時
+	 */
+	protected void setWorkTypePulldown() throws MospException {
+		// VO取得
+		WorkOnHolidayRequestVo vo = (WorkOnHolidayRequestVo)mospParams.getVo();
+		ApplicationReferenceBeanInterface application = timeReference().application();
+		ScheduleReferenceBeanInterface schedule = timeReference().schedule();
+		// 出勤日
+		Date requestDate = getEditRequestDate();
+		// 設定適用取得
+		ApplicationDtoInterface applicationDto = application.findForPerson(vo.getPersonalId(), requestDate);
+		if (applicationDto == null) {
+			vo.setAryPltEditWorkType(new String[0][0]);
+			return;
+		}
+		// カレンダマスタ取得
+		ScheduleDtoInterface scheduleDto = schedule.getScheduleInfo(applicationDto.getScheduleCode(), requestDate);
+		if (scheduleDto == null) {
+			vo.setAryPltEditWorkType(new String[0][0]);
+			return;
+		}
+		vo.setAryPltEditWorkType(getWorkTypeArray(scheduleDto.getPatternCode(), requestDate, true, true, false, false));
+	}
+	
+	/**
 	 * DTOの値をVO(編集項目)に設定する。<br>
 	 * @param dto 対象DTO
 	 * @throws MospException 例外発生時
@@ -1262,6 +1469,10 @@ public class WorkOnHolidayRequestAction extends TimeAction {
 		vo.setTxtEditRequestReason(dto.getRequestReason());
 		vo.setPltEditSubstitute(String.valueOf(substitute));
 		vo.setPltEditSubstituteWorkRange(String.valueOf(TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_ON));
+		vo.setPltEditWorkType("");
+		if (!dto.getWorkTypeCode().isEmpty()) {
+			vo.setPltEditWorkType(dto.getWorkTypeCode());
+		}
 		vo.setPltEditStartHour("");
 		vo.setPltEditStartMinute("");
 		vo.setPltEditEndHour("");
@@ -1316,47 +1527,45 @@ public class WorkOnHolidayRequestAction extends TimeAction {
 	}
 	
 	/**
-	 * 対象日付から勤務形態コードを取得する。<br>
-	 * @param targetDate 対象日付
+	 * 出勤日から勤務形態コードを取得する。<br>
+	 * @param workeDate 出勤日
 	 * @return 勤務形態コード
 	 * @throws MospException 例外発生時
 	 */
-	private String getScheduleWorkTypeCode(Date targetDate) throws MospException {
+	protected String getScheduleWorkTypeCode(Date workeDate) throws MospException {
 		// VO取得
 		WorkOnHolidayRequestVo vo = (WorkOnHolidayRequestVo)mospParams.getVo();
+		// クラス準備
 		ApplicationReferenceBeanInterface application = timeReference().application();
 		ScheduleReferenceBeanInterface schedule = timeReference().schedule();
 		ScheduleDateReferenceBeanInterface scheduleDate = timeReference().scheduleDate();
+		// 申請ユティリティクラス準備
 		RequestUtilBeanInterface requestUtil = timeReference().requestUtil();
-		requestUtil.setRequests(vo.getPersonalId(), targetDate);
-		// 振替休日データリストを取得
+		requestUtil.setRequests(vo.getPersonalId(), workeDate);
+		// 承認済振替休日データリストを取得
 		List<SubstituteDtoInterface> list = requestUtil.getSubstituteList(true);
 		// 振替休日データリスト毎に処理
 		for (SubstituteDtoInterface substituteDto : list) {
-			if (substituteDto.getSubstituteRange() == TimeConst.CODE_HOLIDAY_RANGE_ALL) {
-				// 全休の場合
-				return substituteDto.getSubstituteType();
-			}
+			return substituteDto.getSubstituteType();
 		}
 		// 適用情報取得
-		ApplicationDtoInterface applicationDto = application.findForPerson(vo.getPersonalId(), targetDate);
+		ApplicationDtoInterface applicationDto = application.findForPerson(vo.getPersonalId(), workeDate);
 		// 設定適用マスタの存在チェック
-		application.chkExistApplication(applicationDto, targetDate);
+		application.chkExistApplication(applicationDto, workeDate);
 		if (mospParams.hasErrorMessage()) {
 			return null;
 		}
 		// カレンダマスタ取得
-		ScheduleDtoInterface scheduleDto = schedule.getScheduleInfo(applicationDto.getScheduleCode(), targetDate);
+		ScheduleDtoInterface scheduleDto = schedule.getScheduleInfo(applicationDto.getScheduleCode(), workeDate);
 		// カレンダ管理の存在チェック
-		schedule.chkExistSchedule(scheduleDto, targetDate);
+		schedule.chkExistSchedule(scheduleDto, workeDate);
 		if (mospParams.hasErrorMessage()) {
 			return null;
 		}
 		// カレンダ日マスタからレコードを取得
-		ScheduleDateDtoInterface scheduleDateDto = scheduleDate.findForKey(scheduleDto.getScheduleCode(),
-				scheduleDto.getActivateDate(), targetDate);
+		ScheduleDateDtoInterface scheduleDateDto = scheduleDate.findForKey(scheduleDto.getScheduleCode(), workeDate);
 		// カレンダ日の存在チェック
-		scheduleDate.chkExistScheduleDate(scheduleDateDto, targetDate);
+		scheduleDate.chkExistScheduleDate(scheduleDateDto, workeDate);
 		if (mospParams.hasErrorMessage()) {
 			return null;
 		}
@@ -1365,19 +1574,71 @@ public class WorkOnHolidayRequestAction extends TimeAction {
 	}
 	
 	/**
-	 * 申請種別の確認をする。
+	 * 申請種別の表示設定を行う。<br>
 	 */
 	protected void getWorkPlanFlag() {
 		// VO取得
 		WorkOnHolidayRequestVo vo = (WorkOnHolidayRequestVo)mospParams.getVo();
 		// VOの振替申請の状態チェック
+		// 振替申請（全日）の場合
 		if (vo.getPltEditSubstitute().equals(String.valueOf(TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_ON))) {
 			vo.setJsModeWorkPlanFlag(TimeConst.MODE_WORK_PLAN_APPLICATION_ON);
 		} else if (vo.getPltEditSubstitute().equals(String.valueOf(TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_OFF))) {
+			// 休日出勤申請の場合
 			vo.setJsModeWorkPlanFlag(TimeConst.MODE_WORK_PLAN_APPLICATION_OFF);
 		} else {
 			vo.setJsModeWorkPlanFlag("");
 		}
+	}
+	
+	/**
+	 * 振替範囲名称を取得する。
+	 * "全日"/"午前"/"午後"
+	 * @param code 振替範囲
+	 * @return 振替範囲名称
+	 */
+	protected String getRangeName(int code) {
+		// VO準備
+		WorkOnHolidayRequestVo vo = (WorkOnHolidayRequestVo)mospParams.getVo();
+		// 半日振替でない場合
+		if (!vo.isModeHalfSubstitute()) {
+			return "";
+		}
+		// 全休の場合
+		if (code == TimeConst.CODE_HOLIDAY_RANGE_ALL) {
+			return getCodeName(code, TimeConst.CODE_SUBSTITUTE_WORK_RANGE);
+		}
+		// 午前・午後の場合
+		if (code == TimeConst.CODE_HOLIDAY_RANGE_AM || code == TimeConst.CODE_HOLIDAY_RANGE_PM) {
+			return getCodeName(code, TimeConst.CODE_SUBSTITUTE_HOLIDAY_RANGE);
+		}
+		return "";
+	}
+	
+	/**
+	 * 振替申請（区分）名称を取得する。
+	 * "全日"/"午前"/"午後"
+	 * @param code 振替申請（区分）
+	 * @return 振替申請（区分）名称
+	 */
+	protected String getSubstituteName(int code) {
+		// VO準備
+		WorkOnHolidayRequestVo vo = (WorkOnHolidayRequestVo)mospParams.getVo();
+		// 半日振替でない場合
+		if (!vo.isModeHalfSubstitute()) {
+			return "";
+		}
+		// 振替・午前・午後の場合
+		if (code == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_ON || code == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_AM
+				|| code == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_PM) {
+			return getCodeName(code, TimeConst.CODE_SUBSTITUTE_WORK_RANGE);
+		}
+		// 勤務形態変更の場合
+		if (code == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_ON_WORK_TYPE_CHANGE) {
+			return getCodeName(1, TimeConst.CODE_SUBSTITUTE_WORK_RANGE);
+		}
+		
+		return "";
 	}
 	
 	/**

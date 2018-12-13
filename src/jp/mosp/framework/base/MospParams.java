@@ -27,10 +27,10 @@ import java.util.Set;
 import jp.mosp.framework.constant.ExceptionConst;
 import jp.mosp.framework.constant.MospConst;
 import jp.mosp.framework.log.LoggerInterface;
+import jp.mosp.framework.property.CodeProperty;
 import jp.mosp.framework.property.CommandProperty;
 import jp.mosp.framework.property.MospProperties;
 import jp.mosp.framework.property.RangeProperty;
-import jp.mosp.framework.property.RoleProperty;
 
 /**
  * MosPパラメータクラス。<br>
@@ -42,7 +42,17 @@ public class MospParams {
 	/**
 	 * MosPアプリケーション設定キー(エラービューパス)
 	 */
-	protected static final String			APP_PATH_ERROR_VIEW	= "PathErrorView";
+	protected static final String			APP_PATH_ERROR_VIEW				= "PathErrorView";
+	
+	/**
+	 * MosPアプリケーション設定キー(テスト補助)。
+	 */
+	public static final String				APP_TEST_SUPPORT				= "TestSupport";
+	
+	/**
+	 * MosPアプリケーション設定キー(承認者ユニット利用可否)。
+	 */
+	public static final String				APP_USE_TARGET_APPROVAL_UNIT	= "UseTargetApprovalUnit";
 	
 	/**
 	 * MosP設定情報。
@@ -121,6 +131,12 @@ public class MospParams {
 	private String							fileName;
 	
 	/**
+	 * リダイレクトURL。<br>
+	 * これを設定すると、このリダイレクトとしてがレスポンスとして送出される。<br>
+	 */
+	private String							redirect;
+	
+	/**
 	 * コントローラにより発行された処理シーケンス。<br>
 	 * JSPで利用する。<br>
 	 */
@@ -151,6 +167,11 @@ public class MospParams {
 	 */
 	private Map<String, Object>				generalParamsMap;
 	
+	/**
+	 * APIパラメータリスト。
+	 */
+	private List<String>					apiParams;
+	
 	
 	/**
 	 * MosP処理情報を初期化する。<br>
@@ -165,6 +186,7 @@ public class MospParams {
 		messageList = new ArrayList<String>();
 		errorMessageList = new ArrayList<String>();
 		generalParamsMap = new HashMap<String, Object>();
+		apiParams = new ArrayList<String>();
 		jsFiles = new ArrayList<String>();
 		cssFiles = new ArrayList<String>();
 		nextCount = 0;
@@ -178,6 +200,7 @@ public class MospParams {
 	public void inheritParams(MospParams params) {
 		command = params.nextCommand;
 		generalParamsMap = params.getGeneralParamsMap();
+		apiParams = params.getApiParams();
 		nextCount = ++params.nextCount;
 		messageList = new ArrayList<String>(params.getMessageList());
 		errorMessageList = new ArrayList<String>(params.getErrorMessageList());
@@ -401,6 +424,20 @@ public class MospParams {
 	}
 	
 	/**
+	 * @return redirect
+	 */
+	public String getRedirect() {
+		return redirect;
+	}
+	
+	/**
+	 * @param redirect セットする redirect
+	 */
+	public void setRedirect(String redirect) {
+		this.redirect = redirect;
+	}
+	
+	/**
 	 * @return procSeq
 	 */
 	public int getProcSeq() {
@@ -470,7 +507,13 @@ public class MospParams {
 	 * @param replacements 置換文字列
 	 */
 	public void addErrorMessage(String key, String... replacements) {
-		errorMessageList.add(getCodedMessage(key, replacements));
+		// メッセージを取得
+		String messege = getCodedMessage(key, replacements);
+		// エラーメッセージリストに含まれていない場合
+		if (errorMessageList.contains(messege) == false) {
+			// エラーメッセージリストに追加
+			errorMessageList.add(messege);
+		}
 	}
 	
 	/**
@@ -516,6 +559,22 @@ public class MospParams {
 	}
 	
 	/**
+	 * APIパラメータリストにパラメータを追加する。
+	 * @param list APIパラメータリスト
+	 */
+	public void addApiParams(List<String> list) {
+		apiParams.addAll(list);
+	}
+	
+	/**
+	 * APIパラメータリストを取得する。
+	 * @return APIパラメータリスト
+	 */
+	public List<String> getApiParams() {
+		return apiParams;
+	}
+	
+	/**
 	 * URLにエラービューパスを設定する。
 	 */
 	public void setErrorViewUrl() {
@@ -531,6 +590,22 @@ public class MospParams {
 			return false;
 		}
 		return url.equals(properties.getApplicationProperty(APP_PATH_ERROR_VIEW));
+	}
+	
+	/**
+	 * テスト補助機能の有無を取得する。
+	 * @return 確認結果(true：テスト補助機能有効、false：テスト補助機能無効)
+	 */
+	public boolean isTestSupport() {
+		return properties.getApplicationPropertyBool(APP_TEST_SUPPORT);
+	}
+	
+	/**
+	 * ユニット承認者対象設定の有無を取得する。
+	 * @return 確認結果(true：承認者がユニット単位、false：承認者が個人ID単位)
+	 */
+	public boolean isTargetApprovalUnit() {
+		return properties.getApplicationPropertyBool(APP_USE_TARGET_APPROVAL_UNIT);
 	}
 	
 	/**
@@ -717,11 +792,11 @@ public class MospParams {
 	}
 	
 	/**
-	 * ログインユーザのロール情報を取得する。<br>
-	 * @return ログインユーザのロール情報
+	 * コード設定情報群取得
+	 * @return コード設定情報群
 	 */
-	public RoleProperty getUserRole() {
-		return properties.getRoleProperties().get(getUser().getRole());
+	public Map<String, CodeProperty> getCodeProperty() {
+		return properties.getCodeProperty();
 	}
 	
 }

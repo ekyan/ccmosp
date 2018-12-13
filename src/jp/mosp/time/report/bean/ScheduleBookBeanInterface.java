@@ -30,7 +30,7 @@ public interface ScheduleBookBeanInterface {
 	 * MosPアプリケーション設定キー(テンプレートファイルパス：出勤簿)。<br>
 	 * 出力ファイル名としても用いられる。<br>
 	 */
-	String	APP_REPORT_ATTENDANCE_BOOK	= "attendanceBook.pdf";
+	String APP_REPORT_ATTENDANCE_BOOK = "attendanceBook.pdf";
 	
 	
 	/**

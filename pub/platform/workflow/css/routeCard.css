@@ -35,3 +35,7 @@
 .ListTable #tdEmployeeName {
 	width: 700px;
 }
+
+.ListTable #divEditActivateDate {
+	margin-bottom: 8px;
+}

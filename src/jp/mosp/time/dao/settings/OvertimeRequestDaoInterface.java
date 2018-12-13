@@ -91,8 +91,8 @@ public interface OvertimeRequestDaoInterface extends BaseDaoInterface {
 	 * @return 残業申請リスト
 	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
 	 */
-	List<OvertimeRequestDtoInterface> findForWorkflowStatus(String personalId, int workflowStage,
-			String workflowStatus, String routeCode) throws MospException;
+	List<OvertimeRequestDtoInterface> findForWorkflowStatus(String personalId, int workflowStage, String workflowStatus,
+			String routeCode) throws MospException;
 	
 	/**
 	 * 条件による検索。

@@ -1,5 +1,19 @@
-/**
- *
+/*
+ * MosP - Mind Open Source Project    http://www.mosp.jp/
+ * Copyright (C) MIND Co., Ltd.       http://www.e-mind.co.jp/
+ * 
+ * This program is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU Affero General Public License
+ * as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package jp.mosp.framework.xml;
 
@@ -21,8 +35,7 @@ import jp.mosp.framework.property.RoleProperty;
 import jp.mosp.framework.property.ViewConfigProperty;
 
 /**
- * @author yoshida
- *
+ * MosP設定情報の変換を行う。<br>
  */
 public class ConvertManager implements ConvertManagerInterface {
 	
@@ -30,7 +43,7 @@ public class ConvertManager implements ConvertManagerInterface {
 	public ConvertResultInterface init() {
 		return new ConvertResultInterface() {
 			
-			private ConcurrentHashMap<String, Map<String, ? extends BaseProperty>>	map	= new ConcurrentHashMap<String, Map<String, ? extends BaseProperty>>();
+			private ConcurrentHashMap<String, Map<String, ? extends BaseProperty>> map = new ConcurrentHashMap<String, Map<String, ? extends BaseProperty>>();
 			
 			
 			@Override
@@ -90,7 +103,7 @@ public class ConvertManager implements ConvertManagerInterface {
 			
 			@SuppressWarnings("unchecked")
 			@Override
-			public <T extends BaseProperty>Map<String, T> get(String key) {
+			public <T extends BaseProperty> Map<String, T> get(String key) {
 				if (map.isEmpty()) {
 					// アプリケーション設定情報群準備
 					map.put(PropertyTag.APPLICATION.getName(), new HashMap<String, ApplicationProperty>());
@@ -132,14 +145,15 @@ public class ConvertManager implements ConvertManagerInterface {
 	
 	
 	/**
-	 *
+	 * MosP設定情報作成クラス群。<br>
 	 */
-	protected ConcurrentHashMap<String, TagConverterInterface>	holder	= new ConcurrentHashMap<String, TagConverterInterface>();
+	protected ConcurrentHashMap<String, TagConverterInterface> holder = new ConcurrentHashMap<String, TagConverterInterface>();
 	
 	
 	/**
-	 * @param tagName
-	 * @return
+	 * MosP設定情報作成クラスを取得する。<br>
+	 * @param tagName タグ名
+	 * @return MosP設定情報作成クラス
 	 */
 	protected TagConverterInterface getConverter(String tagName) {
 		TagConverterInterface converter = holder.get(tagName);

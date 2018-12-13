@@ -23,6 +23,7 @@ import java.util.List;
 
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.constant.MospConst;
+import jp.mosp.framework.utils.CapsuleUtility;
 import jp.mosp.framework.utils.DateUtility;
 import jp.mosp.platform.base.PlatformBean;
 import jp.mosp.platform.bean.workflow.WorkflowRegistBeanInterface;
@@ -35,36 +36,32 @@ import jp.mosp.time.bean.AttendanceCorrectionRegistBeanInterface;
 import jp.mosp.time.bean.AttendanceListRegistBeanInterface;
 import jp.mosp.time.bean.AttendanceRegistBeanInterface;
 import jp.mosp.time.bean.AttendanceTransactionRegistBeanInterface;
-import jp.mosp.time.bean.CutoffReferenceBeanInterface;
+import jp.mosp.time.bean.CutoffUtilBeanInterface;
 import jp.mosp.time.bean.GoOutReferenceBeanInterface;
 import jp.mosp.time.bean.GoOutRegistBeanInterface;
-import jp.mosp.time.bean.HolidayRequestReferenceBeanInterface;
-import jp.mosp.time.bean.OvertimeRequestReferenceBeanInterface;
 import jp.mosp.time.bean.RequestUtilBeanInterface;
 import jp.mosp.time.bean.RestReferenceBeanInterface;
 import jp.mosp.time.bean.RestRegistBeanInterface;
 import jp.mosp.time.bean.SubHolidayRegistBeanInterface;
-import jp.mosp.time.bean.SubHolidayRequestReferenceBeanInterface;
 import jp.mosp.time.constant.TimeConst;
 import jp.mosp.time.constant.TimeMessageConst;
 import jp.mosp.time.dao.settings.RestDaoInterface;
 import jp.mosp.time.dto.settings.ApplicationDtoInterface;
 import jp.mosp.time.dto.settings.AttendanceCorrectionDtoInterface;
 import jp.mosp.time.dto.settings.AttendanceDtoInterface;
-import jp.mosp.time.dto.settings.CutoffDtoInterface;
 import jp.mosp.time.dto.settings.DifferenceRequestDtoInterface;
 import jp.mosp.time.dto.settings.GoOutDtoInterface;
-import jp.mosp.time.dto.settings.HolidayRequestDtoInterface;
 import jp.mosp.time.dto.settings.OvertimeRequestDtoInterface;
 import jp.mosp.time.dto.settings.RestDtoInterface;
 import jp.mosp.time.dto.settings.ScheduleDateDtoInterface;
 import jp.mosp.time.dto.settings.SubHolidayDtoInterface;
-import jp.mosp.time.dto.settings.SubHolidayRequestDtoInterface;
 import jp.mosp.time.dto.settings.TimeSettingDtoInterface;
 import jp.mosp.time.dto.settings.WorkOnHolidayRequestDtoInterface;
 import jp.mosp.time.dto.settings.WorkTypeChangeRequestDtoInterface;
 import jp.mosp.time.dto.settings.WorkTypeDtoInterface;
 import jp.mosp.time.dto.settings.WorkTypeItemDtoInterface;
+import jp.mosp.time.entity.RequestEntity;
+import jp.mosp.time.utils.TimeUtility;
 
 /**
  * 勤怠一覧登録クラス。
@@ -105,21 +102,6 @@ public class AttendanceListRegistBean extends AttendanceBean implements Attendan
 	 * 代休データ登録クラス。
 	 */
 	protected SubHolidayRegistBeanInterface					subHolidayRegist;
-	
-	/**
-	 * 残業申請データ参照クラス。
-	 */
-	protected OvertimeRequestReferenceBeanInterface			overtimeRequestReference;
-	
-	/**
-	 * 休暇申請データ参照クラス。
-	 */
-	protected HolidayRequestReferenceBeanInterface			holidayRequestReference;
-	
-	/**
-	 * 代休申請データ参照クラス。
-	 */
-	protected SubHolidayRequestReferenceBeanInterface		subHolidayRequestReference;
 	
 	/**
 	 * 時差出勤申請DTOインターフェース
@@ -178,9 +160,9 @@ public class AttendanceListRegistBean extends AttendanceBean implements Attendan
 	protected GoOutReferenceBeanInterface					goOutReference;
 	
 	/**
-	 * 締日管理参照インターフェース。
+	 * 締日ユーティリティインターフェース。
 	 */
-	protected CutoffReferenceBeanInterface					cutoffReference;
+	protected CutoffUtilBeanInterface						cutoffUtil;
 	
 	/**
 	 * 勤怠トランザクション登録クラス。
@@ -194,20 +176,20 @@ public class AttendanceListRegistBean extends AttendanceBean implements Attendan
 		super.initBean();
 		// 各種クラス準備
 		attendanceRegist = (AttendanceRegistBeanInterface)createBean(AttendanceRegistBeanInterface.class);
-		attendanceCorrectionReference = (AttendanceCorrectionReferenceBeanInterface)createBean(AttendanceCorrectionReferenceBeanInterface.class);
-		attendanceCorrectionRegist = (AttendanceCorrectionRegistBeanInterface)createBean(AttendanceCorrectionRegistBeanInterface.class);
+		attendanceCorrectionReference = (AttendanceCorrectionReferenceBeanInterface)createBean(
+				AttendanceCorrectionReferenceBeanInterface.class);
+		attendanceCorrectionRegist = (AttendanceCorrectionRegistBeanInterface)createBean(
+				AttendanceCorrectionRegistBeanInterface.class);
 		restRegist = (RestRegistBeanInterface)createBean(RestRegistBeanInterface.class);
 		restDao = (RestDaoInterface)createDao(RestDaoInterface.class);
 		goOutRegist = (GoOutRegistBeanInterface)createBean(GoOutRegistBeanInterface.class);
 		subHolidayRegist = (SubHolidayRegistBeanInterface)createBean(SubHolidayRegistBeanInterface.class);
 		workflowRegist = (WorkflowRegistBeanInterface)createBean(WorkflowRegistBeanInterface.class);
-		overtimeRequestReference = (OvertimeRequestReferenceBeanInterface)createBean(OvertimeRequestReferenceBeanInterface.class);
-		holidayRequestReference = (HolidayRequestReferenceBeanInterface)createBean(HolidayRequestReferenceBeanInterface.class);
-		subHolidayRequestReference = (SubHolidayRequestReferenceBeanInterface)createBean(SubHolidayRequestReferenceBeanInterface.class);
 		restReference = (RestReferenceBeanInterface)createBean(RestReferenceBeanInterface.class);
 		goOutReference = (GoOutReferenceBeanInterface)createBean(GoOutReferenceBeanInterface.class);
-		cutoffReference = (CutoffReferenceBeanInterface)createBean(CutoffReferenceBeanInterface.class);
-		attendanceTransactionRegist = (AttendanceTransactionRegistBeanInterface)createBean(AttendanceTransactionRegistBeanInterface.class);
+		cutoffUtil = (CutoffUtilBeanInterface)createBean(CutoffUtilBeanInterface.class);
+		attendanceTransactionRegist = (AttendanceTransactionRegistBeanInterface)createBean(
+				AttendanceTransactionRegistBeanInterface.class);
 	}
 	
 	@Override
@@ -292,15 +274,19 @@ public class AttendanceListRegistBean extends AttendanceBean implements Attendan
 		if (mospParams.hasErrorMessage()) {
 			return;
 		}
+		// 勤怠情報を準備
+		AttendanceDtoInterface dto = null;
 		// エラーメッセージリスト
 		List<String> errorMessageList = new ArrayList<String>();
 		// 対象日毎に勤怠情報を作成して登録
 		for (int i = 0; i < targetDateList.size(); i++) {
 			// 対象日付設定
 			targetDate = targetDateList.get(i);
+			// 始業時刻及び終業時刻を取得
+			Date startTime = startTimeList.get(i);
+			Date endTime = endTimeList.get(i);
 			// 勤怠データ取得
-			AttendanceDtoInterface dto = getAttendanceDto(startTimeList.get(i), startTimeList.get(i),
-					endTimeList.get(i), false, true, true, false, false);
+			dto = getAttendanceDto(startTime, startTime, endTime, false, true, true, false, false);
 			// エラー確認
 			if (mospParams.hasErrorMessage()) {
 				errorMessageList.addAll(mospParams.getErrorMessageList());
@@ -315,7 +301,14 @@ public class AttendanceListRegistBean extends AttendanceBean implements Attendan
 				mospParams.getErrorMessageList().clear();
 				continue;
 			}
-			
+			// 勤怠登録確認チェック
+			attendanceRegist.checkValidate(dto);
+			// エラー確認
+			if (mospParams.hasErrorMessage()) {
+				errorMessageList.addAll(mospParams.getErrorMessageList());
+				mospParams.getErrorMessageList().clear();
+				continue;
+			}
 			// 申請の相関チェック
 			attendanceRegist.checkAppli(dto);
 			// エラー確認
@@ -329,9 +322,6 @@ public class AttendanceListRegistBean extends AttendanceBean implements Attendan
 			
 			// 始業・終業必須チェック
 			attendanceRegist.checkTimeExist(dto);
-			
-			// 勤怠登録確認チェック
-			attendanceRegist.checkValidate(dto);
 			
 			// エラー確認
 			if (mospParams.hasErrorMessage()) {
@@ -356,6 +346,8 @@ public class AttendanceListRegistBean extends AttendanceBean implements Attendan
 		if (!errorMessageList.isEmpty()) {
 			mospParams.getErrorMessageList().addAll(errorMessageList);
 		}
+		// 勤怠申請後処理群を実行
+		afterApplyAttendance(dto);
 	}
 	
 	/**
@@ -409,7 +401,10 @@ public class AttendanceListRegistBean extends AttendanceBean implements Attendan
 			// その他項目の初期化
 			dto.setDirectStart(checkboxOff);
 			dto.setDirectEnd(checkboxOff);
+			dto.setForgotRecordWorkStart(checkboxOff);
+			dto.setNotRecordWorkStart(checkboxOff);
 			dto.setTimeComment("");
+			dto.setRemarks("");
 			dto.setLateReason("");
 			dto.setLateCertificate("");
 			dto.setLateComment("");
@@ -474,7 +469,7 @@ public class AttendanceListRegistBean extends AttendanceBean implements Attendan
 		registPublicGoOut(dto.getStartTime(), dto.getEndTime());
 		// 私用外出時間登録
 		registPrivateGoOut(dto.getStartTime(), dto.getEndTime());
-		// 分単位休暇A時間登録	
+		// 分単位休暇A時間登録
 		registMinutelyHolidayAGoOut(dto.getStartTime(), dto.getEndTime());
 		// 分単位休暇B時間登録
 		registMinutelyHolidayBGoOut(dto.getStartTime(), dto.getEndTime());
@@ -532,7 +527,7 @@ public class AttendanceListRegistBean extends AttendanceBean implements Attendan
 		// カレンダコード取得
 		String scheduleCode = applicationDto.getScheduleCode();
 		// カレンダ日情報取得
-		scheduleDateDto = scheduleDateReference.getScheduleDateInfo(scheduleCode, targetDate, targetDate);
+		scheduleDateDto = scheduleDateReference.getScheduleDateInfo(scheduleCode, targetDate);
 		// 確認
 		scheduleDateReference.chkExistScheduleDate(scheduleDateDto, targetDate);
 		if (mospParams.hasErrorMessage()) {
@@ -549,7 +544,9 @@ public class AttendanceListRegistBean extends AttendanceBean implements Attendan
 			// 最新のワークフロー取得
 			WorkflowDtoInterface workflowDto = workflow.getLatestWorkflowInfo(workOnHolidayRequestDto.getWorkflow());
 			if (workflowDto != null) {
-				if (workflow.isApprovable(workflowDto) || workflow.isCompleted(workflowDto)) {
+				if (workflow.isApprovable(workflowDto) || workflow.isCompleted(workflowDto)
+						|| workflow.isCancelApprovable(workflowDto)
+						|| workflow.isCancelWithDrawnApprovable(workflowDto)) {
 					// 承認可能又は承認済の場合
 					// 休日出勤申請情報から休日出勤時の予定勤務形態を取得
 					workTypeCode = getWorkOnHolidayWorkType(workOnHolidayRequestDto);
@@ -779,146 +776,56 @@ public class AttendanceListRegistBean extends AttendanceBean implements Attendan
 		RequestUtilBeanInterface requestUtil = (RequestUtilBeanInterface)createBean(RequestUtilBeanInterface.class);
 		// 各種申請情報取得
 		requestUtil.setRequests(personalId, targetDate);
+		// 申請エンティティ取得
+		RequestEntity entity = requestUtil.getRequestEntity(personalId, targetDate);
+		// 休憩リスト1～6の初期化
+		startList.add(null);
+		startList.add(null);
+		startList.add(null);
+		startList.add(null);
+		startList.add(null);
+		startList.add(null);
+		endList.add(null);
+		endList.add(null);
+		endList.add(null);
+		endList.add(null);
+		endList.add(null);
+		endList.add(null);
 		// 勤務形態コード及び勤務形態有効日取得
 		String workTypeCode = workTypeDto.getWorkTypeCode();
 		Date activateDate = workTypeDto.getActivateDate();
 		if (TimeConst.CODE_WORK_ON_LEGAL_HOLIDAY.equals(workTypeCode)
 				|| TimeConst.CODE_WORK_ON_PRESCRIBED_HOLIDAY.equals(workTypeCode)) {
-			// 法定休日労働又は所定休日労働の場合
-			startList.add(null); // 休憩1
-			startList.add(null); // 休憩2
-			startList.add(null); // 休憩3
-			startList.add(null); // 休憩4
-			startList.add(null); // 休憩5
-			startList.add(null); // 休憩6
-			endList.add(null); // 休憩1
-			endList.add(null); // 休憩2
-			endList.add(null); // 休憩3
-			endList.add(null); // 休憩4
-			endList.add(null); // 休憩5
-			endList.add(null); // 休憩6
+			// 処理なし
+			return;
+		}
+		if (entity.isAmHoliday(true)) {
+			// 前半休の場合
+			WorkTypeItemDtoInterface halfRestDto = workTypeItemReference.findForKey(workTypeCode, activateDate,
+					TimeConst.CODE_HALFREST);
+			if (endTime != null && halfRestDto != null
+					&& DateUtility.getHour(endTime, targetDate) * TimeConst.CODE_DEFINITION_HOUR
+							+ DateUtility.getMinute(endTime) >= DateUtility.getHour(halfRestDto.getWorkTypeItemValue(),
+									getDefaultStandardDate()) * TimeConst.CODE_DEFINITION_HOUR
+									+ DateUtility.getMinute(halfRestDto.getWorkTypeItemValue())) {
+				startList.set(0,
+						workTypeItemReference.findForKey(workTypeCode, activateDate, TimeConst.CODE_HALFRESTSTART));
+				endList.set(0,
+						workTypeItemReference.findForKey(workTypeCode, activateDate, TimeConst.CODE_HALFRESTEND));
+			}
+			return;
+		} else if (entity.isPmHoliday(true)) {
+			// 処理なし
+			return;
 		} else {
-			boolean holidayAm = false;
-			boolean holidayPm = false;
-			// 休暇申請リスト取得
-			List<HolidayRequestDtoInterface> holidayList = holidayRequestReference.getHolidayRequestList(personalId,
-					targetDate);
-			// 休暇申請リスト毎に処理
-			for (HolidayRequestDtoInterface dto : holidayList) {
-				// ワークフロー取得
-				WorkflowDtoInterface workflowDto = workflow.getLatestWorkflowInfo(dto.getWorkflow());
-				if (workflowDto == null) {
-					continue;
-				}
-				// 承認済でない場合
-				if (!PlatformConst.CODE_STATUS_COMPLETE.equals(workflowDto.getWorkflowStatus())) {
-					continue;
-				}
-				int range = dto.getHolidayRange();
-				if (range == TimeConst.CODE_HOLIDAY_RANGE_AM) {
-					holidayAm = true;
-				} else if (range == TimeConst.CODE_HOLIDAY_RANGE_PM) {
-					holidayPm = true;
-				}
-			}
-			// 代休申請一覧取得
-			List<SubHolidayRequestDtoInterface> subHolidayList = subHolidayRequestReference.getSubHolidayRequestList(
-					personalId, targetDate);
-			// 代休申請一覧毎に処理
-			for (SubHolidayRequestDtoInterface dto : subHolidayList) {
-				// ワークフロー取得
-				WorkflowDtoInterface workflowDto = workflow.getLatestWorkflowInfo(dto.getWorkflow());
-				if (workflowDto == null) {
-					continue;
-				}
-				if (!PlatformConst.CODE_STATUS_COMPLETE.equals(workflowDto.getWorkflowStatus())) {
-					continue;
-				}
-				int range = dto.getHolidayRange();
-				if (range == TimeConst.CODE_HOLIDAY_RANGE_AM) {
-					holidayAm = true;
-				} else if (range == TimeConst.CODE_HOLIDAY_RANGE_PM) {
-					holidayPm = true;
-				}
-			}
-			// 振替休日
-			int substituteRange = requestUtil.checkHolidayRangeSubstitute(requestUtil.getSubstituteList(true));
-			if (substituteRange == TimeConst.CODE_HOLIDAY_RANGE_AM) {
-				// 前半休の場合
-				holidayAm = true;
-			} else if (substituteRange == TimeConst.CODE_HOLIDAY_RANGE_PM) {
-				// 後半休の場合
-				holidayPm = true;
-			}
-			// 振出・休出申請
-			WorkOnHolidayRequestDtoInterface workOnHolidayRequestDto = requestUtil.getWorkOnHolidayDto(true);
-			if (workOnHolidayRequestDto != null) {
-				int substitute = workOnHolidayRequestDto.getSubstitute();
-				if (substitute == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_AM) {
-					// 半日振替出勤(午前)の場合
-					holidayPm = true;
-				} else if (substitute == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_PM) {
-					// 半日振替出勤(午後)の場合
-					holidayAm = true;
-				}
-			}
-			if (holidayAm) {
-				// 午前休の場合
-				WorkTypeItemDtoInterface halfRestDto = workTypeItemReference.findForKey(workTypeCode, activateDate,
-						TimeConst.CODE_HALFREST);
-				if (endTime != null
-						&& halfRestDto != null
-						&& DateUtility.getHour(endTime, targetDate) * TimeConst.CODE_DEFINITION_HOUR
-								+ DateUtility.getMinute(endTime) >= DateUtility.getHour(
-								halfRestDto.getWorkTypeItemValue(), getDefaultStandardDate())
-								* TimeConst.CODE_DEFINITION_HOUR
-								+ DateUtility.getMinute(halfRestDto.getWorkTypeItemValue())) {
-					startList.add(workTypeItemReference.findForKey(workTypeCode, activateDate,
-							TimeConst.CODE_HALFRESTSTART));
-					endList.add(workTypeItemReference
-						.findForKey(workTypeCode, activateDate, TimeConst.CODE_HALFRESTEND));
-				} else {
-					startList.add(null); // 休憩1
-					endList.add(null); // 休憩1
-				}
-				startList.add(null); // 休憩2
-				startList.add(null); // 休憩3
-				startList.add(null); // 休憩4
-				startList.add(null); // 休憩5
-				startList.add(null); // 休憩6
-				endList.add(null); // 休憩2
-				endList.add(null); // 休憩3
-				endList.add(null); // 休憩4
-				endList.add(null); // 休憩5
-				endList.add(null); // 休憩6
-			} else if (holidayPm) {
-				// 午後休の場合
-				startList.add(null); // 休憩1
-				startList.add(null); // 休憩2
-				startList.add(null); // 休憩3
-				startList.add(null); // 休憩4
-				startList.add(null); // 休憩5
-				startList.add(null); // 休憩6
-				endList.add(null); // 休憩1
-				endList.add(null); // 休憩2
-				endList.add(null); // 休憩3
-				endList.add(null); // 休憩4
-				endList.add(null); // 休憩5
-				endList.add(null); // 休憩6
-			} else {
-				startList.add(workTypeItemReference.findForKey(workTypeCode, activateDate, TimeConst.CODE_RESTSTART1));
-				startList.add(workTypeItemReference.findForKey(workTypeCode, activateDate, TimeConst.CODE_RESTSTART2));
-				startList.add(workTypeItemReference.findForKey(workTypeCode, activateDate, TimeConst.CODE_RESTSTART3));
-				startList.add(workTypeItemReference.findForKey(workTypeCode, activateDate, TimeConst.CODE_RESTSTART4));
-				startList.add(null); // 休憩5
-				startList.add(null); // 休憩6
-				endList.add(workTypeItemReference.findForKey(workTypeCode, activateDate, TimeConst.CODE_RESTEND1));
-				endList.add(workTypeItemReference.findForKey(workTypeCode, activateDate, TimeConst.CODE_RESTEND2));
-				endList.add(workTypeItemReference.findForKey(workTypeCode, activateDate, TimeConst.CODE_RESTEND3));
-				endList.add(workTypeItemReference.findForKey(workTypeCode, activateDate, TimeConst.CODE_RESTEND4));
-				endList.add(null); // 休憩5
-				endList.add(null); // 休憩6
-			}
+			startList.set(0, workTypeItemReference.findForKey(workTypeCode, activateDate, TimeConst.CODE_RESTSTART1));
+			startList.set(1, workTypeItemReference.findForKey(workTypeCode, activateDate, TimeConst.CODE_RESTSTART2));
+			startList.set(2, workTypeItemReference.findForKey(workTypeCode, activateDate, TimeConst.CODE_RESTSTART3));
+			startList.set(3, workTypeItemReference.findForKey(workTypeCode, activateDate, TimeConst.CODE_RESTSTART4));
+			endList.set(0, workTypeItemReference.findForKey(workTypeCode, activateDate, TimeConst.CODE_RESTEND1));
+			endList.set(1, workTypeItemReference.findForKey(workTypeCode, activateDate, TimeConst.CODE_RESTEND2));
+			endList.set(2, workTypeItemReference.findForKey(workTypeCode, activateDate, TimeConst.CODE_RESTEND3));
+			endList.set(3, workTypeItemReference.findForKey(workTypeCode, activateDate, TimeConst.CODE_RESTEND4));
 		}
 	}
 	
@@ -1118,7 +1025,7 @@ public class AttendanceListRegistBean extends AttendanceBean implements Attendan
 			if (dto.getGrantedLegalCompensationDays() == TimeConst.HOLIDAY_TIMES_ALL) {
 				// 法定代休発生日数が1日の場合
 				subHolidayDto.setSubHolidayDays(TimeConst.HOLIDAY_TIMES_ALL);
-			} else if (dto.getGrantedLegalCompensationDays() == TimeConst.HOLIDAY_TIMES_HALF) {
+			} else if (TimeUtility.isHolidayTimesHalf(dto.getGrantedLegalCompensationDays())) {
 				// 法定代休発生日数が0.5日の場合
 				subHolidayDto.setSubHolidayDays(TimeConst.HOLIDAY_TIMES_HALF);
 			} else {
@@ -1132,7 +1039,7 @@ public class AttendanceListRegistBean extends AttendanceBean implements Attendan
 			if (dto.getGrantedPrescribedCompensationDays() == TimeConst.HOLIDAY_TIMES_ALL) {
 				// 所定代休発生日数が1日の場合
 				subHolidayDto.setSubHolidayDays(TimeConst.HOLIDAY_TIMES_ALL);
-			} else if (dto.getGrantedPrescribedCompensationDays() == TimeConst.HOLIDAY_TIMES_HALF) {
+			} else if (TimeUtility.isHolidayTimesHalf(dto.getGrantedPrescribedCompensationDays())) {
 				// 所定代休発生日数が0.5日の場合
 				subHolidayDto.setSubHolidayDays(TimeConst.HOLIDAY_TIMES_HALF);
 			} else {
@@ -1175,8 +1082,8 @@ public class AttendanceListRegistBean extends AttendanceBean implements Attendan
 		// 勤務回数
 		attendanceCorrectionDto.setWorks(dto.getTimesWork());
 		// 修正番号
-		AttendanceCorrectionDtoInterface latestDto = attendanceCorrectionReference.getLatestAttendanceCorrectionInfo(
-				personalId, targetDate, dto.getTimesWork());
+		AttendanceCorrectionDtoInterface latestDto = attendanceCorrectionReference
+			.getLatestAttendanceCorrectionInfo(personalId, targetDate, dto.getTimesWork());
 		int correctionTimes = 1;
 		if (latestDto != null) {
 			correctionTimes += latestDto.getCorrectionTimes();
@@ -1288,8 +1195,8 @@ public class AttendanceListRegistBean extends AttendanceBean implements Attendan
 			workflowDto = workflow.getLatestWorkflowInfo(dto.getWorkflow());
 			if (!PlatformConst.CODE_STATUS_DRAFT.equals(workflowDto.getWorkflowStatus())) {
 				// 下書でない場合
-				mospParams
-					.addErrorMessage(TimeMessageConst.MSG_NOT_DRAFT, DateUtility.getStringDate(dto.getWorkDate()));
+				mospParams.addErrorMessage(TimeMessageConst.MSG_NOT_DRAFT,
+						DateUtility.getStringDate(dto.getWorkDate()));
 				return;
 			}
 		}
@@ -1300,8 +1207,14 @@ public class AttendanceListRegistBean extends AttendanceBean implements Attendan
 		// 勤怠関連情報を取得
 		personalId = dto.getPersonalId();
 		targetDate = dto.getWorkDate();
+		// ルートコード或いは承認者を設定
+		setRouteApprover(workflowDto);
 		// ワークフロー登録(下書)
 		workflowDto = workflowRegist.draft(workflowDto, personalId, targetDate, PlatformConst.WORKFLOW_TYPE_TIME);
+		// ワークフロー申請確認
+		if (workflowDto == null) {
+			return;
+		}
 		// ワークフロー番号を勤怠データに設定
 		dto.setWorkflow(workflowDto.getWorkflow());
 	}
@@ -1337,7 +1250,7 @@ public class AttendanceListRegistBean extends AttendanceBean implements Attendan
 	@Override
 	public void setRouteApprover(WorkflowDtoInterface dto, String personalId, Date targetDate) throws MospException {
 		this.personalId = personalId;
-		this.targetDate = targetDate;
+		this.targetDate = CapsuleUtility.getDateClone(targetDate);
 		setRouteApprover(dto);
 	}
 	
@@ -1363,10 +1276,16 @@ public class AttendanceListRegistBean extends AttendanceBean implements Attendan
 			// デフォルト承認者設定
 			defaultApproverList.add(stageApproverList.get(0)[0]);
 		}
-		// ワークフロー情報に設定
-		workflowDto.setApproverId(toSeparatedString(defaultApproverList, PlatformBean.SEPARATOR_DATA));
-		// 承認者を指定するためルートコードは不要
-		workflowDto.setRouteCode("");
+		// ユニット承認者使用
+		if (mospParams.isTargetApprovalUnit()) {
+			// 承認者個人IDを空に設定
+			workflowDto.setApproverId("");
+		} else {
+			// ワークフロー情報に設定
+			workflowDto.setApproverId(toSeparatedString(defaultApproverList, PlatformBean.SEPARATOR_DATA));
+			// 承認者を指定するためルートコードは不要
+			workflowDto.setRouteCode("");
+		}
 	}
 	
 	/**
@@ -1404,8 +1323,8 @@ public class AttendanceListRegistBean extends AttendanceBean implements Attendan
 	@Override
 	public void checkOvertime(AttendanceDtoInterface attendanceDto) throws MospException {
 		// 勤怠申請
-		// 勤怠データの後残業時間(tmd_attendance.overtime_after)が0である
-		if (attendanceDto.getOvertimeAfter() == 0) {
+		// 勤怠データの前残業時間かつ後残業時間が0である
+		if (attendanceDto.getOvertimeBefore() == 0 && attendanceDto.getOvertimeAfter() == 0) {
 			// メッセージ不要
 			return;
 		}
@@ -1420,34 +1339,44 @@ public class AttendanceListRegistBean extends AttendanceBean implements Attendan
 		// 各種申請情報取得
 		RequestUtilBeanInterface requestUtil = (RequestUtilBeanInterface)createBean(RequestUtilBeanInterface.class);
 		requestUtil.setRequests(personalId, targetDate);
-		// 締め日情報の取得
-		CutoffDtoInterface cutoffDto = cutoffReference.getCutoffInfo(timeSettingDto.getCutoffCode(), targetDate);
-		if (cutoffDto == null) {
+		// 未承認仮締を取得
+		int noApproval = cutoffUtil.getNoApproval(timeSettingDto.getCutoffCode(), targetDate);
+		// エラーチェック
+		if (mospParams.hasErrorMessage()) {
 			return;
 		}
-		int noApproval = cutoffDto.getNoApproval();
-		if (noApproval == 0 || noApproval == 2 || noApproval == 3) {
-			// 未承認仮締が有効・無効(残業事前申請のみ)・無効(残業申請なし)の場合はメッセージ不要
+		// 未承認仮締が有効・無効(残業事前申請のみ)・無効(残業申請なし)の場合
+		if (noApproval != 1) {
+			// メッセージ不要
 			return;
 		}
 		// 振出・休出申請を取得
 		WorkOnHolidayRequestDtoInterface workOnHolidayRequestDto = requestUtil.getWorkOnHolidayDto(true);
+		// 振出・休出申請が承認されていて振り替えない場合
 		if (workOnHolidayRequestDto != null
 				&& workOnHolidayRequestDto.getSubstitute() == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_OFF) {
-			// 振出・休出申請が承認されていて振り替えない場合
 			return;
 		}
-		// 残業申請
+		// 前残業未申請フラグ
+		boolean beforeFlag = attendanceDto.getOvertimeBefore() != 0;
+		// 後残業未申請フラグ
+		boolean afterFlag = attendanceDto.getOvertimeAfter() != 0;
+		// 取下、下書以外の残業申請リスト
 		List<OvertimeRequestDtoInterface> overtimeRequestList = requestUtil.getOverTimeList(false);
+		// 取下、下書以外の残業申請毎に処理
 		for (OvertimeRequestDtoInterface overtimeRequestDto : overtimeRequestList) {
+			// 勤務後残業申請がある場合
 			if (overtimeRequestDto.getOvertimeType() == TimeConst.CODE_OVERTIME_WORK_AFTER) {
-				// 勤務後残業申請がある場合
-				return;
+				afterFlag = false;
+			} else if (overtimeRequestDto.getOvertimeType() == TimeConst.CODE_OVERTIME_WORK_BEFORE) {
+				beforeFlag = false;
 			}
 		}
-		// メッセージ追加
-		mospParams.addMessage(TimeMessageConst.MSG_REQUEST_CHECK_11, getStringDate(targetDate),
-				mospParams.getName("OvertimeWork"), mospParams.getName("OvertimeWork"));
+		if (beforeFlag || afterFlag) {
+			// メッセージ追加
+			mospParams.addMessage(TimeMessageConst.MSG_REQUEST_CHECK_11, getStringDate(targetDate),
+					mospParams.getName("OvertimeWork"), mospParams.getName("OvertimeWork"));
+		}
 	}
 	
 	@Override
@@ -1478,5 +1407,4 @@ public class AttendanceListRegistBean extends AttendanceBean implements Attendan
 			mospParams.addErrorMessage(TimeMessageConst.MSG_DRAFT_MINUTELY_HOLIDAY, getStringDate(targetDate));
 		}
 	}
-	
 }

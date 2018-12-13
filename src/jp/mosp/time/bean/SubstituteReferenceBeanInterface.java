@@ -32,18 +32,19 @@ import jp.mosp.time.dto.settings.SubstituteDtoInterface;
 public interface SubstituteReferenceBeanInterface {
 	
 	/**
-	 * 一覧取得。
-	 * <p>
-	 * 個人IDと出勤日と勤務回数から振替休日データリストを取得。
-	 * </p>
+	 * 振替休日データを取得する。<br>
+	 * 個人IDと出勤日（振替出勤日）から振替休日データを取得。<br>
+	 * 
+	 * 次の理由から個人IDと出勤日からは1つの振替休日データしか取得できない。<br>
+	 * ・同一振替出勤日に2つの振替出勤をすることはできない。<br>
+	 * ・一つの振替出勤からは一つの振替出勤しかできない。<br>
+	 * ・取下状態は省く。<br>
 	 * @param personalId 個人ID
 	 * @param workDate 出勤日
-	 * @param timesWork 勤務回数
-	 * @return 振替休日データリスト
+	 * @return 振替休日データ
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
-	List<SubstituteDtoInterface> getSubstituteList(String personalId, Date workDate, int timesWork)
-			throws MospException;
+	SubstituteDtoInterface getSubstituteDto(String personalId, Date workDate) throws MospException;
 	
 	/**
 	 * 一覧取得。

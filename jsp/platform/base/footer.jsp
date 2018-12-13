@@ -23,10 +23,10 @@ autoFlush    = "false"
 errorPage    = "/jsp/common/error.jsp"
 %><%@ page
 import = "jp.mosp.framework.constant.MospConst"
+import = "jp.mosp.framework.base.BaseVo"
 import = "jp.mosp.framework.base.MospParams"
-import = "jp.mosp.platform.base.PlatformVo"
 %><%
 MospParams params = (MospParams)request.getAttribute(MospConst.ATT_MOSP_PARAMS);
-PlatformVo vo = (PlatformVo)params.getVo();
+BaseVo vo = params.getVo();
 %>
 

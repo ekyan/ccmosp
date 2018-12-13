@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE MosP>
+<MosP>
+	
+	<!-- メニュー -->
+	<!-- 案件管理 -->
+	<MainMenu key="menuMePropose">
+		<Menu key="MeProposeList">
+			<Command>ME010100</Command>
+			<VoClass>jp.mosp.addon.manage.vo.MeProposeListVo</VoClass>
+		</Menu>
+		<Menu key="MeProposeCard">
+			<Command>ME010200</Command>
+			<VoClass>jp.mosp.addon.manage.vo.MeProposeCardVo</VoClass>
+		</Menu>
+		<Menu key="MeCompanyMaster">
+			<Command>ME010400</Command>
+			<VoClass>jp.mosp.addon.manage.vo.MeCompanyMasterVo</VoClass>
+		</Menu>
+		<Menu key="MeSalesTotalCalc">
+			<Command>ME010500</Command>
+			<VoClass>jp.mosp.addon.manage.vo.MeAnalysisSalesListVo</VoClass>
+		</Menu>
+	</MainMenu>
+	
+	<!-- 経営管理 -->
+	<MainMenu key="menuMeManage">
+		<Menu key="MeSalesCostBudgetCard">
+			<Command>ME020100</Command>
+			<VoClass>MeSalesBudget</VoClass>
+		</Menu>
+		<Menu key="MeSgaBudgetCard">
+			<Command>ME030100</Command>
+			<VoClass>MeSgaBudget</VoClass>
+		</Menu>
+		<Menu key="MeSgaResultCard">
+			<Command>ME030200</Command>
+			<VoClass>MeSgaResult</VoClass>
+		</Menu>
+		<Menu key="MeAnalysisSales">
+			<Command>ME040100</Command>
+			<VoClass>MeManageAnalysis</VoClass>
+		</Menu>
+		<Menu key="MeConfig">
+			<Command>ME050100</Command>
+			<VoClass>jp.mosp.addon.manage.vo.MeConfigVo</VoClass>
+		</Menu>
+		<Menu key="MeSalesTotalType">
+			<Command>ME050200</Command>
+			<VoClass>jp.mosp.addon.manage.vo.MeTotalTypeMasterVo</VoClass>
+		</Menu>
+		<Menu key="MeImportMaster">
+			<Command>ME050300</Command>
+			<VoClass>jp.mosp.platform.file.vo.ImportListVo</VoClass>
+		</Menu>
+	</MainMenu>
+	
+</MosP>

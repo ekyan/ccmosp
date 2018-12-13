@@ -80,6 +80,11 @@ public interface HolidayDtoInterface extends PlatformDtoInterface {
 	int getContinuousAcquisition();
 	
 	/**
+	 * @return 時間単位休暇機能。
+	 */
+	int getTimelyHolidayFlag();
+	
+	/**
 	 * @return 出勤率計算。
 	 */
 	int getPaidHolidayCalc();
@@ -148,6 +153,11 @@ public interface HolidayDtoInterface extends PlatformDtoInterface {
 	 * @param continuousAcquisition セットする 連続取得。
 	 */
 	void setContinuousAcquisition(int continuousAcquisition);
+	
+	/**
+	 * @param timelyHolidayFlag セットする 時間単位休暇機能。
+	 */
+	void setTimelyHolidayFlag(int timelyHolidayFlag);
 	
 	/**
 	 * @param paidHolidayCalc セットする 出勤率計算。

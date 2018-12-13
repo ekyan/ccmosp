@@ -15,9 +15,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-/**
- * 
- */
 package jp.mosp.time.dto.settings.impl;
 
 import java.util.Date;
@@ -30,9 +27,6 @@ import jp.mosp.time.dto.settings.WorkOnHolidayRequestDtoInterface;
  */
 public class TmdWorkOnHolidayRequestDto extends BaseDto implements WorkOnHolidayRequestDtoInterface {
 	
-	/**
-	 * 
-	 */
 	private static final long	serialVersionUID	= -6948437067693731485L;
 	
 	/**
@@ -59,6 +53,10 @@ public class TmdWorkOnHolidayRequestDto extends BaseDto implements WorkOnHoliday
 	 * 振替申請。
 	 */
 	private int					substitute;
+	/**
+	 * 勤務形態コード。
+	 */
+	private String				workTypeCode;
 	/**
 	 * 出勤予定時刻。
 	 */
@@ -95,6 +93,11 @@ public class TmdWorkOnHolidayRequestDto extends BaseDto implements WorkOnHoliday
 	@Override
 	public String getRequestReason() {
 		return requestReason;
+	}
+	
+	@Override
+	public String getWorkTypeCode() {
+		return workTypeCode;
 	}
 	
 	@Override
@@ -135,6 +138,11 @@ public class TmdWorkOnHolidayRequestDto extends BaseDto implements WorkOnHoliday
 	@Override
 	public void setRequestReason(String requestReason) {
 		this.requestReason = requestReason;
+	}
+	
+	@Override
+	public void setWorkTypeCode(String workTypeCode) {
+		this.workTypeCode = workTypeCode;
 	}
 	
 	@Override

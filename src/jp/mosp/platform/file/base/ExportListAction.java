@@ -84,6 +84,18 @@ public abstract class ExportListAction extends PlatformAction {
 		search.setTableTypeArray(getCodeArray(vo.getTableTypeCodeKey(), false));
 		// 検索条件をもとに検索クラスからマスタリストを取得
 		List<ExportDtoInterface> list = search.getSearchList();
+		setDtoToVoList(list);
+		
+	}
+	
+	/**
+	 * リスト情報取得後の処理
+	 * @param list インポート情報リスト
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	protected void setDtoToVoList(List<ExportDtoInterface> list) throws MospException {
+		// VO準備
+		ExportListVo vo = (ExportListVo)mospParams.getVo();
 		// 検索結果リスト設定
 		vo.setList(list);
 		// デフォルトソートキー及びソート順設定
@@ -98,6 +110,7 @@ public abstract class ExportListAction extends PlatformAction {
 			// 検索結果無しメッセージ設定
 			addNoSearchResultMessage();
 		}
+		
 	}
 	
 	/**

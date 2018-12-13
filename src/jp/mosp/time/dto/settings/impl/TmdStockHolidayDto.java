@@ -169,12 +169,12 @@ public class TmdStockHolidayDto extends BaseDto implements StockHolidayDataDtoIn
 	
 	@Override
 	public Date getLimitDate() {
-		return limitDate;
+		return getDateClone(limitDate);
 	}
 	
 	@Override
 	public void setLimitDate(Date limitDate) {
-		this.limitDate = limitDate;
+		this.limitDate = getDateClone(limitDate);
 	}
 	
 }

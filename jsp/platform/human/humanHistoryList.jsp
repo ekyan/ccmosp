@@ -25,6 +25,7 @@ errorPage    = "/jsp/common/error.jsp"
 import = "jp.mosp.framework.base.MospParams"
 import = "jp.mosp.framework.constant.MospConst"
 import = "jp.mosp.framework.utils.HtmlUtility"
+import = "jp.mosp.framework.utils.RoleUtility"
 import = "jp.mosp.platform.constant.PlatformConst"
 import = "jp.mosp.platform.human.action.HumanHistoryCardAction"
 import = "jp.mosp.platform.human.action.HumanHistoryListAction"
@@ -48,12 +49,12 @@ String division = vo.getDivision();
 ViewConfigProperty viewConfig = params.getProperties().getViewConfigProperties().get(division);
 String view = HumanHistoryListAction.KEY_VIEW_HISTORY_LIST;
 ViewProperty viewProperty = viewConfig.getView(view);
-//人事汎用表示テーブル配列取得
+// 人事汎用表示テーブル配列取得
 String[] viewTables = viewProperty.getViewTableKeys();
+// 人事汎用管理区分参照権限
+boolean isReferenceDivision = RoleUtility.getReferenceDivisionsList(params).contains(division);
 %>
-
-
-<jsp:include page="<%= PlatformHumanConst.PATH_HUMAN_COMMON_INFO_JSP %>" flush="false" />
+<jsp:include page="<%= params.getApplicationProperty(PlatformHumanConst.APP_HUMAN_COMMON_INFO_JSP) %>" flush="false" />
 <%
 //人事汎用管理管理区分設定
 params.addGeneralParam(PlatformHumanConst.PRM_HUMAN_DIVISION,division);
@@ -75,10 +76,14 @@ for (int i = 0; i < vo.getAryActiveteDate().length; i++) {
 }
 %>
 <div class="Button">
+	<% if (!isReferenceDivision) { %>
 		<button type="button" id="btnCmd01" class="Name4Button"
 		onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_TYPE %>',  '<%= division %>','<%= PlatformConst.PRM_TRANSFERRED_ACTION %>',  '<%= HumanHistoryCardAction.CMD_ADD_SELECT %>'), '<%= HumanHistoryListAction.CMD_TRANSFER %>');"
-		><%= params.getName("History") %><%= params.getName("Add") %></button>
-		<button type="button" id="btnCmd01" class="Name4Button"
-		onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_ACTION %>', '<%=HumanInfoAction.class.getName() %>'), '<%= HumanHistoryListAction.CMD_TRANSFER %>');"
-		><%= params.getName("Information") %><%= params.getName("List") %></button>
+		>
+			<%= params.getName("History","Add")%>
+		</button>
+	<% } %>
+	<button type="button" id="btnCmd01" class="Name4Button"
+	onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_ACTION %>', '<%=HumanInfoAction.class.getName() %>'), '<%= HumanHistoryListAction.CMD_TRANSFER %>');"
+	><%= params.getName("Information") %><%= params.getName("List") %></button>
 </div>

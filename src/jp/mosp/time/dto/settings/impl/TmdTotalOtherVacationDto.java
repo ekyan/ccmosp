@@ -57,6 +57,10 @@ public class TmdTotalOtherVacationDto extends BaseDto implements TotalOtherVacat
 	 * その他休暇日数。
 	 */
 	private double				times;
+	/**
+	 * その他休暇時間数。
+	 */
+	private int					hours;
 	
 	
 	@Override
@@ -117,6 +121,22 @@ public class TmdTotalOtherVacationDto extends BaseDto implements TotalOtherVacat
 	@Override
 	public void setTmdTotalOtherVacationId(long tmdTotalOtherVacationId) {
 		this.tmdTotalOtherVacationId = tmdTotalOtherVacationId;
+	}
+	
+	/**
+	 * @return hours
+	 */
+	@Override
+	public int getHours() {
+		return hours;
+	}
+	
+	/**
+	 * @param hours セットする hours
+	 */
+	@Override
+	public void setHours(int hours) {
+		this.hours = hours;
 	}
 	
 }

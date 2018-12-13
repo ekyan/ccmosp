@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -->
 <MosP>
 
-<!--jp.mosp.time.dao.settings-->
+<!-- jp.mosp.time.dao.settings -->
 
 	<Model key="HolidayDataDao">
 		jp.mosp.time.dao.settings.impl.TmdHolidayDataDao
@@ -33,14 +33,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<Model key="PaidHolidayTransactionDao">
 		jp.mosp.time.dao.settings.impl.TmtPaidHolidayDao
 	</Model>
+	<Model key="PaidHolidayGrantDao">
+		jp.mosp.time.dao.settings.impl.TmtPaidHolidayGrantDao
+	</Model>
 	<Model key="StockHolidayDataDao">
 		jp.mosp.time.dao.settings.impl.TmdStockHolidayDao
 	</Model>
 	<Model key="StockHolidayTransactionDao">
 		jp.mosp.time.dao.settings.impl.TmtStockHolidayDao
-	</Model>
-	<Model key="TimelyPaidHolidayDao">
-		jp.mosp.time.dao.settings.impl.TmdTimelyPaidHolidayDao
 	</Model>
 	<Model key="WorkTypeDao">
 		jp.mosp.time.dao.settings.impl.TmmWorkTypeDao
@@ -56,6 +56,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	</Model>
 	<Model key="PaidHolidayDao">
 		jp.mosp.time.dao.settings.impl.TmmPaidHolidayDao
+	</Model>
+	<Model key="PaidHolidayProportionallyDao">
+		jp.mosp.time.dao.settings.impl.TmmPaidHolidayProportionallyDao
 	</Model>
 	<Model key="PaidHolidayFirstYearDao">
 		jp.mosp.time.dao.settings.impl.TmmPaidHolidayFirstYearDao

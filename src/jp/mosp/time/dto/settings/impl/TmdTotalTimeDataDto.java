@@ -146,6 +146,18 @@ public class TmdTotalTimeDataDto extends BaseDto implements TotalTimeDataDtoInte
 	 */
 	private int					lateNight;
 	/**
+	 * 深夜所定労働時間内時間。
+	 */
+	private int					nightWorkWithinPrescribedWork;
+	/**
+	 * 深夜時間外時間。
+	 */
+	private int					nightOvertimeWork;
+	/**
+	 * 深夜休日労働時間。
+	 */
+	private int					nightWorkOnHoliday;
+	/**
 	 * 所定休出時間。
 	 */
 	private int					workOnSpecificHoliday;
@@ -282,13 +294,25 @@ public class TmdTotalTimeDataDto extends BaseDto implements TotalTimeDataDtoInte
 	 */
 	private double				totalSpecialHoliday;
 	/**
+	 * 特別休暇時間。
+	 */
+	private int					specialHolidayHour;
+	/**
 	 * その他休暇合計日数。
 	 */
 	private double				totalOtherHoliday;
 	/**
+	 * その他休暇時間。
+	 */
+	private int					otherHolidayHour;
+	/**
 	 * 欠勤合計日数。
 	 */
 	private double				totalAbsence;
+	/**
+	 * 欠勤時間。
+	 */
+	private int					absenceHour;
 	/**
 	 * 手当合計。
 	 */
@@ -404,6 +428,47 @@ public class TmdTotalTimeDataDto extends BaseDto implements TotalTimeDataDtoInte
 	 */
 	private int					prescribedHolidayOvertimeIn;
 	
+	/**
+	 * 汎用項目1(数値)。
+	 */
+	private int					generalIntItem1;
+	/**
+	 * 汎用項目2(数値)。
+	 */
+	private int					generalIntItem2;
+	/**
+	 * 汎用項目3(数値)。
+	 */
+	private int					generalIntItem3;
+	/**
+	 * 汎用項目4(数値)。
+	 */
+	private int					generalIntItem4;
+	/**
+	 * 汎用項目5(数値)。
+	 */
+	private int					generalIntItem5;
+	/**
+	 * 汎用項目1(浮動小数点数)。
+	 */
+	private double				generalDoubleItem1;
+	/**
+	 * 汎用項目1(浮動小数点数)。
+	 */
+	private double				generalDoubleItem2;
+	/**
+	 * 汎用項目1(浮動小数点数)。
+	 */
+	private double				generalDoubleItem3;
+	/**
+	 * 汎用項目1(浮動小数点数)。
+	 */
+	private double				generalDoubleItem4;
+	/**
+	 * 汎用項目1(浮動小数点数)。
+	 */
+	private double				generalDoubleItem5;
+	
 	
 	@Override
 	public int getCalculationMonth() {
@@ -433,6 +498,21 @@ public class TmdTotalTimeDataDto extends BaseDto implements TotalTimeDataDtoInte
 	@Override
 	public int getLateNight() {
 		return lateNight;
+	}
+	
+	@Override
+	public int getNightWorkWithinPrescribedWork() {
+		return nightWorkWithinPrescribedWork;
+	}
+	
+	@Override
+	public int getNightOvertimeWork() {
+		return nightOvertimeWork;
+	}
+	
+	@Override
+	public int getNightWorkOnHoliday() {
+		return nightWorkOnHoliday;
 	}
 	
 	@Override
@@ -771,6 +851,21 @@ public class TmdTotalTimeDataDto extends BaseDto implements TotalTimeDataDtoInte
 	}
 	
 	@Override
+	public void setNightWorkWithinPrescribedWork(int nightWorkWithinPrescribedWork) {
+		this.nightWorkWithinPrescribedWork = nightWorkWithinPrescribedWork;
+	}
+	
+	@Override
+	public void setNightOvertimeWork(int nightOvertimeWork) {
+		this.nightOvertimeWork = nightOvertimeWork;
+	}
+	
+	@Override
+	public void setNightWorkOnHoliday(int nightWorkOnHoliday) {
+		this.nightWorkOnHoliday = nightWorkOnHoliday;
+	}
+	
+	@Override
 	public void setLateTime(int lateTime) {
 		this.lateTime = lateTime;
 	}
@@ -1031,8 +1126,23 @@ public class TmdTotalTimeDataDto extends BaseDto implements TotalTimeDataDtoInte
 	}
 	
 	@Override
+	public int getSpecialHolidayHour() {
+		return specialHolidayHour;
+	}
+	
+	@Override
+	public int getOtherHolidayHour() {
+		return otherHolidayHour;
+	}
+	
+	@Override
 	public void setTotalOtherHoliday(double totalOtherHoliday) {
 		this.totalOtherHoliday = totalOtherHoliday;
+	}
+	
+	@Override
+	public void setOtherHolidayHour(int otherHolidayHour) {
+		this.otherHolidayHour = otherHolidayHour;
 	}
 	
 	@Override
@@ -1041,13 +1151,28 @@ public class TmdTotalTimeDataDto extends BaseDto implements TotalTimeDataDtoInte
 	}
 	
 	@Override
+	public void setSpecialHolidayHour(int specialHolidayHour) {
+		this.specialHolidayHour = specialHolidayHour;
+	}
+	
+	@Override
 	public double getTotalAbsence() {
 		return totalAbsence;
 	}
 	
 	@Override
+	public int getAbsenceHour() {
+		return absenceHour;
+	}
+	
+	@Override
 	public void setTotalAbsence(double totalAbsence) {
 		this.totalAbsence = totalAbsence;
+	}
+	
+	@Override
+	public void setAbsenceHour(int absenceHour) {
+		this.absenceHour = absenceHour;
 	}
 	
 	@Override
@@ -1285,4 +1410,103 @@ public class TmdTotalTimeDataDto extends BaseDto implements TotalTimeDataDtoInte
 		this.prescribedHolidayOvertimeIn = prescribedHolidayOvertimeIn;
 	}
 	
+	@Override
+	public int getGeneralIntItem1() {
+		return generalIntItem1;
+	}
+	
+	@Override
+	public void setGeneralIntItem1(int generalIntItem1) {
+		this.generalIntItem1 = generalIntItem1;
+	}
+	
+	@Override
+	public int getGeneralIntItem2() {
+		return generalIntItem2;
+	}
+	
+	@Override
+	public void setGeneralIntItem2(int generalIntItem2) {
+		this.generalIntItem2 = generalIntItem2;
+	}
+	
+	@Override
+	public int getGeneralIntItem3() {
+		return generalIntItem3;
+	}
+	
+	@Override
+	public void setGeneralIntItem3(int generalIntItem3) {
+		this.generalIntItem3 = generalIntItem3;
+	}
+	
+	@Override
+	public int getGeneralIntItem4() {
+		return generalIntItem4;
+	}
+	
+	@Override
+	public void setGeneralIntItem4(int generalIntItem4) {
+		this.generalIntItem4 = generalIntItem4;
+	}
+	
+	@Override
+	public int getGeneralIntItem5() {
+		return generalIntItem5;
+	}
+	
+	@Override
+	public void setGeneralIntItem5(int generalIntItem5) {
+		this.generalIntItem5 = generalIntItem5;
+	}
+	
+	@Override
+	public double getGeneralDoubleItem1() {
+		return generalDoubleItem1;
+	}
+	
+	@Override
+	public void setGeneralDoubleItem1(double generalDoubleItem1) {
+		this.generalDoubleItem1 = generalDoubleItem1;
+	}
+	
+	@Override
+	public double getGeneralDoubleItem2() {
+		return generalDoubleItem2;
+	}
+	
+	@Override
+	public void setGeneralDoubleItem2(double generalDoubleItem2) {
+		this.generalDoubleItem2 = generalDoubleItem2;
+	}
+	
+	@Override
+	public double getGeneralDoubleItem3() {
+		return generalDoubleItem3;
+	}
+	
+	@Override
+	public void setGeneralDoubleItem3(double generalDoubleItem3) {
+		this.generalDoubleItem3 = generalDoubleItem3;
+	}
+	
+	@Override
+	public double getGeneralDoubleItem4() {
+		return generalDoubleItem4;
+	}
+	
+	@Override
+	public void setGeneralDoubleItem4(double generalDoubleItem4) {
+		this.generalDoubleItem4 = generalDoubleItem4;
+	}
+	
+	@Override
+	public double getGeneralDoubleItem5() {
+		return generalDoubleItem5;
+	}
+	
+	@Override
+	public void setGeneralDoubleItem5(double generalDoubleItem5) {
+		this.generalDoubleItem5 = generalDoubleItem5;
+	}
 }

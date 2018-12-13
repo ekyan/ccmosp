@@ -272,7 +272,8 @@ public class TmdDifferenceRequestDao extends PlatformDao implements DifferenceRe
 	}
 	
 	@Override
-	public DifferenceRequestDtoInterface findForKeyOnWorkflow(String personalId, Date requestDate) throws MospException {
+	public DifferenceRequestDtoInterface findForKeyOnWorkflow(String personalId, Date requestDate)
+			throws MospException {
 		try {
 			index = 1;
 			StringBuffer sb = getSelectQuery(getClass());

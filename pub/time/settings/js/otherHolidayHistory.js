@@ -31,23 +31,23 @@ function onLoadExtra() {
 		setDisabled("txtEditActivateMonth", true);
 		setDisabled("txtEditActivateDay", true);
 		setDisabled("txtEditEmployeeCode", true);
-		setDisabled("btnRegist", false);
+		setReadOnly("btnRegist", false);
 	} else {
 		setDisabled("txtEditEmployeeCode", false);
-		setDisabled("btnRegist", true);
+		setReadOnly("btnRegist", true);
 	}
 
 	if (modeCardEdit == MODE_CARD_EDIT_EDIT) {
 		setDisabled("pltEditHolidayType", true);
 		if(jsEditActivateDate == "fixed"){
-			setDisabled("btnActivateDate", true);
+			setReadOnly("btnActivateDate", true);
 		} else {
-			setDisabled("btnActivateDate", false);
+			setReadOnly("btnActivateDate", false);
 		}
 	} else {
 		setDisabled("pltEditHolidayType", false);
 		setDisabled("pltEditInactivate", true);
-		setDisabled("btnActivateDate", false);
+		setReadOnly("btnActivateDate", false);
 	}
 	
 	// 検索項目
@@ -55,13 +55,13 @@ function onLoadExtra() {
 		setDisabled("txtSearchActivateYear", true);
 		setDisabled("txtSearchActivateMonth", true);
 		setDisabled("txtSearchActivateDay", true);
-		setDisabled("btnSearch", false);
+		setReadOnly("btnSearch", false);
 	}
 	if (jsSearchActivateDate  == "chaning"){
 		setDisabled("txtSearchActivateYear", false);
 		setDisabled("txtSearchActivateMonth", false);
 		setDisabled("txtSearchActivateDay", false);
-		setDisabled("btnSearch", true);
+		setReadOnly("btnSearch", true);
 	}
 	// 休暇種別選択後の付与日数、取得期限。
 	if (jsEditNoLimit){

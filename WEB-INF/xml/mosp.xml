@@ -25,10 +25,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	
 	<!-- バージョン -->
 	<Application key="Version">
-		v4.3.0
+		v4.6.0
 	</Application>
 	
-	<!-- パスワード有効期限(日) -->
+	<!-- パスワード有効期限(日)(デフォルト値：システム管理で設定可能) -->
 	<Application key="PasswordPeriod">
 		30
 	</Application>
@@ -60,6 +60,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	
 	<!-- パスワード初期化不能 -->
 	<Application key="InitPasswordImpossible">
+		false
+	</Application>
+
+	<!-- ログイン画面パスワード初期化利用可否 -->
+	<Application key="LoginInitializePassword">
 		false
 	</Application>
 	
@@ -129,13 +134,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<Application key="BaseCssFiles">
 		/pub/common/css/mosp.css,
 		/pub/common/css/class.css,
-		/pub/common/css/color.css
+		/pub/common/css/color.css,
+		/pub/common/css/calendar.css
 	</Application>
 	
 	<!-- 標準JSファイルパス -->
 	<Application key="BaseJsFiles">
 		/pub/common/js/mosp.js,
 		/pub/common/js/message.js,
+		/pub/common/js/calendar.js,
 		/pub/platform/portal/js/time.js,
 		/pub/platform/base/js/platform.js
 	</Application>
@@ -167,6 +174,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<!-- ポータル表示コマンド -->
 	<Application key="CommandPortal">
 		PF0040
+	</Application>
+	
+	<!-- MosPプラットフォーム人事管理共通JSPファイルパス -->
+	<Application key="HumanCommonInfoJsp">
+		/jsp/platform/human/humanCommonInfo.jsp
 	</Application>
 	
 	<!-- 個人基本情報履歴削除ボタン表示可否 -->
@@ -245,17 +257,26 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		jp.mosp.platform.comparator.base.ActivateDateComparator
 	</Application>
 	
+	<!-- favicon -->
+	<Application key="FaviconImage">
+		../pub/images/favicon.ico
+	</Application>
+	
 	<!-- ロゴイメージ -->
 	<Application key="LogoImage">
 		../pub/images/mosp.png
 	</Application>
 	
-	<!-- 年月指定日の基準日(0：末日、1-28：日数、101-115：翌月日数) -->
+	<!-- タイトル接頭辞 -->
+	<Application key="TitlePrefix">
+	</Application>
+	
+	<!-- 年月指定時の基準日(0：末日、1-28：日数、101-115：翌月日数) -->
 	<Application key="YearMonthTargetDate">
 		0
 	</Application>
 	
-	<!-- 年月指定日の期間の最終日(0：末日、1-28：日数、101-115：翌月日数) -->
+	<!-- 年月指定時の期間の最終日(0：末日、1-28：日数、101-115：翌月日数) -->
 	<Application key="YearMonthTerm">
 		0
 	</Application>
@@ -263,6 +284,28 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<!-- 年度の開始月 -->
 	<Application key="FiscalStartMonth">
 		4
+	</Application>
+	
+	<!--人事汎用管理区分設定-->
+	<Application key="HumanGeneralDivisions">
+		MailAddress
+	</Application>
+	
+	<!-- ログ出力対象外パラメータ -->
+	<Application key="LogExcludeParams">
+		txtPassWord,hdnConfirmPassword,hdnOldPassword,hdnNewPassword,
+		txtPostgresPass,txtRolePw,pw
+	</Application>
+	
+	<!-- 一度に取得する個人情報の最大数 -->
+	<Application key="PersonalIdsMaxIndex">
+		5000
+	</Application>
+	
+	<!-- ユーザアカウント情報登録後確認Beanクラス群(クラス名) -->
+	<Application key="BeansCheckAfterRegistUser">
+		<Value>jp.mosp.platform.bean.system.impl.CheckNeededRoleBean</Value>
+		<AddValue>true</AddValue>
 	</Application>
 	
 </MosP>

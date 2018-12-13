@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE MosP>
+<!--
+MosP - Mind Open Source Project    http://www.mosp.jp/
+Copyright (C) MIND Co., Ltd.       http://www.e-mind.co.jp/
+
+This program is free software: you can redistribute it and/or
+modify it under the terms of the GNU Affero General Public License
+as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<MosP>
+	<!-- mail -->
+	<Model key="ApplicantMail">
+		jp.mosp.addon.timeapplimail.bean.impl.TaApplicantMailBean
+	</Model>
+	<Model key="ApproverMail">
+		jp.mosp.addon.timeapplimail.bean.impl.TaApproverMailBean
+	</Model>
+	
+	<!-- 申請者メールメッセージ設定 -->
+	<Application key="mailApplicantItem1">
+		mailApplicantItem1,中間締め用,【早急に申請ください】{0%number%0}年{1%number%0}月勤怠について,mail_applicant.vm
+	</Application>
+	<Application key="mailApplicantItem2">
+		mailApplicantItem2,末日締め用,【早急に申請ください】{0%number%0}年{1%number%0}月勤怠について,mail_applicant_2.vm
+	</Application>
+	<Application key="mailApplicantItem3">
+	</Application>
+	<Application key="mailApplicantItem3">
+	</Application>
+	
+	<!-- 承認者メールメッセージ項目 -->
+	<Application key="mailApproverItem1">
+		mailApproverItem1,中間末日締め用,【早急に承認ください】{0%number%0}年{1%number%0}月勤怠について,mail_approver.vm
+	</Application>
+	<Application key="mailApproverItem2">
+	</Application>	
+	<Application key="mailApproverItem3">
+	</Application>
+	<Application key="mailApproverItem4">
+	</Application>	
+	
+	
+	<!-- メール設定 -->
+	<Application key="UseMail">true</Application>
+
+	 
+</MosP>

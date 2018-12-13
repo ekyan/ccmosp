@@ -20,6 +20,7 @@ package jp.mosp.platform.dto.human.impl;
 import java.util.Date;
 
 import jp.mosp.framework.base.BaseDto;
+import jp.mosp.framework.utils.CapsuleUtility;
 import jp.mosp.platform.dto.human.HumanBinaryNormalDtoInterface;
 
 /**
@@ -93,7 +94,7 @@ public class PfaHumanBinaryNormalDto extends BaseDto implements HumanBinaryNorma
 	
 	@Override
 	public byte[] getHumanItemBinary() {
-		return humanItemBinary;
+		return CapsuleUtility.getByteArrayClone(humanItemBinary);
 	}
 	
 	@Override
@@ -133,7 +134,7 @@ public class PfaHumanBinaryNormalDto extends BaseDto implements HumanBinaryNorma
 	
 	@Override
 	public void setHumanItemBinary(byte[] humanItemBinary) {
-		this.humanItemBinary = humanItemBinary;
+		this.humanItemBinary = CapsuleUtility.getByteArrayClone(humanItemBinary);
 	}
 	
 	@Override

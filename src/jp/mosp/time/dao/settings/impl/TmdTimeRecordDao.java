@@ -145,6 +145,35 @@ public class TmdTimeRecordDao extends BaseDao implements TimeRecordDaoInterface 
 	}
 	
 	@Override
+	public List<TimeRecordDtoInterface> findForList(String personalId, Date startDate, Date endDate)
+			throws MospException {
+		try {
+			index = 1;
+			StringBuffer sb = getSelectQuery(getClass());
+			sb.append(where());
+			sb.append(deleteFlagOff());
+			sb.append(and());
+			sb.append(equal(COL_PERSONAL_ID));
+			sb.append(and());
+			sb.append(greaterEqual(COL_WORK_DATE));
+			sb.append(and());
+			sb.append(lessEqual(COL_WORK_DATE));
+			sb.append(getOrderByColumn(COL_WORK_DATE));
+			prepareStatement(sb.toString());
+			setParam(index++, personalId);
+			setParam(index++, startDate);
+			setParam(index++, endDate);
+			executeQuery();
+			return mappingAll();
+		} catch (Throwable e) {
+			throw new MospException(e);
+		} finally {
+			releaseResultSet();
+			releasePreparedStatement();
+		}
+	}
+	
+	@Override
 	public int update(BaseDtoInterface baseDto) throws MospException {
 		try {
 			index = 1;

@@ -35,7 +35,7 @@ public class ImportRegistBean extends PlatformBean implements ImportRegistBeanIn
 	/**
 	 * インポートマスタDAOクラス。<br>
 	 */
-	ImportDaoInterface	dao;
+	ImportDaoInterface dao;
 	
 	
 	/**

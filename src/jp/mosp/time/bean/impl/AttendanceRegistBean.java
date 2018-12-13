@@ -29,7 +29,6 @@ import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.base.MospParams;
 import jp.mosp.framework.constant.MospConst;
 import jp.mosp.framework.utils.DateUtility;
-import jp.mosp.platform.bean.human.EntranceReferenceBeanInterface;
 import jp.mosp.platform.bean.human.RetirementReferenceBeanInterface;
 import jp.mosp.platform.bean.workflow.WorkflowCommentReferenceBeanInterface;
 import jp.mosp.platform.bean.workflow.WorkflowCommentRegistBeanInterface;
@@ -39,6 +38,7 @@ import jp.mosp.platform.bean.workflow.WorkflowRegistBeanInterface;
 import jp.mosp.platform.constant.PlatformConst;
 import jp.mosp.platform.constant.PlatformMessageConst;
 import jp.mosp.platform.dto.workflow.WorkflowDtoInterface;
+import jp.mosp.platform.utils.WorkflowUtility;
 import jp.mosp.time.base.TimeApplicationBean;
 import jp.mosp.time.base.TimeBean;
 import jp.mosp.time.bean.AttendanceCorrectionRegistBeanInterface;
@@ -55,7 +55,6 @@ import jp.mosp.time.bean.WorkTypeReferenceBeanInterface;
 import jp.mosp.time.constant.TimeConst;
 import jp.mosp.time.constant.TimeMessageConst;
 import jp.mosp.time.dao.settings.AttendanceDaoInterface;
-import jp.mosp.time.dao.settings.HolidayRequestDaoInterface;
 import jp.mosp.time.dao.settings.OvertimeRequestDaoInterface;
 import jp.mosp.time.dao.settings.SubHolidayRequestDaoInterface;
 import jp.mosp.time.dao.settings.SubstituteDaoInterface;
@@ -76,6 +75,7 @@ import jp.mosp.time.dto.settings.WorkTypeItemDtoInterface;
 import jp.mosp.time.dto.settings.impl.TmdAttendanceDto;
 import jp.mosp.time.entity.WorkTypeEntity;
 import jp.mosp.time.utils.TimeMessageUtility;
+import jp.mosp.time.utils.TimeUtility;
 
 /**
  * 勤怠データ登録クラス。
@@ -83,9 +83,9 @@ import jp.mosp.time.utils.TimeMessageUtility;
 public class AttendanceRegistBean extends TimeApplicationBean implements AttendanceRegistBeanInterface {
 	
 	/**
-	 * 勤怠データマスタDAOクラス。<br>
+	 * 勤怠データDAOクラス。<br>
 	 */
-	private AttendanceDaoInterface					dao;
+	protected AttendanceDaoInterface				dao;
 	/**
 	 * 勤怠データ参照インターフェース。<br>
 	 */
@@ -115,10 +115,6 @@ public class AttendanceRegistBean extends TimeApplicationBean implements Attenda
 	 */
 	private DifferenceRequestReferenceBeanInterface	differenceReference;
 	/**
-	 * 休暇申請DAOインターフェース。<br>
-	 */
-	private HolidayRequestDaoInterface				holidayDao;
-	/**
 	 * 休日出勤申請DAOインターフェース。<br>
 	 */
 	protected WorkOnHolidayRequestDaoInterface		workOnHolidayRequestDao;
@@ -130,10 +126,6 @@ public class AttendanceRegistBean extends TimeApplicationBean implements Attenda
 	 * 代休申請DAOインターフェース。
 	 */
 	private SubHolidayRequestDaoInterface			subHolidayDao;
-	/**
-	 * 人事入社情報参照インターフェース
-	 */
-	private EntranceReferenceBeanInterface			entranceReference;
 	/**
 	 * 人事退職情報参照クラス。<br>
 	 */
@@ -173,17 +165,12 @@ public class AttendanceRegistBean extends TimeApplicationBean implements Attenda
 	/**
 	 * 締日ユーティリティ。<br>
 	 */
-	private CutoffUtilBeanInterface					cutoffUtil;
+	protected CutoffUtilBeanInterface					cutoffUtil;
 	
 	/**
 	 * 申請ユーティリティ。
 	 */
 	protected RequestUtilBeanInterface				requestUtil;
-	
-	/**
-	 * 休暇範囲(午前休かつ午後休)。
-	 */
-	protected int									CODE_HOLIDAY_RANGE_AM_PM			= 5;
 	
 	/**
 	 * MosPアプリケーション設定キー(勤怠申請期限設定)。
@@ -214,23 +201,26 @@ public class AttendanceRegistBean extends TimeApplicationBean implements Attenda
 		attendanceReference = (AttendanceReferenceBeanInterface)createBean(AttendanceReferenceBeanInterface.class);
 		workTypeReference = (WorkTypeReferenceBeanInterface)createBean(WorkTypeReferenceBeanInterface.class);
 		workTypeItemDao = (WorkTypeItemDaoInterface)createDao(WorkTypeItemDaoInterface.class);
-		holidayRequestReference = (HolidayRequestReferenceBeanInterface)createBean(HolidayRequestReferenceBeanInterface.class);
+		holidayRequestReference = (HolidayRequestReferenceBeanInterface)createBean(
+				HolidayRequestReferenceBeanInterface.class);
 		workflowReference = (WorkflowReferenceBeanInterface)createBean(WorkflowReferenceBeanInterface.class);
 		overtimeDao = (OvertimeRequestDaoInterface)createDao(OvertimeRequestDaoInterface.class);
-		differenceReference = (DifferenceRequestReferenceBeanInterface)createBean(DifferenceRequestReferenceBeanInterface.class);
-		holidayDao = (HolidayRequestDaoInterface)createDao(HolidayRequestDaoInterface.class);
+		differenceReference = (DifferenceRequestReferenceBeanInterface)createBean(
+				DifferenceRequestReferenceBeanInterface.class);
 		workOnHolidayRequestDao = (WorkOnHolidayRequestDaoInterface)createDao(WorkOnHolidayRequestDaoInterface.class);
 		substituteDao = (SubstituteDaoInterface)createDao(SubstituteDaoInterface.class);
 		subHolidayDao = (SubHolidayRequestDaoInterface)createDao(SubHolidayRequestDaoInterface.class);
-		entranceReference = (EntranceReferenceBeanInterface)createBean(EntranceReferenceBeanInterface.class);
 		retirementReference = (RetirementReferenceBeanInterface)createBean(RetirementReferenceBeanInterface.class);
-		workflowCommentReference = (WorkflowCommentReferenceBeanInterface)createBean(WorkflowCommentReferenceBeanInterface.class);
-		attendanceCorrectionRegist = (AttendanceCorrectionRegistBeanInterface)createBean(AttendanceCorrectionRegistBeanInterface.class);
+		workflowCommentReference = (WorkflowCommentReferenceBeanInterface)createBean(
+				WorkflowCommentReferenceBeanInterface.class);
+		attendanceCorrectionRegist = (AttendanceCorrectionRegistBeanInterface)createBean(
+				AttendanceCorrectionRegistBeanInterface.class);
 		restRegist = (RestRegistBeanInterface)createBean(RestRegistBeanInterface.class);
 		goOutRegist = (GoOutRegistBeanInterface)createBean(GoOutRegistBeanInterface.class);
 		subHolidayRegist = (SubHolidayRegistBeanInterface)createBean(SubHolidayRegistBeanInterface.class);
 		workflowRegist = (WorkflowRegistBeanInterface)createBean(WorkflowRegistBeanInterface.class);
-		workflowCommentRegist = (WorkflowCommentRegistBeanInterface)createBean(WorkflowCommentRegistBeanInterface.class);
+		workflowCommentRegist = (WorkflowCommentRegistBeanInterface)createBean(
+				WorkflowCommentRegistBeanInterface.class);
 		workflowIntegrate = (WorkflowIntegrateBeanInterface)createBean(WorkflowIntegrateBeanInterface.class);
 		cutoffUtil = (CutoffUtilBeanInterface)createBean(CutoffUtilBeanInterface.class);
 		requestUtil = (RequestUtilBeanInterface)createBean(RequestUtilBeanInterface.class);
@@ -319,8 +309,8 @@ public class AttendanceRegistBean extends TimeApplicationBean implements Attenda
 	}
 	
 	@Override
-	public void validate(AttendanceDtoInterface dto) throws MospException {
-		// TODO 妥当性確認
+	public void validate(AttendanceDtoInterface dto) {
+		// 妥当性確認
 	}
 	
 	@Override
@@ -343,8 +333,11 @@ public class AttendanceRegistBean extends TimeApplicationBean implements Attenda
 		checkWorkOnHolidayRequest(dto);
 		// 休暇申請チェック
 		checkHolidayRequest(dto);
-		// 分単位休暇全休チェック
-		checkMinutelyHoliday(dto);
+		// 分単位休暇が有効の場合
+		if (mospParams.getApplicationPropertyBool("UseMinutelyHoliday")) {
+			// 分単位休暇全休チェック
+			checkMinutelyHoliday(dto);
+		}
 	}
 	
 	@Override
@@ -362,11 +355,10 @@ public class AttendanceRegistBean extends TimeApplicationBean implements Attenda
 		// 申請期間チェック
 		checkPeriod(dto);
 		// 分単位休暇が全休でない場合
-		if (dto.getMinutelyHolidayA() != 1 && dto.getMinutelyHolidayB() != 1) {
-			// 遅刻の限度チェック
-			checkLateTime(dto);
-			// 早退の限度チェック
-			checkLeaveEarlyTime(dto);
+		if (dto.getMinutelyHolidayA() != TimeConst.CODE_HOLIDAY_RANGE_ALL
+				&& dto.getMinutelyHolidayB() != TimeConst.CODE_HOLIDAY_RANGE_ALL) {
+			// 遅刻早退の限度チェック
+			checkLateEarlyTime(dto);
 		}
 		// 残業のチェック
 		checkOvertime(dto);
@@ -381,7 +373,10 @@ public class AttendanceRegistBean extends TimeApplicationBean implements Attenda
 	
 	@Override
 	public void checkCancelAppli(AttendanceDtoInterface dto) throws MospException {
+		// 仮締め確認
 		checkTemporaryClosingFinal(dto);
+		// 代休チェック
+		checkSubHoliday(dto, mospParams.getName("Release"));
 	}
 	
 	@Override
@@ -402,8 +397,6 @@ public class AttendanceRegistBean extends TimeApplicationBean implements Attenda
 	public void checkCancelApproval(AttendanceDtoInterface dto) throws MospException {
 		// 解除申請時と同様の処理を行う
 		checkCancelAppli(dto);
-		// 代休チェック
-		checkSubHoliday(dto, mospParams.getName("Release"));
 	}
 	
 	@Override
@@ -441,75 +434,87 @@ public class AttendanceRegistBean extends TimeApplicationBean implements Attenda
 	}
 	
 	@Override
-	public void checkLateTime(AttendanceDtoInterface dto) throws MospException {
+	public void checkLateEarlyTime(AttendanceDtoInterface dto) throws MospException {
+		// 個人ID・対象日取得
+		String personalId = dto.getPersonalId();
+		Date workDate = dto.getWorkDate();
 		// 勤怠設定情報の取得
-		setTimeSettings(dto.getPersonalId(), dto.getWorkDate());
+		setTimeSettings(personalId, workDate);
 		if (mospParams.hasErrorMessage()) {
 			return;
 		}
-		// 限度の超過チェック
+		// 各種申請を取得
+		requestUtil.setRequests(personalId, workDate);
+		// 休暇申請情報取得
+		List<HolidayRequestDtoInterface> holidayList = requestUtil.getHolidayList(false);
+		// 代休申請情報取得
+		List<SubHolidayRequestDtoInterface> subHolidayList = requestUtil.getSubHolidayList(false);
+		// 遅刻限度時間を超過している場合
 		if (checkLateLimit(dto, timeSettingDto)) {
-			// 超過していた場合、休暇申請の取得
-			List<HolidayRequestDtoInterface> list = holidayRequestReference.getHolidayRequestList(dto.getPersonalId(),
-					dto.getWorkDate());
-			// 休暇申請チェック
-			if (list != null && !list.isEmpty()) {
-				// 午前休の申請チェック
-				for (HolidayRequestDtoInterface holidayRequestDto : list) {
-					if (holidayRequestDto.getHolidayRange() == TimeConst.CODE_HOLIDAY_RANGE_AM) {
-						WorkflowDtoInterface workflowDto = workflowReference.getLatestWorkflowInfo(holidayRequestDto
-							.getWorkflow());
-						// 下書・取下の場合は参照しない
-						if (workflowDto != null
-								&& !workflowDto.getWorkflowStatus().equals(PlatformConst.CODE_STATUS_DRAFT)
-								&& !workflowDto.getWorkflowStatus().equals(PlatformConst.CODE_STATUS_WITHDRAWN)) {
-							// 1件でも午前休があればエラーメッセージ無し
-							return;
-						}
-					}
-				}
-			}
-			// メッセージ設定
-			mospParams.addErrorMessage(TimeMessageConst.MSG_TARGET_DATE_TARDINESS_LEAVE_EARLY_LIMIT_OVER,
-					getStringDate(dto.getWorkDate()), mospParams.getName("Tardiness"), mospParams.getName("Tardiness"),
-					mospParams.getName("AmRest"));
+			// 午前休取得確認
+			checkLateTime(workDate, holidayList, subHolidayList);
+		}
+		// 早退限度時間を超えている場合
+		if (checkLeaveEarlyLimit(dto, timeSettingDto)) {
+			// 午後休取得確認
+			checkLeaveEarlyTime(workDate, holidayList, subHolidayList);
 		}
 	}
 	
-	@Override
-	public void checkLeaveEarlyTime(AttendanceDtoInterface dto) throws MospException {
-		// 勤怠設定情報の取得
-		setTimeSettings(dto.getPersonalId(), dto.getWorkDate());
-		if (mospParams.hasErrorMessage()) {
-			return;
-		}
-		// 限度の超過チェック
-		if (checkLeaveEarlyLimit(dto, timeSettingDto)) {
-			// 超過していた場合、休暇申請の取得
-			List<HolidayRequestDtoInterface> list = holidayRequestReference.getHolidayRequestList(dto.getPersonalId(),
-					dto.getWorkDate());
-			// 休暇申請チェック
-			if (list != null && !list.isEmpty()) {
-				// 午後休の申請チェック
-				for (HolidayRequestDtoInterface holidayRequestDto : list) {
-					if (holidayRequestDto.getHolidayRange() == TimeConst.CODE_HOLIDAY_RANGE_PM) {
-						WorkflowDtoInterface workflowDto = workflowReference.getLatestWorkflowInfo(holidayRequestDto
-							.getWorkflow());
-						// 下書・取下の場合は参照しない
-						if (workflowDto != null
-								&& !workflowDto.getWorkflowStatus().equals(PlatformConst.CODE_STATUS_DRAFT)
-								&& !workflowDto.getWorkflowStatus().equals(PlatformConst.CODE_STATUS_WITHDRAWN)) {
-							// 1件でも午後休があればエラーメッセージ無し
-							return;
-						}
-					}
-				}
+	/**
+	 * 遅刻限度時間を超えている時に午前休を取得しているか確認する。<br>
+	 * 午前休を取得していない場合、取得を促すメッセージを追加する。<br>
+	 * @param workDate 勤務日
+	 * @param holidayList 下書、取下以外の休暇申請情報リスト
+	 * @param subHolidayList 下書、取下以外の代休申請情報リスト
+	 */
+	public void checkLateTime(Date workDate, List<HolidayRequestDtoInterface> holidayList,
+			List<SubHolidayRequestDtoInterface> subHolidayList) {
+		// 休暇申請毎に処理
+		for (HolidayRequestDtoInterface holidayRequestDto : holidayList) {
+			// 午前休の場合
+			if (holidayRequestDto.getHolidayRange() == TimeConst.CODE_HOLIDAY_RANGE_AM) {
+				return;
 			}
-			// メッセージ設定
-			mospParams.addErrorMessage(TimeMessageConst.MSG_TARGET_DATE_TARDINESS_LEAVE_EARLY_LIMIT_OVER,
-					getStringDate(dto.getWorkDate()), mospParams.getName("LeaveEarly"),
-					mospParams.getName("LeaveEarly"), mospParams.getName("PmRest"));
 		}
+		// 代休申請情報毎に処理
+		for (SubHolidayRequestDtoInterface subHolidayDto : subHolidayList) {
+			// 午前休の場合
+			if (subHolidayDto.getHolidayRange() == TimeConst.CODE_HOLIDAY_RANGE_AM) {
+				return;
+			}
+		}
+		// メッセージ設定
+		getArdinessTardinessLimitOver(workDate);
+	}
+	
+	/**
+	 * 早退限度時間を超えている時に午後休を取得しているか確認する。<br>
+	 * 午後休を取得していない場合、取得を促すメッセージを追加する。<br>
+	 * @param workDate 勤務日
+	 * @param holidayList 下書、取下以外の休暇申請情報リスト
+	 * @param subHolidayList 下書、取下以外の代休申請情報リスト
+	 */
+	protected void checkLeaveEarlyTime(Date workDate, List<HolidayRequestDtoInterface> holidayList,
+			List<SubHolidayRequestDtoInterface> subHolidayList) {
+		// 休暇申請毎に処理
+		for (HolidayRequestDtoInterface holidayRequestDto : holidayList) {
+			// 1件でも午後休がある場合
+			if (holidayRequestDto.getHolidayRange() == TimeConst.CODE_HOLIDAY_RANGE_PM) {
+				// エラーメッセージ無し
+				return;
+			}
+		}
+		// 代休申請情報毎に処理
+		for (SubHolidayRequestDtoInterface subHolidayDto : subHolidayList) {
+			// 1件でも午後休がある場合
+			if (subHolidayDto.getHolidayRange() == TimeConst.CODE_HOLIDAY_RANGE_PM) {
+				// エラーメッセージ無し
+				return;
+			}
+		}
+		// メッセージ設定
+		getLeaveEarlyLimitOver(workDate);
 	}
 	
 	@Override
@@ -589,6 +594,22 @@ public class AttendanceRegistBean extends TimeApplicationBean implements Attenda
 	}
 	
 	/**
+	 * @throws MospException アドオンで例外が発生した場合
+	 */
+	@Override
+	public void checkAttendanceCardDraft(AttendanceDtoInterface dto) throws MospException {
+		// 処理無し(アドオンで実装)
+	}
+	
+	/**
+	 * @throws MospException アドオンで例外が発生した場合
+	 */
+	@Override
+	public void checkAttendanceCardAppli(AttendanceDtoInterface dto) throws MospException {
+		// 処理無し(アドオンで実装)
+	}
+	
+	/**
 	 * 下書時の始業時刻のチェック。<br>
 	 * @param dto 対象DTO
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
@@ -601,15 +622,11 @@ public class AttendanceRegistBean extends TimeApplicationBean implements Attenda
 		String workDate = getStringDate(dto.getWorkDate());
 		if (!dto.getStartTime().before(addDay(dto.getWorkDate(), 1))) {
 			// 始業時刻が翌日の場合
-			StringBuffer sb = new StringBuffer();
-			sb.append(mospParams.getName("StartWork"));
-			sb.append(mospParams.getName("Moment"));
-			mospParams.addErrorMessage(
-					TimeMessageConst.MSG_START_DAY_TIME_CHECK,
-					workDate,
+			mospParams.addErrorMessage(TimeMessageConst.MSG_START_DAY_TIME_CHECK, workDate,
 					DateUtility.getStringTime(
 							DateUtility.addHour(DateUtility.getDefaultTime(), TimeConst.TIME_DAY_ALL_HOUR),
-							DateUtility.getDefaultTime()), sb.toString());
+							DateUtility.getDefaultTime()),
+					getNameStartTimeForWork());
 		}
 		if (!dto.getStartTime().before(getTime(timeSettingDto.getStartDayTime(), dto.getWorkDate()))) {
 			// 始業時刻が一日の起算時刻より前でない場合
@@ -624,16 +641,9 @@ public class AttendanceRegistBean extends TimeApplicationBean implements Attenda
 			// 始業時刻が前日の終業時刻より後の場合
 			return;
 		}
-		StringBuffer sb = new StringBuffer();
-		sb.append(mospParams.getName("Ahead"));
-		sb.append(mospParams.getName("Day"));
-		sb.append(mospParams.getName("Kara"));
-		mospParams.addErrorMessage(
-				TimeMessageConst.MSG_START_TIME_CHECK,
-				new String[]{
-					workDate,
-					sb.toString(),
-					DateUtility.getStringTime(timeSettingDto.getStartDayTime()),
+		String rep = mospParams.getName("Ahead", "Day", "Kara");
+		mospParams.addErrorMessage(TimeMessageConst.MSG_START_TIME_CHECK,
+				new String[]{ workDate, rep, DateUtility.getStringTime(timeSettingDto.getStartDayTime()),
 					DateUtility.getStringTime(
 							DateUtility.addHour(timeSettingDto.getStartDayTime(), TimeConst.TIME_DAY_ALL_HOUR),
 							DateUtility.getDefaultTime()) });
@@ -641,54 +651,62 @@ public class AttendanceRegistBean extends TimeApplicationBean implements Attenda
 	
 	/**
 	 * 下書時の終業時刻のチェック。<br>
+	 * 翌日の起算時刻を取得し整合性の確認を行う。<br>
 	 * @param dto 対象DTO
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
 	public void checkDraftEndTimeForWork(AttendanceDtoInterface dto) throws MospException {
+		// 終業時刻が入力されていない場合
 		if (dto.getEndTime() == null) {
-			// 終業時刻が入力されていない場合はチェックを行わない
+			// チェックなし
 			return;
 		}
 		String workDate = getStringDate(dto.getWorkDate());
 		Date tomorrowDate = addDay(dto.getWorkDate(), 1);
+		// 翌日の起算時間取得
 		Date afterTwentyFourHoursTime = getTime(timeSettingDto.getStartDayTime(), tomorrowDate);
 		String afterTwentyFourHours = DateUtility.getStringTime(afterTwentyFourHoursTime, dto.getWorkDate());
-		if (dto.getEndTime().after(afterTwentyFourHoursTime)) {
-			// 終業時刻が一日の起算時刻の24時間後より後の場合
-			StringBuffer sb = new StringBuffer();
-			sb.append(mospParams.getName("EndWork"));
-			sb.append(mospParams.getName("Moment"));
+		// 終業時刻が一日の起算時刻の24時間後より後の場合
+		if (dto.getEndTime().compareTo(afterTwentyFourHoursTime) > 0) {
+			// エラーメッセージ追加
 			mospParams.addErrorMessage(TimeMessageConst.MSG_START_DAY_TIME_CHECK, workDate, afterTwentyFourHours,
-					sb.toString());
+					getNameEndTimeForWork());
 		}
-		if (afterTwentyFourHoursTime.equals(dto.getEndTime())) {
-			// 終業時刻が一日の起算時刻の24時間後の場合
-			return;
-		}
-		AttendanceDtoInterface tomorrowDto = attendanceReference.findForKey(dto.getPersonalId(), tomorrowDate,
-				TimeBean.TIMES_WORK_DEFAULT);
+		// 翌日の申請済勤怠情報取得
+		RequestUtilBeanInterface tomorrowRequestUtil = (RequestUtilBeanInterface)createBean(
+				RequestUtilBeanInterface.class);
+		tomorrowRequestUtil.setRequests(dto.getPersonalId(), tomorrowDate);
+		AttendanceDtoInterface tomorrowDto = tomorrowRequestUtil.getApplicatedAttendance();
+		// 翌日に勤怠情報が存在しない場合
 		if (tomorrowDto == null || tomorrowDto.getStartTime() == null) {
 			return;
 		}
-		if (dto.getEndTime().before(tomorrowDto.getStartTime())) {
-			// 終業時刻が翌日の始業時刻より前の場合
+		// 終業時刻が翌日の始業時刻より前の場合
+		if (dto.getEndTime().compareTo(tomorrowDto.getStartTime()) < 0) {
 			return;
 		}
-		StringBuffer sb = new StringBuffer();
-		sb.append(mospParams.getName("NextDay"));
-		sb.append(mospParams.getName("To"));
-		mospParams.addErrorMessage(TimeMessageConst.MSG_START_TIME_CHECK, new String[]{ workDate, sb.toString(),
-			DateUtility.getStringTime(timeSettingDto.getStartDayTime()), afterTwentyFourHours });
+		// 終業時刻が翌日の始業時刻と同じの場合
+		if (dto.getEndTime().equals(tomorrowDto.getStartTime())) {
+			// 終業時刻が一日の起算時刻の24時間後の場合
+			if (afterTwentyFourHoursTime.equals(dto.getEndTime())) {
+				return;
+			}
+		}
+		// 終業時刻が翌日の始業時刻以降の場合
+		mospParams.addErrorMessage(TimeMessageConst.MSG_END_TIME_CHECK);
 	}
 	
 	/**
+	 * 勤怠設定の遅刻限度時間を超えていないか確認する。<br>
 	 * @param dto 勤怠データ
 	 * @param timeSettingDto 勤怠設定
-	 * @return 限度時間を超えた場合true それ以外false
+	 * @return 確認結果(true：限度時間を超えている、false：限度時間を超えていない)
 	 */
 	public boolean checkLateLimit(AttendanceDtoInterface dto, TimeSettingDtoInterface timeSettingDto) {
+		// 勤怠設定遅刻限度時間（分）取得
 		int lateEarlyHalf = (DateUtility.getHour(timeSettingDto.getLateEarlyHalf()) * TimeConst.CODE_DEFINITION_HOUR)
 				+ DateUtility.getMinute(timeSettingDto.getLateEarlyHalf());
+		// 遅刻限度時間を超えている場合
 		if (lateEarlyHalf < dto.getLateTime()) {
 			return true;
 		}
@@ -696,13 +714,16 @@ public class AttendanceRegistBean extends TimeApplicationBean implements Attenda
 	}
 	
 	/**
+	 * 勤怠設定の早退限度時間を超えていないか確認する。<br>
 	 * @param dto 勤怠データ
 	 * @param timeSettingDto 勤怠設定
-	 * @return 限度時間を超えた場合true それ以外false
+	 * @return 確認意結果(true：限度時間を超えている、false：限度時間を超えていない)
 	 */
 	public boolean checkLeaveEarlyLimit(AttendanceDtoInterface dto, TimeSettingDtoInterface timeSettingDto) {
+		// 勤怠設定早退限度時間（分）取得
 		int lateEarlyHalf = (DateUtility.getHour(timeSettingDto.getLateEarlyHalf()) * TimeConst.CODE_DEFINITION_HOUR)
 				+ DateUtility.getMinute(timeSettingDto.getLateEarlyHalf());
+		// 早退限度時間を超えている場合
 		if (lateEarlyHalf < dto.getLeaveEarlyTime()) {
 			return true;
 		}
@@ -716,29 +737,50 @@ public class AttendanceRegistBean extends TimeApplicationBean implements Attenda
 		if (mospParams.hasErrorMessage()) {
 			return;
 		}
+		
+		// 未承認仮締取得
 		int noApproval = cutoffDto.getNoApproval();
-		if (noApproval == 0 || noApproval == 1 || noApproval == 3) {
-			// 未承認仮締が有効・無効(残業事後申請可)・無効(残業申請なし)の場合
+		// 未承認仮締が無効（残業事前申請のみ）でない場合
+		if (noApproval != 2) {
 			return;
 		}
-		if (dto.getOvertimeAfter() == 0) {
+		// 前後残業確認
+		boolean overTimeBefore = dto.getOvertimeBefore() > 0;
+		boolean overTimeAfter = dto.getOvertimeAfter() > 0;
+		// 前残業かつ後残業時間がない場合
+		if (!overTimeBefore && !overTimeAfter) {
 			return;
 		}
-		// 振出・休出申請
+		// 承認済振出・休出申請取得
 		WorkOnHolidayRequestDtoInterface workOnHolidayRequestDto = requestUtil.getWorkOnHolidayDto(true);
+		// 振出・休出申請があり振替申請しない場合
 		if (workOnHolidayRequestDto != null
 				&& workOnHolidayRequestDto.getSubstitute() == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_OFF) {
-			// 振り替えない場合
 			return;
 		}
-		// 残業申請
+		// 承認済残業申請リスト取得
 		List<OvertimeRequestDtoInterface> overtimeRequestList = requestUtil.getOverTimeList(true);
+		// 承認済残業申請毎に処理
 		for (OvertimeRequestDtoInterface overtimeRequestDto : overtimeRequestList) {
-			if (overtimeRequestDto.getOvertimeType() == TimeConst.CODE_OVERTIME_WORK_AFTER) {
-				// 勤務後残業申請が承認済の場合
-				return;
+			// 残業申請区分取得
+			int type = overtimeRequestDto.getOvertimeType();
+			// 勤務前残業申請があり承認済の場合
+			if (overTimeBefore && type == TimeConst.CODE_OVERTIME_WORK_BEFORE) {
+				// 勤務前残業申請がされている
+				overTimeBefore = false;
+				continue;
+			}
+			// 勤務後残業申請があり承認済の場合
+			if (overTimeAfter && type == TimeConst.CODE_OVERTIME_WORK_AFTER) {
+				// 勤務後残業時間
+				overTimeAfter = false;
 			}
 		}
+		// 前残と後残が全て申請している場合
+		if (!overTimeBefore && !overTimeAfter) {
+			return;
+		}
+		// エラーメッセージ追加(残業申請してください。)
 		mospParams.addErrorMessage(TimeMessageConst.MSG_REQUEST_CHECK_11, new String[]{
 			getStringDate(dto.getWorkDate()), mospParams.getName("OvertimeWork"), mospParams.getName("OvertimeWork") });
 	}
@@ -755,38 +797,39 @@ public class AttendanceRegistBean extends TimeApplicationBean implements Attenda
 		// 承認済み残業リスト取得
 		List<OvertimeRequestDtoInterface> completedOvertimeList = new ArrayList<OvertimeRequestDtoInterface>();
 		completedOvertimeList.addAll(requestUtil.getOverTimeList(true));
-		// 残業申請
+		// 残業申請リストを取得
 		List<OvertimeRequestDtoInterface> overtimeList = overtimeDao.findForList(personalId, requestDate);
+		// 残業申請毎に処置
 		for (OvertimeRequestDtoInterface requestDto : overtimeList) {
+			// 最新のワークフロー取得
 			WorkflowDtoInterface workflowDto = workflowReference.getLatestWorkflowInfo(requestDto.getWorkflow());
-			if (workflowDto == null) {
+			// 承認状況が取下の場合
+			if (WorkflowUtility.isWithDrawn(workflowDto)) {
 				continue;
 			}
-			if (PlatformConst.CODE_STATUS_WITHDRAWN.equals(workflowDto.getWorkflowStatus())) {
-				// 承認状況が取下の場合
+			// 承認状況が下書の場合
+			if (WorkflowUtility.isDraft(workflowDto)) {
 				continue;
 			}
-			if (PlatformConst.CODE_STATUS_DRAFT.equals(workflowDto.getWorkflowStatus())) {
-				// 承認状況が下書の場合
-				continue;
-			}
-			if (!PlatformConst.CODE_STATUS_COMPLETE.equals(workflowDto.getWorkflowStatus())) {
-				// 承認状況が承認済でない場合は、エラーメッセージの表示
+			// 承認状況が承認済でない場合
+			if (!WorkflowUtility.isCompleted(workflowDto)) {
+				// エラーメッセージの表示
 				// TODO 残業申請のメッセージ追加
 				requestName = mospParams.getName("OvertimeWork", "Application");
 				mospParams.addErrorMessage(TimeMessageConst.MSG_NOT_REQUEST_STATE_COMPLETE, getStringDate(requestDate),
 						requestName);
 			}
 		}
-		// 時差出勤申請
+		// 時差出勤申請を取得
 		DifferenceRequestDtoInterface differenceDto = differenceReference.findForKeyOnWorkflow(personalId, requestDate);
 		if (differenceDto != null) {
+			// 最新のワークフロー取得
 			WorkflowDtoInterface workflowDto = workflowReference.getLatestWorkflowInfo(differenceDto.getWorkflow());
 			if (workflowDto != null) {
-				if (!PlatformConst.CODE_STATUS_WITHDRAWN.equals(workflowDto.getWorkflowStatus())
-						&& !PlatformConst.CODE_STATUS_DRAFT.equals(workflowDto.getWorkflowStatus())
-						&& !PlatformConst.CODE_STATUS_COMPLETE.equals(workflowDto.getWorkflowStatus())) {
-					// 承認状況が取下でなく、下書でなく、承認済でない場合は、エラーメッセージの表示
+				// 承認状況が取下でなく、下書でなく、承認済でない場合
+				if (!WorkflowUtility.isWithDrawn(workflowDto) && !WorkflowUtility.isDraft(workflowDto)
+						&& !WorkflowUtility.isCompleted(workflowDto)) {
+					// エラーメッセージの表示
 					// 時差出勤申請のメッセージ追加
 					requestName = mospParams.getName("TimeDifference", "GoingWork", "Application");
 					mospParams.addErrorMessage(TimeMessageConst.MSG_NOT_REQUEST_STATE_COMPLETE,
@@ -795,27 +838,22 @@ public class AttendanceRegistBean extends TimeApplicationBean implements Attenda
 			}
 		}
 		// 休暇申請（半休）
-		List<HolidayRequestDtoInterface> holidayList = holidayDao.findForList(personalId, requestDate);
+		List<HolidayRequestDtoInterface> holidayList = holidayRequestReference.getHolidayRequestList(personalId,
+				requestDate);
 		for (HolidayRequestDtoInterface requestDto : holidayList) {
 			// 休暇範囲取得
 			int holidayRange = requestDto.getHolidayRange();
 			// 休暇が午前休又は午後休又は時間休の場合
 			if (holidayRange == TimeConst.CODE_HOLIDAY_RANGE_AM || holidayRange == TimeConst.CODE_HOLIDAY_RANGE_PM
 					|| holidayRange == TimeConst.CODE_HOLIDAY_RANGE_TIME) {
+				// ワークフロー情報取得
 				WorkflowDtoInterface workflowDto = workflowReference.getLatestWorkflowInfo(requestDto.getWorkflow());
-				if (workflowDto == null) {
+				// 承認状況が取下又は下書の場合
+				if (WorkflowUtility.isWithDrawn(workflowDto) || WorkflowUtility.isDraft(workflowDto)) {
 					continue;
 				}
-				if (PlatformConst.CODE_STATUS_WITHDRAWN.equals(workflowDto.getWorkflowStatus())) {
-					// 承認状況が取下の場合
-					continue;
-				}
-				if (PlatformConst.CODE_STATUS_DRAFT.equals(workflowDto.getWorkflowStatus())) {
-					// 承認状況が下書の場合
-					continue;
-				}
-				if (!PlatformConst.CODE_STATUS_COMPLETE.equals(workflowDto.getWorkflowStatus())) {
-					// 承認状況が承認済でない場合は、エラーメッセージの表示
+				// 承認状況が承認済でない場合
+				if (!WorkflowUtility.isCompleted(workflowDto)) {
 					// 休暇申請のメッセージ追加
 					requestName = mospParams.getName("Vacation", "Application");
 					mospParams.addErrorMessage(TimeMessageConst.MSG_NOT_REQUEST_STATE_COMPLETE,
@@ -839,22 +877,20 @@ public class AttendanceRegistBean extends TimeApplicationBean implements Attenda
 		List<SubstituteDtoInterface> substituteList = substituteDao.findForList(personalId, requestDate);
 		for (SubstituteDtoInterface substituteDto : substituteList) {
 			int range = substituteDto.getSubstituteRange();
+			// 振替日が午前休又は午後休の場合
 			if (range == TimeConst.CODE_HOLIDAY_RANGE_AM || range == TimeConst.CODE_HOLIDAY_RANGE_PM) {
-				// 振替日が午前休又は午後休の場合
+				// ワークフロ情報取得
 				WorkflowDtoInterface workflowDto = workflowReference.getLatestWorkflowInfo(substituteDto.getWorkflow());
-				if (workflowDto == null) {
+				// 承認状況が取下の場合
+				if (WorkflowUtility.isWithDrawn(workflowDto)) {
 					continue;
 				}
-				if (PlatformConst.CODE_STATUS_WITHDRAWN.equals(workflowDto.getWorkflowStatus())) {
-					// 承認状況が取下の場合
+				// 承認状況が下書の場合
+				if (WorkflowUtility.isDraft(workflowDto)) {
 					continue;
 				}
-				if (PlatformConst.CODE_STATUS_DRAFT.equals(workflowDto.getWorkflowStatus())) {
-					// 承認状況が下書の場合
-					continue;
-				}
-				if (!PlatformConst.CODE_STATUS_COMPLETE.equals(workflowDto.getWorkflowStatus())) {
-					// 承認状況が承認済でない場合は、エラーメッセージの表示
+				// 承認状況が承認済でない場合
+				if (!WorkflowUtility.isCompleted(workflowDto)) {
 					// 休日出勤申請のメッセージ追加
 					requestName = mospParams.getName("Holiday", "GoingWork", "Application");
 					mospParams.addErrorMessage(TimeMessageConst.MSG_NOT_REQUEST_STATE_COMPLETE,
@@ -869,19 +905,16 @@ public class AttendanceRegistBean extends TimeApplicationBean implements Attenda
 			if (holidayRange == TimeConst.CODE_HOLIDAY_RANGE_AM || holidayRange == TimeConst.CODE_HOLIDAY_RANGE_PM) {
 				// 代休が午前休又は午後休の場合
 				WorkflowDtoInterface workflowDto = workflowReference.getLatestWorkflowInfo(requestDto.getWorkflow());
-				if (workflowDto == null) {
+				// 承認状況が取下の場合
+				if (WorkflowUtility.isWithDrawn(workflowDto)) {
 					continue;
 				}
-				if (PlatformConst.CODE_STATUS_WITHDRAWN.equals(workflowDto.getWorkflowStatus())) {
-					// 承認状況が取下の場合
+				// 承認状況が下書の場合
+				if (WorkflowUtility.isDraft(workflowDto)) {
 					continue;
 				}
-				if (PlatformConst.CODE_STATUS_DRAFT.equals(workflowDto.getWorkflowStatus())) {
-					// 承認状況が下書の場合
-					continue;
-				}
-				if (!PlatformConst.CODE_STATUS_COMPLETE.equals(workflowDto.getWorkflowStatus())) {
-					// 承認状況が承認済でない場合は、エラーメッセージの表示
+				// 承認状況が承認済でない場合
+				if (!WorkflowUtility.isCompleted(workflowDto)) {
 					// 代休申請のメッセージ追加
 					requestName = mospParams.getName("CompensatoryHoliday", "Application");
 					mospParams.addErrorMessage(TimeMessageConst.MSG_NOT_REQUEST_STATE_COMPLETE,
@@ -916,20 +949,21 @@ public class AttendanceRegistBean extends TimeApplicationBean implements Attenda
 	protected boolean isConfirmValidate(AttendanceDtoInterface dto, List<OvertimeRequestDtoInterface> overtimeList,
 			DifferenceRequestDtoInterface differenceDto, Date requestStartTime, Date requestEndTime)
 			throws MospException {
-		if (TimeConst.CODE_WORK_ON_LEGAL_HOLIDAY.equals(dto.getWorkTypeCode())
-				|| TimeConst.CODE_WORK_ON_PRESCRIBED_HOLIDAY.equals(dto.getWorkTypeCode())) {
-			// 法定休日労働又は所定休日労働の場合
+		// 法定休日労働又は所定休日労働の場合
+		if (TimeUtility.isWorkOnLegalHoliday(dto.getWorkTypeCode())
+				|| TimeUtility.isWorkOnPrescribedHoliday(dto.getWorkTypeCode())) {
 			return true;
 		}
 		// 勤務開始時刻・終了時刻取得
 		Date startTime = dto.getStartTime();
 		Date endTime = dto.getEndTime();
+		// 時差出勤申請が承認済の場合
 		if (differenceDto != null && workflowIntegrate.isCompleted(differenceDto.getWorkflow())) {
-			// 時差出勤申請が承認済の場合
+			// 始業・就業時刻設定
 			startTime = differenceDto.getRequestStart();
 			endTime = differenceDto.getRequestEnd();
 		} else {
-			// 時差出勤でない場合
+			// 時差出勤申請がない場合
 			// 勤務形態から始業終業時刻を取得
 			WorkTypeItemDtoInterface startDto = workTypeItemDao.findForInfo(dto.getWorkTypeCode(), dto.getWorkDate(),
 					TimeConst.CODE_WORKSTART);
@@ -956,13 +990,35 @@ public class AttendanceRegistBean extends TimeApplicationBean implements Attenda
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
 	protected void checkWorkOnHolidayRequest(AttendanceDtoInterface dto) throws MospException {
-		WorkOnHolidayRequestDtoInterface workOnHolidayRequestDto = workOnHolidayRequestDao.findForKeyOnWorkflow(
-				dto.getPersonalId(), dto.getWorkDate());
+		// 休日出勤申請情報取得
+		WorkOnHolidayRequestDtoInterface workOnHolidayRequestDto = workOnHolidayRequestDao
+			.findForKeyOnWorkflow(dto.getPersonalId(), dto.getWorkDate());
+		// 休日出勤申請がない又は承認済の場合
 		if (workOnHolidayRequestDto == null || workflowIntegrate.isCompleted(workOnHolidayRequestDto.getWorkflow())) {
 			return;
 		}
+		// エラーメッセージ追加
 		mospParams.addErrorMessage(TimeMessageConst.MSG_NOT_REQUEST_STATE_COMPLETE_2, getStringDate(dto.getWorkDate()),
 				mospParams.getName("jp.mosp.time.input.vo.WorkOnHolidayRequestVo"));
+	}
+	
+	/**
+	 * 振出・休出申請及び振替休日情報から出勤日であるか判断する。
+	 * @return 確認結果（true：出勤日である、false：出勤日でない）
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 */
+	protected boolean isWorkDayForWorkOnHoliday() throws MospException {
+		// 振出休出申請（承認済）がある場合
+		if (requestUtil.getWorkOnHolidayDto(true) != null) {
+			// 振出又は休出
+			return true;
+		}
+		// 振替休日情報（全休）がある場合
+		if (requestUtil
+			.checkHolidayRangeSubstitute(requestUtil.getSubstituteList(false)) == TimeConst.CODE_HOLIDAY_RANGE_ALL) {
+			return false;
+		}
+		return true;
 	}
 	
 	/**
@@ -972,28 +1028,26 @@ public class AttendanceRegistBean extends TimeApplicationBean implements Attenda
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
 	protected void checkHolidayRequest(AttendanceDtoInterface dto) throws MospException {
-		// 振替休日
-		if (requestUtil.getWorkOnHolidayDto(true) == null
-				&& requestUtil.checkHolidayRangeSubstitute(requestUtil.getSubstituteList(false)) == TimeConst.CODE_HOLIDAY_RANGE_ALL) {
+		// 出勤日でない場合（振出・休出申請及び振替休日情報で判断）
+		if (isWorkDayForWorkOnHoliday() == false) {
 			// 振出・休出でない場合
-			StringBuffer sb = new StringBuffer();
-			sb.append(mospParams.getName("WorkManage"));
-			sb.append(mospParams.getName("Application"));
 			mospParams.addErrorMessage(TimeMessageConst.MSG_REQUEST_CHECK_10, getStringDate(dto.getWorkDate()),
-					mospParams.getName("ObservedHoliday"), sb.toString());
+					mospParams.getName("ObservedHoliday"), mospParams.getName("WorkManage", "Application"));
 			return;
 		}
-		// 休暇
+		// 休暇範囲フラグ
 		boolean holidayAm = false;
 		boolean holidayPm = false;
+		// 承認済休日出勤申請取得
 		WorkOnHolidayRequestDtoInterface workOnHolidayRequestDto = requestUtil.getWorkOnHolidayDto(true);
+		// 振出・休出申請がない又は全日振替申請の場合
 		if (workOnHolidayRequestDto == null
 				|| workOnHolidayRequestDto.getSubstitute() == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_ON) {
-			// 振出・休出申請されていない
-			// 又は振替出勤の場合
+			// 取下、下書以外休暇申請の休暇範囲取得
 			int holidayRange = requestUtil.checkHolidayRangeHoliday(requestUtil.getHolidayList(false));
+			// 全休の場合
 			if (holidayRange == TimeConst.CODE_HOLIDAY_RANGE_ALL) {
-				// 全休の場合(エラーメッセージを設定)
+				// エラーメッセージ設定
 				TimeMessageUtility.addErrorNotApplicableForHoliday(mospParams, dto.getWorkDate(), null);
 				return;
 			} else if (holidayRange == TimeConst.CODE_HOLIDAY_RANGE_AM) {
@@ -1008,19 +1062,17 @@ public class AttendanceRegistBean extends TimeApplicationBean implements Attenda
 				holidayPm = true;
 			}
 		}
-		// 代休
+		// 代休範囲フラグ
 		boolean subHolidayAm = false;
 		boolean subHolidayPm = false;
+		// 取下、下書以外代休申請情報の範囲取得
 		int subHolidayRange = requestUtil.checkHolidayRangeSubHoliday(requestUtil.getSubHolidayList(false));
+		// 全休の場合
 		if (subHolidayRange == TimeConst.CODE_HOLIDAY_RANGE_ALL) {
-			// 全休の場合
-			StringBuffer sb = new StringBuffer();
-			sb.append(mospParams.getName("WorkManage"));
-			sb.append(mospParams.getName("Application"));
-			mospParams.addErrorMessage(
-					TimeMessageConst.MSG_REQUEST_CHECK_10,
-					new String[]{ getStringDate(dto.getWorkDate()), mospParams.getName("CompensatoryHoliday"),
-						sb.toString() });
+			// エラーメッセージ設定
+			String[] rep = { getStringDate(dto.getWorkDate()), mospParams.getName("CompensatoryHoliday"),
+				mospParams.getName("WorkManage", "Application") };
+			mospParams.addErrorMessage(TimeMessageConst.MSG_REQUEST_CHECK_10, rep);
 			return;
 		} else if (subHolidayRange == TimeConst.CODE_HOLIDAY_RANGE_AM) {
 			// 午前休の場合
@@ -1033,21 +1085,33 @@ public class AttendanceRegistBean extends TimeApplicationBean implements Attenda
 			subHolidayAm = true;
 			subHolidayPm = true;
 		}
-		if ((holidayAm || subHolidayAm) && (holidayPm || subHolidayPm)) {
+		// 振替休日範囲フラグ
+		boolean substituteAm = false;
+		boolean substitutePm = false;
+		int substituteRange = getSubstituteRange(dto);
+		// 全休の場合
+		if (substituteRange == TimeConst.CODE_HOLIDAY_RANGE_ALL) {
+			// エラーメッセージ設定
+			String[] rep = { getStringDate(dto.getWorkDate()), mospParams.getName("ObservedHoliday"),
+				mospParams.getName("WorkManage", "Application") };
+			mospParams.addErrorMessage(TimeMessageConst.MSG_REQUEST_CHECK_10, rep);
+			return;
+		} else if (substituteRange == TimeConst.CODE_HOLIDAY_RANGE_AM) {
+			// 午前休の場合
+			substituteAm = true;
+		} else if (substituteRange == TimeConst.CODE_HOLIDAY_RANGE_PM) {
+			// 午後休の場合
+			substitutePm = true;
+		} else if (substituteRange == TimeConst.CODE_HOLIDAY_RANGE_AM + TimeConst.CODE_HOLIDAY_RANGE_PM) {
 			// 午前休且つ午後休の場合
-			String requestName = "";
-			if (holidayAm) {
-				// 休暇の場合
-				requestName = mospParams.getName("Vacation");
-			} else if (subHolidayAm) {
-				// 代休の場合
-				requestName = mospParams.getName("CompensatoryHoliday");
-			}
-			StringBuffer sb = new StringBuffer();
-			sb.append(mospParams.getName("WorkManage"));
-			sb.append(mospParams.getName("Application"));
-			mospParams.addErrorMessage(TimeMessageConst.MSG_REQUEST_CHECK_10,
-					new String[]{ getStringDate(dto.getWorkDate()), requestName, sb.toString() });
+			substituteAm = true;
+			substitutePm = true;
+		}
+		// 午前休且つ午後休の場合
+		if ((holidayAm || subHolidayAm || substituteAm) && (holidayPm || subHolidayPm || substitutePm)) {
+			// エラーメッセージ設定
+			String[] rep = { getStringDate(dto.getWorkDate()), mospParams.getName("WorkManage", "Application") };
+			mospParams.addErrorMessage(TimeMessageConst.MSG_REQUEST_CHECK_13, rep);
 		}
 	}
 	
@@ -1078,21 +1142,6 @@ public class AttendanceRegistBean extends TimeApplicationBean implements Attenda
 				// エラーメッセージ追加
 				mospParams.addErrorMessage(TimeMessageConst.MSG_GENERAL_ERROR, rep);
 				return;
-			}
-		} else {
-			// 勤務形態から始業終業時刻を取得
-			WorkTypeItemDtoInterface startDto = workTypeItemDao.findForInfo(dto.getWorkTypeCode(), dto.getWorkDate(),
-					TimeConst.CODE_WORKSTART);
-			WorkTypeItemDtoInterface endDto = workTypeItemDao.findForInfo(dto.getWorkTypeCode(), dto.getWorkDate(),
-					TimeConst.CODE_WORKEND);
-			if (startDto != null && endDto != null) {
-				// 勤務形態情報取得
-				int startHour = DateUtility.getHour(startDto.getWorkTypeItemValue(), DateUtility.getDefaultTime());
-				int startMinute = DateUtility.getMinute(startDto.getWorkTypeItemValue());
-				int endHour = DateUtility.getHour(endDto.getWorkTypeItemValue(), DateUtility.getDefaultTime());
-				int endMinute = DateUtility.getMinute(endDto.getWorkTypeItemValue());
-				// TODO
-				
 			}
 		}
 		// TODO チェックがついているのに入力なしの時
@@ -1142,10 +1191,15 @@ public class AttendanceRegistBean extends TimeApplicationBean implements Attenda
 	}
 	
 	/**
+	 * 始業・終業・勤務時刻の妥当性を確認する。<br>
 	 * @param dto 対象DTO
 	 */
 	public void checkTimeValidity(AttendanceDtoInterface dto) {
-		if (dto.getStartTime() == null || dto.getEndTime() == null) {
+		// 始業時刻・終業時刻取得
+		Date startTime = dto.getStartTime();
+		Date endTime = dto.getEndTime();
+		// 始業時刻がない又は終業時刻がない場合
+		if (startTime == null || endTime == null) {
 			return;
 		}
 		// 勤務時間の妥当性を確認
@@ -1153,7 +1207,8 @@ public class AttendanceRegistBean extends TimeApplicationBean implements Attenda
 		if (mospParams.hasErrorMessage()) {
 			return;
 		}
-		if (dto.getEndTime().before(dto.getStartTime())) {
+		// 始業時刻の前に終業時刻又は同じ場合
+		if (startTime.compareTo(endTime) >= 0) {
 			// エラーメッセージ設定
 			addInvalidOrderMessage(mospParams.getName("StartWork"), mospParams.getName("EndWork"));
 		}
@@ -1204,33 +1259,36 @@ public class AttendanceRegistBean extends TimeApplicationBean implements Attenda
 	
 	@Override
 	public void checkAttendance(AttendanceDtoInterface dto) throws MospException {
+		// 勤怠情報取得
 		AttendanceDtoInterface attendanceDto = dao.findForKey(dto.getPersonalId(), dto.getWorkDate(), 1);
 		if (attendanceDto == null) {
 			return;
 		}
+		// ワークフロー情報取得
 		WorkflowDtoInterface workflowDto = workflowReference.getLatestWorkflowInfo(attendanceDto.getWorkflow());
 		if (workflowDto == null) {
 			return;
 		}
-		if (PlatformConst.CODE_STATUS_WITHDRAWN.equals(workflowDto.getWorkflowStatus())) {
-			// 取下の場合
+		// 取下の場合
+		if (WorkflowUtility.isWithDrawn(workflowDto)) {
 			return;
 		}
-		if (PlatformConst.CODE_STATUS_DRAFT.equals(workflowDto.getWorkflowStatus())) {
-			// 下書の場合
+		// 下書の場合
+		if (WorkflowUtility.isDraft(workflowDto)) {
 			return;
 		}
+		// 差戻の場合
 		if (PlatformConst.CODE_STATUS_REVERT.equals(workflowDto.getWorkflowStatus())) {
-			// 差戻の場合
+			// ワークフロー段階が0の場合
 			if (workflowDto.getWorkflowStage() == PlatformConst.WORKFLOW_STAGE_ZERO) {
-				// ワークフロー段階が0の場合
 				return;
 			}
 		}
+		// ワークフロー番号が同じ場合
 		if (dto.getWorkflow() == workflowDto.getWorkflow()) {
-			// ワークフロー番号が同じ場合は同じ申請
 			return;
 		}
+		// 重複エラーメッセージ追加
 		TimeMessageUtility.addErrorAlreadyApplyWork(mospParams, dto.getWorkDate(), null);
 	}
 	
@@ -1251,7 +1309,9 @@ public class AttendanceRegistBean extends TimeApplicationBean implements Attenda
 	 * @param dto 対象DTO
 	 */
 	protected void checkRegistStartTimeForWork(AttendanceDtoInterface dto) {
+		// 勤怠情報がないまたは始業時刻がない場合
 		if (dto == null || dto.getStartTime() == null) {
+			// エラーメッセージ追加
 			mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_FORMAT_CHECK, getNameStartTimeForWork());
 		}
 	}
@@ -1261,38 +1321,44 @@ public class AttendanceRegistBean extends TimeApplicationBean implements Attenda
 	 * @param dto 対象DTO
 	 */
 	protected void checkRegistEndTimeForWork(AttendanceDtoInterface dto) {
+		// 勤怠情報がないまたは終業時刻がない場合
 		if (dto == null || dto.getEndTime() == null) {
+			// エラーメッセージ追加
 			mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_FORMAT_CHECK, getNameEndTimeForWork());
 		}
 	}
 	
 	/**
-	 * 申請時の遅刻理由チェック。
+	 * 申請時の遅刻理由チェック。<br>
+	 * 遅刻時間が発生し遅刻理由がない場合、メッセージで入力を促す。<br>
 	 * @param dto 対象DTO
 	 */
 	protected void checkLateReason(AttendanceDtoInterface dto) {
+		// 実遅刻時間が0の場合
 		if (dto.getActualLateTime() == 0) {
-			// 実遅刻時間が0の場合
 			return;
 		}
+		// 遅刻理由がない場合
 		if (dto.getLateReason().isEmpty()) {
-			// 遅刻理由がない場合
+			// エラーメッセージ追加
 			mospParams.addErrorMessage(TimeMessageConst.MSG_REQUIRED_SELECTION,
 					DateUtility.getStringDate(dto.getWorkDate()), mospParams.getName("Tardiness", "Reason"));
 		}
 	}
 	
 	/**
-	 * 申請時の早退理由チェック。
+	 * 申請時の早退理由チェック。<br>
+	 * 早退時間が発生し早退理由がない場合、メッセージで入力を促す。<br>
 	 * @param dto 対象DTO
 	 */
 	protected void checkLeaveEarlyReason(AttendanceDtoInterface dto) {
+		// 実早退時間が0の場合
 		if (dto.getActualLeaveEarlyTime() == 0) {
-			// 実早退時間が0の場合
 			return;
 		}
+		// 早退理由がない場合
 		if (dto.getLeaveEarlyReason().isEmpty()) {
-			// 早退理由がない場合
+			// エラーメッセージ追加
 			mospParams.addErrorMessage(TimeMessageConst.MSG_REQUIRED_SELECTION,
 					DateUtility.getStringDate(dto.getWorkDate()), mospParams.getName("LeaveEarly", "Reason"));
 		}
@@ -1304,32 +1370,53 @@ public class AttendanceRegistBean extends TimeApplicationBean implements Attenda
 	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
 	 */
 	protected void checkPaidLeaveTime(AttendanceDtoInterface dto) throws MospException {
-		RequestUtilBeanInterface yesterdayRequestUtil = (RequestUtilBeanInterface)createBean(RequestUtilBeanInterface.class);
+		// 昨日申請ユーティリティクラス取得
+		RequestUtilBeanInterface yesterdayRequestUtil = (RequestUtilBeanInterface)createBean(
+				RequestUtilBeanInterface.class);
 		yesterdayRequestUtil.setRequests(dto.getPersonalId(), DateUtility.addDay(dto.getWorkDate(), -1));
-		RequestUtilBeanInterface tomorrowRequestUtil = (RequestUtilBeanInterface)createBean(RequestUtilBeanInterface.class);
+		// 明日申請ユーティリティクラス取得
+		RequestUtilBeanInterface tomorrowRequestUtil = (RequestUtilBeanInterface)createBean(
+				RequestUtilBeanInterface.class);
 		tomorrowRequestUtil.setRequests(dto.getPersonalId(), DateUtility.addDay(dto.getWorkDate(), 1));
+		// 昨日勤怠情報取得
 		AttendanceDtoInterface yesterdayDto = yesterdayRequestUtil.getApplicatedAttendance();
+		// 昨日勤怠情報がない場合
 		if (yesterdayDto == null) {
+			// 昨日勤怠申請情報(1次戻)を取得
 			yesterdayDto = yesterdayRequestUtil.getFirstRevertedAttendance();
 		}
+		// 昨日勤怠情報がない場合
 		if (yesterdayDto == null) {
+			// 昨日勤怠申請情報(下書)を取得
 			yesterdayDto = yesterdayRequestUtil.getDraftAttendance();
 		}
+		// 昨日終業時刻準備
 		Date yesterdayEndTime = null;
+		// 昨日勤怠情報がある場合
 		if (yesterdayDto != null) {
+			// 昨日終業時刻設定
 			yesterdayEndTime = yesterdayDto.getEndTime();
 		}
+		// 明日勤怠申請情報(取下、下書、1次戻以外)を取得
 		AttendanceDtoInterface tomorrowDto = tomorrowRequestUtil.getApplicatedAttendance();
+		// 明日勤怠情報がない場合
 		if (tomorrowDto == null) {
+			// 明日勤怠申請情報(1次戻)を取得
 			tomorrowDto = tomorrowRequestUtil.getFirstRevertedAttendance();
 		}
+		// 明日勤怠情報がない場合
 		if (tomorrowDto == null) {
+			// 明日勤怠申請情報(下書)を取得
 			tomorrowDto = tomorrowRequestUtil.getDraftAttendance();
 		}
+		// 明日始業時刻準備
 		Date tomorrowStartTime = null;
+		// 明日勤怠情報がある場合
 		if (tomorrowDto != null) {
+			// 明日始業時刻設定
 			tomorrowStartTime = tomorrowDto.getStartTime();
 		}
+		// 昨日終業時刻がある又は明日始業時刻がある場合
 		if (yesterdayEndTime != null || tomorrowStartTime != null) {
 			// 休暇申請リスト毎に処理
 			for (HolidayRequestDtoInterface holidayDto : requestUtil.getHolidayList(true)) {
@@ -1337,70 +1424,56 @@ public class AttendanceRegistBean extends TimeApplicationBean implements Attenda
 				if (holidayDto.getHolidayRange() != TimeConst.CODE_HOLIDAY_RANGE_TIME) {
 					continue;
 				}
+				// 前日の終業時刻より前の場合
 				if (yesterdayEndTime != null && holidayDto.getStartTime().before(yesterdayEndTime)) {
-					// 前日の終業時刻より前の場合
-					StringBuffer sb = new StringBuffer();
-					sb.append(mospParams.getName("Ahead"));
-					sb.append(mospParams.getName("Day"));
-					sb.append(mospParams.getName("Of"));
-					sb.append(mospParams.getName("Work"));
-					sb.append(mospParams.getName("Time"));
+					// エラーメッセージ追加
+					String rep = mospParams.getName("Ahead", "Day", "Of", "Work", "Time");
 					mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK_3,
-							DateUtility.getStringDate(dto.getWorkDate()), mospParams.getName("HolidayTime"),
-							sb.toString());
+							DateUtility.getStringDate(dto.getWorkDate()), mospParams.getName("HolidayTime"), rep);
 					return;
 				}
+				// 翌日の始業時刻より後の場合
 				if (tomorrowStartTime != null && holidayDto.getEndTime().after(tomorrowStartTime)) {
-					// 翌日の始業時刻より後の場合
-					StringBuffer sb = new StringBuffer();
-					sb.append(mospParams.getName("NextDay"));
-					sb.append(mospParams.getName("Of"));
-					sb.append(mospParams.getName("Work"));
-					sb.append(mospParams.getName("Time"));
+					// エラーメッセージ追加
+					String rep = mospParams.getName("NextDay", "Of", "Work", "Time");
 					mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK_3,
-							DateUtility.getStringDate(dto.getWorkDate()), mospParams.getName("HolidayTime"),
-							sb.toString());
+							DateUtility.getStringDate(dto.getWorkDate()), mospParams.getName("HolidayTime"), rep);
 					return;
 				}
 			}
 		}
+		// 始業時刻がある場合
 		if (dto.getStartTime() != null) {
-			// 休暇申請リスト毎に処理
+			// 昨日の休暇申請リスト（取下、下書以外）毎に処理
 			for (HolidayRequestDtoInterface holidayDto : yesterdayRequestUtil.getHolidayList(false)) {
 				// 時間休でない場合
 				if (holidayDto.getHolidayRange() != TimeConst.CODE_HOLIDAY_RANGE_TIME) {
 					continue;
 				}
+				// 始業時刻より後の場合
 				if (holidayDto.getEndTime().after(dto.getStartTime())) {
-					// 始業時刻より後の場合
-					StringBuffer sb = new StringBuffer();
-					sb.append(mospParams.getName("Ahead"));
-					sb.append(mospParams.getName("Day"));
-					sb.append(mospParams.getName("Of"));
-					sb.append(mospParams.getName("HolidayTime"));
+					// エラーメッセージ追加
+					String rep = mospParams.getName("Ahead", "Day", "Of", "HolidayTime");
 					mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK_3,
-							DateUtility.getStringDate(dto.getWorkDate()), mospParams.getName("Work", "Time"),
-							sb.toString());
+							DateUtility.getStringDate(dto.getWorkDate()), mospParams.getName("Work", "Time"), rep);
 					return;
 				}
 			}
 		}
+		// 終業時刻がある場合
 		if (dto.getEndTime() != null) {
-			// 休暇申請リスト毎に処理
+			// 明日の休暇申請リスト（取下、下書以外）毎に処理
 			for (HolidayRequestDtoInterface holidayDto : tomorrowRequestUtil.getHolidayList(false)) {
 				// 時間休でない場合
 				if (holidayDto.getHolidayRange() != TimeConst.CODE_HOLIDAY_RANGE_TIME) {
 					continue;
 				}
+				// 終業時刻より前の場合
 				if (holidayDto.getStartTime().before(dto.getEndTime())) {
-					// 終業時刻より前の場合
-					StringBuffer sb = new StringBuffer();
-					sb.append(mospParams.getName("NextDay"));
-					sb.append(mospParams.getName("Of"));
-					sb.append(mospParams.getName("HolidayTime"));
+					// エラーメッセージ追加
+					String rep = mospParams.getName("NextDay", "Of", "HolidayTime");
 					mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK_3,
-							DateUtility.getStringDate(dto.getWorkDate()), mospParams.getName("Work", "Time"),
-							sb.toString());
+							DateUtility.getStringDate(dto.getWorkDate()), mospParams.getName("Work", "Time"), rep);
 					return;
 				}
 			}
@@ -1413,29 +1486,32 @@ public class AttendanceRegistBean extends TimeApplicationBean implements Attenda
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
 	protected void checkPaidLeaveTimeForShortTime(AttendanceDtoInterface dto) throws MospException {
+		// 時差出勤申請情報で対象承認状況の情報を取得
 		DifferenceRequestDtoInterface differenceRequestDto = requestUtil.getDifferenceDto(true);
+		// 時差出勤申請が承認されている場合
 		if (differenceRequestDto != null) {
-			// 時差出勤申請が承認されている場合
 			return;
 		}
 		// 時差出勤申請が承認されていない場合
+		// 勤務形態エンティティを取得
 		WorkTypeEntity workTypeEntity = workTypeReference.getWorkTypeEntity(dto.getWorkTypeCode(), dto.getWorkDate());
 		if (workTypeEntity == null) {
 			return;
 		}
+		// 時短時間1が設定されているかを確認
 		boolean isShort1TimeSet = workTypeEntity.isShort1TimeSet();
 		Date short1StartTime = null;
 		Date short1EndTime = null;
+		// 時短時間1が設定されている場合
 		if (isShort1TimeSet) {
-			// 時短時間1が設定されている場合
 			short1StartTime = getTime(workTypeEntity.getShort1StartTime(), dto.getWorkDate());
 			short1EndTime = getTime(workTypeEntity.getShort1EndTime(), dto.getWorkDate());
 		}
 		boolean isShort2TimeSet = workTypeEntity.isShort2TimeSet();
 		Date short2StartTime = null;
 		Date short2EndTime = null;
+		// 時短時間2が設定されている場合
 		if (isShort2TimeSet) {
-			// 時短時間2が設定されている場合
 			short2StartTime = getTime(workTypeEntity.getShort2StartTime(), dto.getWorkDate());
 			short2EndTime = getTime(workTypeEntity.getShort2EndTime(), dto.getWorkDate());
 		}
@@ -1450,18 +1526,16 @@ public class AttendanceRegistBean extends TimeApplicationBean implements Attenda
 				continue;
 			}
 			// 時間休である場合
-			if (isShort1TimeSet
-					&& checkDuplicationTimeZone(holidayDto.getStartTime(), holidayDto.getEndTime(), short1StartTime,
-							short1EndTime)) {
+			if (isShort1TimeSet && checkDuplicationTimeZone(holidayDto.getStartTime(), holidayDto.getEndTime(),
+					short1StartTime, short1EndTime)) {
 				// 時短時間1と重複している場合
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK,
 						DateUtility.getStringDate(dto.getWorkDate()), mospParams.getName("ShortTime", "Time", "No1"),
 						mospParams.getName("HolidayTime"));
 				return;
 			}
-			if (isShort2TimeSet
-					&& checkDuplicationTimeZone(holidayDto.getStartTime(), holidayDto.getEndTime(), short2StartTime,
-							short2EndTime)) {
+			if (isShort2TimeSet && checkDuplicationTimeZone(holidayDto.getStartTime(), holidayDto.getEndTime(),
+					short2StartTime, short2EndTime)) {
 				// 時短時間2と重複している場合
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TIME_DUPLICATION_CHECK,
 						DateUtility.getStringDate(dto.getWorkDate()), mospParams.getName("ShortTime", "Time", "No2"),
@@ -1474,43 +1548,52 @@ public class AttendanceRegistBean extends TimeApplicationBean implements Attenda
 	@Override
 	public void checkPrivateGoOut(AttendanceDtoInterface dto, List<RestDtoInterface> restList,
 			List<GoOutDtoInterface> privateList) throws MospException {
+		// 始業時刻又は終業時刻がない場合
 		if (dto.getStartTime() == null || dto.getEndTime() == null) {
 			return;
 		}
+		// 各種申請取得
 		requestUtil.setRequests(dto.getPersonalId(), dto.getWorkDate());
 		// 勤怠設定情報の取得
 		setTimeSettings(dto.getPersonalId(), dto.getWorkDate());
 		if (mospParams.hasErrorMessage()) {
 			return;
 		}
+		// 値準備
 		int regWorkStart = 0;
 		int regWorkEnd = 0;
 		boolean isWorkOnDayOff = false;
+		// 休日出勤申請情報(取下・下書以外)を取得
 		WorkOnHolidayRequestDtoInterface workOnHolidayRequestDto = requestUtil.getWorkOnHolidayDto(false);
 		if (workOnHolidayRequestDto != null) {
-			WorkflowDtoInterface workflowDto = workflowIntegrate.getLatestWorkflowInfo(workOnHolidayRequestDto
-				.getWorkflow());
+			// 最新のワークフロー取得
+			WorkflowDtoInterface workflowDto = workflowIntegrate
+				.getLatestWorkflowInfo(workOnHolidayRequestDto.getWorkflow());
+			// 承認可能又は承認済かつ休日出勤申請の場合
 			if (workflowDto != null
-					&& (workflowIntegrate.isApprovable(workflowDto) || workflowIntegrate.isCompleted(workflowDto))
+					&& (workflowIntegrate.isApprovable(workflowDto) || WorkflowUtility.isCompleted(workflowDto))
 					&& workOnHolidayRequestDto.getSubstitute() == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_OFF) {
-				// 休日出勤の場合
+				// 差を取得
 				isWorkOnDayOff = true;
 				regWorkStart = getDefferenceMinutes(dto.getWorkDate(), dto.getStartTime());
 				regWorkEnd = getDefferenceMinutes(dto.getWorkDate(), dto.getEndTime());
 			}
 		}
 		boolean isDifferenceWork = false;
+		// 時差出勤申請情報(承認済)を取得
 		DifferenceRequestDtoInterface differenceDto = requestUtil.getDifferenceDto(true);
+		// 時差出勤が存在する場合
 		if (differenceDto != null) {
-			// 時差出勤の場合
 			isDifferenceWork = true;
 			regWorkStart = getDefferenceMinutes(dto.getWorkDate(), differenceDto.getRequestStart());
 			regWorkEnd = getDefferenceMinutes(dto.getWorkDate(), differenceDto.getRequestEnd());
 		}
+		// 休日出勤でなく且つ時差出勤でない場合
 		if (!isWorkOnDayOff && !isDifferenceWork) {
-			// 休日出勤でなく且つ時差出勤でない場合
+			// 勤務形態(出勤時刻)取得
 			WorkTypeItemDtoInterface workStartDto = workTypeItemDao.findForInfo(dto.getWorkTypeCode(),
 					dto.getWorkDate(), TimeConst.CODE_WORKSTART);
+			// 勤務形態(退勤時刻)取得
 			WorkTypeItemDtoInterface workEndDto = workTypeItemDao.findForInfo(dto.getWorkTypeCode(), dto.getWorkDate(),
 					TimeConst.CODE_WORKEND);
 			if (workStartDto == null || workEndDto == null) {
@@ -1616,8 +1699,8 @@ public class AttendanceRegistBean extends TimeApplicationBean implements Attenda
 					break;
 				}
 			}
+			// 遅刻時間 + 私用外出時間が遅刻早退限度時間を超える場合
 			if (privateTime > limitTime) {
-				// 遅刻時間 + 私用外出時間が遅刻早退限度時間を超える場合
 				// メッセージ設定
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TARGET_DATE_TARDINESS_LEAVE_EARLY_LIMIT_OVER,
 						getStringDate(dto.getWorkDate()), mospParams.getName("PrivateGoingOut"),
@@ -1625,9 +1708,9 @@ public class AttendanceRegistBean extends TimeApplicationBean implements Attenda
 				return;
 			}
 		}
+		// 休暇申請が午後休でなく代休が午後休でなく早退時間が限度時間以下の場合
 		if (holidayRange != TimeConst.CODE_HOLIDAY_RANGE_PM && subHolidayRange != TimeConst.CODE_HOLIDAY_RANGE_PM
 				&& dto.getLeaveEarlyTime() <= limitTime) {
-			// 午後休でなく且つ早退時間が限度時間以下の場合
 			int time = workEnd;
 			int privateTime = dto.getLeaveEarlyTime();
 			while (privateTime <= limitTime) {
@@ -1657,8 +1740,8 @@ public class AttendanceRegistBean extends TimeApplicationBean implements Attenda
 					break;
 				}
 			}
+			// 早退時間 + 私用外出時間が遅刻早退限度時間を超える場合
 			if (privateTime > limitTime) {
-				// 早退時間 + 私用外出時間が遅刻早退限度時間を超える場合
 				// メッセージ設定
 				mospParams.addErrorMessage(TimeMessageConst.MSG_TARGET_DATE_TARDINESS_LEAVE_EARLY_LIMIT_OVER,
 						new String[]{ getStringDate(dto.getWorkDate()), mospParams.getName("PrivateGoingOut"),
@@ -1675,11 +1758,13 @@ public class AttendanceRegistBean extends TimeApplicationBean implements Attenda
 	
 	@Override
 	public void checkApprover(AttendanceDtoInterface dto, WorkflowDtoInterface workDto) throws MospException {
+		// 承認者個人ID取得
 		String approverId = workDto.getApproverId();
 		// 自己承認以外
 		if (PlatformConst.APPROVAL_ROUTE_SELF.equals(approverId)) {
 			return;
 		}
+		// 承認者個人ID配列取得
 		String[] arrayApproverId = approverId.split(",");
 		for (String element : arrayApproverId) {
 			// 対象データが1件しかない場合のチェック
@@ -1690,7 +1775,7 @@ public class AttendanceRegistBean extends TimeApplicationBean implements Attenda
 				}
 			} else {
 				// 入社チェック
-				if (!entranceReference.isEntered(element, dto.getWorkDate())) {
+				if (!isEntered(element, dto.getWorkDate())) {
 					mospParams.addErrorMessage(PlatformMessageConst.MSG_NOT_EXIST_AND_CHANGE_SOMETHING,
 							mospParams.getName("Approver"), getNameWorkDate());
 				}
@@ -1709,14 +1794,18 @@ public class AttendanceRegistBean extends TimeApplicationBean implements Attenda
 	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
 	 */
 	protected void checkTomorrowAttendance(AttendanceDtoInterface dto) throws MospException {
-		RequestUtilBeanInterface tomorrowRequestUtil = (RequestUtilBeanInterface)createBean(RequestUtilBeanInterface.class);
+		// 明日申請ユーティリティクラス取得
+		RequestUtilBeanInterface tomorrowRequestUtil = (RequestUtilBeanInterface)createBean(
+				RequestUtilBeanInterface.class);
 		tomorrowRequestUtil.setRequests(dto.getPersonalId(), addDay(dto.getWorkDate(), 1));
+		// 明日勤怠申請情報(取下、下書、1次戻以外)を取得
 		AttendanceDtoInterface tomorrowDto = tomorrowRequestUtil.getApplicatedAttendance();
 		if (tomorrowDto == null || tomorrowDto.getStartTime() == null) {
 			return;
 		}
+		// 翌日の始業時刻が当日の終業時刻より前の場合
 		if (tomorrowDto.getStartTime().before(dto.getEndTime())) {
-			// 翌日の始業時刻が当日の終業時刻より前の場合
+			// エラーメッセージ追加
 			mospParams.addErrorMessage(TimeMessageConst.MSG_TOMORROW_WORK_BEGIN,
 					new String[]{ getStringDate(dto.getWorkDate()) });
 		}
@@ -1729,48 +1818,88 @@ public class AttendanceRegistBean extends TimeApplicationBean implements Attenda
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
 	protected void checkSubHoliday(AttendanceDtoInterface dto, String operationName) throws MospException {
-		// 法定代休
+		// 法定代休申請データリストを取得
 		List<SubHolidayRequestDtoInterface> legalList = subHolidayDao.findForList(dto.getPersonalId(),
 				dto.getWorkDate(), dto.getTimesWork(), TimeConst.CODE_LEGAL_SUBHOLIDAY_CODE);
-		for (SubHolidayRequestDtoInterface subHolidayRequestDto : legalList) {
-			WorkflowDtoInterface workflowDto = workflowIntegrate.getLatestWorkflowInfo(subHolidayRequestDto
-				.getWorkflow());
-			if (workflowIntegrate.isDraft(workflowDto) || workflowIntegrate.isWithDrawn(workflowDto)) {
-				// 下書又は取下の場合
-				continue;
-			}
+		// 代休申請存在確認
+		if (isAppliSubHoliday(legalList)) {
 			// エラーメッセージ
 			addSubHolidayRequestedErrorMessage(operationName);
 			return;
 		}
-		// 所定代休
+		// 所定代休申請データリストを取得
 		List<SubHolidayRequestDtoInterface> prescribedList = subHolidayDao.findForList(dto.getPersonalId(),
 				dto.getWorkDate(), dto.getTimesWork(), TimeConst.CODE_PRESCRIBED_SUBHOLIDAY_CODE);
-		for (SubHolidayRequestDtoInterface subHolidayRequestDto : prescribedList) {
-			WorkflowDtoInterface workflowDto = workflowIntegrate.getLatestWorkflowInfo(subHolidayRequestDto
-				.getWorkflow());
-			if (workflowIntegrate.isDraft(workflowDto) || workflowIntegrate.isWithDrawn(workflowDto)) {
-				// 下書又は取下の場合
-				continue;
-			}
+		// 代休申請存在確認
+		if (isAppliSubHoliday(prescribedList)) {
 			// エラーメッセージ
 			addSubHolidayRequestedErrorMessage(operationName);
 			return;
 		}
-		// 深夜代休
+		// 深夜代休申請データリストを取得
 		List<SubHolidayRequestDtoInterface> nightList = subHolidayDao.findForList(dto.getPersonalId(),
 				dto.getWorkDate(), dto.getTimesWork(), TimeConst.CODE_MIDNIGHT_SUBHOLIDAY_CODE);
-		for (SubHolidayRequestDtoInterface subHolidayRequestDto : nightList) {
-			WorkflowDtoInterface workflowDto = workflowIntegrate.getLatestWorkflowInfo(subHolidayRequestDto
-				.getWorkflow());
-			if (workflowIntegrate.isDraft(workflowDto) || workflowIntegrate.isWithDrawn(workflowDto)) {
-				// 下書又は取下の場合
-				continue;
-			}
+		// 代休申請存在確認
+		if (isAppliSubHoliday(nightList)) {
 			// エラーメッセージ
 			addSubHolidayRequestedErrorMessage(operationName);
 			return;
 		}
+	}
+	
+	/**
+	 * 取下、下書、1次戻以外の振替休日申請の休暇範囲取得。<br>
+	 * 対象日に申請済の振替出勤申請があった場合は休暇範囲から除外する。
+	 * @param dto 対象DTO
+	 * @return 振替休日の休暇範囲
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 */
+	int getSubstituteRange(AttendanceDtoInterface dto) throws MospException {
+		// 対象日における振替休日申請リストを取得
+		List<SubstituteDtoInterface> substituteDtoList = requestUtil.getSubstituteList(false);
+		// 休暇範囲判定用リストの振替休日申請から休暇範囲を取得
+		int substituteRange = requestUtil.checkHolidayRangeSubstitute(substituteDtoList);
+		int workOnHolidayRange = 0;
+		// 対象日の振替出勤申請の有無確認
+		WorkOnHolidayRequestDtoInterface workOnHolidayDto = workOnHolidayRequestDao
+			.findForKeyOnWorkflow(dto.getPersonalId(), dto.getWorkDate());
+		if (workOnHolidayDto != null) {
+			// 再振替出勤申請がある場合
+			WorkflowDtoInterface workflowDto = workflowReference.getLatestWorkflowInfo(workOnHolidayDto.getWorkflow());
+			if (WorkflowUtility.isApplied(workflowDto) && !WorkflowUtility.isCompleted(workflowDto)) {
+				// 再振替出勤申請が未承認の場合
+				if (workOnHolidayDto.getSubstitute() == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_AM) {
+					// 午前振出の場合
+					workOnHolidayRange = TimeConst.CODE_HOLIDAY_RANGE_AM;
+				} else if (workOnHolidayDto.getSubstitute() == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_PM) {
+					// 午後振出の場合
+					workOnHolidayRange = TimeConst.CODE_HOLIDAY_RANGE_PM;
+				}
+			}
+		}
+		// 休暇範囲から再振替出勤分をひく
+		return substituteRange - workOnHolidayRange;
+	}
+	
+	/**
+	 * 代休申請が存在するか確認する。
+	 * @param list 代休申請リスト
+	 * @return 確認結果(true：代休申請あり、false：代休申請なし)
+	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
+	 */
+	protected boolean isAppliSubHoliday(List<SubHolidayRequestDtoInterface> list) throws MospException {
+		// 代休申請データ毎に処理
+		for (SubHolidayRequestDtoInterface subHolidayRequestDto : list) {
+			// 最新のワークフロー取得
+			WorkflowDtoInterface workflowDto = workflowIntegrate
+				.getLatestWorkflowInfo(subHolidayRequestDto.getWorkflow());
+			// 下書又は取下の場合
+			if (WorkflowUtility.isDraft(workflowDto) || WorkflowUtility.isWithDrawn(workflowDto)) {
+				continue;
+			}
+			return true;
+		}
+		return false;
 	}
 	
 	/**
@@ -1833,6 +1962,26 @@ public class AttendanceRegistBean extends TimeApplicationBean implements Attenda
 	 */
 	protected String getNameEndTimeForWork() {
 		return mospParams.getName("EndWork", "Moment");
+	}
+	
+	/**
+	 * 遅刻限度時間を超過しているエラーメッセージ。<br>
+	 * @param workDate 勤務日
+	 */
+	protected void getArdinessTardinessLimitOver(Date workDate) {
+		mospParams.addErrorMessage(TimeMessageConst.MSG_TARGET_DATE_TARDINESS_LEAVE_EARLY_LIMIT_OVER,
+				getStringDate(workDate), mospParams.getName("Tardiness"), mospParams.getName("Tardiness"),
+				mospParams.getName("AmRest"));
+	}
+	
+	/**
+	 * 早退限度時間を超過しているエラーメッセージ。<br>
+	 * @param workDate 勤務日
+	 */
+	protected void getLeaveEarlyLimitOver(Date workDate) {
+		mospParams.addErrorMessage(TimeMessageConst.MSG_TARGET_DATE_TARDINESS_LEAVE_EARLY_LIMIT_OVER,
+				getStringDate(workDate), mospParams.getName("LeaveEarly"), mospParams.getName("LeaveEarly"),
+				mospParams.getName("PmRest"));
 	}
 	
 }

@@ -53,6 +53,20 @@
 }
 
 /**
+ * 項目名称表示欄(追加ロール)。
+ */
+#divEdit .RoleTitleTd {
+	width: 180px;	
+}
+
+/**
+ * 項目内容表示欄(追加ロール)。
+ */
+#divEdit .RoleInputTd {
+	width: auto;
+}
+
+/**
  * 編集欄有効日入力項目表示位置
  */
 .List #divSearchRoleCode {
@@ -102,15 +116,15 @@
 }
 
 /**
- * 一覧表示ヘッダ(ユーザID)。
- */
-.LeftListTable #thUserId {
-	width: 345px;
-}
-
-/**
  * 一覧表示ヘッダ(ロール)。
  */
 .LeftListTable #thRoleCode {
 	width: 130px;
+}
+
+/**
+ * 一覧表示ヘッダ(ロール：追加ロール利用時)。
+ */
+.LeftListTable #thExtraRoleCode {
+	width: 220px;
 }

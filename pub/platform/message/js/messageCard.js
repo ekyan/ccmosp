@@ -35,7 +35,9 @@ function onLoadExtra() {
 		// 無効フラグ編集不可
 		setReadOnly("pltEditInactivate", true);
 		// 削除ボタン利用不可
-		setDisabled("btnDelete", true);
+		setReadOnly("btnDelete", true);
+		// メール送信ボタン利用不可
+		setReadOnly("btnSendMail", true);
 	}
 	// 有効日決定状態
 	if (modeActivateDate == MODE_ACTIVATE_DATE_FIXED) {
@@ -47,7 +49,7 @@ function onLoadExtra() {
 	// 有効日変更状態
 	if (modeActivateDate == MODE_ACTIVATE_DATE_CHANGING) {
 		// 登録ボタン利用不可
-		setDisabled("btnRegist", true);
+		setReadOnly("btnRegist", true);
 	}
 	// 個人テキストボックス変更イベント設定
 	setOnChangeHandler("txtEmployeeCode", onChangeEmployeeCode);

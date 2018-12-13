@@ -21,6 +21,7 @@ import java.sql.PreparedStatement;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import jp.mosp.framework.base.BaseDaoInterface;
 import jp.mosp.framework.base.MospException;
@@ -28,7 +29,7 @@ import jp.mosp.platform.dao.system.SectionDaoInterface;
 import jp.mosp.platform.dto.human.HumanDtoInterface;
 
 /**
- * 人事マスタDAOインターフェース
+ * 人事マスタDAOインターフェース。<br>
  */
 public interface HumanDaoInterface extends BaseDaoInterface {
 	
@@ -99,6 +100,28 @@ public interface HumanDaoInterface extends BaseDaoInterface {
 	List<HumanDtoInterface> findForActivateDate(Date activateDate) throws MospException;
 	
 	/**
+	 * 人事情報群(キー：個人ID)を取得する。<br>
+	 * <br>
+	 * 対象日における全ての人事情報を取得する。<br>
+	 * <br>
+	 * @param targetDate 有効日
+	 * @return 人事情報群(キー：個人ID)
+	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
+	 */
+	Map<String, HumanDtoInterface> findForTargetDate(Date targetDate) throws MospException;
+	
+	/**
+	 * 社員コード群を取得する。<br>
+	 * <br>
+	 * 削除フラグが立っていないものを対象とする。<br>
+	 * 社員コード採番に用いる。<br>
+	 * <br>
+	 * @return 社員コード群
+	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
+	 */
+	Set<String> findForEmployeeNumbering() throws MospException;
+	
+	/**
 	 * 人事マスタリストを取得する。<br>
 	 * 削除フラグが立っていないものを対象とする。<br>
 	 * 有効日の範囲で検索する。但し、有効日From及び有効日Toは、検索対象に含まれない。<br>
@@ -135,11 +158,11 @@ public interface HumanDaoInterface extends BaseDaoInterface {
 	 * </p>
 	 * @return
 	 * <pre>
-	 * SELECT 
-	 * 	個人ID 
-	 * FROM 人事マスタ 
-	 * WHERE 削除フラグ = 0 
-	 * AND 社員コード = ? 
+	 * SELECT
+	 * 	個人ID
+	 * FROM 人事マスタ
+	 * WHERE 削除フラグ = 0
+	 * AND 社員コード = ?
 	 * AND 有効日 <= ? DESC LIMIT 1
 	 * </pre>
 	 */
@@ -154,9 +177,9 @@ public interface HumanDaoInterface extends BaseDaoInterface {
 	 * </p>
 	 * @return
 	 * <pre>
-	 * SELECT 
-	 * 	個人ID 
-	 * FROM 人事マスタ 
+	 * SELECT
+	 * 	個人ID
+	 * FROM 人事マスタ
 	 * WHERE 有効日以前で最新
 	 * AND 削除フラグ = 0
 	 * AND (社員名 like ?
@@ -221,6 +244,22 @@ public interface HumanDaoInterface extends BaseDaoInterface {
 	 * </pre>
 	 */
 	String getQueryForSectionCode();
+	
+	/**
+	 * サブクエリ。
+	 * @return
+	 * <pre>
+	 * SELECT
+	 *  個人ID
+	 * FROM 人事マスタ
+	 * WHERE 削除フラグ = 0
+	 * AND 有効日以前で最新
+	 * AND
+	 *  {@link SectionDaoInterface#getQueryForLowerSection(String)}
+	 * </pre>
+	 * @throws MospException SQLの作成に失敗した場合
+	 */
+	String getQueryForLowerSection() throws MospException;
 	
 	/**
 	 * サブクエリ。

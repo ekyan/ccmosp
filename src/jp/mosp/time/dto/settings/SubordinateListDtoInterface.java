@@ -20,18 +20,24 @@ package jp.mosp.time.dto.settings;
 import jp.mosp.framework.base.BaseDtoInterface;
 import jp.mosp.platform.dto.base.EmployeeCodeDtoInterface;
 import jp.mosp.platform.dto.base.EmployeeNameDtoInterface;
+import jp.mosp.platform.dto.base.PersonalIdDtoInterface;
 import jp.mosp.platform.dto.base.SectionCodeDtoInterface;
 
 /**
  * 部下一覧DTOインターフェース
  */
-public interface SubordinateListDtoInterface extends EmployeeCodeDtoInterface, EmployeeNameDtoInterface,
-		SectionCodeDtoInterface, BaseDtoInterface {
+public interface SubordinateListDtoInterface extends PersonalIdDtoInterface, EmployeeCodeDtoInterface,
+		EmployeeNameDtoInterface, SectionCodeDtoInterface, BaseDtoInterface {
 	
 	/**
-	 * @return 個人ID。
+	 * @return 対象年
 	 */
-	String getPersonalId();
+	int getTargetYear();
+	
+	/**
+	 * @return 対象月
+	 */
+	int getTargetMonth();
 	
 	/**
 	 * @return 出勤日数。
@@ -189,9 +195,14 @@ public interface SubordinateListDtoInterface extends EmployeeCodeDtoInterface, E
 	int getCutoffState();
 	
 	/**
-	 * @return 承認状態
+	 * @return 未承認フラグ(true：未承認有、false：未承認無)
 	 */
-	int getApprovalState();
+	boolean isApprovableExist();
+	
+	/**
+	 * @return 未申請フラグ(true：勤怠未申請有、false：勤怠未申請無)
+	 */
+	boolean isAppliableExist();
 	
 	/**
 	 * @return 締状態表示クラス
@@ -204,9 +215,14 @@ public interface SubordinateListDtoInterface extends EmployeeCodeDtoInterface, E
 	String getApprovalStateClass();
 	
 	/**
-	 * @param approvalState セットする 承認状態
+	 * @param isApprovableExist セットする 未承認フラグ(true：未承認有、false：未承認無)
 	 */
-	void setApprovalState(int approvalState);
+	void setApprovableExist(boolean isApprovableExist);
+	
+	/**
+	 * @param isAppliableExist セットする 未申請フラグ(true：勤怠未申請有、false：勤怠未申請無)
+	 */
+	void setAppliableExist(boolean isAppliableExist);
 	
 	/**
 	 * @param cutoffState セットする 締状態
@@ -224,9 +240,14 @@ public interface SubordinateListDtoInterface extends EmployeeCodeDtoInterface, E
 	void setApprovalStateClass(String approvalStateClass);
 	
 	/**
-	 * @param personalId セットする 個人ID。
+	 * @param targetYear 対象年
 	 */
-	void setPersonalId(String personalId);
+	void setTargetYear(int targetYear);
+	
+	/**
+	 * @param targetMonth 対象月
+	 */
+	void setTargetMonth(int targetMonth);
 	
 	/**
 	 * @param workDate セットする 出勤日数。

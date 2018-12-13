@@ -102,6 +102,18 @@ public abstract class BaseBean implements BaseBeanInterface {
 	}
 	
 	/**
+	 * DAOインスタンスを生成し、初期化する。<br>
+	 * {@link InstanceFactory#loadDao(String, MospParams, Connection)}を用いる。<br>
+	 * @param modelClass モデルクラス名
+	 * @return 初期化されたDAOインスタンス
+	 * @throws MospException DAOインスタンスの生成及び初期化に失敗した場合
+	 */
+	protected BaseDaoInterface createDao(String modelClass) throws MospException {
+		// インスタンス生成クラスを用いてDAOインスタンスを生成し初期化
+		return InstanceFactory.loadDao(modelClass, mospParams, connection);
+	}
+	
+	/**
 	 * Beanインスタンスを生成し、初期化する。<br>
 	 * {@link InstanceFactory#loadBean(Class, MospParams, Connection)}を用いる。<br>
 	 * @param cls 対象Beanインターフェース
@@ -139,6 +151,20 @@ public abstract class BaseBean implements BaseBeanInterface {
 	}
 	
 	/**
+	 * オブジェクトを生成する。<br>
+	 * {@link InstanceFactory#loadDao(Class, MospParams, Connection)}を用いる。<br>
+	 * <br>
+	 * @param cls 対象オブジェクトインターフェース
+	 * @return オブジェクト
+	 * @throws MospException オブジェクトの生成に失敗した場合
+	 */
+	@SuppressWarnings("unchecked")
+	protected <T> T createObject(Class<?> cls) throws MospException {
+		// インスタンス生成クラスを用いてインスタンスを生成
+		return (T)InstanceFactory.loadGeneralInstance(cls, mospParams);
+	}
+	
+	/**
 	 * ロック対象追加。
 	 * @param tableName 対象テーブル名
 	 * @param isWrite WRITEの場合true、READの場合false
@@ -167,7 +193,9 @@ public abstract class BaseBean implements BaseBeanInterface {
 			throw new MospException(e);
 		} finally {
 			try {
-				ps.close();
+				if (ps != null) {
+					ps.close();
+				}
 			} catch (SQLException e) {
 				throw new MospException(e);
 			}
@@ -192,7 +220,9 @@ public abstract class BaseBean implements BaseBeanInterface {
 				throw new MospException(e);
 			} finally {
 				try {
-					ps.close();
+					if (ps != null) {
+						ps.close();
+					}
 				} catch (SQLException e) {
 					throw new MospException(e);
 				}

@@ -480,8 +480,8 @@ public class WorkTypePatternCardAction extends TimeSettingAction {
 	/**
 	 * 有効日を取得する。<br>
 	 * 画面で指定した年月を表す日付(年月の初日)を取得する。<br>
+	 * @return 有効日
 	 */
-	@Override
 	protected Date getActivateDate() {
 		// VO取得
 		WorkTypePatternCardVo vo = (WorkTypePatternCardVo)mospParams.getVo();

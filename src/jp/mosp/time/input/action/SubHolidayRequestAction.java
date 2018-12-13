@@ -31,6 +31,7 @@ import jp.mosp.platform.bean.workflow.WorkflowRegistBeanInterface;
 import jp.mosp.platform.constant.PlatformConst;
 import jp.mosp.platform.constant.PlatformMessageConst;
 import jp.mosp.platform.dto.workflow.WorkflowDtoInterface;
+import jp.mosp.platform.utils.WorkflowUtility;
 import jp.mosp.time.base.TimeAction;
 import jp.mosp.time.bean.ApplicationReferenceBeanInterface;
 import jp.mosp.time.bean.AttendanceTransactionRegistBeanInterface;
@@ -48,7 +49,6 @@ import jp.mosp.time.dto.settings.SubHolidayRequestDtoInterface;
 import jp.mosp.time.dto.settings.SubHolidayRequestListDtoInterface;
 import jp.mosp.time.dto.settings.TimeSettingDtoInterface;
 import jp.mosp.time.input.vo.SubHolidayRequestVo;
-import jp.mosp.time.utils.TimeUtility;
 
 /**
  * 代休申請情報の確認と編集を行う。<br>
@@ -352,8 +352,8 @@ public class SubHolidayRequestAction extends TimeAction {
 		// 締日ユーティリティー取得
 		CutoffUtilBeanInterface cutoffUtil = timeReference().cutoffUtil();
 		// 締日情報取得
-		CutoffDtoInterface startMonthCutoffDto = cutoffUtil
-			.getCutoffForPersonalId(vo.getPersonalId(), year, startMonth);
+		CutoffDtoInterface startMonthCutoffDto = cutoffUtil.getCutoffForPersonalId(vo.getPersonalId(), year,
+				startMonth);
 		if (mospParams.hasErrorMessage()) {
 			// 検索結果無しメッセージ設定
 			addNoSearchResultMessage();
@@ -388,8 +388,8 @@ public class SubHolidayRequestAction extends TimeAction {
 				startWorkMonth);
 		CutoffDtoInterface endWorkMonthCutoffDto = cutoffUtil.getCutoffForPersonalId(vo.getPersonalId(), workYear,
 				endWorkMonth);
-		String startWorkMonthCutoffCode = startWorkMonthCutoffDto == null ? null : startWorkMonthCutoffDto
-			.getCutoffCode();
+		String startWorkMonthCutoffCode = startWorkMonthCutoffDto == null ? null
+				: startWorkMonthCutoffDto.getCutoffCode();
 		String endWorkMonthCutoffCode = endWorkMonthCutoffDto == null ? null : endWorkMonthCutoffDto.getCutoffCode();
 		// 締期間の開始及び最終日
 		Date workFirstDate = null;
@@ -415,7 +415,7 @@ public class SubHolidayRequestAction extends TimeAction {
 		// ソート
 		sort();
 		// 検索結果確認
-		if (list.isEmpty()) {
+		if (list.isEmpty() && mospParams.getCommand().equals(CMD_SEARCH)) {
 			// 検索結果無しメッセージ設定
 			addNoSearchResultMessage();
 		}
@@ -455,9 +455,7 @@ public class SubHolidayRequestAction extends TimeAction {
 				PlatformConst.WORKFLOW_TYPE_TIME);
 		if (workflowDto != null) {
 			// ワークフローコメント登録
-			platform().workflowCommentRegist().addComment(
-					workflowDto,
-					mospParams.getUser().getPersonalId(),
+			platform().workflowCommentRegist().addComment(workflowDto, mospParams.getUser().getPersonalId(),
 					mospParams.getProperties().getMessage(PlatformMessageConst.MSG_PROCESS_SUCCEED,
 							new String[]{ mospParams.getName("WorkPaper") }));
 			// ワークフロー番号セット
@@ -544,12 +542,7 @@ public class SubHolidayRequestAction extends TimeAction {
 		commit();
 		// 申請成功メッセージ設定
 		addAppliMessage();
-		int holidayRange = Integer.parseInt(vo.getPltEditHolidayRange());
-		if (holidayRange == TimeConst.CODE_HOLIDAY_RANGE_AM || holidayRange == TimeConst.CODE_HOLIDAY_RANGE_PM) {
-			// 午前休又は午後休の場合
-			// 半休申請メッセージ設定
-			addHalfHolidayRequestMessage();
-		}
+		addHalfHolidayRequestMessage(dto);
 		// 登録結果確認
 		if (!mospParams.hasErrorMessage()) {
 			// 登録が成功した場合、初期状態に戻す。
@@ -563,6 +556,8 @@ public class SubHolidayRequestAction extends TimeAction {
 			Date searchWorkDate = timeReference().cutoffUtil().getCutoffMonth(dto.getPersonalId(), dto.getWorkDate());
 			vo.setPltSearchWorkYear(DateUtility.getStringYear(searchWorkDate));
 			vo.setPltSearchWorkMonth(DateUtility.getStringMonthM(searchWorkDate));
+			// 検索
+			search();
 		}
 	}
 	
@@ -590,8 +585,8 @@ public class SubHolidayRequestAction extends TimeAction {
 		if (isDraft) {
 			// 下書の場合は削除する
 			workflowRegist.delete(workflowDto);
-			workflowCommentRegist.deleteList(reference().workflowComment().getWorkflowCommentList(
-					workflowDto.getWorkflow()));
+			workflowCommentRegist
+				.deleteList(reference().workflowComment().getWorkflowCommentList(workflowDto.getWorkflow()));
 			regist.delete(dto);
 		} else {
 			// 下書でない場合は取下する
@@ -599,9 +594,7 @@ public class SubHolidayRequestAction extends TimeAction {
 			workflowDto = workflowRegist.withdrawn(workflowDto);
 			if (workflowDto != null) {
 				// ワークフローコメント登録
-				workflowCommentRegist.addComment(
-						workflowDto,
-						mospParams.getUser().getPersonalId(),
+				workflowCommentRegist.addComment(workflowDto, mospParams.getUser().getPersonalId(),
 						mospParams.getProperties().getMessage(PlatformMessageConst.MSG_PROCESS_SUCCEED,
 								new String[]{ mospParams.getName("TakeDown") }));
 			}
@@ -834,9 +827,9 @@ public class SubHolidayRequestAction extends TimeAction {
 		// 申請年月日が含まれる締月を取得し検索条件に設定
 		Date searchDate = timeReference().cutoffUtil().getCutoffMonth(vo.getPersonalId(), date);
 		vo.setPltSearchRequestYear(DateUtility.getStringYear(searchDate));
-		vo.setPltSearchRequestMonth((DateUtility.getStringMonthM(searchDate)));
+		vo.setPltSearchRequestMonth(DateUtility.getStringMonthM(searchDate));
 		vo.setPltSearchWorkYear(DateUtility.getStringYear(searchDate));
-		vo.setPltSearchWorkMonth("");
+		vo.setPltSearchWorkMonth(DateUtility.getStringMonthM(searchDate));
 		vo.setPltSearchState("");
 		// 承認者欄の初期化
 		String[] aryPltLblApproverSetting = new String[0];
@@ -862,60 +855,63 @@ public class SubHolidayRequestAction extends TimeAction {
 	
 	/**
 	 * 代休残数を設定する。<br>
+	 * システム日付の締め期間初日から申請可能な代休情報を取得し、設定する。<br>
+	 * 
 	 * @throws MospException 例外処理発生時
 	 */
 	protected void setCompensationDay() throws MospException {
 		// VO取得
 		SubHolidayRequestVo vo = (SubHolidayRequestVo)mospParams.getVo();
+		// クラス準備
 		ApplicationReferenceBeanInterface application = timeReference().application();
 		TimeSettingReferenceBeanInterface timeSetting = timeReference().timeSetting();
 		WorkflowIntegrateBeanInterface workflowIntegrate = reference().workflowIntegrate();
+		CutoffUtilBeanInterface cutoff = timeReference().cutoffUtil();
 		Date systemDate = getSystemDate();
-		ApplicationDtoInterface applicationDto = application.findForPerson(vo.getPersonalId(), systemDate);
-		if (applicationDto == null) {
-			return;
-		}
-		TimeSettingDtoInterface timeSettingDto = timeSetting.getTimeSettingInfo(applicationDto.getWorkSettingCode(),
-				systemDate);
-		if (timeSettingDto == null) {
-			return;
-		}
-		CutoffDtoInterface cutoffDto = timeReference().cutoff().getCutoffInfo(timeSettingDto.getCutoffCode(),
-				systemDate);
+		// 締め日情報取得
+		CutoffDtoInterface cutoffDto = cutoff.getCutoffForPersonalId(vo.getPersonalId(), systemDate);
 		if (cutoffDto == null) {
 			return;
 		}
-		Date cutoffMonth = TimeUtility.getCutoffMonth(cutoffDto.getCutoffDate(), systemDate);
-		Date cutoffFirstDate = TimeUtility.getCutoffFirstDate(cutoffDto.getCutoffDate(),
-				DateUtility.getYear(cutoffMonth), DateUtility.getMonth(cutoffMonth));
+		// 締め期間初日取得
+		Date cutoffFirstDate = cutoff.getCutoffFirstDate(cutoffDto.getCutoffCode(), DateUtility.getYear(systemDate),
+				DateUtility.getMonth(systemDate));
+		if (mospParams.hasErrorMessage()) {
+			return;
+		}
+		// 締め期間初日で有効な設定適用情報取得
 		ApplicationDtoInterface cutoffApplicationDto = application.findForPerson(vo.getPersonalId(), cutoffFirstDate);
 		if (cutoffApplicationDto == null) {
 			return;
 		}
-		TimeSettingDtoInterface cutoffTimeSettingDto = timeSetting.getTimeSettingInfo(
-				cutoffApplicationDto.getWorkSettingCode(), cutoffFirstDate);
+		// 締め期間初日で有効な勤怠設定情報取得
+		TimeSettingDtoInterface cutoffTimeSettingDto = timeSetting
+			.getTimeSettingInfo(cutoffApplicationDto.getWorkSettingCode(), cutoffFirstDate);
 		if (cutoffTimeSettingDto == null) {
 			return;
 		}
-		Date startDate = DateUtility.addDay(
-				DateUtility.addMonth(cutoffFirstDate, -cutoffTimeSettingDto.getSubHolidayLimitMonth()),
-				-cutoffTimeSettingDto.getSubHolidayLimitDate());
+		// リスト準備
 		List<SubHolidayDtoInterface> list = new ArrayList<SubHolidayDtoInterface>();
-		for (SubHolidayDtoInterface subHolidayDto : timeReference().subHoliday().getSubHolidayList(vo.getPersonalId(),
-				startDate, systemDate)) {
+		// 締め期間初日時点の代休取得期限～システム
+		for (SubHolidayDtoInterface subHolidayDto : timeReference().subHoliday().getfindForList(vo.getPersonalId(),
+				cutoffFirstDate, systemDate, TimeConst.HOLIDAY_TIMES_HALF)) {
+			// 利用日数準備
 			double useDays = 0;
+			// 代休申請情報情報毎に処理
 			for (SubHolidayRequestDtoInterface subHolidayRequestDto : timeReference().subHolidayRequest()
 				.getSubHolidayRequestList(subHolidayDto.getPersonalId(), subHolidayDto.getWorkDate(),
 						subHolidayDto.getTimesWork(), subHolidayDto.getSubHolidayType())) {
-				WorkflowDtoInterface workflowDto = workflowIntegrate.getLatestWorkflowInfo(subHolidayRequestDto
-					.getWorkflow());
-				if (workflowDto == null || workflowIntegrate.isDraft(workflowDto)
-						|| workflowIntegrate.isWithDrawn(workflowDto)) {
+				// ワークフロ情報取得
+				WorkflowDtoInterface workflowDto = workflowIntegrate
+					.getLatestWorkflowInfo(subHolidayRequestDto.getWorkflow());
+				// 申請済でない場合
+				if (!WorkflowUtility.isApplied(workflowDto)) {
 					continue;
 				}
+				// 休暇範囲取得
 				int subHolidayRange = subHolidayRequestDto.getHolidayRange();
+				// 全休の場合
 				if (subHolidayRange == TimeConst.CODE_HOLIDAY_RANGE_ALL) {
-					// 全休の場合
 					useDays++;
 				} else if (subHolidayRange == TimeConst.CODE_HOLIDAY_RANGE_AM
 						|| subHolidayRange == TimeConst.CODE_HOLIDAY_RANGE_PM) {
@@ -923,28 +919,40 @@ public class SubHolidayRequestAction extends TimeAction {
 					useDays += TimeConst.HOLIDAY_TIMES_HALF;
 				}
 			}
+			// 利用日数が同じか多い場合
 			if (subHolidayDto.getSubHolidayDays() <= useDays) {
 				continue;
 			}
+			// 申請可能残に日数取得
 			subHolidayDto.setSubHolidayDays(subHolidayDto.getSubHolidayDays() - useDays);
+			// リストに追加
 			list.add(subHolidayDto);
 		}
+		// 配列準備
 		String[] aryLblCompensationWorkDate = new String[list.size()];
 		String[] aryLblCompensationExpirationDate = new String[list.size()];
 		String[] aryLblCompensationType = new String[list.size()];
 		String[] aryLblCompensationRange = new String[list.size()];
 		for (int i = 0; i < list.size(); i++) {
+			// 代休情報取得
 			SubHolidayDtoInterface dto = list.get(i);
+			// 休日出勤日時点の設定適用情報取得
 			ApplicationDtoInterface subHolidayApplicationDto = application.findForPerson(vo.getPersonalId(),
 					dto.getWorkDate());
 			if (subHolidayApplicationDto == null) {
 				continue;
 			}
-			TimeSettingDtoInterface subHolidayTimeSettingDto = timeSetting.getTimeSettingInfo(
-					subHolidayApplicationDto.getWorkSettingCode(), dto.getWorkDate());
+			// 休日出勤日時点の勤怠設定情報取得
+			TimeSettingDtoInterface subHolidayTimeSettingDto = timeSetting
+				.getTimeSettingInfo(subHolidayApplicationDto.getWorkSettingCode(), dto.getWorkDate());
 			if (subHolidayTimeSettingDto == null) {
 				continue;
 			}
+			// 取得期限取得
+			Date limitDate = DateUtility.addDay(
+					DateUtility.addMonth(dto.getWorkDate(), subHolidayTimeSettingDto.getSubHolidayLimitMonth()),
+					subHolidayTimeSettingDto.getSubHolidayLimitDate());
+			// 代休種別準備
 			String subHolidayName = "";
 			int subHolidayType = dto.getSubHolidayType();
 			if (subHolidayType == TimeConst.CODE_LEGAL_SUBHOLIDAY_CODE) {
@@ -959,6 +967,7 @@ public class SubHolidayRequestAction extends TimeAction {
 			} else {
 				continue;
 			}
+			// 休暇範囲準備
 			String subHolidayRange = "";
 			double subHolidayDays = dto.getSubHolidayDays();
 			if (subHolidayDays == TimeConst.CODE_HOLIDAY_RANGE_ALL) {
@@ -973,13 +982,13 @@ public class SubHolidayRequestAction extends TimeAction {
 			} else {
 				continue;
 			}
+			// 設定
 			aryLblCompensationWorkDate[i] = getStringDateAndDay(dto.getWorkDate());
-			aryLblCompensationExpirationDate[i] = getStringDateAndDay(DateUtility.addDay(
-					DateUtility.addMonth(dto.getWorkDate(), subHolidayTimeSettingDto.getSubHolidayLimitMonth()),
-					subHolidayTimeSettingDto.getSubHolidayLimitDate()));
+			aryLblCompensationExpirationDate[i] = getStringDateAndDay(limitDate);
 			aryLblCompensationType[i] = subHolidayName;
 			aryLblCompensationRange[i] = subHolidayRange;
 		}
+		// VOに設定
 		vo.setAryLblCompensationWorkDate(aryLblCompensationWorkDate);
 		vo.setAryLblCompensationExpirationDate(aryLblCompensationExpirationDate);
 		vo.setAryLblCompensationType(aryLblCompensationType);
@@ -1119,8 +1128,8 @@ public class SubHolidayRequestAction extends TimeAction {
 		// VO取得
 		SubHolidayRequestVo vo = (SubHolidayRequestVo)mospParams.getVo();
 		// 履歴編集対象取得
-		SubHolidayRequestDtoInterface dto = timeReference().subHolidayRequest().findForKeyOnWorkflow(
-				vo.getPersonalId(), requestDate, holidayRange);
+		SubHolidayRequestDtoInterface dto = timeReference().subHolidayRequest().findForKeyOnWorkflow(vo.getPersonalId(),
+				requestDate, holidayRange);
 		// 存在確認
 		checkSelectedDataExist(dto);
 		// VOにセット
@@ -1168,10 +1177,9 @@ public class SubHolidayRequestAction extends TimeAction {
 				return false;
 			}
 			// 承認者プルダウン設定
-			if (setApproverPullDown(
-					vo.getPersonalId(),
-					DateUtility.getDate(vo.getPltEditRequestYear(), vo.getPltEditRequestMonth(),
-							vo.getPltEditRequestDay()), PlatformConst.WORKFLOW_TYPE_TIME) == false) {
+			if (setApproverPullDown(vo.getPersonalId(), DateUtility.getDate(vo.getPltEditRequestYear(),
+					vo.getPltEditRequestMonth(), vo.getPltEditRequestDay()),
+					PlatformConst.WORKFLOW_TYPE_TIME) == false) {
 				vo.setAryPltEditWorkDate(getInputActivateNoDataLeavePulldown());
 				return false;
 			}
@@ -1211,6 +1219,21 @@ public class SubHolidayRequestAction extends TimeAction {
 		// VO取得
 		SubHolidayRequestVo vo = (SubHolidayRequestVo)mospParams.getVo();
 		return getDate(vo.getPltEditRequestYear(), vo.getPltEditRequestMonth(), vo.getPltEditRequestDay());
+	}
+	
+	/**
+	 * 半休の場合のメッセージ表示
+	 * @param dto 代休申請DTO
+	 * @throws MospException インスタンスの生成或いはSQLの実行が失敗した場合
+	 */
+	protected void addHalfHolidayRequestMessage(SubHolidayRequestDtoInterface dto) throws MospException {
+		int holidayRange = dto.getHolidayRange();
+		if (holidayRange == TimeConst.CODE_HOLIDAY_RANGE_AM || holidayRange == TimeConst.CODE_HOLIDAY_RANGE_PM) {
+			// 午前休又は午後休の場合
+			// 半休申請メッセージ設定
+			addHalfHolidayRequestMessage();
+		}
+		
 	}
 	
 }

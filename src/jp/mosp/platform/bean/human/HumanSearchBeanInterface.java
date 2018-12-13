@@ -67,7 +67,7 @@ public interface HumanSearchBeanInterface {
 	/**
 	 * 人事情報マップを取得する。<br>
 	 * 個人IDと人事情報のマップを取得する。<br>
-	 * @return 
+	 * @return 人事情報群(キー：個人ID)
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
 	Map<String, HumanDtoInterface> getHumanDtoMap() throws MospException;
@@ -139,6 +139,13 @@ public interface HumanSearchBeanInterface {
 	 * @param positionCode セットする職位コード
 	 */
 	void setPositionCode(String positionCode);
+	
+	/**
+	 * 職位等級範囲を設定する。<br>
+	 * 職位コードで抽出した人事情報のみでなく、職位ランクで抽出した人事情報を加える。<br>
+	 * @param positionGradeRange セットする職位等級範囲
+	 */
+	void setPositionGradeRange(String positionGradeRange);
 	
 	/**
 	 * 兼務要否を設定する。<br>

@@ -46,6 +46,8 @@ public class WorkOnHolidayRequestVo extends TimeVo {
 	private String				pltEditSubstitute2Year;
 	private String				pltEditSubstitute2Month;
 	private String				pltEditSubstitute2Day;
+	private String				pltEditWorkType;
+	
 	private String				pltSearchSubstitute;
 	private String				pltSearchSubstituteRange;
 	private String				pltSearchState;
@@ -80,6 +82,8 @@ public class WorkOnHolidayRequestVo extends TimeVo {
 	private String[][]			aryPltEditSubstitute2Month;
 	private String[][]			aryPltEditSubstitute2Day;
 	private String[][]			aryPltEditSubstitute2Range;
+	private String[][]			aryPltEditWorkType;
+	
 	private String[][]			aryPltSearchSubstituteRange;
 	private String[][]			aryPltSearchState;
 	private String[][]			aryPltSearchRequestYear;
@@ -356,6 +360,20 @@ public class WorkOnHolidayRequestVo extends TimeVo {
 	 */
 	public void setPltEditSubstitute2Day(String pltEditSubstitute2Day) {
 		this.pltEditSubstitute2Day = pltEditSubstitute2Day;
+	}
+	
+	/**
+	 * @return pltEditWorkType
+	 */
+	public String getPltEditWorkType() {
+		return pltEditWorkType;
+	}
+	
+	/**
+	 * @param pltEditWorkType セットする pltEditWorkType
+	 */
+	public void setPltEditWorkType(String pltEditWorkType) {
+		this.pltEditWorkType = pltEditWorkType;
 	}
 	
 	/**
@@ -808,6 +826,20 @@ public class WorkOnHolidayRequestVo extends TimeVo {
 	 */
 	public void setAryPltEditSubstitute2Range(String[][] aryPltEditSubstitute2Range) {
 		this.aryPltEditSubstitute2Range = getStringArrayClone(aryPltEditSubstitute2Range);
+	}
+	
+	/**
+	 * @return aryPltEditWorkType
+	 */
+	public String[][] getAryPltEditWorkType() {
+		return getStringArrayClone(aryPltEditWorkType);
+	}
+	
+	/**
+	 * @param aryPltEditWorkType セットする aryPltEditWorkType
+	 */
+	public void setAryPltEditWorkType(String[][] aryPltEditWorkType) {
+		this.aryPltEditWorkType = getStringArrayClone(aryPltEditWorkType);
 	}
 	
 	/**

@@ -58,6 +58,11 @@ public interface TotalLeaveDtoInterface extends BaseDtoInterface {
 	double getTimes();
 	
 	/**
+	 * @return 特別休暇時間数。
+	 */
+	int getHours();
+	
+	/**
 	 * @param tmdTotalLeaveId セットする レコード識別ID。
 	 */
 	void setTmdTotalLeaveId(long tmdTotalLeaveId);
@@ -86,4 +91,9 @@ public interface TotalLeaveDtoInterface extends BaseDtoInterface {
 	 * @param times セットする 特別休暇日数。
 	 */
 	void setTimes(double times);
+	
+	/**
+	 * @param hours セットする 特別休暇時間数。
+	 */
+	void setHours(int hours);
 }

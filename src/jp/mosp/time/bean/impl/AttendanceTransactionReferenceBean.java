@@ -32,12 +32,13 @@ import jp.mosp.time.dto.settings.AttendanceTransactionDtoInterface;
 /**
  * 勤怠トランザクション参照クラス。
  */
-public class AttendanceTransactionReferenceBean extends TimeBean implements AttendanceTransactionReferenceBeanInterface {
+public class AttendanceTransactionReferenceBean extends TimeBean
+		implements AttendanceTransactionReferenceBeanInterface {
 	
 	/**
 	 * 勤怠トランザクションDAOクラス。
 	 */
-	protected AttendanceTransactionDaoInterface	dao;
+	protected AttendanceTransactionDaoInterface dao;
 	
 	
 	/**
@@ -68,7 +69,8 @@ public class AttendanceTransactionReferenceBean extends TimeBean implements Atte
 	}
 	
 	@Override
-	public AttendanceTransactionDtoInterface sum(String personalId, Date firstDate, Date lastDate) throws MospException {
+	public AttendanceTransactionDtoInterface sum(String personalId, Date firstDate, Date lastDate)
+			throws MospException {
 		return dao.sum(personalId, firstDate, lastDate);
 	}
 	

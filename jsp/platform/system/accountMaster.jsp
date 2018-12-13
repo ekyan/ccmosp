@@ -36,6 +36,7 @@ import = "jp.mosp.platform.system.action.AccountMasterAction"
 import = "jp.mosp.platform.system.constant.PlatformSystemConst"
 import = "jp.mosp.platform.system.vo.AccountMasterVo"
 import = "jp.mosp.platform.utils.PlatformUtility"
+import = "jp.mosp.platform.utils.PlatformNamingUtility"
 %><%
 MospParams params = (MospParams)request.getAttribute(MospConst.ATT_MOSP_PARAMS);
 AccountMasterVo vo = (AccountMasterVo)params.getVo();
@@ -56,14 +57,14 @@ AccountMasterVo vo = (AccountMasterVo)params.getVo();
 				<input type="text" class="Number2RequiredTextBox" id="txtEditActivateMonth" name="txtEditActivateMonth" value="<%= HtmlUtility.escapeHTML(vo.getTxtEditActivateMonth()) %>" />&nbsp;<label for="txtEditActivateMonth"><%= params.getName("Month") %></label>
 				<input type="text" class="Number2RequiredTextBox" id="txtEditActivateDay" name="txtEditActivateDay" value="<%= HtmlUtility.escapeHTML(vo.getTxtEditActivateDay()) %>" />&nbsp;<label for="txtEditActivateDay"><%= params.getName("Day") %></label>
 			</td>
-			<td class="TitleTd"><span class="RequiredLabel">*&nbsp;</span><span><label for="txtEditEmployeeCode"><%= params.getName("Employee","Code") %></label></span></td>
+			<td class="TitleTd"><span class="RequiredLabel">*&nbsp;</span><span><label for="txtEditEmployeeCode"><%= PlatformNamingUtility.employeeCode(params) %></label></span></td>
 			<td class="InputTd" id="tdEmployeeCodeNoBoder">
 				<input type="text" class="Code10RequiredTextBox" id="txtEditEmployeeCode" name="txtEditEmployeeCode" value="<%= HtmlUtility.escapeHTML(vo.getTxtEditEmployeeCode()) %>"/>&nbsp;
 				<button type="button" class="Name2Button" id="btnEditEmployeeCode" onclick="submitForm(event, 'trEmployee', null, '<%= AccountMasterAction.CMD_SET_EMPLOYEE %>')"><%= vo.getModeEditEmployee().equals(PlatformConst.MODE_ACTIVATE_DATE_FIXED) ? params.getName("Change") : params.getName("Decision") %></button>
 			</td>
 		</tr>
 		<tr>
-			<td class="TitleTd"><span><label for="pltEditRoleCode"><%= params.getName("Role") %></label></span></td>
+			<td class="TitleTd"><span><label for="pltEditRoleCode"><%= PlatformNamingUtility.role(params) %></label></span></td>
 			<td class="InputTd">
 				<div>
 					<select class="Name15PullDown" id="pltEditRoleCode" name="pltEditRoleCode">
@@ -94,6 +95,42 @@ AccountMasterVo vo = (AccountMasterVo)params.getVo();
 			</td>
 		</tr>
 	</table>
+<%
+if (vo.getAryRoleType().length > 0) {
+%>
+	<table class="OverInputTable">
+		<tr>
+			<th class="EditTableTh" colspan="4">
+				<label class="TitleTh" for="pltExtraRoles"><%= PlatformNamingUtility.extraRole(params) %></label>
+			</th>
+		</tr>
+	</table>
+	<table class="UnderInputTable">
+		<tr>
+<%
+	for (int i = 0; i < vo.getAryRoleType().length; i++) {
+%>
+			<td class="TitleTd RoleTitleTd"><%= vo.getAryRoleTypeName(i) %></td>
+			<td class="InputTd RoleInputTd">
+				<%= HtmlUtility.getSelectTag("Name15PullDown", "", "pltExtraRoles", vo.getPltExtraRoles(i), vo.getAryPltExtraRoles(vo.getAryRoleType(i)), true, false) %>
+			</td>
+<%
+		if (i == vo.getAryRoleType().length - 1) {
+%>
+		</tr>
+<%
+		} else if (i % 2 == 1) {
+%>
+		</tr>
+		<tr>
+<%
+		}
+	}
+%>
+	</table>
+<%
+}
+%>
 </div>
 <div class="List" id="divSearch">
 	<table class="InputTable" id="tblBaseSettingSearch">
@@ -107,7 +144,7 @@ AccountMasterVo vo = (AccountMasterVo)params.getVo();
 				<input type="text" class="Number2RequiredTextBox" id="txtSearchActivateMonth" name="txtSearchActivateMonth" value="<%= HtmlUtility.escapeHTML(vo.getTxtSearchActivateMonth()) %>" />&nbsp;<label for="txtSearchActivateMonth"><%= params.getName("Month") %></label>
 				<input type="text" class="Number2RequiredTextBox" id="txtSearchActivateDay" name="txtSearchActivateDay" value="<%= HtmlUtility.escapeHTML(vo.getTxtSearchActivateDay()) %>" />&nbsp;<label for="txtSearchActivateDay"><%= params.getName("Day") %></label>
 			</td>
-			<td class="TitleTd"><span><label for="pltSearchEmployeeCode"><%= params.getName("Employee","Code") %></label></span></td>
+			<td class="TitleTd"><span><label for="pltSearchEmployeeCode"><%= PlatformNamingUtility.employeeCode(params) %></label></span></td>
 			<td class="InputTd">
 				<input type="text" class="Code10TextBox" id="pltSearchEmployeeCode" name="pltSearchEmployeeCode" value="<%= HtmlUtility.escapeHTML(vo.getPltSearchEmployeeCode()) %>" />
 			</td>
@@ -145,10 +182,10 @@ AccountMasterVo vo = (AccountMasterVo)params.getVo();
 		<tr>
 			<th class="ListSelectTh" id="thButton"></th>
 			<th class="ListSortTh" id="thActivateDate" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= ActivateDateComparator.class.getName() %>'), '<%= AccountMasterAction.CMD_SORT %>');"><%= params.getName("ActivateDate") %><%= PlatformUtility.getSortMark(ActivateDateComparator.class.getName(), params) %></th>
-			<th class="ListSortTh" id="thEmployeeCode" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= EmployeeCodeComparator.class.getName() %>'), '<%= AccountMasterAction.CMD_SORT %>');"><%= params.getName("Employee","Code") %><%= PlatformUtility.getSortMark(EmployeeCodeComparator.class.getName(), params) %></th>
+			<th class="ListSortTh" id="thEmployeeCode" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= EmployeeCodeComparator.class.getName() %>'), '<%= AccountMasterAction.CMD_SORT %>');"><%= PlatformNamingUtility.employeeCode(params) %><%= PlatformUtility.getSortMark(EmployeeCodeComparator.class.getName(), params) %></th>
 			<th class="ListSortTh" id="thEmployeeName" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= EmployeeNameComparator.class.getName() %>'), '<%= AccountMasterAction.CMD_SORT %>');"><%= params.getName("Employee","FirstName") %><%= PlatformUtility.getSortMark(EmployeeNameComparator.class.getName(), params) %></th>
 			<th class="ListSortTh" id="thUserId" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= AccountMasterUserIdComparator.class.getName() %>'), '<%= AccountMasterAction.CMD_SORT %>');"><%= params.getName("User") %><%= params.getName("Id") %><%= PlatformUtility.getSortMark(AccountMasterUserIdComparator.class.getName(), params) %></th>
-			<th class="ListSortTh" id="thRoleCode" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= AccountMasterRoleCodeComparator.class.getName() %>'), '<%= AccountMasterAction.CMD_SORT %>');"><%= params.getName("Role") %><%= PlatformUtility.getSortMark(AccountMasterRoleCodeComparator.class.getName(), params) %></th>
+			<th class="ListSortTh" id="<%= vo.getAryRoleType().length > 0 ? "thExtraRoleCode" : "thRoleCode" %>" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= AccountMasterRoleCodeComparator.class.getName() %>'), '<%= AccountMasterAction.CMD_SORT %>');"><%= params.getName("Role") %><%= PlatformUtility.getSortMark(AccountMasterRoleCodeComparator.class.getName(), params) %></th>
 			<th class="ListSortTh" id="thInactivate" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= InactivateComparator.class.getName() %>'), '<%= AccountMasterAction.CMD_SORT %>');"><%= params.getName("EffectivenessExistence","Slash","InactivateExistence") %><%= PlatformUtility.getSortMark(InactivateComparator.class.getName(), params) %></th>
 			<th class="ListSelectTh" id="thSelect">
 <%
@@ -173,7 +210,7 @@ for (int i = 0; i < vo.getAryLblEmployeeCode().length; i++) {
 			<td class="ListInputTd"><%= HtmlUtility.escapeHTML(vo.getAryLblUserId()[i]) %></td>
 			<td class="ListInputTd"><%= HtmlUtility.escapeHTML(vo.getAryLblRoleCode()[i]) %></td>
 			<td class="ListSelectTd"><%= HtmlUtility.escapeHTML(vo.getAryLblInactivate()[i]) %></td>
-			<td class="ListSelectTd"><input type="checkbox" name="ckbSelect" value="<%= vo.getAryCkbRecordId()[i] %>" <%= HtmlUtility.getChecked(vo.getAryCkbRecordId()[i], vo.getCkbSelect()) %> /></td>
+			<td class="ListSelectTd"><%= HtmlUtility.getCheckTag(params, "", "", "ckbSelect", vo.getAryCkbRecordId()[i], false, vo.getCkbSelect()) %></td>
 		</tr>
 <%
 }

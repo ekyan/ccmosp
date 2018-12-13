@@ -15,9 +15,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-/**
- * 
- */
 package jp.mosp.platform.dao.system;
 
 import java.sql.PreparedStatement;
@@ -148,6 +145,25 @@ public interface PositionDaoInterface extends BaseDaoInterface {
 	 * @throws MospException SQL例外が発生した場合
 	 */
 	int setParamsForRange(int index, String[] rangeArray, Date targetDate, PreparedStatement ps) throws MospException;
+	
+	/**
+	 * 職位等級条件SQLを作成する。<br>
+	 * @param greaterEqual 以上の場合true、以下の場合false
+	 * @return 職位等級条件SQL
+	 */
+	String getQueryForPositionGrade(boolean greaterEqual);
+	
+	/**
+	 * 職位等級条件パラメータを設定する。<br>
+	 * @param index パラメータインデックス
+	 * @param positionCode 職位コード
+	 * @param targetDate 対象日
+	 * @param ps ステートメント
+	 * @return 加算されたパラメータインデックス
+	 * @throws MospException SQL例外が発生した場合
+	 */
+	int setParamsForPositionGrande(int index, String positionCode, Date targetDate, PreparedStatement ps)
+			throws MospException;
 	
 	/**
 	 * 承認者条件SQLを作成する。<br>

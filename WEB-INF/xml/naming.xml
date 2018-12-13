@@ -18,6 +18,9 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -->
 <MosP>
+	<Naming key="menuTop">
+		トップ
+	</Naming>
 	<Naming key="menuHumanManage">
 		人事管理
 	</Naming>
@@ -90,6 +93,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<Naming key="jp.mosp.platform.system.vo.WorkPlaceMasterVo">
 		勤務地マスタ
 	</Naming>
+	<Naming key="jp.mosp.platform.system.vo.SystemManagementVo">
+		システム管理
+	</Naming>
 	<Naming key="jp.mosp.platform.system.vo.NamingTypeListVo">
 		名称区分マスタ
 	</Naming>
@@ -135,6 +141,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<Naming key="Day">
 		日
 	</Naming>
+	<Naming key="AmountWeek">
+		週間
+	</Naming>
 	<Naming key="AmountMonth">
 		ヶ月
 	</Naming>
@@ -146,6 +155,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	</Naming>
 	<Naming key="Code">
 		コード
+	</Naming>
+	<Naming key="EmployeeCode">
+		社員コード
 	</Naming>
 	<Naming key="Personal">
 		個人
@@ -278,6 +290,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	</Naming>
 	<Naming key="InputEmployeeCode">
 		社員コードを入力して下さい。
+	</Naming>
+	<Naming key="PleaseSearch">
+		検索して下さい。
 	</Naming>
 	<Naming key="RetirementOff">
 		在職
@@ -534,6 +549,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<Naming key="Time">
 		時間
 	</Naming>
+	<Naming key="Hour">
+		時
+	</Naming>
 	<Naming key="Minutes">
 		分
 	</Naming>
@@ -663,6 +681,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<Naming key="Set">
 		設定
 	</Naming>
+	<Naming key="TimeLimit">
+		期限
+	</Naming>
+	<Naming key="Screen">
+		画面
+	</Naming>
+	<Naming key="DisplaySetting">
+		表示設定
+	</Naming>
 	<Naming key="InputCsv">
 		カンマ区切で入力
 	</Naming>
@@ -674,6 +701,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	</Naming>
 	<Naming key="RangeSettingMessage">
 		勤務地、雇用契約、所属、職位を全て未指定で登録することにより全体適用になります。
+	</Naming>
+	<Naming key="No0">
+		0
 	</Naming>
 	<Naming key="No1">
 		1
@@ -711,6 +741,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<Naming key="No12">
 		12
 	</Naming>
+	<Naming key="Red">
+		赤
+	</Naming>
+	<Naming key="Yellow">
+		黄
+	</Naming>
 	<Naming key="Output">
 		出力
 	</Naming>
@@ -741,6 +777,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<Naming key="Item">
 		項目
 	</Naming>
+	<Naming key="LegalAbbreviation">
+		法
+	</Naming>
 	<Naming key="ExportListAction">
 		※エクスポートマスタを選択してから実行して下さい。
 	</Naming>
@@ -764,6 +803,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	</Naming>
 	<Naming key="MarineDay">
 		海の日
+	</Naming>
+	<Naming key="MountDay">
+		山の日
 	</Naming>
 	<Naming key="RespectForTheAgedDay">
 		敬老の日
@@ -827,5 +869,65 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	</Naming>
 	<Naming key="RetirementReasonDetail">
 		理由詳細
-	</Naming> 
+	</Naming>
+	<Naming key="Relevance">
+		関連
+	</Naming>
+	<Naming key="MailAddress">
+		メールアドレス
+	</Naming>
+	<Naming key="SendMail">
+		メール送信
+	</Naming>
+	<Naming key="ApproverPositionGrade">
+		承認者職位等級範囲
+	</Naming>
+	<Naming key="AppKey">
+		アプリケーション設定キー
+	</Naming>
+	<Naming key="Touten">
+		、
+	</Naming>
+	<Naming key="Blank">
+		空白
+	</Naming>
+	<Naming key="AutoNumbering">
+		自動設定
+	</Naming>
+	<Naming key="IfForgotPassword">
+		パスワードを忘れた場合
+	</Naming>
+	<Naming key="NeedLowerSection">
+		下位所属含む
+	</Naming>
+	<Naming key="LowerAlphaCharacter">
+		半角英字
+	</Naming>	
+	<Naming key="SpaceKana">
+		スペース
+	</Naming>
+	<Naming key="Or">
+		又は
+	</Naming>
+	<Naming key="LowerAlphaNumeric">
+		半角英数字
+	</Naming>
+	<Naming key="HyphenKana">
+		ハイフン
+	</Naming>
+	<Naming key="NumericValue">
+		数値
+	</Naming>
+	<Naming key="MiddlePoint">
+		・
+	</Naming>
+	<Naming key="Checked">
+		レ
+	</Naming>
+	<Naming key="Selected">
+		●
+	</Naming>
+	<Naming key="SetCase">
+		に設定したい場合
+	</Naming>
 </MosP>

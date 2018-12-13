@@ -17,6 +17,7 @@
  */
 package jp.mosp.time.management.vo;
 
+import jp.mosp.framework.base.BaseDtoInterface;
 import jp.mosp.time.base.TimeVo;
 
 /**
@@ -50,8 +51,10 @@ public class ApprovalCardVo extends TimeVo {
 	private String				lblWorkTime;
 	private String				lblWorkType;
 	private String				lblDirectWorkManage;
+	private String				lblCheckWorkStart;
 	private String				lblUnpaidShortTime;
 	private String				lblTimeComment;
+	private String				lblRemarks;
 	
 	// 勤怠休憩情報
 	private String				lblRestTime;
@@ -96,12 +99,14 @@ public class ApprovalCardVo extends TimeVo {
 	private String				lblLeaveEarlyComment;
 	
 	// 勤怠残業情報
+	private String				lblOvertime;
 	private String				lblOverTimeIn;
 	private String				lblOverTimeOut;
 	private String				lblLateNightTime;
 	private String				lblSpecificWorkTimeIn;
 	private String				lblSpecificWorkTimeOver;
 	private String				lblLegalWorkTime;
+	private String				lblHolidayWorkTime;
 	private String				lblDecreaseTime;
 	
 	// 勤怠情報承認状況
@@ -227,6 +232,31 @@ public class ApprovalCardVo extends TimeVo {
 	 * 承認解除、差戻ボタン要否。<br>
 	 */
 	private boolean				needCancelApproveButton;
+	
+	/**
+	 * 前ワークフロー。
+	 */
+	private long				prevWorkflow;
+	
+	/**
+	 * 次ワークフロー。
+	 */
+	private long				nextWorkflow;
+	
+	/**
+	 * 前コマンド。
+	 */
+	private String				prevCommand;
+	
+	/**
+	 * 次コマンド。
+	 */
+	private String				nextCommand;
+	
+	/**
+	 * 遷移DTO配列。<br>
+	 */
+	private BaseDtoInterface[]	rollArray;
 	
 	
 	/**
@@ -692,6 +722,20 @@ public class ApprovalCardVo extends TimeVo {
 	}
 	
 	/**
+	 * @return lblOvertime
+	 */
+	public String getLblOvertime() {
+		return lblOvertime;
+	}
+	
+	/**
+	 * @param lblOvertime セットする lblOvertime
+	 */
+	public void setLblOvertime(String lblOvertime) {
+		this.lblOvertime = lblOvertime;
+	}
+	
+	/**
 	 * @return lblOverTimeIn
 	 */
 	public String getLblOverTimeIn() {
@@ -773,6 +817,20 @@ public class ApprovalCardVo extends TimeVo {
 	 */
 	public void setLblLegalWorkTime(String lblLegalWorkTime) {
 		this.lblLegalWorkTime = lblLegalWorkTime;
+	}
+	
+	/**
+	 * @return lblHolidayWorkTime
+	 */
+	public String getLblHolidayWorkTime() {
+		return lblHolidayWorkTime;
+	}
+	
+	/**
+	 * @param lblHolidayWorkTime セットする。 lblHolidayWorkTime
+	 */
+	public void setLblHolidayWorkTime(String lblHolidayWorkTime) {
+		this.lblHolidayWorkTime = lblHolidayWorkTime;
 	}
 	
 	/**
@@ -1768,117 +1826,215 @@ public class ApprovalCardVo extends TimeVo {
 	public void setLblMinutelyHolidayATime3(String lblMinutelyHolidayATime3) {
 		this.lblMinutelyHolidayATime3 = lblMinutelyHolidayATime3;
 	}
-
+	
 	/**
 	 * @return lblMinutelyHolidayATime4
 	 */
 	public String getLblMinutelyHolidayATime4() {
 		return lblMinutelyHolidayATime4;
 	}
-
+	
 	/**
 	 * @param lblMinutelyHolidayATime4 セットする lblMinutelyHolidayATime4
 	 */
 	public void setLblMinutelyHolidayATime4(String lblMinutelyHolidayATime4) {
 		this.lblMinutelyHolidayATime4 = lblMinutelyHolidayATime4;
 	}
-
+	
 	/**
 	 * @return lblAllMinutelyHolidayA
 	 */
 	public String getLblAllMinutelyHolidayA() {
 		return lblAllMinutelyHolidayA;
 	}
-
+	
 	/**
 	 * @param lblAllMinutelyHolidayA セットする lblAllMinutelyHolidayA
 	 */
 	public void setLblAllMinutelyHolidayA(String lblAllMinutelyHolidayA) {
 		this.lblAllMinutelyHolidayA = lblAllMinutelyHolidayA;
 	}
-
+	
 	/**
 	 * @return lblMinutelyHolidayBTime
 	 */
 	public String getLblMinutelyHolidayBTime() {
 		return lblMinutelyHolidayBTime;
 	}
-
+	
 	/**
 	 * @param lblMinutelyHolidayBTime セットする lblMinutelyHolidayBTime
 	 */
 	public void setLblMinutelyHolidayBTime(String lblMinutelyHolidayBTime) {
 		this.lblMinutelyHolidayBTime = lblMinutelyHolidayBTime;
 	}
-
+	
 	/**
 	 * @return lblMinutelyHolidayBTime1
 	 */
 	public String getLblMinutelyHolidayBTime1() {
 		return lblMinutelyHolidayBTime1;
 	}
-
+	
 	/**
 	 * @param lblMinutelyHolidayBTime1 セットする lblMinutelyHolidayBTime1
 	 */
 	public void setLblMinutelyHolidayBTime1(String lblMinutelyHolidayBTime1) {
 		this.lblMinutelyHolidayBTime1 = lblMinutelyHolidayBTime1;
 	}
-
+	
 	/**
 	 * @return lblMinutelyHolidayBTime2
 	 */
 	public String getLblMinutelyHolidayBTime2() {
 		return lblMinutelyHolidayBTime2;
 	}
-
+	
 	/**
 	 * @param lblMinutelyHolidayBTime2 セットする lblMinutelyHolidayBTime2
 	 */
 	public void setLblMinutelyHolidayBTime2(String lblMinutelyHolidayBTime2) {
 		this.lblMinutelyHolidayBTime2 = lblMinutelyHolidayBTime2;
 	}
-
+	
 	/**
 	 * @return lblMinutelyHolidayBTime3
 	 */
 	public String getLblMinutelyHolidayBTime3() {
 		return lblMinutelyHolidayBTime3;
 	}
-
+	
 	/**
 	 * @param lblMinutelyHolidayBTime3 セットする lblMinutelyHolidayBTime3
 	 */
 	public void setLblMinutelyHolidayBTime3(String lblMinutelyHolidayBTime3) {
 		this.lblMinutelyHolidayBTime3 = lblMinutelyHolidayBTime3;
 	}
-
+	
 	/**
 	 * @return lblMinutelyHolidayBTime4
 	 */
 	public String getLblMinutelyHolidayBTime4() {
 		return lblMinutelyHolidayBTime4;
 	}
-
+	
 	/**
 	 * @param lblMinutelyHolidayBTime4 セットする lblMinutelyHolidayBTime4
 	 */
 	public void setLblMinutelyHolidayBTime4(String lblMinutelyHolidayBTime4) {
 		this.lblMinutelyHolidayBTime4 = lblMinutelyHolidayBTime4;
 	}
-
+	
 	/**
 	 * @return lblAllMinutelyHolidayB
 	 */
 	public String getLblAllMinutelyHolidayB() {
 		return lblAllMinutelyHolidayB;
 	}
-
+	
 	/**
 	 * @param lblAllMinutelyHolidayB セットする lblAllMinutelyHolidayB
 	 */
 	public void setLblAllMinutelyHolidayB(String lblAllMinutelyHolidayB) {
 		this.lblAllMinutelyHolidayB = lblAllMinutelyHolidayB;
+	}
+	
+	/**
+	 * @return lblRemarks
+	 */
+	public String getLblRemarks() {
+		return lblRemarks;
+	}
+	
+	/**
+	 * @param lblRemarks セットする lblRemarks
+	 */
+	public void setLblRemarks(String lblRemarks) {
+		this.lblRemarks = lblRemarks;
+	}
+	
+	/**
+	 * @return lblCheckWorkStart
+	 */
+	public String getLblCheckWorkStart() {
+		return lblCheckWorkStart;
+	}
+	
+	/**
+	 * @param lblCheckWorkStart セットする lblCheckWorkStart
+	 */
+	public void setLblCheckWorkStart(String lblCheckWorkStart) {
+		this.lblCheckWorkStart = lblCheckWorkStart;
+	}
+	
+	/**
+	 * @return prevWorkflow
+	 */
+	public long getPrevWorkflow() {
+		return prevWorkflow;
+	}
+	
+	/**
+	 * @param prevWorkflow セットする prevWorkflow
+	 */
+	public void setPrevWorkflow(long prevWorkflow) {
+		this.prevWorkflow = prevWorkflow;
+	}
+	
+	/**
+	 * @return nextWorkflow
+	 */
+	public long getNextWorkflow() {
+		return nextWorkflow;
+	}
+	
+	/**
+	 * @param nextWorkflow セットする nextWorkflow
+	 */
+	public void setNextWorkflow(long nextWorkflow) {
+		this.nextWorkflow = nextWorkflow;
+	}
+	
+	/**
+	 * @return prevCommand
+	 */
+	public String getPrevCommand() {
+		return prevCommand;
+	}
+	
+	/**
+	 * @param prevCommand セットする prevCommand
+	 */
+	public void setPrevCommand(String prevCommand) {
+		this.prevCommand = prevCommand;
+	}
+	
+	/**
+	 * @return nextCommand
+	 */
+	public String getNextCommand() {
+		return nextCommand;
+	}
+	
+	/**
+	 * @param nextCommand セットする nextCommand
+	 */
+	public void setNextCommand(String nextCommand) {
+		this.nextCommand = nextCommand;
+	}
+	
+	/**
+	 * @return rollArray
+	 */
+	public BaseDtoInterface[] getRollArray() {
+		return getDtoArrayClone(rollArray);
+	}
+	
+	/**
+	 * @param rollArray セットする rollArray
+	 */
+	public void setRollArray(BaseDtoInterface[] rollArray) {
+		this.rollArray = getDtoArrayClone(rollArray);
 	}
 	
 }

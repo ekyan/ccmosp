@@ -111,12 +111,12 @@ public class TmtTotalTimeEmployeeDto extends BaseDto implements TotalTimeEmploye
 	
 	@Override
 	public Date getCalculationDate() {
-		return calculationDate;
+		return getDateClone(calculationDate);
 	}
 	
 	@Override
 	public void setCalculationDate(Date calculationDate) {
-		this.calculationDate = calculationDate;
+		this.calculationDate = getDateClone(calculationDate);
 	}
 	
 	@Override

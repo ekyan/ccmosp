@@ -22,7 +22,9 @@ import java.util.Date;
 import jp.mosp.framework.base.MospParams;
 import jp.mosp.framework.utils.DateUtility;
 import jp.mosp.framework.utils.MessageUtility;
+import jp.mosp.framework.utils.MospUtility;
 import jp.mosp.platform.constant.PlatformMessageConst;
+import jp.mosp.platform.utils.PlatformNamingUtility;
 import jp.mosp.time.constant.TimeMessageConst;
 import jp.mosp.time.dto.settings.CutoffErrorListDtoInterface;
 
@@ -39,68 +41,98 @@ public class TimeMessageUtility {
 	 * メッセージコード(集計時エラー内容)。<br>
 	 * %1%の%2%が%3%です。<br>
 	 */
-	protected static final String	MSG_CUTOFF_ERROR			= "TMW0318";
+	protected static final String	MSG_CUTOFF_ERROR					= "TMW0318";
 	
 	/**
 	 * メッセージコード(打刻成功時)。<br>
-	 * %1%を%2%しました。<br>
+	 * %1%に%2%を%3%しました。<br>
 	 */
-	public static final String		MSG_RECORD_TIME				= "TMI0001";
+	public static final String		MSG_RECORD_TIME						= "TMI0004";
 	
 	/**
 	 * 勤務時間の範囲チェックエラーメッセージ。<br>
 	 * メッセージコード(勤務時間外に設定されている場合)。<br>
 	 * 勤務時間外に%1%が設定されています。%1%は勤務時間内に含めて設定してください。<br>
 	 */
-	public static final String		MSG_W_WORK_TIME_OUT_CHECK	= "TMW0237";
+	public static final String		MSG_W_WORK_TIME_OUT_CHECK			= "TMW0237";
 	
 	/**
 	 * メッセージコード(終了が開始よりも前の場合)。<br>
 	 * %1%終了は%2%開始より後となるようにしてください。<br>
 	 */
-	protected static final String	MSG_W_END_BEFORE_START		= "TMW0280";
+	public static final String		MSG_W_END_BEFORE_START				= "TMW0280";
 	
 	/**
 	 * メッセージコード(既に登録されているため処理できなかった場合)。<br>
 	 * %1%は既に%2%が登録されているため、%3%できません。勤怠詳細を確認してください。<br>
 	 */
-	public static final String		MSG_ALREADY_RECORDED		= "TMW0301";
+	public static final String		MSG_ALREADY_RECORDED				= "TMW0301";
 	
 	/**
 	 * メッセージコード(開始時刻が登録されていないため処理できなかった場合)。<br>
 	 * %1%の%2%は、%3%が登録されていないため%4%できません。勤怠詳細を確認してください。<br>
 	 */
-	protected static final String	MSG_START_NOT_RECORDED		= "TMW0302";
+	protected static final String	MSG_START_NOT_RECORDED				= "TMW0302";
 	
 	/**
 	 * メッセージコード(限度を超えているため処理できなかった場合)。<br>
 	 * %1%の%2%は、限度を超えるため%3%できません。勤怠詳細を確認してください。<br>
 	 */
-	protected static final String	MSG_OVER_LIMIT				= "TMW0303";
+	protected static final String	MSG_OVER_LIMIT						= "TMW0303";
 	
 	/**
 	 * メッセージコード(時短勤務の時刻の境界が不正な場合)。<br>
 	 * %1%の%2%には%3%と同一の時刻を入力してください。<br>
 	 */
-	protected static final String	MSG_W_SHORT_TIME_BOUNDARY	= "TMW0321";
+	protected static final String	MSG_W_SHORT_TIME_BOUNDARY			= "TMW0321";
 	
 	/**
 	 * メッセージコード(時短勤務区分の組合せが不正な場合)。<br>
 	 * 時短時間1で無給を設定した場合、時短時間2でも必ず無給を設定するようにしてください。<br>
 	 */
-	protected static final String	MSG_W_SHORT_TYPE_PAIR		= "TMW0322";
+	protected static final String	MSG_W_SHORT_TYPE_PAIR				= "TMW0322";
 	
 	/**
 	 * メッセージコード(遅刻か早退があるためポータルからの自己承認ができない場合)。<br>
 	 * 遅刻か早退があるため、自己承認ができません。勤怠詳細から勤怠を申請してください。<br>
 	 */
-	protected static final String	MSG_W_SELF_APPROVE_FAILED	= "TMW0323";
+	protected static final String	MSG_W_SELF_APPROVE_FAILED			= "TMW0323";
 	
 	/**
 	 * メッセージコード(分単位休暇が0でなく勤務時間が0の場合(全休チェックなし))。<br>
 	 * 分単位休暇を取得して全休にする場合、全休チェックを付けてください。<br>
 	 */
-	protected static final String	MSG_W_MINUTELY_ALL_HOLIDAY	= "TMW0328";
+	protected static final String	MSG_W_MINUTELY_ALL_HOLIDAY			= "TMW0328";
+	
+	/**
+	 * メッセージコード(別項目が設定されていることにより登録不可となる場合)。<br>
+	 * %1%が%2%の場合、登録できません。<br>
+	 */
+	protected static final String	MSG_W_NOT_REGIST_FOR_ANOTHER_ITEM	= "TMW0330";
+	
+	/**
+	 * メッセージコード(有給休暇を削除する際、休暇申請が存在した場合。)<br>
+	 * 付与日：%1%は休暇年月日：%1%に休暇申請を申請しているため削除できません。休暇申請を取下してください。<br>
+	 */
+	public static final String		MSG_EXIST_HOLIDAY_REQUEST			= "TMW0331";
+	
+	/**
+	 * メッセージコード(有給休暇を削除する際、有給休暇手動付与情報が存在した場合。)<br>
+	 * 付与日：%1%は有効日：%2%に有給休暇手動付与を作成しているため削除できません。<br>
+	 */
+	public static final String		MSG_EXIST_PAID_HOLIDAY_TRANSACTION	= "TMW0332";
+	
+	/**
+	 * メッセージコード(表示設定説明)。<br>
+	 * %1%の「%2%」の表示欄に反映される時間です。<br>
+	 */
+	public static final String		MSG_DISPLAY_SETTING_DESCRIPTION		= "TMI0011";
+	
+	/**
+	 * メッセージコード(色設定説明)。<br>
+	 * この時間を超えると、%1%の「%2%」に%3%色で時間が表示されます。<br>
+	 */
+	public static final String		MSG_COLOR_SETTING_DESCRIPTION		= "TMI0012";
 	
 	
 	/**
@@ -138,6 +170,19 @@ public class TimeMessageUtility {
 	}
 	
 	/**
+	 * itemNameが設定されていません。(パンくず名称)を利用するためには人事管理で設定を行う必要があります。(TMW0262)
+	 * @param mospParams MosP処理情報
+	 * @param itemName   項目名
+	 */
+	public static void addErrorUnsetHumanInfo(MospParams mospParams, String itemName) {
+		// 最新のパンくず名称(表示している画面の名称)を取得
+		String topicPathName = MospUtility.getTopicPathName(mospParams);
+		// MosP処理情報にエラーメッセージを追加
+		MessageUtility.addErrorMessage(mospParams, TimeMessageConst.MSG_UNSETTING, itemName, topicPathName,
+				PlatformNamingUtility.menuHumanManage(mospParams));
+	}
+	
+	/**
 	 * year年month月は既に月次処理が行われています。年月を変更してください。(TMW0272)
 	 * @param mospParams MosP処理情報
 	 * @param year       年
@@ -149,59 +194,84 @@ public class TimeMessageUtility {
 	}
 	
 	/**
-	 * 打刻できませんでした。エラー内容を確認の上、再度処理を行ってください。
+	 * エラー内容を確認の上、再度処理を行ってください。
 	 * @param mospParams MosP処理情報
 	 */
 	public static void addMessageRecordTimeFailed(MospParams mospParams) {
-		mospParams.addMessage(PlatformMessageConst.MSG_PROCESS_FAILED, getNameRecordTime(mospParams));
+		mospParams.addMessage(PlatformMessageConst.MSG_PROCESS_FAILED_2);
+	}
+	
+	/**
+	 * 打刻できませんでした。エラー内容を確認ください。
+	 * @param mospParams MosP処理情報
+	 */
+	public static void addMessageRecordStartTimeFailed(MospParams mospParams) {
+		mospParams.addMessage(PlatformMessageConst.MSG_PROCESS_FAILED_3, getNameRecordTime(mospParams));
 	}
 	
 	/**
 	 * 始業を打刻しました。<br>
 	 * @param mospParams MosP処理情報
+	 * @param recordTime 打刻時刻
 	 */
-	public static void addMessageRecordStartWork(MospParams mospParams) {
-		mospParams.addMessage(MSG_RECORD_TIME, getNameStartWork(mospParams), getNameRecordTime(mospParams));
+	public static void addMessageRecordStartWork(MospParams mospParams, String recordTime) {
+		mospParams.addMessage(MSG_RECORD_TIME, recordTime, getNameStartWork(mospParams), getNameRecordTime(mospParams));
 	}
 	
 	/**
 	 * 終業を打刻しました。<br>
 	 * @param mospParams MosP処理情報
+	 * @param recordTime 打刻時刻
 	 */
-	public static void addMessageRecordEndWork(MospParams mospParams) {
-		mospParams.addMessage(MSG_RECORD_TIME, getNameEndWork(mospParams), getNameRecordTime(mospParams));
+	public static void addMessageRecordEndWork(MospParams mospParams, String recordTime) {
+		mospParams.addMessage(MSG_RECORD_TIME, recordTime, getNameEndWork(mospParams), getNameRecordTime(mospParams));
 	}
 	
 	/**
 	 * 休憩入りを打刻しました。<br>
 	 * @param mospParams MosP処理情報
+	 * @param recordTime 打刻時刻
 	 */
-	public static void addMessageRecordStartRest(MospParams mospParams) {
-		mospParams.addMessage(MSG_RECORD_TIME, getNameStartRest(mospParams), getNameRecordTime(mospParams));
+	public static void addMessageRecordStartRest(MospParams mospParams, String recordTime) {
+		mospParams.addMessage(MSG_RECORD_TIME, recordTime, getNameStartRest(mospParams), getNameRecordTime(mospParams));
 	}
 	
 	/**
 	 * 休憩戻りを打刻しました。<br>
 	 * @param mospParams MosP処理情報
+	 * @param recordTime 打刻時刻
 	 */
-	public static void addMessageRecordEndRest(MospParams mospParams) {
-		mospParams.addMessage(MSG_RECORD_TIME, getNameEndRest(mospParams), getNameRecordTime(mospParams));
+	public static void addMessageRecordEndRest(MospParams mospParams, String recordTime) {
+		mospParams.addMessage(MSG_RECORD_TIME, recordTime, getNameEndRest(mospParams), getNameRecordTime(mospParams));
 	}
 	
 	/**
 	 * 定時終業を打刻しました。<br>
 	 * @param mospParams MosP処理情報
+	 * @param recordTime 打刻時刻
 	 */
-	public static void addMessageRecordRegularEnd(MospParams mospParams) {
-		mospParams.addMessage(MSG_RECORD_TIME, getNameRegularEnd(mospParams), getNameRecordTime(mospParams));
+	public static void addMessageRecordRegularEnd(MospParams mospParams, String recordTime) {
+		mospParams.addMessage(MSG_RECORD_TIME, recordTime, getNameRegularEnd(mospParams),
+				getNameRecordTime(mospParams));
 	}
 	
 	/**
 	 * 出勤を打刻しました。<br>
 	 * @param mospParams MosP処理情報
+	 * @param recordTime 打刻時刻
 	 */
-	public static void addMessageRecordRegularWork(MospParams mospParams) {
-		mospParams.addMessage(MSG_RECORD_TIME, getNameRegularWork(mospParams), getNameRecordTime(mospParams));
+	public static void addMessageRecordRegularWork(MospParams mospParams, String recordTime) {
+		mospParams.addMessage(MSG_RECORD_TIME, recordTime, getNameRegularWork(mospParams),
+				getNameRecordTime(mospParams));
+	}
+	
+	/**
+	 * 終業時刻を更新しました。<br>
+	 * @param mospParams MosP処理情報
+	 * @param recordTime 打刻時刻
+	 */
+	public static void addMessageUpdateEndWork(MospParams mospParams, String recordTime) {
+		mospParams.addMessage(MSG_RECORD_TIME, recordTime, getNameEndWorkTime(mospParams), getNameUpdate(mospParams));
 	}
 	
 	/**
@@ -299,8 +369,8 @@ public class TimeMessageUtility {
 	 * @param mospParams MosP処理情報
 	 */
 	public static void addErrorShort2TimeBoundary(MospParams mospParams) {
-		mospParams.addErrorMessage(MSG_W_SHORT_TIME_BOUNDARY, getNameShort2Time(mospParams),
-				getNameEndTime(mospParams), getNameEndWorkTime(mospParams));
+		mospParams.addErrorMessage(MSG_W_SHORT_TIME_BOUNDARY, getNameShort2Time(mospParams), getNameEndTime(mospParams),
+				getNameEndWorkTime(mospParams));
 	}
 	
 	/**
@@ -324,8 +394,8 @@ public class TimeMessageUtility {
 	 * @param mospParams MosP処理情報
 	 */
 	public static void addErrorShort1EndBeforeStart(MospParams mospParams) {
-		mospParams
-			.addErrorMessage(MSG_W_END_BEFORE_START, getNameShort1Time(mospParams), getNameShort1Time(mospParams));
+		mospParams.addErrorMessage(MSG_W_END_BEFORE_START, getNameShort1Time(mospParams),
+				getNameShort1Time(mospParams));
 	}
 	
 	/**
@@ -333,8 +403,17 @@ public class TimeMessageUtility {
 	 * @param mospParams MosP処理情報
 	 */
 	public static void addErrorShort2EndBeforeStart(MospParams mospParams) {
-		mospParams
-			.addErrorMessage(MSG_W_END_BEFORE_START, getNameShort2Time(mospParams), getNameShort2Time(mospParams));
+		mospParams.addErrorMessage(MSG_W_END_BEFORE_START, getNameShort2Time(mospParams),
+				getNameShort2Time(mospParams));
+	}
+	
+	/**
+	 * 有効日終了は有効日開始より後となるようにしてください。(TMW0280)<br>
+	 * @param mospParams MosP処理情報
+	 */
+	public static void addErrorActivateDateEndBeforeStart(MospParams mospParams) {
+		mospParams.addErrorMessage(MSG_W_END_BEFORE_START, getNameActivateDate(mospParams),
+				getNameActivateDate(mospParams));
 	}
 	
 	/**
@@ -428,9 +507,128 @@ public class TimeMessageUtility {
 	 * @param afterName  後にあるべき日時の名称
 	 * @param row        対象行インデックス
 	 */
-	public static void addErrorTimeOrderInvalid(MospParams mospParams, String beforeName, String afterName, Integer row) {
+	public static void addErrorTimeOrderInvalid(MospParams mospParams, String beforeName, String afterName,
+			Integer row) {
 		mospParams.addErrorMessage(PlatformMessageConst.MSG_INVALID_ORDER,
 				getRowedFieldName(mospParams, afterName, row), beforeName);
+	}
+	
+	/**
+	 * 時短時間1が設定済みで且つ無給の場合、勤務前残業自動申請は有効に出来ません。(TMW0330)<br>
+	 * @param mospParams MosP処理情報
+	 */
+	public static void addErrorAnotherItemInvalid(MospParams mospParams) {
+		mospParams.addErrorMessage(MSG_W_NOT_REGIST_FOR_ANOTHER_ITEM);
+	}
+	
+	/**
+	 * 付与日：YYYY/MM/DDは休暇年月日：YYYY/MM/DDに休暇申請を申請しているため削除できません。休暇申請を取下してください。(TMW0331)<br>
+	 * @param mospParams MosP処理情報
+	 * @param acquisitionDate 有給休暇付与日
+	 * @param requestDate 休暇申請日
+	 */
+	public static void addErrorNoDeleteForHolidayRequest(MospParams mospParams, Date acquisitionDate,
+			Date requestDate) {
+		String[] rep = { DateUtility.getStringDate(acquisitionDate), DateUtility.getStringDate(requestDate) };
+		mospParams.addErrorMessage(MSG_EXIST_HOLIDAY_REQUEST, rep);
+	}
+	
+	/**
+	 * holidayNameは半休申請できません。休暇種別を選択し直してください。(TMW0245)<br>
+	 * @param mospParams  MosP処理情報
+	 * @param holidayName 休暇名称
+	 */
+	public static void addErrorHalfHolidayInvalid(MospParams mospParams, String holidayName) {
+		addErrorHolidayRangeInvalid(mospParams, holidayName, TimeNamingUtility.halfHoliday(mospParams));
+	}
+	
+	/**
+	 * holidayNameは時間休申請できません。休暇種別を選択し直してください。(TMW0245)<br>
+	 * @param mospParams  MosP処理情報
+	 * @param holidayName 休暇名称
+	 */
+	public static void addErrorHourlyHolidayInvalid(MospParams mospParams, String holidayName) {
+		addErrorHolidayRangeInvalid(mospParams, holidayName, TimeNamingUtility.hourlyHoliday(mospParams));
+	}
+	
+	/**
+	 * holidayNameはholidayRange申請できません。休暇種別を選択し直してください。(TMW0245)<br>
+	 * @param mospParams   MosP処理情報
+	 * @param holidayName  休暇名称
+	 * @param holidayRange 休暇範囲名称
+	 */
+	public static void addErrorHolidayRangeInvalid(MospParams mospParams, String holidayName, String holidayRange) {
+		// holidayRange申請文字列を準備
+		StringBuilder range = new StringBuilder(holidayRange);
+		range.append(PlatformNamingUtility.application(mospParams));
+		// MosP処理情報にエラーメッセージを追加
+		MessageUtility.addErrorMessage(mospParams, TimeMessageConst.MSG_REQUEST_CHECK_6, holidayName, range.toString(),
+				TimeNamingUtility.holidayType(mospParams));
+	}
+	
+	/**
+	 * 半休と時間休は同日に申請できません。休暇年月日または休暇範囲を選択し直してください。(TMW0245)<br>
+	 * @param mospParams MosP処理情報
+	 */
+	public static void addErrorHalfAndHourlyHoliday(MospParams mospParams) {
+		// 半休と時間休文字列を準備
+		StringBuilder range = new StringBuilder(TimeNamingUtility.halfHoliday(mospParams));
+		range.append(TimeNamingUtility.and(mospParams));
+		range.append(TimeNamingUtility.hourlyHoliday(mospParams));
+		// 同日に申請文字列を準備
+		StringBuilder application = new StringBuilder(TimeNamingUtility.same(mospParams));
+		application.append(PlatformNamingUtility.day(mospParams));
+		application.append(TimeNamingUtility.in(mospParams));
+		application.append(PlatformNamingUtility.application(mospParams));
+		// 休暇年月日または休暇範囲文字列を準備
+		StringBuilder correction = new StringBuilder(TimeNamingUtility.holidayDate(mospParams));
+		correction.append(TimeNamingUtility.or(mospParams));
+		correction.append(TimeNamingUtility.holidayRange(mospParams));
+		// MosP処理情報にエラーメッセージを追加
+		MessageUtility.addErrorMessage(mospParams, TimeMessageConst.MSG_REQUEST_CHECK_6, range.toString(),
+				application.toString(), correction.toString());
+	}
+	
+	/**
+	 * 付与日：%1%は有効日：%2%に有給休暇手動付与を作成しているため削除できません。(TMW0332)<br>
+	 * @param mospParams MosP処理情報
+	 * @param acquisitionDate 有給休暇付与日
+	 * @param activateDate 有給手動付与有効日
+	 */
+	public static void addErrorNoDeleteForPaidHolidayTransaction(MospParams mospParams, Date acquisitionDate,
+			Date activateDate) {
+		String[] rep = { DateUtility.getStringDate(acquisitionDate), DateUtility.getStringDate(activateDate) };
+		mospParams.addErrorMessage(MSG_EXIST_PAID_HOLIDAY_TRANSACTION, rep);
+	}
+	
+	/**
+	 * 残業申請画面の「申請可能時間」の表示欄に反映される時間です。<br>
+	 * @param mospParams MosP処理情報
+	 * @return メッセージ
+	 */
+	public static String getLimitSettingDescription(MospParams mospParams) {
+		return mospParams.getMessage(MSG_DISPLAY_SETTING_DESCRIPTION,
+				TimeNamingUtility.overtimeRequestScreen(mospParams), TimeNamingUtility.applicableTime(mospParams));
+	}
+	
+	/**
+	 * この時間を超えると、勤怠一覧画面の「外残」に黄色で時間が表示されます。<br><br>
+	 * @param mospParams MosP処理情報
+	 * @return メッセージ
+	 */
+	public static String getAttentionSettingDescription(MospParams mospParams) {
+		return mospParams.getMessage(MSG_COLOR_SETTING_DESCRIPTION, TimeNamingUtility.attendanceListScreen(mospParams),
+				TimeNamingUtility.overtimeOutAbbr(mospParams), PlatformNamingUtility.yellow(mospParams));
+	}
+	
+	/**
+	 * この時間を超えると、勤怠一覧画面の「外残」に赤色で時間が表示されます。<br><br>
+	 * @param mospParams MosP処理情報
+	 * @return メッセージ
+	 */
+	public static String getWarningSettingDescription(MospParams mospParams) {
+		return mospParams.getMessage(MSG_COLOR_SETTING_DESCRIPTION, TimeNamingUtility.attendanceListScreen(mospParams),
+				TimeNamingUtility.overtimeOutAbbr(mospParams), PlatformNamingUtility.red(mospParams));
 	}
 	
 	/**
@@ -528,6 +726,15 @@ public class TimeMessageUtility {
 	}
 	
 	/**
+	 * 更新名称を取得する。<br>
+	 * @param mospParams MosP処理情報
+	 * @return 更新名称
+	 */
+	protected static String getNameUpdate(MospParams mospParams) {
+		return mospParams.getName("Update");
+	}
+	
+	/**
 	 * 始業名称を取得する。<br>
 	 * @param mospParams MosP処理情報
 	 * @return 始業名称
@@ -588,6 +795,24 @@ public class TimeMessageUtility {
 	 */
 	protected static String getNameRegularWork(MospParams mospParams) {
 		return mospParams.getName("GoingWork");
+	}
+	
+	/**
+	 * 休憩1名称を取得する。<br>
+	 * @param mospParams MosP処理情報
+	 * @return 休憩1名称
+	 */
+	protected static String getNameRest1Time(MospParams mospParams) {
+		return mospParams.getName("Rest1");
+	}
+	
+	/**
+	 * 休憩2名称を取得する。<br>
+	 * @param mospParams MosP処理情報
+	 * @return 休憩1名称
+	 */
+	protected static String getNameRest2Time(MospParams mospParams) {
+		return mospParams.getName("Rest2");
 	}
 	
 	/**
@@ -680,4 +905,12 @@ public class TimeMessageUtility {
 		return mospParams.getName("RestTime");
 	}
 	
+	/**
+	 * 有効日名称を取得する。<br>
+	 * @param mospParams MosP処理情報
+	 * @return 有効日名称
+	 */
+	public static String getNameActivateDate(MospParams mospParams) {
+		return mospParams.getName("ActivateDate");
+	}
 }

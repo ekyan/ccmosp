@@ -26,8 +26,6 @@ import java.util.Map;
 
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.base.MospParams;
-import jp.mosp.framework.property.ConventionProperty;
-import jp.mosp.framework.xml.TableItemProperty;
 import jp.mosp.platform.base.PlatformBean;
 import jp.mosp.platform.bean.human.HumanBinaryArrayReferenceBeanInterface;
 import jp.mosp.platform.dao.human.HumanBinaryArrayDaoInterface;
@@ -41,27 +39,7 @@ public class HumanBinaryArrayReferenceBean extends HumanGeneralBean implements H
 	/**
 	 * 人事入社情報DAO。
 	 */
-	private HumanBinaryArrayDaoInterface		dao;
-	
-	/**
-	 * 人事汎用項目区分設定情報。
-	 */
-	protected ConventionProperty				conventionProperty;
-	
-	/**
-	 * 人事汎用項目情報リスト。
-	 */
-	protected List<TableItemProperty>			tableItemList;
-	
-	/**
-	 * 人事行ID一覧情報汎用マップ。
-	 */
-	LinkedHashMap<String, Map<String, String>>	arrayHumanInfoMap;
-	
-	/**
-	 * 人事履歴情報汎用マップ。
-	 */
-	Map<String, String>							arrayMap;
+	private HumanBinaryArrayDaoInterface dao;
 	
 	
 	/**
@@ -113,6 +91,11 @@ public class HumanBinaryArrayReferenceBean extends HumanGeneralBean implements H
 		}
 		
 		return arrayRowId;
+	}
+	
+	@Override
+	public HumanBinaryArrayDtoInterface findForKey(Long id, boolean isUpdate) throws MospException {
+		return (HumanBinaryArrayDtoInterface)dao.findForKey(id, isUpdate);
 	}
 	
 }

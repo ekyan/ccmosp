@@ -38,12 +38,14 @@ public class PaidHolidayDataGrantListDto extends BaseDto implements PaidHolidayD
 	private Date				grantDate;
 	private Date				startDate;
 	private Date				endDate;
-	private int					workDays;
-	private int					totalWorkDays;
+	private Integer				workDays;
+	private Integer				totalWorkDays;
 	private Double				attendanceRate;
 	private String				accomplish;
 	private String				grant;
 	private Double				grantDays;
+	private boolean				warning;
+	private String				error;
 	
 	
 	@Override
@@ -139,22 +141,22 @@ public class PaidHolidayDataGrantListDto extends BaseDto implements PaidHolidayD
 	}
 	
 	@Override
-	public int getWorkDays() {
+	public Integer getWorkDays() {
 		return workDays;
 	}
 	
 	@Override
-	public void setWorkDays(int workDays) {
+	public void setWorkDays(Integer workDays) {
 		this.workDays = workDays;
 	}
 	
 	@Override
-	public int getTotalWorkDays() {
+	public Integer getTotalWorkDays() {
 		return totalWorkDays;
 	}
 	
 	@Override
-	public void setTotalWorkDays(int totalWorkDays) {
+	public void setTotalWorkDays(Integer totalWorkDays) {
 		this.totalWorkDays = totalWorkDays;
 	}
 	
@@ -196,6 +198,26 @@ public class PaidHolidayDataGrantListDto extends BaseDto implements PaidHolidayD
 	@Override
 	public void setGrantDays(Double grantDays) {
 		this.grantDays = grantDays;
+	}
+	
+	@Override
+	public boolean isWarning() {
+		return warning;
+	}
+	
+	@Override
+	public void setWarning(boolean warning) {
+		this.warning = warning;
+	}
+	
+	@Override
+	public String getError() {
+		return error;
+	}
+	
+	@Override
+	public void setError(String error) {
+		this.error = error;
 	}
 	
 }

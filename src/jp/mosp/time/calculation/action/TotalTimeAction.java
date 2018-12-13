@@ -19,7 +19,6 @@ package jp.mosp.time.calculation.action;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -35,11 +34,7 @@ import jp.mosp.time.base.TimeAction;
 import jp.mosp.time.base.TotalTimeBaseAction;
 import jp.mosp.time.bean.CutoffReferenceBeanInterface;
 import jp.mosp.time.bean.CutoffUtilBeanInterface;
-import jp.mosp.time.bean.PaidHolidayDataRegistBeanInterface;
-import jp.mosp.time.bean.PaidHolidayInfoReferenceBeanInterface;
 import jp.mosp.time.bean.StockHolidayDataGrantBeanInterface;
-import jp.mosp.time.bean.StockHolidayDataRegistBeanInterface;
-import jp.mosp.time.bean.StockHolidayInfoReferenceBeanInterface;
 import jp.mosp.time.bean.TotalTimeCalcBeanInterface;
 import jp.mosp.time.bean.TotalTimeEmployeeTransactionReferenceBeanInterface;
 import jp.mosp.time.bean.TotalTimeEmployeeTransactionRegistBeanInterface;
@@ -51,8 +46,6 @@ import jp.mosp.time.constant.TimeConst;
 import jp.mosp.time.constant.TimeMessageConst;
 import jp.mosp.time.dto.settings.CutoffDtoInterface;
 import jp.mosp.time.dto.settings.CutoffErrorListDtoInterface;
-import jp.mosp.time.dto.settings.PaidHolidayDataDtoInterface;
-import jp.mosp.time.dto.settings.StockHolidayDataDtoInterface;
 import jp.mosp.time.dto.settings.TotalTimeCutoffListDtoInterface;
 import jp.mosp.time.dto.settings.TotalTimeDtoInterface;
 import jp.mosp.time.utils.TimeUtility;
@@ -150,20 +143,6 @@ public class TotalTimeAction extends TotalTimeBaseAction {
 	 */
 	public static final String	CMD_SET_TOTAL_MONTH	= "TM3180";
 	
-	/**
-	 * 未締状態ステータス。<br>
-	 * <br>
-	 * 検索結果の締状態に未締があればtrueを設定する。<br>
-	 */
-	public static boolean		unwellsetState;
-	
-	/**
-	 * 仮締状態ステータス。<br>
-	 * <br>
-	 * 検索結果の締状態に仮締があればtrueを設定する。<br>
-	 */
-	public static boolean		draftState;
-	
 	
 	/**
 	 * {@link TimeAction#TimeAction()}を実行する。<br>
@@ -195,15 +174,15 @@ public class TotalTimeAction extends TotalTimeBaseAction {
 			search();
 		} else if (mospParams.getCommand().equals(CMD_TEMP_TIGHTEN)) {
 			// 仮締
-			prepareVo();
+			prepareVo(true, false);
 			tmpTighten();
 		} else if (mospParams.getCommand().equals(CMD_DECIDE)) {
 			// 確定
-			prepareVo();
+			prepareVo(true, false);
 			decide();
 		} else if (mospParams.getCommand().equals(CMD_REMOVE)) {
 			// 解除
-			prepareVo();
+			prepareVo(true, false);
 			remove();
 		} else if (mospParams.getCommand().equals(CMD_SORT)) {
 			// ソート
@@ -279,79 +258,25 @@ public class TotalTimeAction extends TotalTimeBaseAction {
 		TotalTimeVo vo = (TotalTimeVo)mospParams.getVo();
 		String cutoffCode = getTransferredCode();
 		// VOから年月を取得
-		int calculationYear = Integer.parseInt(vo.getPltEditRequestYear());
-		int calculationMonth = Integer.parseInt(vo.getPltEditRequestMonth());
-		// 登録クラス取得
-		TotalTimeTransactionRegistBeanInterface regist = time().totalTimeTransactionRegist();
-		TotalTimeEmployeeTransactionRegistBeanInterface employeeRegist = time().totalTimeEmployeeTransactionRegist();
-		// DTOの準備
-		TotalTimeDtoInterface dto = regist.getInitDto();
-		// DTOに値を設定
-		setDtoFields(dto);
-		// 仮締をセット
-		dto.setCutoffState(TimeConst.CODE_CUTOFF_STATE_TEMP_TIGHT);
+		int targetYear = Integer.parseInt(vo.getPltEditRequestYear());
+		int targetMonth = Integer.parseInt(vo.getPltEditRequestMonth());
 		// 集計クラス取得
 		TotalTimeCalcBeanInterface calc = time().totalTimeCalc();
-		// 集計クラスに計算情報を設定
-		calc.setCalculationInfo(calculationYear, calculationMonth, cutoffCode);
-		// 処理結果確認(集計クラス計算情報設定に失敗した場合)
+		// 仮締(勤怠集計)
+		List<CutoffErrorListDtoInterface> list = calc.tightening(targetYear, targetMonth, cutoffCode);
+		// 処理結果確認
 		if (mospParams.hasErrorMessage()) {
 			// 登録失敗メッセージ設定
 			addInsertFailedMessage();
 			return;
 		}
-		// 締日ユーティリティを取得
-		CutoffUtilBeanInterface cutoffUtil = timeReference().cutoffUtil();
-		// 対象年月において対象締日コードが適用されている個人IDのセットを取得
-		Set<String> personalIdSet = cutoffUtil.getCutoffPersonalIdSet(cutoffCode, calculationYear, calculationMonth);
-		if (personalIdSet.isEmpty()) {
-			// 登録失敗メッセージ設定
-			addInsertFailedMessage();
-			PlatformMessageUtility.addErrorEmployeeNotExist(mospParams);
-			return;
-		}
-		// エラーリスト準備
-		List<CutoffErrorListDtoInterface> errorList = new ArrayList<CutoffErrorListDtoInterface>();
-		int employeeCount = 0;
-		// 仮締対象個人IDリスト準備
-		List<String> registerdPersonalId = new ArrayList<String>();
-		// 締日コード適用個人ID毎に処理
-		for (String personalId : personalIdSet) {
-			// 勤怠集計処理
-			List<CutoffErrorListDtoInterface> list = calc.calc(personalId);
-			// 処理結果確認
-			if (mospParams.hasErrorMessage()) {
-				// 計算失敗メッセージ設定
-				addCalculateFailedMessage();
-				return;
-			}
-			employeeCount++;
-			if (!list.isEmpty()) {
-				errorList.addAll(list);
-				continue;
-			}
-			registerdPersonalId.add(personalId);
-		}
-		// 仮締対象社員につき仮締
-		employeeRegist.draft(registerdPersonalId, Integer.parseInt(vo.getTotalTimeRequestYear()),
-				Integer.parseInt(vo.getTotalTimeRequestMonth()), cutoffCode);
-		// 仮締対象社員全員を仮締したか確認
-		if (personalIdSet.size() == employeeCount) {
-			// 仮締処理
-			regist.draft(dto);
-		}
-		if (mospParams.hasErrorMessage()) {
-			// 登録失敗メッセージ設定
-			addInsertFailedMessage();
-			return;
-		}
-		// エラーリストがあるか取得する
-		if (!errorList.isEmpty()) {
-			// 仮締処理からlistが帰ってきたら集計時エラー内容参照画面へ遷移する
-			mospParams.addGeneralParam(TimeConst.PRM_TOTALTIME_ERROR, errorList);
+		// 集計時エラー内容参照情報がある場合
+		if (list.isEmpty() == false) {
+			// 仮締処理からlistが帰ってきたら集計時エラー内容参照画面へ遷移
+			mospParams.addGeneralParam(TimeConst.PRM_TOTALTIME_ERROR, list);
 			mospParams.addGeneralParam(TimeConst.PRM_TRANSFERRED_GENERIC_CODE, cutoffCode);
-			mospParams.addGeneralParam(TimeConst.PRM_TRANSFERRED_YEAR, calculationYear);
-			mospParams.addGeneralParam(TimeConst.PRM_TRANSFERRED_MONTH, calculationMonth);
+			mospParams.addGeneralParam(TimeConst.PRM_TRANSFERRED_YEAR, targetYear);
+			mospParams.addGeneralParam(TimeConst.PRM_TRANSFERRED_MONTH, targetMonth);
 			mospParams.setNextCommand(CutoffErrorListAction.CMD_SHOW);
 			return;
 		}
@@ -398,8 +323,8 @@ public class TotalTimeAction extends TotalTimeBaseAction {
 			return;
 		}
 		// DTOの準備
-		TotalTimeDtoInterface dto = timeReference().totalTimeTransaction().findForKey(calculationYear,
-				calculationMonth, cutoffCode);
+		TotalTimeDtoInterface dto = timeReference().totalTimeTransaction().findForKey(calculationYear, calculationMonth,
+				cutoffCode);
 		// DTOに値を設定
 		setDtoFields(dto);
 		// 確定をセット
@@ -412,8 +337,6 @@ public class TotalTimeAction extends TotalTimeBaseAction {
 			addInsertFailedMessage();
 			return;
 		}
-		// 有給休暇更新
-//		updatePaidHoliday(personalIdSet);
 		// ストック休暇付与
 		grantStockHoliday(personalIdSet);
 		if (mospParams.hasErrorMessage()) {
@@ -487,25 +410,12 @@ public class TotalTimeAction extends TotalTimeBaseAction {
 			regist.draftRelease(totalTimeDto);
 		} else if (totalTimeDto.getCutoffState() == TimeConst.CODE_CUTOFF_STATE_TIGHTENED) {
 			// 確定解除(確定→仮締)
-			Set<String> removePersonalIdSet = new HashSet<String>();
-			for (String personalId : personalIdSet) {
-				Integer state = employeeTransactionReference.getCutoffState(personalId, calculationYear,
-						calculationMonth);
-				if (state == null || state.intValue() == TimeConst.CODE_CUTOFF_STATE_NOT_TIGHT) {
-					// 仮締でない場合
-					continue;
-				}
-				removePersonalIdSet.add(personalId);
-			}
 			// DTOに値を設定
 			setDtoFields(totalTimeDto);
 			// 仮締をセット
 			totalTimeDto.setCutoffState(TimeConst.CODE_CUTOFF_STATE_TEMP_TIGHT);
 			// 確定解除
 			regist.registRelease(totalTimeDto);
-//			employeeRegist.registRelease(personalIdList, calculationYear, calculationMonth, cutoffCode);
-			// 有給休暇削除
-//			deletePaidHoliday(removePersonalIdSet);
 			if (mospParams.hasErrorMessage()) {
 				// 登録失敗メッセージ設定
 				addInsertFailedMessage();
@@ -594,8 +504,6 @@ public class TotalTimeAction extends TotalTimeBaseAction {
 		// 集計対象年月ラベルの初期化
 		vo.setTxtLblRequestYear("");
 		vo.setTxtLblRequestMonth("");
-		unwellsetState = false;
-		draftState = false;
 	}
 	
 	/**
@@ -613,8 +521,6 @@ public class TotalTimeAction extends TotalTimeBaseAction {
 		String[] aryLblCutoffDate = new String[list.size()];
 		String[] aryLblCutoffState = new String[list.size()];
 		int[] aryCutoffState = new int[list.size()];
-		unwellsetState = false;
-		draftState = false;
 		// 締日情報取得(プルダウンの中身)
 		String[][] cutoffDateArray = mospParams.getProperties().getCodeArray(TimeConst.CODE_KEY_CUTOFF_DATE, false);
 		// データ作成
@@ -647,11 +553,9 @@ public class TotalTimeAction extends TotalTimeBaseAction {
 	protected String getStringState(int state) throws MospException {
 		if (state == TimeConst.CODE_CUTOFF_STATE_NOT_TIGHT) {
 			// 未締
-			unwellsetState = true;
 			return mospParams.getName("Ram") + mospParams.getName("Cutoff");
 		} else if (state == TimeConst.CODE_CUTOFF_STATE_TEMP_TIGHT) {
 			// 仮締
-			draftState = true;
 			return mospParams.getName("Provisional") + mospParams.getName("Cutoff");
 		} else {
 			// 確定
@@ -688,217 +592,6 @@ public class TotalTimeAction extends TotalTimeBaseAction {
 		dto.setCalculationDate(calculationDate);
 		// 未締に設定
 		dto.setCutoffState(0);
-	}
-	
-	/**
-	 * 有給休暇データを更新する。<br>
-	 * @param idSet 個人IDセット
-	 * @throws MospException 例外発生時
-	 */
-	protected void updatePaidHoliday(Set<String> idSet) throws MospException {
-		// VO準備
-		TotalTimeVo vo = (TotalTimeVo)mospParams.getVo();
-		int year = Integer.parseInt(vo.getPltEditRequestYear());
-		int month = Integer.parseInt(vo.getPltEditRequestMonth());
-		// 呼出Bean取得
-		PaidHolidayDataRegistBeanInterface regist = time().paidHolidayDataRegist();
-		PaidHolidayInfoReferenceBeanInterface infoReference = timeReference().paidHolidayInfo();
-		StockHolidayDataRegistBeanInterface stockRegist = time().stockHolidayDataRegist();
-		StockHolidayInfoReferenceBeanInterface stockInfoReference = timeReference().stockHolidayInfo();
-		CutoffUtilBeanInterface cutoffUtilBean = timeReference().cutoffUtil();
-		
-		// 締日コード取得
-		String cutoffCode = getTransferredCode();
-		// 締日コード確認
-		if (cutoffCode == null || cutoffCode.isEmpty()) {
-			return;
-		}
-		
-		// 締期間最終日取得
-		Date cutoffDate = cutoffUtilBean.getCutoffLastDate(cutoffCode, year, month);
-		if (cutoffDate == null) {
-			return;
-		}
-		// 締期間 + 1日
-		Date nextDate = DateUtility.addDay(cutoffDate, 1);
-		Date nextMonth = DateUtility.addMonth(cutoffDate, 1);
-		
-		for (String personalId : idSet) {
-			// ストック休暇
-			// 締期間最終日
-			stockRegist.delete(personalId, cutoffDate);
-			List<StockHolidayDataDtoInterface> stockHolidayDataList = stockInfoReference.getStockHolidayCalcInfo(
-					personalId, cutoffDate);
-			for (StockHolidayDataDtoInterface dto : stockHolidayDataList) {
-				stockRegist.insert(dto);
-			}
-			// 締期間最終日 + 1
-			stockRegist.delete(personalId, nextDate);
-			List<StockHolidayDataDtoInterface> nextStockHolidayDataList = stockInfoReference
-				.getStockHolidayNextMonthInfo(personalId, nextDate, stockHolidayDataList);
-			for (StockHolidayDataDtoInterface dto : nextStockHolidayDataList) {
-				stockRegist.insert(dto);
-			}
-			// 有給休暇
-			// 締期間最終日
-			regist.delete(personalId, cutoffDate);
-			List<PaidHolidayDataDtoInterface> paidHolidayDataList = infoReference.getPaidHolidayCalcInfo(personalId,
-					cutoffDate);
-			for (PaidHolidayDataDtoInterface dto : paidHolidayDataList) {
-				regist.insert(dto);
-			}
-			List<PaidHolidayDataDtoInterface> addList = new ArrayList<PaidHolidayDataDtoInterface>();
-			List<PaidHolidayDataDtoInterface> currentNextPaidHolidayDataList = timeReference().paidHolidayData()
-				.getPaidHolidayDataInfoList(personalId, nextDate, nextMonth);
-			for (PaidHolidayDataDtoInterface currentDto : currentNextPaidHolidayDataList) {
-				boolean exists = false;
-				for (PaidHolidayDataDtoInterface dto : paidHolidayDataList) {
-					if (currentDto.getAcquisitionDate().equals(dto.getAcquisitionDate())) {
-						// 取得日が同じである場合
-						exists = true;
-						break;
-					}
-				}
-				if (!exists) {
-					addList.add(currentDto);
-				}
-			}
-			// リストに追加
-			paidHolidayDataList.addAll(addList);
-			
-			for (PaidHolidayDataDtoInterface dto : currentNextPaidHolidayDataList) {
-				// 削除
-				regist.delete(dto);
-			}
-			List<PaidHolidayDataDtoInterface> nextPaidHolidayDataList = infoReference.getPaidHolidayNextMonthInfo(
-					personalId, cutoffDate, year, month, paidHolidayDataList);
-			for (PaidHolidayDataDtoInterface dto : nextPaidHolidayDataList) {
-				regist.insert(dto);
-			}
-			// ストック休暇新規データ
-			Double expirationDay = infoReference.getExpirationDay(paidHolidayDataList, cutoffDate);
-			if (expirationDay != null) {
-				StockHolidayDataDtoInterface stockHolidayDataDto = stockInfoReference.getNewStockHolidayInfo(
-						personalId, nextDate, expirationDay.doubleValue());
-				if (stockHolidayDataDto != null) {
-					stockRegist.insert(stockHolidayDataDto);
-				}
-			}
-			// 有給休暇新規データ
-			PaidHolidayDataDtoInterface paidHolidayDataDto = infoReference.getNewPaidHolidayInfo(personalId,
-					cutoffDate, year, month);
-			if (paidHolidayDataDto != null) {
-				regist.insert(paidHolidayDataDto);
-			}
-		}
-	}
-	
-	/**
-	 * 有給休暇データを削除する。<br>
-	 * @param idSet 個人IDセット
-	 * @throws MospException 例外発生時
-	 */
-	protected void deletePaidHoliday(Set<String> idSet) throws MospException {
-		// VO準備
-		TotalTimeVo vo = (TotalTimeVo)mospParams.getVo();
-		// 呼出Bean取得
-		PaidHolidayDataRegistBeanInterface regist = time().paidHolidayDataRegist();
-		PaidHolidayInfoReferenceBeanInterface infoReference = timeReference().paidHolidayInfo();
-		StockHolidayDataRegistBeanInterface stockRegist = time().stockHolidayDataRegist();
-//		StockHolidayInfoReferenceBeanInterface stockInfoReference = timeReference().stockHolidayInfo();
-		CutoffUtilBeanInterface cutoffUtil = timeReference().cutoffUtil();
-		int year = Integer.parseInt(vo.getPltEditRequestYear());
-		int month = Integer.parseInt(vo.getPltEditRequestMonth());
-		// 締日コード取得
-		String cutoffCode = getTransferredCode();
-		// 締日コード確認
-		if (cutoffCode == null || cutoffCode.isEmpty()) {
-			return;
-		}
-		// 締期間最終日取得
-		Date cutoffDate = cutoffUtil.getCutoffLastDate(cutoffCode, year, month);
-		if (cutoffDate == null) {
-			return;
-		}
-		int previousMonthYear = year;
-		int previousMonthMonth = month - 1;
-		if (previousMonthMonth == 0) {
-			previousMonthYear--;
-			previousMonthMonth = 12;
-		}
-		// 締期間最終日 + 1日
-		Date nextDate = DateUtility.addDay(cutoffDate, 1);
-		Date nextMonth = DateUtility.addMonth(cutoffDate, 1);
-		for (String personalId : idSet) {
-			// ストック休暇
-			// 締期間最終日
-			stockRegist.delete(personalId, cutoffDate);
-//			List<StockHolidayDataDtoInterface> stockHolidayDataList = stockInfoReference.getStockHolidayCalcInfo(
-//					personalId, cutoffDate);
-//			for (StockHolidayDataDtoInterface dto : stockHolidayDataList) {
-//				stockRegist.delete(dto.getPersonalId(), dto.getActivateDate());
-//			}
-			// 締期間最終日 + 1
-			stockRegist.delete(personalId, nextDate);
-//			List<StockHolidayDataDtoInterface> nextStockHolidayDataList = stockInfoReference
-//				.getStockHolidayNextMonthInfo(personalId, nextDate, stockHolidayDataList);
-//			for (StockHolidayDataDtoInterface dto : nextStockHolidayDataList) {
-//				stockRegist.delete(dto.getPersonalId(), dto.getActivateDate());
-//			}
-			// 有給休暇
-			List<PaidHolidayDataDtoInterface> paidHolidayDataList = infoReference.getPaidHolidayCalcInfo(personalId,
-					cutoffDate);
-//			for (PaidHolidayDataDtoInterface dto : paidHolidayDataList) {
-//				regist.delete(dto.getPersonalId(), dto.getActivateDate());
-//			}
-			regist.delete(personalId, cutoffDate);
-//			List<PaidHolidayDataDtoInterface> addList = new ArrayList<PaidHolidayDataDtoInterface>();
-			List<PaidHolidayDataDtoInterface> currentNextPaidHolidayDataList = timeReference().paidHolidayData()
-				.getPaidHolidayDataInfoList(personalId, nextDate, nextMonth);
-			for (PaidHolidayDataDtoInterface dto : currentNextPaidHolidayDataList) {
-//				boolean exists = false;
-				for (PaidHolidayDataDtoInterface paidHolidayDataDto : paidHolidayDataList) {
-					if (dto.getAcquisitionDate().equals(paidHolidayDataDto.getAcquisitionDate())) {
-						// 取得日が同じである場合
-						regist.delete(dto);
-//						exists = true;
-//						break;
-					}
-				}
-//				if (!exists) {
-//					addList.add(dto);
-//				}
-			}
-//			// リストに追加
-//			paidHolidayDataList.addAll(addList);
-//			for (PaidHolidayDataDtoInterface dto : currentNextPaidHolidayDataList) {
-//				// 削除
-//				regist.delete(dto);
-//			}
-//			List<PaidHolidayDataDtoInterface> nextPaidHolidayDataList = infoReference.getPaidHolidayNextMonthInfo(
-//					personalId, cutoffDate, year, month, paidHolidayDataList);
-//			for (PaidHolidayDataDtoInterface dto : nextPaidHolidayDataList) {
-//				regist.delete(dto.getPersonalId(), dto.getActivateDate());
-//			}
-			// ストック休暇新規データ
-//			StockHolidayDataDtoInterface stockHolidayDataDto = stockInfoReference.getNewStockHolidayInfo(personalId,
-//					nextDate, infoReference.getExpirationDay(paidHolidayDataList, cutoffDate));
-//			if (stockHolidayDataDto != null) {
-//				stockRegist.delete(stockHolidayDataDto.getPersonalId(), stockHolidayDataDto.getActivateDate());
-//			}
-			// 有給休暇新規データ
-			PaidHolidayDataDtoInterface paidHolidayDataDto = infoReference.getNewPaidHolidayInfo(personalId,
-					cutoffDate, year, month);
-			if (paidHolidayDataDto != null) {
-				regist.delete(paidHolidayDataDto.getPersonalId(), paidHolidayDataDto.getActivateDate());
-			}
-			PaidHolidayDataDtoInterface previousMonthPaidHolidayDataDto = infoReference.getNewPaidHolidayInfo(
-					personalId, previousMonthYear, previousMonthMonth);
-			if (previousMonthPaidHolidayDataDto == null) {
-				continue;
-			}
-			regist.insert(previousMonthPaidHolidayDataDto);
-		}
 	}
 	
 	/**

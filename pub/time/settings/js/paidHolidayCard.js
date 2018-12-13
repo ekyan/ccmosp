@@ -62,15 +62,15 @@ function onLoadExtra() {
 	setDisabled("pltMaxCarryOverTimes", true);
 	setDisabled("pltHalfDayUnit", true);
 	// 新規登録
-	if (modeCardEdit == MODE_CARD_EDIT_INSERT){
+	if (modeCardEdit == MODE_CARD_EDIT_INSERT) {
 		setDisabled("pltEditInactivate", true);
 	}
 	// 履歴追加
-	if (modeCardEdit == MODE_CARD_EDIT_ADD){
+	if (modeCardEdit == MODE_CARD_EDIT_ADD) {
 		setDisabled("txtPaidHolidayCode", true);
 	}
 	// 編集モード確認
-	if (modeCardEdit == MODE_CARD_EDIT_EDIT){
+	if (modeCardEdit == MODE_CARD_EDIT_EDIT) {
 		setDisabled("txtEditActivateYear", true);
 		setDisabled("txtEditActivateMonth", true);
 		setDisabled("txtEditActivateDay", true);
@@ -98,7 +98,7 @@ function checkPaidHolidayCard(aryMessage, event) {
 		aryMessage.push(getMessage(MSG_WORK_RATE_CHECK, null));
 		return;
 	}
-	if(holidayType == 0){
+	if(holidayType == 0) {
 		// 基準月日のチェック
 		if (checkPointDate(aryMessage, event) == false) {
 			return;
@@ -109,6 +109,9 @@ function checkPaidHolidayCard(aryMessage, event) {
 		}
 	} else if (holidayType == 3) {
 		// 対象外なのでチェックなし
+	} else if (holidayType == 4) {
+		// 比例
+		return;
 	} else {
 		// 自動付与（入社日/月）の重複チェック
 		if (checkWorkDate(aryMessage, event) == false) {
@@ -128,11 +131,11 @@ function checkPaidHolidayCard(aryMessage, event) {
  */
 function checkPointDate(aryMessage, event) {
 	// 検索対象文字列宣言
-	var MONTH_ID  = "txtPointDateMonth";
-	var DAY_ID  = "txtPointDateDay";
+	var MONTH_ID = "txtPointDateMonth";
+	var DAY_ID = "txtPointDateDay";
 	// 範囲宣言
-	var MIN_MONTH  = 1;
-	var MAX_MONTH  = 12;
+	var MIN_MONTH = 1;
+	var MAX_MONTH = 12;
 	var MIN_DAY = 1;
 	// 各月最終日宣言
 	var MAX_DAY = new Array(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31);
@@ -190,7 +193,7 @@ function checkPointDate(aryMessage, event) {
  */
 function checkTimesPointDate(aryMessage, event) {
 	// 検索対象文字列宣言
-	var POINT_ID  = "TimesPointDate";
+	var POINT_ID = "TimesPointDate";
 	var aryPoint = [];
 	var aryElement = [];
 	// input要素取得
@@ -207,7 +210,7 @@ function checkTimesPointDate(aryMessage, event) {
 		if (elementId.indexOf(POINT_ID) <= 0) {
 			continue;
 		}
-		if( elementId.length < 19 ){
+		if(elementId.length < 19) {
 			checkNum = 1;
 		} else {
 			checkNum = 2;
@@ -226,7 +229,7 @@ function checkTimesPointDate(aryMessage, event) {
 	var aryPointLength = aryPoint.length;
 	for (var i = 0; i < aryPointLength; i++) {
 		for (var j = i+1; j < aryPointLength; j++) {
-			if(aryPoint[i] == aryPoint[j]){
+			if(aryPoint[i] == aryPoint[j]) {
 				if (aryMessage.length == 0) {
 					setFocus(aryElement[i]);
 				}
@@ -261,16 +264,20 @@ function checkHolidayType() {
 	setDisabled("pltTimelyPaidHolidayTime", false);
 	setDisabled("pltTimeUnitPaidHoliday", false);
 	setDisabled("pltMaxCarryOverYear", false);
-	if (modeCardEdit == MODE_CARD_EDIT_INSERT){
+	if (modeCardEdit == MODE_CARD_EDIT_INSERT) {
 		setDisabled("pltEditInactivate", true);
 	} else {
 		setDisabled("pltEditInactivate", false);
 	}
-	if(holidayType == 0){
+	if(holidayType == 0) {
+		// 基準日
+		setObjectVisibility("Proportionally", false);
 		setObjectVisibility("AutomaticGivingNorm", true);
 		setObjectVisibility("AutomaticGivingJoined", false);
 	} else if(holidayType == 3) {
+		// 対象外
 		// 必要のない項目を全て非表示にする
+		setObjectVisibility("Proportionally", false);
 		setObjectVisibility("FirstYearGiving", false);
 		setObjectVisibility("AutomaticGivingNorm", false);
 		setObjectVisibility("AutomaticGivingJoined", false);
@@ -295,10 +302,16 @@ function checkHolidayType() {
 		setDisabled("pltTimeUnitPaidHoliday", true);
 		setDisabled("pltMaxCarryOverYear", true);
 		setDisabled("pltEditInactivate", true);
+	} else if (holidayType == 4) {
+		// 比例
+		setObjectVisibility("Proportionally", true);
+		setObjectVisibility("FirstYearGiving", false);
+		setObjectVisibility("AutomaticGivingNorm", false);
+		setObjectVisibility("AutomaticGivingJoined", false);
 	} else {
 		setObjectVisibility("AutomaticGivingNorm", false);
 		setObjectVisibility("AutomaticGivingJoined", true);
-		if (modeCardEdit == MODE_CARD_EDIT_INSERT){
+		if (modeCardEdit == MODE_CARD_EDIT_INSERT) {
 			setFormValue("txtPointDateMonth","0");
 			setFormValue("txtPointDateDay","0");
 		}
@@ -313,7 +326,7 @@ function changeHolidayType(event) {
 /**
  * オブジェクトの表示・非表示
  * @param テーブルid
- * @param  num
+ * @param num
  * @return 無し
  * @throws 実行時例外
  */
@@ -336,7 +349,7 @@ function setObjectVisibility(target , isVisible) {
  */
 function checkTimelyPaidHoliday() {
 	var timelyPaidHoliday = getFormValue("pltTimelyPaidHoliday");
-	if(timelyPaidHoliday == 1){
+	if(timelyPaidHoliday == 1) {
 		setDisabled("pltTimelyPaidHolidayTime", true);
 		setDisabled("pltTimeUnitPaidHoliday", true);
 	} else {
@@ -357,8 +370,8 @@ function changeTimelyPaidHoliday(event) {
  */
 function checkWorkDate(aryMessage, event) {
 	// 検索対象文字列宣言
-	var WORK_YEAR_ID  = "WorkYear";
-	var WORK_MONTH_ID  = "WorkMonth";
+	var WORK_YEAR_ID = "WorkYear";
+	var WORK_MONTH_ID = "WorkMonth";
 	var aryYear = [];
 	var aryMonth = [];
 	var aryElement = [];
@@ -376,7 +389,7 @@ function checkWorkDate(aryMessage, event) {
 		if (elementId.indexOf(WORK_YEAR_ID) <= 0) {
 			continue;
 		}
-		if( elementId.length < 13 ){
+		if(elementId.length < 13) {
 			checkNum = 1;
 		} else {
 			checkNum = 2;
@@ -404,7 +417,7 @@ function checkWorkDate(aryMessage, event) {
 	var aryYearLength = aryYear.length;
 	for (var i = 0; i < aryYearLength; i++) {
 		for (var j = i+1; j < aryYearLength; j++) {
-			if(aryYear[i] == aryYear[j] && aryMonth[i] == aryMonth[j]){
+			if(aryYear[i] == aryYear[j] && aryMonth[i] == aryMonth[j]) {
 				if (aryMessage.length == 0) {
 					setFocus(aryElement[i]);
 				}
@@ -423,9 +436,9 @@ function checkWorkDate(aryMessage, event) {
  */
 function checkWorkRecordDate(aryMessage, event) {
 	// 検索対象文字列宣言
-	var WORK_YEAR_ID  = "WorkYear";
-	var WORK_MONTH_ID  = "WorkMonth";
-	var JOIN_DATE_ID  = "JoiningDateAmount";
+	var WORK_YEAR_ID = "WorkYear";
+	var WORK_MONTH_ID = "WorkMonth";
+	var JOIN_DATE_ID = "JoiningDateAmount";
 	// input要素取得
 	objTarget = document.form;
 	var inputNodeList = objTarget.getElementsByTagName("input");
@@ -442,7 +455,7 @@ function checkWorkRecordDate(aryMessage, event) {
 		if (elementId.indexOf(WORK_YEAR_ID) <= 0) {
 			continue;
 		}
-		if( elementId.length < 13 ){
+		if(elementId.length < 13) {
 			checkNum = 1;
 		} else {
 			checkNum = 2;
@@ -502,7 +515,7 @@ function checkWorkRecordDate(aryMessage, event) {
 		errorElement = element;
 		workNum++;
 	}
-	if( inputFlg == 0 ){
+	if(inputFlg == 0) {
 		if (aryMessage.length == 0) {
 			setFocus(errorElement);
 		}

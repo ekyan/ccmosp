@@ -76,48 +76,12 @@ public interface GeneralRegistBeanInterface {
 	void validate(GeneralDtoInterface dto) throws MospException;
 	
 	/**
-	 * 下書時の確認処理を行う。<br>
-	 * @param dto 対象DTO
-	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合 
-	 */
-	void checkDraft(GeneralDtoInterface dto) throws MospException;
-	
-	/**
-	 * 申請時の確認処理を行う。<br>
-	 * @param dto 対象DTO
-	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
-	 */
-	void checkAppli(GeneralDtoInterface dto) throws MospException;
-	
-	/**
-	 * 承認時の確認処理を行う。<br>
-	 * @param dto 対象DTO
-	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
-	 */
-	void checkApproval(GeneralDtoInterface dto) throws MospException;
-	
-	/**
-	 * 取消時の確認処理を行う。<br>
-	 * @param dto 対象DTO
-	 */
-	void checkCancel(GeneralDtoInterface dto);
-	
-	/**
-	 * 申請、下書き時の入力チェック。仮締チェック。<br>
-	 * <p>
-	 * 仮締されている場合、エラーメッセージを設定する。
-	 * </p>
-	 * @param dto 対象DTO
-	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
-	 */
-	void checkTemporaryClosingFinal(GeneralDtoInterface dto) throws MospException;
-	
-	/**
 	 * 汎用情報の削除処理。<br>
-	 * @param personalId 個人ID
-	 * @param workDate 勤務日
+	 * @param generalType 汎用区分
+	 * @param generalCode 汎用コード
+	 * @param generalDate 汎用日付
 	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
 	 */
-	void delete(String personalId, Date workDate) throws MospException;
+	void delete(String generalType, String generalCode, Date generalDate) throws MospException;
 	
 }

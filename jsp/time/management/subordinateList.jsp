@@ -30,6 +30,7 @@ import = "jp.mosp.platform.comparator.base.EmployeeNameComparator"
 import = "jp.mosp.platform.comparator.base.SectionCodeComparator"
 import = "jp.mosp.platform.constant.PlatformConst"
 import = "jp.mosp.platform.utils.PlatformUtility"
+import = "jp.mosp.platform.utils.PlatformNamingUtility"
 import = "jp.mosp.time.comparator.settings.SubordinateAbsenceComparator"
 import = "jp.mosp.time.comparator.settings.SubordinateAllHolidayComparator"
 import = "jp.mosp.time.comparator.settings.SubordinateApprovalComparator"
@@ -56,7 +57,7 @@ SubordinateListVo vo = (SubordinateListVo)params.getVo();
 boolean isSubHolidayRequestValid = TimeUtility.isSubHolidayRequestValid(params);
 %>
 <div class="List" id="divSearch">
-	<table class="InputTable">
+	<table class="InputTable" id="subordinateList_tblSearch">
 		<thead>
 			<tr>
 				<th class="ListTableTh" colspan="6">
@@ -78,7 +79,7 @@ boolean isSubHolidayRequestValid = TimeUtility.isSubHolidayRequestValid(params);
 					<%= params.getName("Month") %>&nbsp;
 					<button type="button" class="Name2Button" id="btnRequestDate" onclick="submitForm(event, 'divSearchClassRoute', null, '<%= SubordinateListAction.CMD_SET_ACTIVATION_DATE %>')"><%= vo.getModeActivateDate().equals(PlatformConst.MODE_ACTIVATE_DATE_FIXED) ? params.getName("Change") : params.getName("Decision") %></button>
 				</td>
-				<td class="TitleTd"><%= params.getName("Employee","Code") %></td>
+				<td class="TitleTd"><%= PlatformNamingUtility.employeeCode(params) %></td>
 				<td class="InputTd">
 					<Input type="text" class="Code10TextBox" id="txtSearchEmployeeCode" name="txtSearchEmployeeCode" value="<%= HtmlUtility.escapeHTML(vo.getTxtSearchEmployeeCode()) %>" />
 				</td>
@@ -100,10 +101,10 @@ boolean isSubHolidayRequestValid = TimeUtility.isSubHolidayRequestValid(params);
 						<%= HtmlUtility.getSelectOption(vo.getAryPltEmployment(), vo.getPltSearchEmployment()) %>
 					</select>
 				</td>
-				<td class="TitleTd"><%= params.getName("Ram","Approval") %></td>
+				<td class="TitleTd"><%= params.getName("Search","Type") %></td>
 				<td class="InputTd">
-					<select class="Name7PullDown" id="pltSearchApproval" name="pltSearchApproval">
-						<%= HtmlUtility.getSelectOption(vo.getAryPltApproval(), vo.getPltSearchApproval()) %>
+					<select class="Name7PullDown" id="pltSearchHumanType" name="pltSearchHumanType">
+						<%= HtmlUtility.getSelectOption(vo.getAryPltHumanType(), vo.getPltSearchHumanType()) %>
 					</select>
 				</td>
 			</tr>
@@ -125,6 +126,15 @@ boolean isSubHolidayRequestValid = TimeUtility.isSubHolidayRequestValid(params);
 					<select class="Name2PullDown" id="pltSearchCalc" name="pltSearchCalc">
 						<%= HtmlUtility.getSelectOption(vo.getAryPltCalc(), vo.getPltSearchCalc()) %>
 					</select>
+				</td>
+			</tr>
+			<tr>
+				<td class="TitleTd"><%= params.getName("Ram","Approval") %></td>
+				<td class="InputTd">
+					<select class="Name7PullDown" id="pltSearchApproval" name="pltSearchApproval">
+						<%= HtmlUtility.getSelectOption(vo.getAryPltApproval(), vo.getPltSearchApproval()) %>
+					</select>
+					<input type="checkbox" class="CheckBox" id="ckbYesterday" name="ckbYesterday" value="<%= MospConst.CHECKBOX_ON %>" <%= HtmlUtility.getChecked(vo.getCkbYesterday()) %> />&nbsp;<%= params.getName("BeforeDay","Until") %>
 				</td>
 			</tr>
 		</tbody>
@@ -161,7 +171,7 @@ if (vo.getAryLblEmployeeCode().length > 0) {
 			</tr>
 			<tr>
 				<th class="ListSelectTh" id="thButton"></th>
-				<th class="ListSortTh" id="thEmployeeCode" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= EmployeeCodeComparator.class.getName() %>'), '<%= SubordinateListAction.CMD_SORT %>')"><%= params.getName("Code") %><%= PlatformUtility.getSortMark(EmployeeCodeComparator.class.getName(), params) %></th>
+				<th class="ListSortTh" id="thEmployeeCode" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= EmployeeCodeComparator.class.getName() %>'), '<%= SubordinateListAction.CMD_SORT %>')"><%= params.getName("SubordinateCode") %><%= PlatformUtility.getSortMark(EmployeeCodeComparator.class.getName(), params) %></th>
 				<th class="ListSortTh" id="thEmployeeName" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= EmployeeNameComparator.class.getName() %>'), '<%= SubordinateListAction.CMD_SORT %>')"><%= params.getName("Employee","FirstName") %><%= PlatformUtility.getSortMark(EmployeeNameComparator.class.getName(), params) %></th>
 				<th class="ListSortTh" id="thSection" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= SectionCodeComparator.class.getName() %>'), '<%= SubordinateListAction.CMD_SORT %>')"><%= params.getName("Section") %><%= PlatformUtility.getSortMark(SectionCodeComparator.class.getName(), params) %></th>
 				<th class="ListSortTh" id="thWorkDate" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= SubordinateWorkDateComparator.class.getName() %>'), '<%= SubordinateListAction.CMD_SORT %>')"><%= params.getName("GoingWork") %><%= PlatformUtility.getSortMark(SubordinateWorkDateComparator.class.getName(), params) %></th>
@@ -221,7 +231,7 @@ for (int i = 0; i < vo.getAryLblEmployeeCode().length; i++) {
 				<td class="ListSelectTd"><span class="<%= vo.getClaApploval(i) %>"><%= vo.getAryLblApploval(i) %></span></td>
 				<td class="ListSelectTd"><span class="<%= vo.getClaCalc(i) %>"><%= vo.getAryLblCalc(i) %></span></td>
 				<td class="ListSelectTd"><%= HtmlUtility.escapeHTML(vo.getAryLblCorrection(i)) %></td>
-				<td class="ListSelectTd"><input type="checkbox" class="CheckBox" name="ckbSelect" value="<%= vo.getAryPersonalId(i) %>" <%= HtmlUtility.getChecked(vo.getAryPersonalId(i), vo.getCkbSelect()) %> /></td>
+				<td class="ListSelectTd"><input type="checkbox" class="CheckBox" name="ckbSelect" value="<%= i %>" <%= HtmlUtility.getChecked(i, vo.getCkbSelect()) %> /></td>
 			</tr>
 <%
 }
@@ -233,108 +243,6 @@ for (int i = 0; i < vo.getAryLblEmployeeCode().length; i++) {
 if (vo.getAryLblEmployeeCode().length > 0) {
 %>
 <%= HtmlUtility.getListInfoFlex(params, vo.getList(), vo.getPageCommand(), vo.getDataPerPage(), vo.getSelectIndex()) %>
-<%
-}
-%>
-
-<%
-if (false) {
-%>
-<div class="List">
-	<table class="LeftListTable" id="tblTotal">
-		<tr>
-			<th class="ListSelectTh" id="thTotalTime" rowspan="2">
-				<div><%= params.getName("SumTotal") %></div>
-				<div><%= params.getName("Time") %></div>
-			</th>
-			<th class="ListSelectTh" id="thTotalTime"><%= params.getName("Work") %></th>
-			<th class="ListSelectTh" id="thTotalTime"><%= params.getName("RestTime") %></th>
-			<th class="ListSelectTh" id="thTotalTime"><%= params.getName("GoingOut") %></th>
-			<th class="ListSelectTh" id="thTotalTime"><%= params.getName("LateLeaveEarly") %></th>
-			<th class="ListSelectTh" id="thTotalTime"><%= params.getName("Inside","Remainder") %></th>
-			<th class="ListSelectTh" id="thTotalTime"><%= params.getName("LeftOut") %></th>
-			<th class="ListSelectTh" id="thTotalTime"><%= params.getName("WorkingHoliday") %></th>
-			<th class="ListSelectTh" id="thTotalTime"><%= params.getName("Midnight") %></th>
-			<th class="ListSelectTh" id="thTotalTime" rowspan="2"><%= params.getName("Frequency") %></th>
-			<th class="ListSelectTh" id="thTotalTime"><%= params.getName("GoingWork") %></th>
-			<th class="ListSelectTh" id="thTotalTime"><%= params.getName("Tardiness") %></th>
-			<th class="ListSelectTh" id="thTotalTime"><%= params.getName("LeaveEarly") %></th>
-			<th class="ListSelectTh" id="thTotalTime"><%= params.getName("OvertimeWork") %></th>
-			<th class="ListSelectTh" id="thTotalTime"><%= params.getName("WorkingHoliday") %></th>
-		</tr>
-		<tr>
-			<td class="SelectTd" id="lblTotalWork"><%= vo.getLblTotalWork() %></td>
-			<td class="SelectTd" id="lblTotalRest"><%= vo.getLblTotalRest() %></td>
-			<td class="SelectTd" id="lblTotalPrivate"><%= vo.getLblTotalPrivate() %></td>
-			<td class="SelectTd" id="lblTotalLateLeaveEarly"><%= vo.getLblTotalLateLeaveEarly() %></td>
-			<td class="SelectTd" id="lblTotalOverTimeIn"><%= vo.getLblTotalOverTimeIn() %></td>
-			<td class="SelectTd" id="lblTotalOverTimeOut"><%= vo.getLblTotalOverTimeOut() %></td>
-			<td class="SelectTd" id="lblTotalWorkOnHoliday"><%= vo.getLblTotalWorkOnHoliday() %></td>
-			<td class="SelectTd" id="lblTotalLateNight"><%= vo.getLblTotalLateNight() %></td>
-			<td class="SelectTd" id="lblTimesWork"><%= vo.getLblTimesWork() %></td>
-			<td class="SelectTd" id="lblTimesLate"><%= vo.getLblTimesLate() %></td>
-			<td class="SelectTd" id="lblTimesLeaveEarly"><%= vo.getLblTimesLeaveEarly() %></td>
-			<td class="SelectTd" id="lblTimesOverTimeWork"><%= vo.getLblTimesOverTimeWork() %></td>
-			<td class="SelectTd" id="lblTimesWorkOnHoliday"><%= vo.getLblTimesWorkOnHoliday() %></td>
-		</tr>
-		<tr>
-			<th class="ListSelectTh" id="thTotalTime" rowspan="2"><%= params.getName("Holiday") %></th>
-			<th class="ListSelectTh" id="thTotalTime"><%= params.getName("Legal") %></th>
-			<th class="ListSelectTh" id="thTotalTime"><%= params.getName("Prescribed") %></th>
-			<th class="ListSelectTh" id="thTotalTime"><%= params.getName("ClosedVibration") %></th>
-			<th class="ListSelectTh" id="thTotalTime" rowspan="2"><%= params.getName("Vacation") %></th>
-			<th class="ListSelectTh" id="thTotalTime"><%= params.getName("PaidHoliday") %></th>
-			<th class="ListSelectTh" id="thTotalTime"><%= params.getName("SalaryTime") %></th>
-			<th class="ListSelectTh" id="thTotalTime"><%= params.getName("SpecialLeave") %></th>
-			<th class="ListSelectTh" id="thTotalTime"><%= params.getName("Others") %></th>
-<% if (isSubHolidayRequestValid) { %>
-			<th class="ListSelectTh" id="thTotalTime"><%= params.getName("CompensatoryHoliday") %></th>
-<% } %>
-			<th class="ListSelectTh" id="thTotalTime"><%= params.getName("Absence") %></th>
-			<td class="Blank" colspan="4" rowspan="4"></td>
-		</tr>
-		<tr>
-			<td class="SelectTd" id="lblTimesLegalHoliday"><%= vo.getLblTimesLegalHoliday() %></td>
-			<td class="SelectTd" id="lblTimesSpecificHoliday"><%= vo.getLblTimesSpecificHoliday() %></td>
-			<td class="SelectTd" id="lblTimesSubstitute"><%= vo.getLblTimesSubstitute() %></td>
-			<td class="SelectTd" id="lblTimesPaidHoliday"><%= vo.getLblTimesPaidHoliday() %></td>
-			<td class="SelectTd" id="lblTimesPaidHolidayTime"><%= vo.getLblTimesPaidHoloidayTime() %></td>
-			<td class="SelectTd" id="lblTimesSpecialHoloiday"><%= vo.getLblTimesSpecialHoloiday() %></td>
-			<td class="SelectTd" id="lblTimesOtherHoliday"><%= vo.getLblTimesOtherHoloiday() %></td>
-<% if (isSubHolidayRequestValid) { %>
-			<td class="SelectTd" id="lblTimesSubHoliday"><%= vo.getLblTimesSubHoliday() %></td>
-<% } %>
-			<td class="SelectTd" id="lblTimesAbsence"><%= vo.getLblTimesAbsence() %></td>
-		</tr>
-<!--
-		<tr>
-			<th class="ListSelectTh" id="thTotalTime" rowspan="2"><= params.getName("Allowance") %></th>
-			<th class="ListSelectTh" id="thTotalTime"><= params.getName("Allowance","No1") %></th>
-			<th class="ListSelectTh" id="thTotalTime"><= params.getName("Allowance","No2") %></th>
-			<th class="ListSelectTh" id="thTotalTime"><= params.getName("Allowance","No3") %></th>
-			<th class="ListSelectTh" id="thTotalTime"><= params.getName("Allowance","No4") %></th>
-			<th class="ListSelectTh" id="thTotalTime"><= params.getName("Allowance","No5") %></th>
-			<th class="ListSelectTh" id="thTotalTime"><= params.getName("Allowance","No6") %></th>
-			<th class="ListSelectTh" id="thTotalTime"><= params.getName("Allowance","No7") %></th>
-			<th class="ListSelectTh" id="thTotalTime"><= params.getName("Allowance","No8") %></th>
-			<th class="ListSelectTh" id="thTotalTime"><= params.getName("Allowance","No9") %></th>
-			<th class="ListSelectTh" id="thTotalTime"><= params.getName("Allowance","No10") %></th>
-		</tr>
-		<tr>
-			<td class="SelectTd" id="lblTimesAllowance1"><= vo.getLblTimesAllowance1() %></td>
-			<td class="SelectTd" id="lblTimesAllowance2"><= vo.getLblTimesAllowance2() %></td>
-			<td class="SelectTd" id="lblTimesAllowance3"><= vo.getLblTimesAllowance3() %></td>
-			<td class="SelectTd" id="lblTimesAllowance4"><= vo.getLblTimesAllowance4() %></td>
-			<td class="SelectTd" id="lblTimesAllowance5"><= vo.getLblTimesAllowance5() %></td>
-			<td class="SelectTd" id="lblTimesAllowance6"><= vo.getLblTimesAllowance6() %></td>
-			<td class="SelectTd" id="lblTimesAllowance7"><= vo.getLblTimesAllowance7() %></td>
-			<td class="SelectTd" id="lblTimesAllowance8"><= vo.getLblTimesAllowance8() %></td>
-			<td class="SelectTd" id="lblTimesAllowance9"><= vo.getLblTimesAllowance9() %></td>
-			<td class="SelectTd" id="lblTimesAllowance10"><= vo.getLblTimesAllowance10() %></td>
-		</tr>
--->
-	</table>
-</div>
 <%
 }
 %>

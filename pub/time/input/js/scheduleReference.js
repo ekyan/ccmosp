@@ -19,6 +19,8 @@
  * 画面読込時追加処理。
  */
 function onLoadExtra() {
+	// 勤怠一覧用当日背景色設定
+	setToDayTableColor("list")
 	// 勤怠年変更イベント設定
 	setOnChangeHandler("pltSelectYear", changeSelect);
 	// 勤怠年変更イベント設定
@@ -33,3 +35,4 @@ function changeSelect(event) {
 	// リクエスト送信
 	submitForm(event, null, null, getFormValue("hdnSearchCommand"));
 }
+

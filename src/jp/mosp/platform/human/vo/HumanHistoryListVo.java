@@ -18,6 +18,7 @@
 package jp.mosp.platform.human.vo;
 
 import java.util.Date;
+import java.util.LinkedHashMap;
 
 import jp.mosp.platform.human.base.PlatformHumanVo;
 
@@ -26,15 +27,27 @@ import jp.mosp.platform.human.base.PlatformHumanVo;
  */
 public class HumanHistoryListVo extends PlatformHumanVo {
 	
-	private static final long	serialVersionUID	= -6918193191713351429L;
+	private static final long									serialVersionUID	= -6918193191713351429L;
 	
-	private String[]			aryActiveteDate;
+	private String[]											aryActiveteDate;
 	
-	private Date				activeDate;
+	private Date												activeDate;
 	
 	// 削除：履歴が一つだけしかない時の削除要否フラグ
-	private Boolean				jsIsLastHistory;
+	private Boolean												jsIsLastHistory;
 	
+	private LinkedHashMap<String, LinkedHashMap<String, Long>>	aryHistoryRecordIdMap;
+	
+	
+	/**
+	 * VOの初期設定を行う。<br>
+	 * <br>
+	 */
+	public HumanHistoryListVo() {
+		super();
+		aryHistoryRecordIdMap = new LinkedHashMap<String, LinkedHashMap<String, Long>>();
+		
+	}
 	
 	/**
 	 * @param aryActiveteDate セットする aryActiveteDate
@@ -62,14 +75,14 @@ public class HumanHistoryListVo extends PlatformHumanVo {
 	 * @param activeDate セットする activeDate
 	 */
 	public void setActiveDate(Date activeDate) {
-		this.activeDate = activeDate;
+		this.activeDate = getDateClone(activeDate);
 	}
 	
 	/**
 	 * @return activeDate
 	 */
 	public Date getActiveDate() {
-		return activeDate;
+		return getDateClone(activeDate);
 	}
 	
 	/**
@@ -84,6 +97,31 @@ public class HumanHistoryListVo extends PlatformHumanVo {
 	 */
 	public boolean getJsIsLastHistory() {
 		return jsIsLastHistory;
+	}
+	
+	/**
+	 * レコード識別IDマップを設定<br>
+	 * @param aryHistoryRecordIdMap レコード識別IDマップ
+	 */
+	public void setAryHistoryRecordIdMap(LinkedHashMap<String, LinkedHashMap<String, Long>> aryHistoryRecordIdMap) {
+		this.aryHistoryRecordIdMap.putAll(aryHistoryRecordIdMap);
+	}
+	
+	/**
+	 * レコード識別IDを取得<br>
+	 * @param itemKey 人事汎用管理項目 
+	 * @return 識別ID 
+	 */
+	public LinkedHashMap<String, Long> getAryHistoryRecordIdMap(String itemKey) {
+		return aryHistoryRecordIdMap.get(itemKey);
+	}
+	
+	/**
+	 * 識別IDマップを取得<br>
+	 * @return 識別IDマップ 
+	 */
+	public LinkedHashMap<String, LinkedHashMap<String, Long>> getAryHistoryRecordIdMap() {
+		return aryHistoryRecordIdMap;
 	}
 	
 }

@@ -36,7 +36,7 @@ public class RetirementReferenceBean extends BaseBean implements RetirementRefer
 	/**
 	 * 人事退職情報DAO
 	 */
-	private RetirementDaoInterface	retirementDao;
+	private RetirementDaoInterface retirementDao;
 	
 	
 	/**

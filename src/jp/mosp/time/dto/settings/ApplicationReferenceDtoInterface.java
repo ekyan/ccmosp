@@ -28,9 +28,9 @@ import jp.mosp.platform.dto.base.WorkPlaceCodeDtoInterface;
 /**
  * 設定適用マスタDTOインターフェース。
  */
-public interface ApplicationReferenceDtoInterface extends EmployeeCodeDtoInterface, EmployeeNameDtoInterface,
-		SectionCodeDtoInterface, WorkPlaceCodeDtoInterface, PositionCodeDtoInterface, PlatformDtoInterface,
-		EmploymentContractCodeDtoInterface {
+public interface ApplicationReferenceDtoInterface
+		extends EmployeeCodeDtoInterface, EmployeeNameDtoInterface, SectionCodeDtoInterface, WorkPlaceCodeDtoInterface,
+		PositionCodeDtoInterface, PlatformDtoInterface, EmploymentContractCodeDtoInterface {
 	
 	/**
 	 * @return 個人ID

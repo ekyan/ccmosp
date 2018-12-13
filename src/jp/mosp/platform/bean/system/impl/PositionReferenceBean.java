@@ -47,7 +47,7 @@ public class PositionReferenceBean extends PlatformBean implements PositionRefer
 	/**
 	 * 職位マスタDAO。
 	 */
-	private PositionDaoInterface	dao;
+	private PositionDaoInterface dao;
 	
 	
 	/**
@@ -113,7 +113,8 @@ public class PositionReferenceBean extends PlatformBean implements PositionRefer
 	}
 	
 	@Override
-	public Map<String, PositionDtoInterface> getPositionMap(Date targetDate, String operationType) throws MospException {
+	public Map<String, PositionDtoInterface> getPositionMap(Date targetDate, String operationType)
+			throws MospException {
 		// リストを取得しマップに変換
 		return getMap(getPositionList(targetDate, operationType));
 	}
@@ -144,7 +145,8 @@ public class PositionReferenceBean extends PlatformBean implements PositionRefer
 	}
 	
 	@Override
-	public String[][] getNameSelectArray(Date targetDate, boolean needBlank, String operationType) throws MospException {
+	public String[][] getNameSelectArray(Date targetDate, boolean needBlank, String operationType)
+			throws MospException {
 		// プルダウン用配列取得(名称)
 		return getSelectArray(targetDate, needBlank, operationType, true, false, false);
 	}
@@ -281,10 +283,11 @@ public class PositionReferenceBean extends PlatformBean implements PositionRefer
 		// 操作範囲(職位)配列をリストに変換(ここに兼務情報を追加する)
 		List<String> rangeList = new ArrayList<String>(MospUtility.asList(rangeArray));
 		// 人事兼務情報参照クラス取得
-		ConcurrentReferenceBeanInterface concurrentRefer = (ConcurrentReferenceBeanInterface)createBean(ConcurrentReferenceBeanInterface.class);
+		ConcurrentReferenceBeanInterface concurrentRefer = (ConcurrentReferenceBeanInterface)createBean(
+				ConcurrentReferenceBeanInterface.class);
 		// 対象日時点で終了していない人事兼務情報のリストを取得
-		List<ConcurrentDtoInterface> concurrentList = concurrentRefer.getConcurrentList(mospParams.getUser()
-			.getPersonalId(), targetDate);
+		List<ConcurrentDtoInterface> concurrentList = concurrentRefer
+			.getConcurrentList(mospParams.getUser().getPersonalId(), targetDate);
 		// 人事兼務情報毎に処理
 		for (ConcurrentDtoInterface concurrent : concurrentList) {
 			// 操作範囲(職位)リストに追加
@@ -360,11 +363,11 @@ public class PositionReferenceBean extends PlatformBean implements PositionRefer
 		sb.append(code);
 		// コード用全角空白設定
 		for (int i = 0; i < codeDoubleBytes; i++) {
-			sb.append(STR_DB_SAPCE);
+			sb.append(MospConst.STR_DB_SPACE);
 		}
 		// コード用半角空白設定
 		for (int i = 0; i < codeSingleBytes; i++) {
-			sb.append(STR_SB_SAPCE);
+			sb.append(MospConst.STR_SB_SPACE);
 		}
 		// 等級付加
 		sb.append(mospParams.getName("LeftSquareBracket"));
@@ -372,11 +375,11 @@ public class PositionReferenceBean extends PlatformBean implements PositionRefer
 		sb.append(mospParams.getName("RightSquareBracket"));
 		// 全角空白設定
 		for (int i = 0; i < doubleBytes; i++) {
-			sb.append(STR_DB_SAPCE);
+			sb.append(MospConst.STR_DB_SPACE);
 		}
 		// 半角空白設定
 		for (int i = 0; i < singleBytes; i++) {
-			sb.append(STR_SB_SAPCE);
+			sb.append(MospConst.STR_SB_SPACE);
 		}
 		// 名称付加
 		sb.append(name);

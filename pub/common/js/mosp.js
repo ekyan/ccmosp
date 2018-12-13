@@ -175,14 +175,34 @@ var TAG_TR = "TR";
 var TAG_TD = "TD";
 
 /**
+ * タグ名(SPAN)
+ */
+var TAG_SPAN = "SPAN";
+
+/**
  * タグ名(A)。
  */
 var TAG_A = "A";
 
 /**
+ * タグ名(TABLE)。
+ */
+var TAG_TABLE = "TABLE";
+
+/**
+ * タグ名(DIV)。
+ */
+var TAG_DIV = "DIV";
+
+/**
  * 入力タイプ(text)。
  */
 var INPUT_TYPE_TEXT = "text";
+
+/**
+ * 入力タイプ(password)。
+ */
+var INPUT_TYPE_PASSWORD = "password";
 
 /**
  * 入力タイプ(checkbox)。
@@ -198,6 +218,31 @@ var INPUT_TYPE_HIDDEN = "hidden";
  * 属性(for)。
  */
 var ATT_FOR = "for";
+
+/**
+ * 最小値(日付：年)。
+ */
+var MIN_DATE_YEAR = 1000;
+
+/**
+ * 最大値(日付：年)。
+ */
+var MAX_DATE_YEAR = 9000;
+
+/**
+ * 最大値(日付：年)。
+ */
+var SEPARATOR_DATE = "/";
+
+/**
+ * イベント大区分(HTML)。
+ */
+var EVENTS_TYPE_HTML = "HTMLEvents";
+
+/**
+ * イベント区分(change)。
+ */
+var EVENT_TYPE_CHANGE = "change";
 
 /**
  * リクエスト送信準備をする。<br>
@@ -233,6 +278,8 @@ function prepareSubmit(objForm, cmd) {
 function doSubmit(objForm, cmd) {
 	// リクエスト送信準備
 	if (prepareSubmit(objForm, cmd)) {
+		// 送信(submit)直前の処理
+		beforeSubmit();
 		// submit
 		objForm.submit();
 	}
@@ -250,6 +297,8 @@ function doSubmitForFile(objForm, cmd) {
 	if (prepareSubmit(objForm, cmd)) {
 		// 問合中フラグ更新
 		inquiring = false;
+		// 送信(submit)直前の処理
+		beforeSubmit();
 		// submit
 		objForm.submit();
 	}
@@ -267,10 +316,19 @@ function doSubmitForMulti(objForm, cmd) {
 	// リクエスト送信準備
 	if (prepareSubmit(objForm, cmd)) {
 		// ファイルアップロード対応
-		objForm.encoding = "multipart/form-data"
+		objForm.encoding = "multipart/form-data";
+		// 送信(submit)直前の処理
+		beforeSubmit();
 		// submit
 		objForm.submit();
 	}
+}
+
+/**
+ * 送信(submit)直前の処理を行う。
+ */
+function beforeSubmit() {
+	// 各画面で実装
 }
 
 /**
@@ -352,6 +410,23 @@ function getElementByName(target, tagName, name) {
 		}
 	}
 	return null;
+}
+
+/**
+ * 対象要素から遡り取得対象タグの要素を取得する。<br>
+ * @param target  対象要素
+ * @param tagName 取得対象タグ
+ * @returns 要素
+ */
+function getUpperElementByTagName(target, tagName) {
+	// 上位要素取得
+	var upper = target.parentNode
+	// 上位要素確認
+	while (upper.tagName != tagName && upper != null) {
+		// 上位要素取得
+		upper = upper.parentNode;
+	}
+	return upper;
 }
 
 /**
@@ -580,7 +655,14 @@ function getBorderBottomWidth(target) {
  */
 function setDisabled(target, disabled) {
 	var objTarget = getObject(target);
+	// disabled属性がある場合
 	if (objTarget != null && objTarget.disabled != null) {
+		// style.backgroundColor属性がある場合
+		if (objTarget.style != null && objTarget.style.backgroundColor != null) {
+			// style.backgroundColor属性をリセット
+			objTarget.style.backgroundColor = "";
+		}
+		// disabledを設定
 		objTarget.disabled = disabled;
 	}
 }
@@ -594,12 +676,16 @@ function setDisabled(target, disabled) {
  */
 function setReadOnly(target, isReadOnly) {
 	var objTarget = getObject(target);
+	if (objTarget == null) {
+		return;
+	}
 	if (isReadOnly) {
 		objTarget.blur();
 		window.focus();
 	}
 	switch (objTarget.type) {
 		case "text":
+		case "textarea":
 			if (isReadOnly) {
 				objTarget.readOnly = "readonly";
 			} else {
@@ -609,6 +695,7 @@ function setReadOnly(target, isReadOnly) {
 		case "select-one":
 		case "checkbox":
 		case "button":
+		case "radio":
 		case "radio":
 			objTarget.disabled = isReadOnly;
 			break;
@@ -620,6 +707,19 @@ function setReadOnly(target, isReadOnly) {
 		setColor(target, COLOR_FONT_NORMAL);
 	}
 }
+
+/**
+ * 読取専用設定（タグ一括）
+ * @param targetTag 対象タグ
+ * @param isRead 活性状態（true:読み取り専用、false:入力状態）
+ */
+function setReadOnlyForTag(targetTag,isRead) {
+	var elements = getElementsByTagName(document.form, targetTag);
+	for (var i = 0; i < elements.length; i++) {
+		setReadOnly(elements[i], isRead);
+	}
+}
+
 
 /**
  * 可視設定
@@ -782,6 +882,21 @@ function removeSelectedOption(target) {
 }
 
 /**
+ * セレクトボックスのオプションを削除する。<br>
+ * @param target セレクトボックス(StringあるいはObject)
+ */
+function removeAllOptions(target) {
+	// オプション及びオプション長を取得
+	var options = getSelectOptions(target);
+	var optionLength = options.length;
+	// オプション毎に処理
+	for (var i = optionLength - 1; i >= 0; i--) {
+		// オプションを削除
+		options[i] = null;
+	}
+}
+
+/**
  * セレクトボックスのオプションを設定する。
  * @param target      設定対象セレクトボックス(StringあるいはObject)
  * @param optionArray 設定オプション配列(1列目：値、2列目：表示内容)
@@ -825,6 +940,54 @@ function moveSelectOptions(targetFrom, targetTo) {
 }
 
 /**
+ * セレクトボックスの末尾にオプションを追加する。<br>
+ * @param target セレクトボックス(StringあるいはObject)
+ * @param text   表示内容
+ * @param value  値
+ */
+function addSelectOption(target, text, value) {
+	// オブジェクトを取得
+	var objTarget = getObject(target);
+	// オブジェクトのタグ名がSELECTでない場合
+	if (objTarget.nodeName != TAG_SELECT) {
+		// 処理無し
+		return;
+	}
+	// オプション及びオプション長を取得
+	var options = getSelectOptions(objTarget);
+	var optionLength = options.length;
+	// オプション毎に処理
+	for (var i = 0; i < optionLength; i++) {
+		// 同じ値のオプションが存在する場合
+		if (options[i].value == value) {
+			// 処理無し
+			return;
+		}
+	}
+	// オプションを追加
+	options.add(new Option(text, value));
+}
+
+/**
+ * セレクトボックスのオプションをコピーする。<br>
+ * @param targetFrom コピー元セレクトボックス(StringあるいはObject)
+ * @param targetTo   コピー先セレクトボックス(StringあるいはObject)
+ */
+function copySelectOptions(targetFrom, targetTo) {
+	// コピー先のオプションを削除
+	removeAllOptions(targetTo);
+	// オプション及びオプション長を取得
+	var optionFrom = getSelectOptions(targetFrom);
+	var optionTo = getSelectOptions(targetTo);
+	var optionFromLength = optionFrom.length;
+	// コピー元のオプション毎に処理
+	for (var i = 0; i < optionFromLength; i++) {
+		// コピー先のオプションに追加
+		optionTo.add(new Option(optionFrom[i].text, optionFrom[i].value));
+	}
+}
+
+/**
  * チェックボックス等のチェックを操作する。<br>
  * @param target  設定対象チェックボックス
  * @param checked チェック要否(true：チェック、false：チェック外し)
@@ -846,6 +1009,52 @@ function isCheckableChecked(target) {
 	if (objTarget != null && objTarget.checked != null && objTarget.checked == true) {
 		return true;
 	}
+	return false;
+}
+
+/**
+ * チェックボックスの選択値を取得する。
+ * 選択されていない場合は、空の配列を返す。
+ * @param targetName チェックボックス名
+ * @return チェックボックス選択値配列
+ */
+function getCheckBoxSelectedValue(targetName) {
+	// チェックボックス選択値配列を準備
+	var values = new Array();
+	// チェックボックス要素群を取得
+	var elements = document.getElementsByName(targetName);
+	var elementsLength = elements.length;
+	// チェックボックス要素毎に処理
+	for (var i = 0; i < elementsLength; i++) {
+		// 選択されている場合
+		if (elements[i].checked) {
+			// 値を追加
+			values.push(elements[i].value);
+		}
+	}
+	// チェックボックス選択値配列を取得
+	return values;
+}
+
+/**
+ * チェックボックスの選択値にその値が含まれるかを確認する。
+ * @param targetName チェックボックス名
+ * @param value      値
+ * @return 確認結果(true：その値が含まれる、false：含まれない)
+ */
+function isTheCheckBoxValueChecked(targetName, value) {
+	// チェックボックス選択値配列を取得
+	var values = getCheckBoxSelectedValue(targetName);
+	var valueLength = values.length;
+	// チェックボックス選択値毎に処理
+	for (var i = 0; i < valueLength; i++) {
+		// 選択値とその値が同じである場合
+		if (values[i] == value) {
+			// その値が含まれると判断
+			return true;
+		}
+	}
+	// その値が含まれないと判断
 	return false;
 }
 
@@ -918,7 +1127,13 @@ function setOnClickHandler(target, func) {
  * @param func   設定ファンクション又はスクリプト
  */
 function setOnMouseOverHandler(target, func) {
-	getObject(target).onmouseover = func;
+	// 対象オブジェクトを取得
+	var objTarget = getObject(target);
+	// 対象オブジェクトが存在しない場合
+	if (objTarget == null) {
+		return;
+	}
+	objTarget.onmouseover = func;
 }
 
 /**
@@ -927,7 +1142,13 @@ function setOnMouseOverHandler(target, func) {
  * @param func   設定ファンクション又はスクリプト
  */
 function setOnMouseOutHandler(target, func) {
-	getObject(target).onmouseout = func;
+	// 対象オブジェクトを取得
+	var objTarget = getObject(target);
+	// 対象オブジェクトが存在しない場合
+	if (objTarget == null) {
+		return;
+	}
+	objTarget.onmouseout = func;
 }
 
 /**
@@ -936,7 +1157,51 @@ function setOnMouseOutHandler(target, func) {
  * @param func   設定ファンクション又はスクリプト
  */
 function setOnChangeHandler(target, func) {
-	getObject(target).onchange = func;
+	// 対象オブジェクトを取得
+	var objTarget = getObject(target);
+	// 対象オブジェクトが存在しない場合
+	if (objTarget == null) {
+		return;
+	}
+	objTarget.onchange = func;
+}
+
+/**
+ * オンチェンジイベントハンドラを設定する。
+ * @param targetName 設定対象名
+ * @param func       設定ファンクション又はスクリプト
+ */
+function setOnChangeHandlerByName(targetName, func) {
+	// 名称から要素群を取得
+	var elements = document.getElementsByName(targetName);
+	var elementsLength = elements.length;
+	// 要素毎に処理
+	for (var i = 0; i < elementsLength; i++) {
+		// オンチェンジイベントハンドラを設定
+		setOnChangeHandler(elements[i], func);
+	}
+}
+
+/**
+ * イベントを発行する。
+ * JavaScriptで値を変更した後にchangeイベントを発行する場合等に用いる。
+ * @param target    設定対象(StringあるいはObject)
+ * @param eventType イベント区分
+ */
+function dispatchEvent(target, eventType) {
+	// 対象オブジェクトを取得
+	var objTarget = getObject(target);
+	// 対象オブジェクトが存在しない場合
+	if (objTarget == null) {
+		// 処理無し
+		return;
+	}
+	// イベントオブジェクトを生成
+    var event = document.createEvent(EVENTS_TYPE_HTML);
+    // イベントオブジェクトを初期化(伝播無し、キャンセル可)
+    event.initEvent(eventType, false, true);
+    // イベントを発行
+    objTarget.dispatchEvent(event);
 }
 
 /**
@@ -1285,11 +1550,35 @@ function checkSearchDate(targetYear, targetMonth, targetDay, aryMessage) {
 		checkDateYear(targetYear, aryMessage);
 		return;
 	}
-	// それ以外の場合
-	setBgColor(targetYear, COLOR_FIELD_ERROR);
-	setBgColor(targetMonth, COLOR_FIELD_ERROR);
-	setBgColor(targetDay, COLOR_FIELD_ERROR);
-	aryMessage.push(getMessage(MSG_INPUT_ERROR));
+	
+	// 以下、エラー
+	
+	// 月のみ入力時
+	if(year == "" && month !="" && day ==""){
+		setFocus(targetYear);
+		setBgColor(targetYear, COLOR_FIELD_ERROR);
+		aryMessage.push(getMessage(MSG_REQUIRED, "年"));
+	}
+	// 月日入力時
+	if(year == "" && month !="" && day !=""){
+		setFocus(targetYear);
+		setBgColor(targetYear, COLOR_FIELD_ERROR);
+		aryMessage.push(getMessage(MSG_REQUIRED, "年"));
+	}
+	// 日のみ入力時
+	if(year == "" && month =="" && day !=""){
+		setFocus(targetYear);
+		setBgColor(targetYear, COLOR_FIELD_ERROR);
+		setBgColor(targetMonth, COLOR_FIELD_ERROR);
+		aryMessage.push(getMessage(MSG_REQUIRED, "年"));
+		aryMessage.push(getMessage(MSG_REQUIRED, "月"));
+	}
+	// 年、日入力時
+	if(year != "" && month =="" && day !=""){
+		setFocus(targetMonth);
+		setBgColor(targetMonth, COLOR_FIELD_ERROR);
+		aryMessage.push(getMessage(MSG_REQUIRED, "月"));
+	}
 }
 
 /**
@@ -1333,6 +1622,148 @@ function checkDateMonth(targetMonth, aryMessage) {
 		return false;
 	}
 	return true;
+}
+
+/**
+ * 対象要素(年月か年月日)の妥当性を確認する。
+ * @param targetElement 対象要素(年月か年月日)
+ * @param isMonth       年月フラグ(true：年月、false：年月でない)
+ * @param aryMessage    エラーメッセージ格納配列
+ */
+function checkCalendar(targetElement, isMonth, aryMessage) {
+	// 対象要素(年月入力)の値を取得
+	var value = getFormValue(targetElement);
+	// 対象要素(年月入力)の値が空白である場合
+	if (value == "") {
+		// 処理無し
+		return;
+	}
+	// 対象要素の値を日付オブジェクトとして取得できなかった場合
+	if (makeDateOfString(value, isMonth) == null) {
+		// 背景色を変更
+		setBgColor(targetElement, COLOR_FIELD_ERROR);
+		// ラベルを取得
+		var rep = getLabel(targetElement);
+		// エラーメッセージを追加
+		aryMessage.push(getMessage(MSG_INPUT_FORM_ERROR_AMP , rep));
+	}
+}
+
+/**
+ * 対象オブジェクトが日付として有効であるかを確認する。
+ * @param date 対象オブジェクト
+ * @return 確認結果(true：日付として有効である、false：そうでない)
+ */
+function isValidDate(date) {
+	// 日付オブジェクトでない場合
+	if (Object.prototype.toString.call(date) != "[object Date]") {
+		// 日付として有効でないと判断
+	    return false;
+	}
+	// 日時を表す数値が取得できない場合
+	if (isNaN(date.getTime())) {
+		// 日付として有効でないと判断
+	    return false;
+	}
+	// 年を取得
+	var year = date.getFullYear();
+	// 年が最小値より小さくなるか最大値より大きくなる場合
+	if (year < MIN_DATE_YEAR || year > MAX_DATE_YEAR) {
+		// 日付として有効でないと判断
+	    return false;
+	}
+	// 日付として有効であると判断
+	return true;
+}
+
+/**
+ * 文字列から日付オブジェクトを取得する。
+ * 有効な日付が取得できなかった場合は、nullを返す。
+ * 
+ * 年月である場合、日付文字列を日付と判断できないため、
+ * 日付文字列の後ろに/1を付加して日付を取得する。
+ * 
+ * @param strDate 日付文字列
+ * @param isMonth 年月フラグ(true：年月、false：年月でない)
+ * @return 日付オブジェクト
+ */
+function makeDateOfString(strDate, isMonth) {
+	// 日付文字列が空白である場合
+	if (strDate == "") {
+		// nullを取得
+		return null;
+	}
+	// 年が4桁でない場合
+	if (strDate.indexOf(SEPARATOR_DATE) != 4 ) {
+		// nullを取得
+		return null;
+	}
+	// 日付オブジェクトを取得
+	var date = new Date(strDate);
+	// 年月である場合
+	if (isMonth) {
+		// 日を追加し日付オブジェクトを取得
+		date = new Date(strDate + SEPARATOR_DATE + "1");
+	}
+	// 有効な日付が取得できた場合
+	if (isValidDate(date)) {
+		// 日付オブジェクトを取得
+		return date;
+	}
+	// nullを取得
+	return null;
+}
+
+/**
+ * 文字列から日付オブジェクトを取得する。
+ * 有効な日付が取得できなかった場合は、nullを返す。
+ * 
+ * 日文字列が空白である場合、日には1を設定する。
+ * 月文字列が空白である場合、月には1を設定する。
+ * 
+ * @param strYear  年文字列
+ * @param strMonth 月文字列(1～12)
+ * @param strDay   日文字列
+ * @return 日付オブジェクト
+ */
+function getDateObject(strYear, strMonth, strDay) {
+	// 日文字列が空白である場合
+	if (strDay == "") {
+		// 日文字列を1に設定
+		strDay = 1;
+	}
+	// 月文字列が空白である場合
+	if (strMonth == "") {
+		// 月文字列を1に設定
+		strMonth = 1;
+	}
+	// 日付オブジェクトを取得
+	var date = new Date(strYear, strMonth - 1, strDay, 0, 0, 0, 0);
+	// 有効な日付が取得できた場合
+	if (isValidDate(date)) {
+		// 日付オブジェクトを取得
+		return date;
+	}
+	// nullを取得
+	return null;
+}
+
+/**
+ * クライアント日付を取得する。
+ * @return 日付オブジェクト
+ */
+function getClientDate() {
+	// クライアント日付を取得
+	var date = new Date();
+	// 有効な日付が取得できた場合
+	if (isValidDate(date)) {
+		// 日付オブジェクトを取得
+		return date;
+	}
+	// 年を最小に設定
+	date.setFullYear(MIN_DATE_YEAR);
+	// 日付オブジェクトを取得
+	return date;
 }
 
 /**
@@ -1416,13 +1847,18 @@ function getLabel(target) {
 	var separator = ",";
 	// ラベル取得対象ID取得
 	var id = getObject(target).id;
+	// IDが取得できない場合
+	if (id == "") {
+		// NAMEを取得
+		id = getObject(target).name;
+	}
 	// ラベル要素群取得
 	var labelElements = getElementsByTagName(DIV_BODY, TAG_LABEL);
 	var labelElementsLength = labelElements.length;
 	for (var i = 0; i < labelElementsLength; i++) {
 		// for属性確認
 		if (labelElements.item(i).getAttribute(ATT_FOR) == null) {
-			return "";
+			continue;
 		}
 		// for属性分割
 		var ids = labelElements.item(i).getAttribute(ATT_FOR).split(separator);

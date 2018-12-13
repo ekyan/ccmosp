@@ -24,6 +24,7 @@ import java.util.Map;
 import jp.mosp.framework.base.BaseVo;
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.utils.DateUtility;
+import jp.mosp.framework.utils.RoleUtility;
 import jp.mosp.framework.utils.TopicPathUtility;
 import jp.mosp.platform.base.PlatformAction;
 import jp.mosp.platform.bean.human.HumanHistoryReferenceBeanInterface;
@@ -183,6 +184,9 @@ public class HumanHistoryCardAction extends PlatformHumanAction {
 		} else {
 			throwInvalidCommandException();
 		}
+		
+		// 当該画面共通情報設定
+		setCardCommonInfo();
 	}
 	
 	/**
@@ -268,8 +272,8 @@ public class HumanHistoryCardAction extends PlatformHumanAction {
 		// 人事汎用管理区分設定
 		vo.setDivision(getTransferredType());
 		// パンくず名設定
-		TopicPathUtility.setTopicPathName(mospParams, vo.getClassName(), mospParams.getName(vo.getDivision())
-				+ mospParams.getName("Information", "Insert"));
+		TopicPathUtility.setTopicPathName(mospParams, vo.getClassName(),
+				mospParams.getName(vo.getDivision()) + mospParams.getName("Information", "Insert"));
 		// 人事管理共通情報利用設定
 		setPlatformHumanSettings(CMD_SEARCH, PlatformHumanConst.MODE_HUMAN_NO_ACTIVATE_DATE);
 		// 人事管理共通情報設定
@@ -293,6 +297,9 @@ public class HumanHistoryCardAction extends PlatformHumanAction {
 		Date activeDate = getDate(vo.getTxtActivateYear(), vo.getTxtActivateMonth(), vo.getTxtActivateDay());
 		// 登録クラス取得
 		HumanHistoryRegistBeanInterface regist = platform().humanHistoryRegist();
+		// 人事汎用履歴情報参照クラス取得
+		HumanHistoryReferenceBeanInterface historyRefer = reference().humanHistory();
+		
 		// 履歴追加処理
 		regist.add(vo.getDivision(), KEY_VIEW_HUMAN_HISTORY_CARD, vo.getPersonalId(), activeDate);
 		// 履歴追加結果確認
@@ -309,13 +316,10 @@ public class HumanHistoryCardAction extends PlatformHumanAction {
 		setHumanCommonInfo(vo.getPersonalId(), activeDate);
 		// MosP処理情報設定
 		mospParams.addGeneralParam(PlatformConst.PRM_TRANSFERRED_ACTIVATE_DATE, DateUtility.getStringDate(activeDate));
-		// 人事汎用履歴情報参照クラス取得
-		HumanHistoryReferenceBeanInterface historyRefer = reference().humanHistory();
 		// プルダウンを取得
 		vo.putPltItem(historyRefer.getHumanGeneralPulldown(division, KEY_VIEW_HUMAN_HISTORY_CARD, activeDate));
 		// 人事マスタ情報取得
-		vo.putHistoryItem(division, historyRefer.getHistoryMapInfo(vo.getDivision(), KEY_VIEW_HUMAN_HISTORY_CARD,
-				vo.getPersonalId(), activeDate));
+		setHistoryItem(division, activeDate);
 		// 履歴編集モード設定
 		vo.setModeCardEdit(PlatformConst.MODE_CARD_EDIT_EDIT);
 	}
@@ -330,8 +334,8 @@ public class HumanHistoryCardAction extends PlatformHumanAction {
 		// 人事汎用管理区分設定
 		vo.setDivision(getTransferredType());
 		// パンくず名設定
-		TopicPathUtility.setTopicPathName(mospParams, vo.getClassName(), mospParams.getName(vo.getDivision())
-				+ mospParams.getName("Information", "Insert"));
+		TopicPathUtility.setTopicPathName(mospParams, vo.getClassName(),
+				mospParams.getName(vo.getDivision()) + mospParams.getName("Information", "Insert"));
 		// 人事管理共通情報利用設定
 		setPlatformHumanSettings(CMD_SEARCH, PlatformHumanConst.MODE_HUMAN_CODE_AND_NAME);
 		// 人事管理共通情報設定
@@ -366,8 +370,7 @@ public class HumanHistoryCardAction extends PlatformHumanAction {
 		// プルダウンを取得
 		vo.putPltItem(historyRefer.getHumanGeneralPulldown(division, KEY_VIEW_HUMAN_HISTORY_CARD, activeDate));
 		// 人事マスタ情報取得
-		vo.putHistoryItem(division, historyRefer.getHistoryMapInfo(vo.getDivision(), KEY_VIEW_HUMAN_HISTORY_CARD,
-				vo.getPersonalId(), activeDate));
+		setHistoryItem(division, activeDate);
 		// 有効日編集項目に設定
 		vo.setTxtActivateYear(DateUtility.getStringYear(activeDate));
 		vo.setTxtActivateMonth(DateUtility.getStringMonth(activeDate));
@@ -388,8 +391,6 @@ public class HumanHistoryCardAction extends PlatformHumanAction {
 		}
 		// 登録クラス取得
 		HumanHistoryRegistBeanInterface regist = platform().humanHistoryRegist();
-		// 参照クラス取得
-		HumanHistoryReferenceBeanInterface reference = reference().humanHistory();
 		// 画面区分取得
 		String division = vo.getDivision();
 		// 個人ID取得
@@ -397,7 +398,7 @@ public class HumanHistoryCardAction extends PlatformHumanAction {
 		// 有効日取得
 		Date activeDate = getDate(vo.getTxtActivateYear(), vo.getTxtActivateMonth(), vo.getTxtActivateDay());
 		// 履歴追加処理
-		regist.update(division, KEY_VIEW_HUMAN_HISTORY_CARD, personalId, activeDate);
+		regist.update(division, KEY_VIEW_HUMAN_HISTORY_CARD, personalId, activeDate, vo.getAryRecordIdMap());
 		// 更新結果確認
 		if (mospParams.hasErrorMessage()) {
 			// 更新失敗メッセージ設定
@@ -413,8 +414,7 @@ public class HumanHistoryCardAction extends PlatformHumanAction {
 		// MosP処理情報設定
 		mospParams.addGeneralParam(PlatformConst.PRM_TRANSFERRED_ACTIVATE_DATE, DateUtility.getStringDate(activeDate));
 		// 値再設定
-		vo.putHistoryItem(division,
-				reference.getHistoryMapInfo(division, KEY_VIEW_HUMAN_HISTORY_CARD, personalId, activeDate));
+		setHistoryItem(division, activeDate);
 	}
 	
 	/**
@@ -454,6 +454,7 @@ public class HumanHistoryCardAction extends PlatformHumanAction {
 		vo.setModeActivateDate(PlatformConst.MODE_ACTIVATE_DATE_CHANGING);
 		// 編集モード設定
 		vo.setModeCardEdit(PlatformConst.MODE_CARD_EDIT_INSERT);
+		
 		// プルダウン設定
 		setPulldown();
 	}
@@ -469,7 +470,8 @@ public class HumanHistoryCardAction extends PlatformHumanAction {
 		HumanHistoryReferenceBeanInterface historyRefere = reference().humanHistory();
 		// プルダウン設定
 		if (vo.getModeActivateDate().equals(PlatformConst.MODE_ACTIVATE_DATE_CHANGING)) {
-			vo.putPltItem(historyRefere.getInputActiveDateGeneralPulldown(vo.getDivision(), KEY_VIEW_HUMAN_HISTORY_CARD));
+			vo.putPltItem(
+					historyRefere.getInputActiveDateGeneralPulldown(vo.getDivision(), KEY_VIEW_HUMAN_HISTORY_CARD));
 			return;
 		}
 		// 有効日取得
@@ -514,11 +516,11 @@ public class HumanHistoryCardAction extends PlatformHumanAction {
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
 	protected boolean getSamaActiveDateInfo(String personalId, Date activeDate, String division) throws MospException {
+		HumanHistoryCardVo vo = (HumanHistoryCardVo)mospParams.getVo();
 		// 対象有効日情報取得
-		LinkedHashMap<String, Map<String, String>> historyInfo = reference().humanHistory().getHistoryMapInfo(division,
-				KEY_VIEW_HUMAN_HISTORY_CARD, personalId, activeDate);
+		setHistoryItem(division, activeDate);
 		// 情報が既に有る場合
-		if (historyInfo.isEmpty() == false) {
+		if (vo.getHistoryMapInfo(division).isEmpty() == false) {
 			// 対象情報が存在する場合
 			mospParams.addErrorMessage(PlatformMessageConst.MSG_HIST_ALREADY_EXISTED);
 			return true;
@@ -532,5 +534,37 @@ public class HumanHistoryCardAction extends PlatformHumanAction {
 	public void addNotHumanErrorMessage() {
 		String key = mospParams.getName("Personal", "Basis", "Information");
 		mospParams.addErrorMessage(PlatformMessageConst.MSG_WORKFORM_EXISTENCE, key);
+	}
+	
+	/**
+	 * 当該画面の共通情報を設定する
+	 */
+	public void setCardCommonInfo() {
+		// VO取得
+		HumanHistoryCardVo vo = (HumanHistoryCardVo)mospParams.getVo();
+		// 人事汎用管理区分参照権限設定
+		vo.setJsIsReferenceDivision(RoleUtility.getReferenceDivisionsList(mospParams).contains(getTransferredType()));
+	}
+	
+	/**
+	 * 人事履歴情報取得
+	 * @param division 人事汎用管理区分
+	 * @param activeDate 有効日
+	 * @throws MospException SQL実行に失敗した場合
+	 */
+	protected void setHistoryItem(String division, Date activeDate) throws MospException {
+		// VO取得
+		HumanHistoryCardVo vo = (HumanHistoryCardVo)mospParams.getVo();
+		// 人事汎用履歴情報参照クラス取得
+		HumanHistoryReferenceBeanInterface historyRefer = reference().humanHistory();
+		// 人事履歴情報取得
+		historyRefer.getHistoryRecordMapInfo(vo.getDivision(), KEY_VIEW_HUMAN_HISTORY_CARD, vo.getPersonalId(),
+				activeDate);
+		
+		// レコード識別IDのマップを設定
+		vo.setAryRecordIdMap(historyRefer.getRecordsMap());
+		// 人事マスタ情報取得
+		vo.putHistoryItem(division, historyRefer.getHistoryHumanInfoMap());
+		
 	}
 }

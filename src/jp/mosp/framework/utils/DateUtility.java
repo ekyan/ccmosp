@@ -24,9 +24,12 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
 
 import jp.mosp.framework.base.MospException;
+import jp.mosp.framework.base.MospParams;
 import jp.mosp.framework.constant.MospConst;
+import jp.mosp.platform.utils.PlatformNamingUtility;
 
 /**
  * 日付操作に有用なメソッドを提供する。<br><br>
@@ -37,6 +40,11 @@ public final class DateUtility {
 	 * 1時間を秒に直した数値(1000 * 60 * 60)。<br>
 	 */
 	public static final int	TIME_HOUR_MILLI_SEC	= 3600000;
+	
+	/**
+	 * 1日を秒に直した数値(1000 * 60 * 60 * 24)。<br>
+	 */
+	public static final int	TIME_DAY_MILLI_SEC	= 86400000;
 	
 	
 	/**
@@ -154,8 +162,8 @@ public final class DateUtility {
 	 * @return 時間
 	 */
 	public static int getHour(Date date, Date standardDate) {
-		if (date == null || standardDate == null) {
-			// FIXME TODO nullの場合 0を返しても大丈夫かどうか。
+		// 基準日日付がnullである場合
+		if (standardDate == null) {
 			return getHour(date);
 		}
 		return (int)((date.getTime() - standardDate.getTime()) / TIME_HOUR_MILLI_SEC);
@@ -398,12 +406,52 @@ public final class DateUtility {
 	}
 	
 	/**
-	 * 日付オブジェクトを取得する(String→Date)。
+	 * 日付オブジェクトを取得する(String→Date)。<br>
 	 * @param date 日付文字列(yyyy/MM/dd)
 	 * @return 日付
 	 */
 	public static Date getDate(String date) {
 		return getDate(date, "yyyy/MM/dd");
+	}
+	
+	/**
+	 * 日付オブジェクトを取得する(String→Date)。<br>
+	 * <br>
+	 * 次の順で解析し、日付として取得できたものを返す。<br>
+	 * ・yyyyMMddHHmmss<br>
+	 * ・yyyy/MM/dd<br>
+	 * ・yyyyMMdd<br>
+	 * ・yyyy-MM-dd<br>
+	 * <br>
+	 * 年月の前ゼロは、無くても良い。<br>
+	 * 但し、yyyyMMddの場合は、前ゼロが無いと
+	 * 思った通りの日付が取得できないことがある。<br>
+	 * <br>
+	 * @param date 日付文字列
+	 * @return 日付
+	 */
+	public static Date getVariousDate(String date) {
+		// yyyyMMddHHmmss
+		Date objDate = getDate(date, "yyyyMMddHHmmss");
+		if (objDate != null) {
+			return objDate;
+		}
+		// yyyy/MM/dd
+		objDate = getDate(date, "yyyy/MM/dd");
+		if (objDate != null) {
+			return objDate;
+		}
+		// yyyyMMdd
+		objDate = getDate(date, "yyyyMMdd");
+		if (objDate != null) {
+			return objDate;
+		}
+		// yyyy-MM-dd
+		objDate = getDate(date, "yyyy-MM-dd");
+		if (objDate != null) {
+			return objDate;
+		}
+		return objDate;
 	}
 	
 	/**
@@ -430,6 +478,15 @@ public final class DateUtility {
 	 */
 	public static String getStringDate(Date date) {
 		return getStringDate(date, "yyyy/MM/dd");
+	}
+	
+	/**
+	 * 日付文字列を取得する(Date→String)。<br>
+	 * @param date 対象日付オブジェクト
+	 * @return 日付文字列(yyyyMMdd)
+	 */
+	public static String getStringDateNoSeparator(Date date) {
+		return getStringDate(date, "yyyyMMdd");
 	}
 	
 	/**
@@ -489,6 +546,70 @@ public final class DateUtility {
 	/**
 	 * 日付文字列を取得する(Date→String)。
 	 * @param date 対象日付オブジェクト
+	 * @return 日付文字列(HH:mm:ss)
+	 */
+	public static String getStringTimeAndSecond(Date date) {
+		return getStringDate(date, "HH:mm:ss");
+	}
+	
+	/**
+	 * 日付文字列を取得する(Date→String)。
+	 * @param date 対象日付オブジェクト
+	 * @return 日付文字列( yyyy年MM月dd日)
+	 */
+	public static String getStringJapaneseDate(Date date) {
+		return getStringDate(date, "yyyy年MM月dd日");
+	}
+	
+	/**
+	 * 日付文字列を取得する(Date→String)。
+	 * @param date 対象日付オブジェクト
+	 * @return 日付文字列(yyyy年MM月)
+	 */
+	public static String getStringJapaneseMonth(Date date) {
+		return getStringDate(date, "yyyy年MM月");
+	}
+	
+	/**
+	 * 日付文字列(yyyy年MM月～yyyy年MM月)を取得する。<br>
+	 * @param mospParams MosP処理情報
+	 * @param fromDate   日付オブジェクト(From)
+	 * @param toDate     日付オブジェクト(To)
+	 * @return 日付文字列(yyyy年MM月～yyyy年MM月)
+	 */
+	public static String getStringJapaneseMonthTerm(MospParams mospParams, Date fromDate, Date toDate) {
+		// 日付文字列を準備
+		StringBuilder sb = new StringBuilder();
+		// 日付オブジェクト(From)を設定
+		sb.append(getStringJapaneseMonth(fromDate));
+		// ～を設定
+		sb.append(PlatformNamingUtility.wave(mospParams));
+		// 日付オブジェクト(To)を設定
+		sb.append(getStringJapaneseMonth(toDate));
+		// 日付文字列を取得
+		return sb.toString();
+	}
+	
+	/**
+	 * 日付文字列を取得する(和暦)(Date→String)。
+	 * @param date 対象日付オブジェクト
+	 * @return 日付文字列( GGGGyyyy年MM月dd日)
+	 */
+	public static String getStringTimeJapaneseCalendar(Date date) {
+		// ロケール変更前を取得
+		Locale defaultLocale = Locale.getDefault();
+		// ローケルを和暦に設定
+		Locale.setDefault(new Locale("ja", "JP", "JP"));
+		// 日付文字列取得
+		String stringDate = getStringDate(date, "GGGGyyyy年MM月dd日");
+		// ロケールを元に戻す
+		Locale.setDefault(defaultLocale);
+		return stringDate;
+	}
+	
+	/**
+	 * 日付文字列を取得する(Date→String)。
+	 * @param date 対象日付オブジェクト
 	 * @param standardDate 基準日付
 	 * @return 日付文字列(HH:mm)
 	 */
@@ -500,6 +621,22 @@ public final class DateUtility {
 		sb.append(getStringHour(date, standardDate));
 		sb.append(":");
 		sb.append(getStringMinute(date));
+		return sb.toString();
+	}
+	
+	/**
+	 * 日付文字列を取得する(Date→String)。
+	 * @param date 対象日付オブジェクト
+	 * @param standardDate 基準日付
+	 * @return 日付文字列(HH:mm:ss)
+	 */
+	public static String getStringTimeAndSecond(Date date, Date standardDate) {
+		if (date == null || standardDate == null) {
+			return getStringTimeAndSecond(date);
+		}
+		StringBuffer sb = new StringBuffer();
+		sb.append(getStringHour(date, standardDate));
+		sb.append(getStringDate(date, ":mm:ss"));
 		return sb.toString();
 	}
 	
@@ -621,33 +758,6 @@ public final class DateUtility {
 	}
 	
 	/**
-	 * 日付オブジェクトを取得する。<br>
-	 * 年、月、日がいずれも空白の場合、nullを返す。<br>
-	 * 引数にnullが含まれる場合は、例外を発行する。<br>
-	 * @param year		対象年
-	 * @param month		対象月
-	 * @param day		対象日
-	 * @param hour		対象時
-	 * @param minute	対象分
-	 * @return 日付オブジェクト
-	 * @throws MospException 日付の変換に失敗した場合
-	 */
-	public static Date getDateTime(String year, String month, String day, String hour, String minute)
-			throws MospException {
-		try {
-			if (year.isEmpty() && month.isEmpty() && day.isEmpty() && hour.isEmpty() && minute.isEmpty()) {
-				return null;
-			}
-			return getDateTime(Integer.parseInt(year), Integer.parseInt(month), Integer.parseInt(day),
-					Integer.valueOf(hour), Integer.valueOf(minute));
-		} catch (NullPointerException e) {
-			throw new MospException(e);
-		} catch (NumberFormatException e) {
-			throw new MospException(e);
-		}
-	}
-	
-	/**
 	 * 指定曜日可否を確認する。
 	 * @param date 対象年月日
 	 * @param dayOfWeek 対象曜日
@@ -721,18 +831,20 @@ public final class DateUtility {
 	}
 	
 	/**
-	 * 開始日から対象日までの日数を取得する。
-	 * @param startDate 開始日
+	 * 開始日から対象日までの日数を取得する。<br>
+	 * @param startDate  開始日
 	 * @param targetDate 対象日
 	 * @return 日数
 	 */
-	public static String countDays(Date startDate, Date targetDate) {
-		Calendar cal1 = Calendar.getInstance();
-		Calendar cal2 = Calendar.getInstance();
-		cal1.set(getYear(targetDate), getMonth(targetDate), getDay(targetDate), 0, 0, 0);
-		cal2.set(getYear(startDate), getMonth(startDate), getDay(startDate), 0, 0, 0);
-		long day = (cal1.getTimeInMillis() - cal2.getTimeInMillis()) / (24 * 60 * 60 * 1000);
-		return String.valueOf(day);
+	public static int getDayDifference(Date startDate, Date targetDate) {
+		// 日付がnullである場合
+		if (startDate == null || targetDate == null) {
+			return 0;
+		}
+		// 差を取得
+		long diff = targetDate.getTime() - startDate.getTime();
+		// 日数に変換
+		return (int)(diff / TIME_DAY_MILLI_SEC);
 	}
 	
 	/**
@@ -752,18 +864,6 @@ public final class DateUtility {
 		int targetMonthMin = targetYear * 12 + targetMonth;
 		// 経過月
 		return targetMonthMin - startMonthMin;
-	}
-	
-	/**
-	 * 開始日から対象日まで経過年数を取得する。
-	 * @param startDate 開始日
-	 * @param targetDate 対象日
-	 * @return 経過年数
-	 */
-	public int countMonth(Date startDate, Date targetDate) {
-		int startYear = getMonth(startDate);
-		int targetYear = getMonth(targetDate);
-		return targetYear - startYear;
 	}
 	
 	/**
@@ -788,4 +888,129 @@ public final class DateUtility {
 		return targetDate.compareTo(startDate) >= 0 && targetDate.compareTo(endDate) <= 0;
 	}
 	
+	/**
+	 * 同じ日時であるかを確認する。<br>
+	 * どちらか一方でもnullである場合には、同じ日時でないと判断する。<br>
+	 * @param date1 日時1
+	 * @param date2 日時2
+	 * @return 確認結果(true：同じ日時である、false：同じ日時でない)
+	 */
+	public static boolean isSame(Date date1, Date date2) {
+		// どちらか一方でもnullである場合
+		if (date1 == null || date2 == null) {
+			// 同じ日時でないと判断
+			return false;
+		}
+		// 同じ日時であるかを確認
+		return date1.compareTo(date2) == 0;
+	}
+	
+	/**
+	 * 後(何年何か月何日後)の日付を取得する。<br>
+	 * <br>
+	 * 年、月、日の順で加算していく。<br>
+	 * 例：2013/02/28の1年1か月1日後は、2014/03/29。<br>
+	 * <br>
+	 * @param targetDate 対象日
+	 * @param year       年(何年後)
+	 * @param month      月(何か月後)
+	 * @param day        日(何日後)
+	 * @return 後(何年何か月何日後)の日付
+	 */
+	public static Date getDateAfter(Date targetDate, int year, int month, int day) {
+		// 対象日確認
+		if (targetDate == null) {
+			return null;
+		}
+		// 年を加算
+		Date after = addYear(targetDate, year);
+		// 月を加算
+		after = addMonth(after, month);
+		// 日を加算
+		return addDay(after, day);
+	}
+	
+	/**
+	 * 対象日が開始日から後(何年何か月何日後)の日付に含まれるかを確認する。<br>
+	 * <br>
+	 * 対象日がnullの場合、含まれないと判断する。<br>
+	 * 最終日可否フラグがfalseである場合は、最終日は期間に含めない。<br>
+	 * <br>
+	 * @param targetDate       対象日
+	 * @param startDate        開始日
+	 * @param year             年(何年後)
+	 * @param month            月(何か月後)
+	 * @param day              日(何日後)
+	 * @param isContainLastDay 最終日可否フラグ
+	 * @return 確認結果(true：含まれる、false：含まれない)
+	 */
+	public static boolean isInDateAfter(Date targetDate, Date startDate, int year, int month, int day,
+			boolean isContainLastDay) {
+		// 対象日がnullの場合
+		if (targetDate == null) {
+			// 含まれないと判断
+			return false;
+		}
+		// 後の日付を取得
+		Date endDate = getDateAfter(startDate, year, month, day);
+		// 最終日を期間に含めない場合
+		if (isContainLastDay == false) {
+			// 後の日付を一日減
+			endDate = addDay(endDate, -1);
+			
+		}
+		// 期間に対象日が含まれているか確認
+		return isTermContain(targetDate, startDate, endDate);
+	}
+	
+	/**
+	 * 対象日時が有効期限を超えているかを確認する。<br>
+	 * 基準日時+有効期限が対象日時と同じ場合は、超えていないと判断する。<br>
+	 * 基準日時+有効期限の秒以下は切り捨てられる。<br>
+	 * <br>
+	 * @param targetDate    対象日時
+	 * @param referenceDate 基準日時
+	 * @param expiration    有効期限(分)
+	 * @return 確認結果(true：超えている、false：超えていない)
+	 */
+	public static boolean isExpireMinute(Date targetDate, Date referenceDate, int expiration) {
+		return targetDate.after(addMinute(referenceDate, expiration));
+	}
+	
+	/**
+	 * 対象日が有効期限を超えているかを確認する。<br>
+	 * 基準日+有効期限が対象日と同じ場合は、超えていないと判断する。<br>
+	 * 基準日+有効期限の時間以下は切り捨てられる。<br>
+	 * <br>
+	 * @param targetDate    対象日
+	 * @param referenceDate 基準日
+	 * @param expiration    有効期限(日)
+	 * @return 確認結果(true：超えている、false：超えていない)
+	 */
+	public static boolean isExpireDay(Date targetDate, Date referenceDate, int expiration) {
+		return targetDate.after(addDay(referenceDate, expiration));
+	}
+	
+	/**
+	 * 対象年月の年度を取得
+	 * @param year 対象年
+	 * @param month 対象月
+	 * @return 対象年度
+	 * @throws MospException インスタンスの生成或いはSQLの実行に失敗した場合
+	 */
+	public static int getYearOfTerm(int year, int month) throws MospException {
+		Date targetDate = DateUtility.getDate(year, month, 1);
+		
+		if (targetDate == null) {
+			return 0;
+		}
+		
+		// 1～3月の場合、前年度となるので 西暦から-1する
+		if (month < 4) {
+			return year - 1;
+		}
+		
+		return year;
+		
+	}
 }

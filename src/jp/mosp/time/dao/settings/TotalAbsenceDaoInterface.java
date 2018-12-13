@@ -42,8 +42,8 @@ public interface TotalAbsenceDaoInterface extends BaseDaoInterface {
 	 * @return 勤怠欠勤集計データDTO
 	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
 	 */
-	TotalAbsenceDtoInterface findForKey(String personalId, int calculationYear, int calculationMonth, String absenceCode)
-			throws MospException;
+	TotalAbsenceDtoInterface findForKey(String personalId, int calculationYear, int calculationMonth,
+			String absenceCode) throws MospException;
 	
 	/**
 	 * 検索条件取得。

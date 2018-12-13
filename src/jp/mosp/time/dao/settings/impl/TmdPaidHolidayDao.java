@@ -19,9 +19,7 @@ package jp.mosp.time.dao.settings.impl;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import jp.mosp.framework.base.BaseDto;
 import jp.mosp.framework.base.BaseDtoInterface;
@@ -234,6 +232,34 @@ public class TmdPaidHolidayDao extends PlatformDao implements PaidHolidayDataDao
 	}
 	
 	@Override
+	public List<PaidHolidayDataDtoInterface> findForInfoAllList(String personalId, Date targetDate)
+			throws MospException {
+		try {
+			index = 1;
+			StringBuffer sb = getSelectQuery(getClass());
+			sb.append(where());
+			sb.append(deleteFlagOff());
+			sb.append(and());
+			sb.append(inactivateFlagOff());
+			sb.append(and());
+			sb.append(equal(COL_PERSONAL_ID));
+			sb.append(and());
+			sb.append(greater(COL_LIMIT_DATE));
+			sb.append(getOrderByColumn(COL_ACQUISITION_DATE, COL_ACTIVATE_DATE));
+			prepareStatement(sb.toString());
+			setParam(index++, personalId);
+			setParam(index++, targetDate);
+			executeQuery();
+			return mappingAll();
+		} catch (Throwable e) {
+			throw new MospException(e);
+		} finally {
+			releaseResultSet();
+			releasePreparedStatement();
+		}
+	}
+	
+	@Override
 	public List<PaidHolidayDataDtoInterface> findForHistory(String personalId, Date acquisitionDate)
 			throws MospException {
 		try {
@@ -295,47 +321,26 @@ public class TmdPaidHolidayDao extends PlatformDao implements PaidHolidayDataDao
 	}
 	
 	@Override
-	public List<PaidHolidayDataDtoInterface> findForInfoList(String personalId, Date activateDate) throws MospException {
+	public List<PaidHolidayDataDtoInterface> findForInfoList(String personalId, Date activateDate)
+			throws MospException {
 		try {
 			index = 1;
 			StringBuffer sb = getSelectQuery(getClass());
+			sb.append(getQueryForMaxActivateDate(TABLE, COL_ACTIVATE_DATE, COL_PERSONAL_ID, COL_ACQUISITION_DATE));
 			sb.append(where());
 			sb.append(deleteFlagOff());
 			sb.append(and());
-			sb.append(COL_INACTIVATE_FLAG);
-			sb.append(" = ");
-			sb.append(MospConst.DELETE_FLAG_OFF);
+			sb.append(inactivateFlagOff());
 			sb.append(and());
 			sb.append(equal(COL_PERSONAL_ID));
-			sb.append(and());
-			sb.append(COL_ACTIVATE_DATE);
-			sb.append(in());
-			sb.append(leftParenthesis());
-			sb.append(selectMax(COL_ACTIVATE_DATE));
-			sb.append(from(TABLE));
-			sb.append(asTmpTable(TABLE));
-			sb.append(where());
-			sb.append(deleteFlagOff());
-			sb.append(and());
-			sb.append(COL_INACTIVATE_FLAG);
-			sb.append(" = ");
-			sb.append(MospConst.DELETE_FLAG_OFF);
-			sb.append(and());
-			sb.append(equal(COL_PERSONAL_ID));
-			sb.append(and());
-			sb.append(equalTmpColumn(TABLE, COL_ACQUISITION_DATE));
-			sb.append(and());
-			sb.append(lessEqual(COL_ACTIVATE_DATE));
-			sb.append(rightParenthesis());
 			sb.append(and());
 			sb.append(lessEqual(COL_ACQUISITION_DATE));
 			sb.append(and());
 			sb.append(greaterEqual(COL_LIMIT_DATE));
 			sb.append(getOrderByColumn(COL_ACQUISITION_DATE));
 			prepareStatement(sb.toString());
-			setParam(index++, personalId);
-			setParam(index++, personalId);
 			setParam(index++, activateDate);
+			setParam(index++, personalId);
 			setParam(index++, activateDate);
 			setParam(index++, activateDate);
 			executeQuery();
@@ -349,52 +354,25 @@ public class TmdPaidHolidayDao extends PlatformDao implements PaidHolidayDataDao
 	}
 	
 	@Override
-	public List<PaidHolidayDataDtoInterface> findForInfoList(String personalId, Date firstDate, Date lastDate)
+	public List<PaidHolidayDataDtoInterface> findForNextInfoList(String personalId, Date targetDate)
 			throws MospException {
 		try {
 			index = 1;
 			StringBuffer sb = getSelectQuery(getClass());
+			sb.append(getQueryForMinActivateDate());
 			sb.append(where());
 			sb.append(deleteFlagOff());
 			sb.append(and());
-			sb.append(COL_INACTIVATE_FLAG);
-			sb.append(" = ");
-			sb.append(MospConst.DELETE_FLAG_OFF);
+			sb.append(inactivateFlagOff());
 			sb.append(and());
 			sb.append(equal(COL_PERSONAL_ID));
 			sb.append(and());
-			sb.append(COL_ACTIVATE_DATE);
-			sb.append(" = (");
-			sb.append(select());
-			sb.append("MAX(");
-			sb.append(COL_ACTIVATE_DATE);
-			sb.append(")");
-			sb.append(from(TABLE));
-			sb.append("AS A ");
-			sb.append(where());
-			sb.append(deleteFlagOff());
-			sb.append(and());
-			sb.append(TABLE);
-			sb.append(".");
-			sb.append(COL_PERSONAL_ID);
-			sb.append(" = A.");
-			sb.append(COL_PERSONAL_ID);
-			sb.append(and());
-			sb.append(lessEqual(COL_ACTIVATE_DATE));
-			sb.append(and());
-			sb.append(greaterEqual(COL_ACTIVATE_DATE));
-			sb.append(")");
-			sb.append(and());
-			sb.append(lessEqual(COL_ACQUISITION_DATE));
-			sb.append(and());
-			sb.append(greaterEqual(COL_LIMIT_DATE));
+			sb.append(greater(COL_ACQUISITION_DATE));
 			sb.append(getOrderByColumn(COL_ACQUISITION_DATE));
 			prepareStatement(sb.toString());
+			setParam(index++, targetDate);
 			setParam(index++, personalId);
-			setParam(index++, lastDate);
-			setParam(index++, firstDate);
-			setParam(index++, lastDate);
-			setParam(index++, lastDate);
+			setParam(index++, targetDate);
 			executeQuery();
 			return mappingAll();
 		} catch (Throwable e) {
@@ -476,13 +454,6 @@ public class TmdPaidHolidayDao extends PlatformDao implements PaidHolidayDataDao
 	}
 	
 	@Override
-	@Deprecated
-	public List<PaidHolidayDataDtoInterface> findForSearch(Map<String, Object> param) {
-		// 処理無し
-		return null;
-	}
-	
-	@Override
 	public int update(BaseDtoInterface baseDto) throws MospException {
 		try {
 			index = 1;
@@ -542,9 +513,174 @@ public class TmdPaidHolidayDao extends PlatformDao implements PaidHolidayDataDao
 	}
 	
 	@Override
-	@Deprecated
-	public Map<String, Object> getParamsMap() {
-		return new HashMap<String, Object>();
+	public List<PaidHolidayDataDtoInterface> findForList(Date targetDate) throws MospException {
+		try {
+			index = 1;
+			StringBuffer sb = getSelectQuery(getClass());
+			sb.append(where());
+			sb.append(deleteFlagOff());
+			sb.append(and());
+			sb.append(inactivateFlagOff());
+			sb.append(and());
+			sb.append(lessEqual(COL_ACQUISITION_DATE));
+			sb.append(and());
+			sb.append(lessEqual(COL_ACTIVATE_DATE));
+			sb.append(and());
+			sb.append(greaterEqual(COL_LIMIT_DATE));
+			sb.append(getOrderByColumns(COL_PERSONAL_ID, COL_ACQUISITION_DATE, COL_ACTIVATE_DATE));
+			prepareStatement(sb.toString());
+			setParam(index++, targetDate);
+			setParam(index++, targetDate);
+			setParam(index++, targetDate);
+			executeQuery();
+			return mappingAll();
+		} catch (Throwable e) {
+			throw new MospException(e);
+		} finally {
+			releaseResultSet();
+			releasePreparedStatement();
+		}
+	}
+	
+	@Override
+	public List<PaidHolidayDataDtoInterface> getExpiredList(String personalId, Date startDate, Date endDate)
+			throws MospException {
+		try {
+			index = 1;
+			StringBuffer sb = getSelectQuery(getClass());
+			sb.append(where());
+			sb.append(deleteFlagOff());
+			sb.append(and());
+			sb.append(inactivateFlagOff());
+			sb.append(and());
+			sb.append(equal(COL_PERSONAL_ID));
+			sb.append(and());
+			sb.append(lessEqual(COL_LIMIT_DATE));
+			sb.append(and());
+			sb.append(greaterEqual(COL_LIMIT_DATE));
+			sb.append(getOrderByColumns(COL_ACQUISITION_DATE, COL_ACTIVATE_DATE));
+			prepareStatement(sb.toString());
+			setParam(index++, personalId);
+			setParam(index++, endDate);
+			setParam(index++, startDate);
+			executeQuery();
+			return mappingAll();
+		} catch (Throwable e) {
+			throw new MospException(e);
+		} finally {
+			releaseResultSet();
+			releasePreparedStatement();
+		}
+	}
+	
+	/**
+	 * 対象日より後で最も古い情報を抽出する条件SQLを取得する。<br>
+	 * @return 対象日より後で最も古い情報を抽出する条件SQL
+	 */
+	protected String getQueryForMinActivateDate() {
+		// SQL作成準備
+		StringBuffer sb = new StringBuffer();
+		// 有効日における最新の情報を抽出する条件SQLを追加
+		sb.append(join());
+		sb.append(leftParenthesis());
+		sb.append(select());
+		sb.append(COL_PERSONAL_ID);
+		sb.append(as(getTmpColumn(COL_PERSONAL_ID)));
+		sb.append(comma());
+		sb.append(COL_ACQUISITION_DATE);
+		sb.append(as(getTmpColumn(COL_ACQUISITION_DATE)));
+		sb.append(comma());
+		sb.append(minAs(COL_ACTIVATE_DATE));
+		sb.append(from(TABLE));
+		sb.append(where());
+		sb.append(deleteFlagOff());
+		sb.append(and());
+		sb.append(greater(COL_ACQUISITION_DATE));
+		sb.append(and());
+		sb.append(COL_ACTIVATE_DATE);
+		sb.append(greaterEqual());
+		sb.append(COL_ACQUISITION_DATE);
+		sb.append(groupBy(COL_PERSONAL_ID, COL_ACQUISITION_DATE));
+		sb.append(rightParenthesis());
+		sb.append(asTmpTable(TABLE));
+		sb.append(on());
+		sb.append(COL_PERSONAL_ID);
+		sb.append(equal());
+		sb.append(getExplicitTableColumn(getTmpTable(TABLE), getTmpColumn(COL_PERSONAL_ID)));
+		sb.append(and());
+		sb.append(COL_ACQUISITION_DATE);
+		sb.append(equal());
+		sb.append(getExplicitTableColumn(getTmpTable(TABLE), getTmpColumn(COL_ACQUISITION_DATE)));
+		sb.append(and());
+		sb.append(COL_ACTIVATE_DATE);
+		sb.append(equal());
+		sb.append(getExplicitTableColumn(getTmpTable(TABLE), getMinColumn(COL_ACTIVATE_DATE)));
+		return sb.toString();
+	}
+	
+	@Override
+	public List<PaidHolidayDataDtoInterface> findForAcquisitionList(String personalId, Date startDate, Date endDate)
+			throws MospException {
+		try {
+			index = 1;
+			StringBuffer sb = getSelectQuery(getClass());
+			sb.append(where());
+			sb.append(deleteFlagOff());
+			sb.append(and());
+			sb.append(inactivateFlagOff());
+			sb.append(and());
+			sb.append(equal(COL_PERSONAL_ID));
+			sb.append(and());
+			sb.append(lessEqual(COL_ACQUISITION_DATE));
+			sb.append(and());
+			sb.append(greaterEqual(COL_ACQUISITION_DATE));
+			sb.append(getOrderByColumns(COL_ACQUISITION_DATE, COL_ACTIVATE_DATE));
+			prepareStatement(sb.toString());
+			setParam(index++, personalId);
+			setParam(index++, endDate);
+			setParam(index++, startDate);
+			executeQuery();
+			return mappingAll();
+		} catch (Throwable e) {
+			throw new MospException(e);
+		} finally {
+			releaseResultSet();
+			releasePreparedStatement();
+		}
+	}
+	
+	/**
+	 * 
+	 * @param column 対象カラム
+	 * @return min(column) AS min_column
+	 */
+	protected static String minAs(String column) {
+		StringBuffer sb = new StringBuffer();
+		sb.append(min(column));
+		sb.append(as(getMinColumn(column)));
+		return sb.toString();
+	}
+	
+	/**
+	 * 
+	 * @param column 対象カラム
+	 * @return min(column)
+	 */
+	protected static String min(String column) {
+		StringBuffer sb = new StringBuffer();
+		sb.append("min(");
+		sb.append(column);
+		sb.append(") ");
+		return sb.toString();
+	}
+	
+	/**
+	 * 一時カラム名取得。
+	 * @param column 対象カラム
+	 * @return min_対象カラム
+	 */
+	protected static String getMinColumn(String column) {
+		return "min_" + column;
 	}
 	
 }

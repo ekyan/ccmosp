@@ -17,7 +17,9 @@
  */
 package jp.mosp.platform.human.vo;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import jp.mosp.platform.human.base.PlatformHumanVo;
@@ -27,7 +29,7 @@ import jp.mosp.platform.human.base.PlatformHumanVo;
  */
 public class HumanInfoVo extends PlatformHumanVo {
 	
-	private static final long	serialVersionUID	= -7529586050432800847L;
+	private static final long serialVersionUID = -7529586050432800847L;
 	
 	
 	/**
@@ -37,93 +39,189 @@ public class HumanInfoVo extends PlatformHumanVo {
 	public HumanInfoVo() {
 		super();
 		divisionMap = new HashMap<String, String>();
+		// 人事情報一覧画面追加情報パラメータマップを初期化
+		extraParameters = new HashMap<String, String[]>();
+		// 人事情報一覧画面追加情報JSPリスト
+		extraViewList = new ArrayList<String>();
 	}
 	
 	
 	/**
 	 * 入社日。<br>
 	 */
-	private String		lblEntranceDate;
+	private String					lblEntranceDate;
 	/**
 	 * 雇用契約。<br>
 	 */
-	private String		lblEmployment;
+	private String					lblEmployment;
 	/**
 	 * 社員名(ｶﾅ)。<br>
 	 */
-	private String		lblEmployeeKana;
+	private String					lblEmployeeKana;
 	/**
 	 * 勤務地。<br>
 	 */
-	private String		lblWorkPlace;
+	private String					lblWorkPlace;
 	/**
 	 * 所属。<br>
 	 */
-	private String		lblSection;
+	private String					lblSection;
 	/**
 	 * 職位。<br>
 	 */
-	private String		lblPosition;
+	private String					lblPosition;
 	/**
 	 * 役職。<br>
 	 */
-	private String		lblPost;
+	private String					lblPost;
 	/**
 	 * 退職日。<br>
 	 */
-	private String		lblRetirementDate;
+	private String					lblRetirementDate;
 	/**
 	 * 退職理由。<br>
 	 */
-	private String		lblRetirementReason;
+	private String					lblRetirementReason;
 	/**
 	 * 詳細。<br>
 	 */
-	private String		lblRetirementDetail;
+	private String					lblRetirementDetail;
 	/**
 	 * 休職開始日。<br>
 	 */
-	private String[]	arySuspensionStartDate;
+	private String[]				arySuspensionStartDate;
 	/**
 	 * 休職終了日。<br>
 	 */
-	private String[]	arySuspensionEndDate;
+	private String[]				arySuspensionEndDate;
 	/**
 	 * 休職終了予定日。<br>
 	 */
-	private String[]	arySuspensionsScheduleEndDate;
+	private String[]				arySuspensionsScheduleEndDate;
 	/**
 	 * 休職理由。<br>
 	 */
-	private String[]	arySuspensionReason;
+	private String[]				arySuspensionReason;
 	/**
 	 * 開始日(兼務)。<br>
 	 */
-	private String[]	aryConcurrentStartDate;
+	private String[]				aryConcurrentStartDate;
 	/**
 	 * 終了日(兼務)。<br>
 	 */
-	private String[]	aryConcurrentEndDate;
+	private String[]				aryConcurrentEndDate;
 	/**
 	 * 所属略称(兼務)。<br>
 	 */
-	private String[]	aryConcurrentSectionAbbr;
+	private String[]				aryConcurrentSectionAbbr;
 	/**
 	 * 職位略称(兼務)。<br>
 	 */
-	private String[]	aryConcurrentPositionAbbr;
+	private String[]				aryConcurrentPositionAbbr;
 	/**
 	 * 備考(兼務)。<br>
 	 */
-	private String[]	aryConcurrentRemark;
+	private String[]				aryConcurrentRemark;
 	
 	//////人事汎用//////
 	
 	/**
 	 *  勤続年数
 	 */
-	private String		lblYearsOfService;
+	private String					lblYearsOfService;
 	
+	/**
+	 * 人事情報一覧画面追加情報パラメータマップ。<br>
+	 * 人事情報一覧画面では複数の人事情報一覧画面追加情報用Beanが
+	 * VOに値を設定するため、Mapの形でパラメータを保持する。<br>
+	 */
+	private Map<String, String[]>	extraParameters;
+	
+	/**
+	 * 人事情報一覧画面追加情報JSPリスト。<br>
+	 * humanInfo.jspでインクルードするJSPのリスト。<br>
+	 */
+	private List<String>			extraViewList;
+	
+	
+	/**
+	 * 人事情報一覧画面追加情報パラメータを設定する。<br>
+	 * @param key    キー
+	 * @param values 値
+	 */
+	public void putExtraParameters(String key, String[] values) {
+		extraParameters.put(key, values);
+	}
+	
+	/**
+	 * 人事情報一覧画面追加情報パラメータを設定する。<br>
+	 * @param key   キー
+	 * @param value 値
+	 */
+	public void putExtraParameters(String key, String value) {
+		String[] values = { value };
+		extraParameters.put(key, values);
+	}
+	
+	/**
+	 * 人事情報一覧画面追加情報パラメータを取得する。<br>
+	 * @param key キー
+	 * @return ポータルパラメータ
+	 */
+	public String[] getExtraParameters(String key) {
+		return extraParameters.get(key);
+	}
+	
+	/**
+	 * 人事情報一覧画面追加情報パラメータを取得する。<br>
+	 * @param key キー
+	 * @return 人事情報一覧画面追加情報パラメータ
+	 */
+	public String getExtraParameter(String key) {
+		String[] extraParameter = extraParameters.get(key);
+		if (extraParameter == null || extraParameter.length == 0) {
+			return "";
+		}
+		return extraParameter[0];
+	}
+	
+	/**
+	 * 人事情報一覧画面追加情報JSPリストを追加する。<br>
+	 * @param view JSPパス
+	 */
+	public void addExtraViewList(String view) {
+		if (extraViewList.contains(view) == false) {
+			extraViewList.add(view);
+		}
+	}
+	
+	/**
+	 * @return extraParameters
+	 */
+	public Map<String, String[]> getExtraParameters() {
+		return extraParameters;
+	}
+	
+	/**
+	 * @param extraParameters セットする portalParameters
+	 */
+	public void setExtraParameters(Map<String, String[]> extraParameters) {
+		this.extraParameters = extraParameters;
+	}
+	
+	/**
+	 * @return extraViewList
+	 */
+	public List<String> getExtraViewList() {
+		return extraViewList;
+	}
+	
+	/**
+	 * @param extraViewList セットする portalViewList
+	 */
+	public void setExtraViewList(List<String> extraViewList) {
+		this.extraViewList = extraViewList;
+	}
 	
 	/**
 	 * @param lblYearsOfService セットする lblYearsOfService

@@ -39,7 +39,7 @@ public class CutoffReferenceBean extends PlatformBean implements CutoffReference
 	/**
 	 * 締日管理DAO
 	 */
-	private CutoffDaoInterface	dao;
+	private CutoffDaoInterface dao;
 	
 	
 	/**

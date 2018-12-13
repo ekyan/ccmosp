@@ -34,6 +34,8 @@ import jp.mosp.time.dto.settings.WorkTypeDtoInterface;
 import jp.mosp.time.dto.settings.WorkTypeItemDtoInterface;
 import jp.mosp.time.dto.settings.impl.TmmWorkTypeDto;
 import jp.mosp.time.entity.WorkTypeEntity;
+import jp.mosp.time.entity.WorkTypeEntityInterface;
+import jp.mosp.time.utils.TimeNamingUtility;
 
 /**
  * 勤務形態マスタ参照クラス。
@@ -43,9 +45,14 @@ public class WorkTypeReferenceBean extends PlatformBean implements WorkTypeRefer
 	/**
 	 * 勤務形態マスタDAO。
 	 */
-	private WorkTypeDaoInterface		dao;
+	protected WorkTypeDaoInterface		dao;
+//	private WorkTypeDaoInterface		dao;
 	
-	private WorkTypeItemDaoInterface	workTypeItemDao;
+	/**
+	 * 勤務形態項目管理DAO。
+	 */
+	protected WorkTypeItemDaoInterface	workTypeItemDao;
+//	private WorkTypeItemDaoInterface	workTypeItemDao;
 	
 	
 	/**
@@ -144,6 +151,7 @@ public class WorkTypeReferenceBean extends PlatformBean implements WorkTypeRefer
 	
 	@Override
 	public String getWorkTypeAbbrAndTime(String workTypeCode, Date targetDate) throws MospException {
+		// 勤務形態マスタからレコードを取得
 		WorkTypeDtoInterface dto = findForInfo(workTypeCode, targetDate);
 		if (dto == null) {
 			return workTypeCode;
@@ -237,6 +245,25 @@ public class WorkTypeReferenceBean extends PlatformBean implements WorkTypeRefer
 	}
 	
 	@Override
+	public List<WorkTypeEntity> getWorkTypeEntityHistory(String workTypeCode) throws MospException {
+		// 勤務形態エンティティ履歴(有効日昇順)を準備
+		List<WorkTypeEntity> history = new ArrayList<WorkTypeEntity>();
+		// 勤務形態情報履歴を取得
+		List<WorkTypeDtoInterface> list = getWorkTypeHistory(workTypeCode);
+		// 勤務形態情報毎に処理
+		for (WorkTypeDtoInterface dto : list) {
+			// 有効日を取得
+			Date activateDate = dto.getActivateDate();
+			// 勤務形態項目情報リストを取得
+			List<WorkTypeItemDtoInterface> itemList = workTypeItemDao.findForWorkType(workTypeCode, activateDate);
+			// 勤務形態エンティティを取得し設定
+			history.add(createWorkTypeEntity(dto, itemList));
+		}
+		// 勤務形態エンティティ履歴(有効日昇順)を取得
+		return history;
+	}
+	
+	@Override
 	public WorkTypeEntity getWorkTypeEntity(String workTypeCode, Date targetDate) throws MospException {
 		// 勤務形態情報取得
 		WorkTypeDtoInterface dto = getWorkTypeInfo(workTypeCode, targetDate);
@@ -245,7 +272,7 @@ public class WorkTypeReferenceBean extends PlatformBean implements WorkTypeRefer
 			// 勤務形態項目情報リスト取得
 			List<WorkTypeItemDtoInterface> list = workTypeItemDao.findForWorkType(workTypeCode, dto.getActivateDate());
 			// 勤務形態エンティティを取得
-			return new WorkTypeEntity(dto, list);
+			return createWorkTypeEntity(dto, list);
 		}
 		// 勤務形態コード確認
 		if (workTypeCode == null) {
@@ -269,7 +296,7 @@ public class WorkTypeReferenceBean extends PlatformBean implements WorkTypeRefer
 			dto.setWorkTypeCode(workTypeCode);
 		}
 		// 勤務形態エンティティを取得
-		return new WorkTypeEntity(dto, new ArrayList<WorkTypeItemDtoInterface>());
+		return createWorkTypeEntity(dto, new ArrayList<WorkTypeItemDtoInterface>());
 	}
 	
 	/**
@@ -321,8 +348,8 @@ public class WorkTypeReferenceBean extends PlatformBean implements WorkTypeRefer
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
 	protected String getWorkBeginAndWorkEnd(WorkTypeDtoInterface dto) throws MospException {
-		WorkTypeItemDtoInterface workBeginDto = workTypeItemDao.findForKey(dto.getWorkTypeCode(),
-				dto.getActivateDate(), TimeConst.CODE_WORKSTART);
+		WorkTypeItemDtoInterface workBeginDto = workTypeItemDao.findForKey(dto.getWorkTypeCode(), dto.getActivateDate(),
+				TimeConst.CODE_WORKSTART);
 		WorkTypeItemDtoInterface workEndDto = workTypeItemDao.findForKey(dto.getWorkTypeCode(), dto.getActivateDate(),
 				TimeConst.CODE_WORKEND);
 		Date defaultTime = DateUtility.getDefaultTime();
@@ -442,6 +469,22 @@ public class WorkTypeReferenceBean extends PlatformBean implements WorkTypeRefer
 	}
 	
 	/**
+	 * 勤務形態エンティティの作成
+	 * @param workTypeDto 勤務形態情報
+	 * @param itemDtoList 勤務形態項目情報リスト
+	 * @return 勤務形態エンティティ
+	 */
+	protected WorkTypeEntity createWorkTypeEntity(WorkTypeDtoInterface workTypeDto, 
+			List<WorkTypeItemDtoInterface> itemDtoList) throws MospException {
+		// インターフェースで返すべきだが、修正箇所を減らすため、クラスとして返す
+		WorkTypeEntity entity = (WorkTypeEntity)createObject(WorkTypeEntityInterface.class);
+		entity.setWorkTypeDto(workTypeDto);
+		entity.setWorkTypeItemList(itemDtoList);
+		
+		return entity;
+	}
+	
+	/**
 	 * 所定休日略称を取得する。<br>
 	 * @return 所定休日略称
 	 */
@@ -478,7 +521,7 @@ public class WorkTypeReferenceBean extends PlatformBean implements WorkTypeRefer
 	 * @return 所定休日名称
 	 */
 	protected String getPrescribedHolidayNaming() {
-		return mospParams.getName("Prescribed") + mospParams.getName("Holiday");
+		return TimeNamingUtility.prescribedHoliday(mospParams);
 	}
 	
 	/**
@@ -486,7 +529,7 @@ public class WorkTypeReferenceBean extends PlatformBean implements WorkTypeRefer
 	 * @return 法定休日名称
 	 */
 	protected String getLegalHolidayNaming() {
-		return mospParams.getName("Legal") + mospParams.getName("Holiday");
+		return TimeNamingUtility.legalHoliday(mospParams);
 	}
 	
 	/**

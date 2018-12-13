@@ -30,6 +30,6 @@ function onLoadExtra() {
 		setDisabled("txtSearchActivateDay", true);
 	} else {
 		// 検索ボタン利用不可
-		setDisabled("btnRegist", true);
+		setReadOnly("btnRegist", true);
 	}
 }

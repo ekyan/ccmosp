@@ -78,6 +78,14 @@ public class AttendanceViewDto extends BaseDto implements AttendanceViewDtoInter
 	 */
 	private int					directEnd;
 	/**
+	 * 始業忘れ。
+	 */
+	private int					forgotRecordWorkStart;
+	/**
+	 * その他の始業できなかった場合。
+	 */
+	private int					notRecordWorkStart;
+	/**
 	 * 始業時刻。
 	 */
 	private Date				startTime;
@@ -283,6 +291,18 @@ public class AttendanceViewDto extends BaseDto implements AttendanceViewDtoInter
 	 */
 	private int					lateNightTime;
 	/**
+	 * 深夜所定労働時間内時間。
+	 */
+	private int					nightWorkWithinPrescribedWork;
+	/**
+	 * 深夜時間外時間。
+	 */
+	private int					nightOvertimeWork;
+	/**
+	 * 深夜休日労働時間。
+	 */
+	private int					nightWorkOnHoliday;
+	/**
 	 * 所定休日勤務時間。
 	 */
 	private int					specificWorkTime;
@@ -298,6 +318,10 @@ public class AttendanceViewDto extends BaseDto implements AttendanceViewDtoInter
 	 * 勤怠コメント。
 	 */
 	private String				timeComment;
+	/**
+	 * 備考。
+	 */
+	private String				remarks;
 	/**
 	 * 出勤日数。
 	 */
@@ -355,13 +379,25 @@ public class AttendanceViewDto extends BaseDto implements AttendanceViewDtoInter
 	 */
 	private double				specialLeaveDays;
 	/**
+	 * 特別休暇時間数。
+	 */
+	private int					specialLeaveHours;
+	/**
 	 * その他休暇日数。
 	 */
 	private double				otherLeaveDays;
 	/**
+	 * その他休暇時間数。
+	 */
+	private int					otherLeaveHours;
+	/**
 	 * 欠勤日数。
 	 */
 	private double				absenceDays;
+	/**
+	 * 欠勤時間数。
+	 */
+	private int					absenceHours;
 	/**
 	 * 法定代休発生日数。
 	 */
@@ -523,6 +559,21 @@ public class AttendanceViewDto extends BaseDto implements AttendanceViewDtoInter
 	@Override
 	public int getLateNightTime() {
 		return lateNightTime;
+	}
+	
+	@Override
+	public int getNightWorkWithinPrescribedWork() {
+		return nightWorkWithinPrescribedWork;
+	}
+	
+	@Override
+	public int getNightOvertimeWork() {
+		return nightOvertimeWork;
+	}
+	
+	@Override
+	public int getNightWorkOnHoliday() {
+		return nightWorkOnHoliday;
 	}
 	
 	@Override
@@ -793,6 +844,21 @@ public class AttendanceViewDto extends BaseDto implements AttendanceViewDtoInter
 	@Override
 	public void setLateNightTime(int lateNightTime) {
 		this.lateNightTime = lateNightTime;
+	}
+	
+	@Override
+	public void setNightWorkWithinPrescribedWork(int nightWorkWithinPrescribedWork) {
+		this.nightWorkWithinPrescribedWork = nightWorkWithinPrescribedWork;
+	}
+	
+	@Override
+	public void setNightOvertimeWork(int nightOvertimeWork) {
+		this.nightOvertimeWork = nightOvertimeWork;
+	}
+	
+	@Override
+	public void setNightWorkOnHoliday(int nightWorkOnHoliday) {
+		this.nightWorkOnHoliday = nightWorkOnHoliday;
 	}
 	
 	@Override
@@ -1126,13 +1192,28 @@ public class AttendanceViewDto extends BaseDto implements AttendanceViewDtoInter
 	}
 	
 	@Override
+	public int getSpecialLeaveHours() {
+		return specialLeaveHours;
+	}
+	
+	@Override
 	public double getOtherLeaveDays() {
 		return otherLeaveDays;
 	}
 	
 	@Override
+	public int getOtherLeaveHours() {
+		return otherLeaveHours;
+	}
+	
+	@Override
 	public double getAbsenceDays() {
 		return absenceDays;
+	}
+	
+	@Override
+	public int getAbsenceHours() {
+		return absenceHours;
 	}
 	
 	@Override
@@ -1286,13 +1367,28 @@ public class AttendanceViewDto extends BaseDto implements AttendanceViewDtoInter
 	}
 	
 	@Override
+	public void setSpecialLeaveHours(int specialLeaveHours) {
+		this.specialLeaveHours = specialLeaveHours;
+	}
+	
+	@Override
 	public void setOtherLeaveDays(double otherLeaveDays) {
 		this.otherLeaveDays = otherLeaveDays;
 	}
 	
 	@Override
+	public void setOtherLeaveHours(int otherLeaveHours) {
+		this.otherLeaveHours = otherLeaveHours;
+	}
+	
+	@Override
 	public void setAbsenceDays(double absenceDays) {
 		this.absenceDays = absenceDays;
+	}
+	
+	@Override
+	public void setAbsenceHours(int absenceHours) {
+		this.absenceHours = absenceHours;
 	}
 	
 	@Override
@@ -1326,7 +1422,8 @@ public class AttendanceViewDto extends BaseDto implements AttendanceViewDtoInter
 	}
 	
 	@Override
-	public void setPrescribedHolidayWorkTimeWithoutCompensationDay(int prescribedHolidayWorkTimeWithoutCompensationDay) {
+	public void setPrescribedHolidayWorkTimeWithoutCompensationDay(
+			int prescribedHolidayWorkTimeWithoutCompensationDay) {
 		this.prescribedHolidayWorkTimeWithoutCompensationDay = prescribedHolidayWorkTimeWithoutCompensationDay;
 	}
 	
@@ -1458,6 +1555,36 @@ public class AttendanceViewDto extends BaseDto implements AttendanceViewDtoInter
 	@Override
 	public void setShortUnpaid(int shortUnpaid) {
 		this.shortUnpaid = shortUnpaid;
+	}
+	
+	@Override
+	public int getForgotRecordWorkStart() {
+		return forgotRecordWorkStart;
+	}
+	
+	@Override
+	public int getNotRecordWorkStart() {
+		return notRecordWorkStart;
+	}
+	
+	@Override
+	public String getRemarks() {
+		return remarks;
+	}
+	
+	@Override
+	public void setForgotRecordWorkStart(int forgotRecordWorkStart) {
+		this.forgotRecordWorkStart = forgotRecordWorkStart;
+	}
+	
+	@Override
+	public void setNotRecordWorkStart(int notRecordWorkStart) {
+		this.notRecordWorkStart = notRecordWorkStart;
+	}
+	
+	@Override
+	public void setRemarks(String remarks) {
+		this.remarks = remarks;
 	}
 	
 }

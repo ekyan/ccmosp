@@ -36,7 +36,7 @@ public class SubApproverReferenceBean extends PlatformBean implements SubApprove
 	/**
 	 * 代理承認者テーブルDAO。
 	 */
-	protected SubApproverDaoInterface	dao;
+	protected SubApproverDaoInterface dao;
 	
 	
 	/**

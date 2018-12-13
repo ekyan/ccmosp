@@ -1,17 +1,17 @@
 /*
  * MosP - Mind Open Source Project    http://www.mosp.jp/
  * Copyright (C) MIND Co., Ltd.       http://www.e-mind.co.jp/
- *
+ * 
  * This program is free software: you can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License
  * as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -23,38 +23,11 @@ import java.util.List;
 import java.util.Map;
 
 import jp.mosp.framework.base.IndexedDtoInterface;
-import jp.mosp.framework.constant.MospConst;
-import jp.mosp.framework.utils.MospUtility;
 
 /**
- * MosPロール設定情報を扱う。
+ * MosP設定情報(ロール)。<br>
  */
 public class RoleProperty implements IndexedDtoInterface, BaseProperty {
-	
-	/**
-	 * ロール追加情報(初期ロール)。
-	 */
-	protected static final String			ROLE_EXTRA_DEFAULT		= "default";
-	
-	/**
-	 * ロール追加情報(必須ロール)。
-	 */
-	protected static final String			ROLE_EXTRA_NEEDED		= "needed";
-	
-	/**
-	 * ロール追加情報(特権ロール)。
-	 */
-	protected static final String			ROLE_EXTRA_SUPER		= "super";
-	
-	/**
-	 * ロール追加情報(承認ロール)。
-	 */
-	protected static final String			ROLE_EXTRA_APPROVER		= "approver";
-	
-	/**
-	 * ロール追加情報(計算ロール)。
-	 */
-	protected static final String			ROLE_EXTRA_CALCULATOR	= "calculator";
 	
 	/**
 	 * キー。
@@ -67,7 +40,18 @@ public class RoleProperty implements IndexedDtoInterface, BaseProperty {
 	private String							roleName;
 	
 	/**
-	 * ロール追加情報。
+	 * ロール区分。<br>
+	 * デフォルトは空白。<br>
+	 * <br>
+	 * 追加ロールを利用する際にパッケージやアドオンを識別する文字列を設定する。<br>
+	 * 空白はメインロールを、空白以外は追加ロールを意味する。<br>
+	 * <br>
+	 */
+	private String							roleType;
+	
+	/**
+	 * ロール追加情報。<br>
+	 * カンマ区切で複数設定することができる。<br>
 	 */
 	private String							roleExtra;
 	
@@ -82,7 +66,7 @@ public class RoleProperty implements IndexedDtoInterface, BaseProperty {
 	private List<String>					acceptCmdList;
 	
 	/**
-	 * ロール実行不能コマンドリスト。
+	 * ロール実行不能コマンドリスト。<br>
 	 */
 	private List<String>					rejectCmdList;
 	
@@ -92,6 +76,28 @@ public class RoleProperty implements IndexedDtoInterface, BaseProperty {
 	 */
 	private int								viewIndex;
 	
+	/**
+	 * ロール拡張権限。<br>
+	 * アドオン機能等で独自に設定して用いることを想定している。<br>
+	 */
+	private String							roleAuthority;
+	
+	/**
+	 * ロール拡張担当業務。<br>
+	 * アドオン機能等で独自に設定して用いることを想定している。<br>
+	 */
+	private String							roleCharge;
+	
+	/**
+	 * 人事汎用管理区分非表示リスト。
+	 */
+	private List<String>					hiddenDivisionsList;
+	
+	/**
+	 * 人事汎用管理区分参照リスト。
+	 */
+	private List<String>					referenceDivisionsList;
+	
 	
 	/**
 	 * MosPロール情報を生成する。
@@ -100,10 +106,15 @@ public class RoleProperty implements IndexedDtoInterface, BaseProperty {
 	public RoleProperty(String key) {
 		this.key = key;
 		roleName = "";
+		roleType = "";
 		roleExtra = "";
 		roleMenuMap = new HashMap<String, RoleMenuProperty>();
 		acceptCmdList = new ArrayList<String>();
 		rejectCmdList = new ArrayList<String>();
+		roleAuthority = "";
+		roleCharge = "";
+		hiddenDivisionsList = new ArrayList<String>();
+		referenceDivisionsList = new ArrayList<String>();
 	}
 	
 	@Override
@@ -125,6 +136,22 @@ public class RoleProperty implements IndexedDtoInterface, BaseProperty {
 	 */
 	public void setRoleName(String roleName) {
 		this.roleName = roleName;
+	}
+	
+	/**
+	 * ロール区分を設定する。<br>
+	 * @return ロール区分
+	 */
+	public String getRoleType() {
+		return roleType;
+	}
+	
+	/**
+	 * ロール区分を設定する。<br>
+	 * @param roleType ロール区分
+	 */
+	public void setRoleType(String roleType) {
+		this.roleType = roleType;
 	}
 	
 	/**
@@ -185,126 +212,51 @@ public class RoleProperty implements IndexedDtoInterface, BaseProperty {
 	}
 	
 	/**
-	 * 初期ロール確認を行う。<br>
-	 * @return 初期ロール確認結果(true：初期ロール、false：初期ロールでない)
+	 * ロール拡張権限を取得する。
+	 * @return ロール拡張権限
 	 */
-	public boolean isDefault() {
-		// ロール追加情報取得
-		for (String extra : getRoleExtraArray()) {
-			// 必須ロール設定確認
-			if (extra.equals(ROLE_EXTRA_DEFAULT)) {
-				return true;
-			}
-		}
-		return false;
+	public String getRoleAuthority() {
+		return roleAuthority;
 	}
 	
 	/**
-	 * 必須ロール確認を行う。<br>
-	 * @return 必須ロール確認結果(true：必須ロール、false：必須ロールでない)
+	 * ロール拡張権限を設定する。
+	 * @param roleAuthority ロール拡張権限
 	 */
-	public boolean isNeeded() {
-		// ロール追加情報取得
-		for (String extra : getRoleExtraArray()) {
-			// 必須ロール設定確認
-			if (extra.equals(ROLE_EXTRA_NEEDED)) {
-				return true;
-			}
-		}
-		return false;
+	public void setRoleAuthority(String roleAuthority) {
+		this.roleAuthority = roleAuthority;
 	}
 	
 	/**
-	 * 特権ロール確認を行う。<br>
-	 * @return 特権ロール確認結果(true：特権ロール、false：特権ロールでない)
+	 * ロール拡張担当業務を取得する。
+	 * @return roleCharge ロール拡張担当業務
 	 */
-	public boolean isSuper() {
-		// ロール追加情報取得
-		for (String extra : getRoleExtraArray()) {
-			// 特権ロール設定確認
-			if (extra.equals(ROLE_EXTRA_SUPER)) {
-				return true;
-			}
-		}
-		return false;
+	public String getRoleCharge() {
+		return roleCharge;
 	}
 	
 	/**
-	 * 承認ロール確認を行う。<br>
-	 * @return 承認ロール確認結果(true：承認ロール、false：承認ロールでない)
+	 * ロール拡張担当業務を設定する。
+	 * @param roleCharge ロール拡張担当業務
 	 */
-	public boolean isApprover() {
-		// ロール追加情報取得
-		for (String extra : getRoleExtraArray()) {
-			// 承認ロール設定確認
-			if (extra.equals(ROLE_EXTRA_APPROVER)) {
-				return true;
-			}
-		}
-		return false;
+	public void setRoleCharge(String roleCharge) {
+		this.roleCharge = roleCharge;
 	}
 	
 	/**
-	 * 計算ロール確認を行う。<br>
-	 * @return 計算ロール確認結果(true：計算ロール、false：計算ロールでない)
+	 * 人事汎用管理区分非表示リストを取得する
+	 * @return 人事汎用管理区分非表示リスト
 	 */
-	public boolean isCalculator() {
-		// ロール追加情報取得
-		for (String extra : getRoleExtraArray()) {
-			// 計算ロール設定確認
-			if (extra.equals(ROLE_EXTRA_CALCULATOR)) {
-				return true;
-			}
-		}
-		return false;
+	public List<String> getHiddenDivisionsList() {
+		return hiddenDivisionsList;
 	}
 	
 	/**
-	 * ロール追加情報配列を取得する。<br>
-	 * @return ロール追加情報配列
+	 * 人事汎用管理区分参照リストを取得する
+	 * @return 人事汎用管理区分参照リスト
 	 */
-	protected String[] getRoleExtraArray() {
-		if (roleExtra == null) {
-			roleExtra = "";
-		}
-		return MospUtility.split(roleExtra, MospConst.APP_PROPERTY_SEPARATOR);
-	}
-	
-	/**
-	 * ロール実行可能コマンドの確認を行う。<br>
-	 * 実行不可コマンドは、コマンドでのみ、実行不可コマンドリストから検索する。<br>
-	 * 実行不可コマンドリスト内にコマンドが含まれている場合、falseを返す。<br>
-	 * 実行可能コマンドは、見つかるまでワイルドカードで置換して、
-	 * 実行可能コマンドリストから検索する。<br>
-	 * 実行可能コマンドリストに含まれていない場合、falseを返す。<br>
-	 * @param command コマンド
-	 * @return ロール実行可能コマンド確認結果(true：実行可能、false：実行不能)
-	 */
-	public boolean hasAuthority(String command) {
-		// コマンド確認
-		if (command == null || command.isEmpty()) {
-			return false;
-		}
-		// 実行不可コマンドリスト確認
-		if (rejectCmdList.contains(command)) {
-			return false;
-		}
-		// 実行可能コマンドリスト確認
-		if (acceptCmdList.contains(command)) {
-			return true;
-		}
-		// コマンド末尾をワイルドカード化
-		String wildCardCommand = MospUtility.getWildCardCommand(command);
-		// 実行可能コマンドリスト確認
-		while (wildCardCommand.isEmpty() == false) {
-			// 実行可能コマンドリスト確認
-			if (acceptCmdList.contains(wildCardCommand)) {
-				return true;
-			}
-			// コマンド末尾をワイルドカード化
-			wildCardCommand = MospUtility.getWildCardCommand(wildCardCommand);
-		}
-		return false;
+	public List<String> getReferenceDivisionsList() {
+		return referenceDivisionsList;
 	}
 	
 }

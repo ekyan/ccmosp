@@ -172,6 +172,21 @@ public interface TotalTimeDataDtoInterface extends BaseDtoInterface {
 	int getLateNight();
 	
 	/**
+	 * @return 深夜所定労働時間内時間。
+	 */
+	int getNightWorkWithinPrescribedWork();
+	
+	/**
+	 * @return 深夜時間外時間。
+	 */
+	int getNightOvertimeWork();
+	
+	/**
+	 * @return 深夜休日労働時間。
+	 */
+	int getNightWorkOnHoliday();
+	
+	/**
 	 * @return 所定休出時間。
 	 */
 	int getWorkOnSpecificHoliday();
@@ -342,14 +357,29 @@ public interface TotalTimeDataDtoInterface extends BaseDtoInterface {
 	double getTotalSpecialHoliday();
 	
 	/**
+	 * @return 特別休暇時間。
+	 */
+	int getSpecialHolidayHour();
+	
+	/**
 	 * @return その他休暇合計日数。
 	 */
 	double getTotalOtherHoliday();
 	
 	/**
+	 * @return その他休暇時間。
+	 */
+	int getOtherHolidayHour();
+	
+	/**
 	 * @return 欠勤合計日数。
 	 */
 	double getTotalAbsence();
+	
+	/**
+	 * @return 欠勤時間。
+	 */
+	int getAbsenceHour();
 	
 	/**
 	 * @return 手当合計。
@@ -577,6 +607,21 @@ public interface TotalTimeDataDtoInterface extends BaseDtoInterface {
 	void setLateNight(int lateNight);
 	
 	/**
+	 * @param nightWorkWithinPrescribedWork セットする 深夜所定労働時間内時間。
+	 */
+	void setNightWorkWithinPrescribedWork(int nightWorkWithinPrescribedWork);
+	
+	/**
+	 * @param nightOvertimeWork セットする 深夜時間外時間。
+	 */
+	void setNightOvertimeWork(int nightOvertimeWork);
+	
+	/**
+	 * @param nightWorkOnHoliday セットする 深夜休日労働時間。
+	 */
+	void setNightWorkOnHoliday(int nightWorkOnHoliday);
+	
+	/**
 	 * @param workOnSpecificHoliday セットする 所定休出時間。
 	 */
 	void setWorkOnSpecificHoliday(int workOnSpecificHoliday);
@@ -747,14 +792,29 @@ public interface TotalTimeDataDtoInterface extends BaseDtoInterface {
 	void setTotalSpecialHoliday(double totalSpecialHoliday);
 	
 	/**
+	 * @param specialHolidayHour セットする 特別休暇時間。
+	 */
+	void setSpecialHolidayHour(int specialHolidayHour);
+	
+	/**
 	 * @param totalOtherHoliday セットする その他休暇合計日数。
 	 */
 	void setTotalOtherHoliday(double totalOtherHoliday);
 	
 	/**
+	 * @param otherHolidayHour セットする その他休暇時間。
+	 */
+	void setOtherHolidayHour(int otherHolidayHour);
+	
+	/**
 	 * @param totalAbsence セットする 欠勤合計日数。
 	 */
 	void setTotalAbsence(double totalAbsence);
+	
+	/**
+	 * @param absenceHour セットする 欠勤時間。
+	 */
+	void setAbsenceHour(int absenceHour);
 	
 	/**
 	 * @param totalAllowance セットする 手当合計。
@@ -907,5 +967,105 @@ public interface TotalTimeDataDtoInterface extends BaseDtoInterface {
 	 * @param prescribedHolidayOvertimeIn セットする 所定休日時間内時間(所定休日法定労働時間内残業時間)
 	 */
 	public void setPrescribedHolidayOvertimeIn(int prescribedHolidayOvertimeIn);
+	
+	/**
+	 * @return 汎用項目1(数値)
+	 */
+	int getGeneralIntItem1();
+	
+	/**
+	 * @param generalIntItem1 汎用項目1(数値)
+	 */
+	void setGeneralIntItem1(int generalIntItem1);
+	
+	/**
+	 * @return 汎用項目2(数値)
+	 */
+	int getGeneralIntItem2();
+	
+	/**
+	 * @param generalIntItem2 汎用項目2(数値)
+	 */
+	void setGeneralIntItem2(int generalIntItem2);
+	
+	/**
+	 * @return 汎用項目3(数値)
+	 */
+	int getGeneralIntItem3();
+	
+	/**
+	 * @param generalIntItem3 汎用項目3(数値)
+	 */
+	void setGeneralIntItem3(int generalIntItem3);
+	
+	/**
+	 * @return 汎用項目4(数値)
+	 */
+	int getGeneralIntItem4();
+	
+	/**
+	 * @param generalIntItem4 汎用項目4(数値)
+	 */
+	void setGeneralIntItem4(int generalIntItem4);
+	
+	/**
+	 * @return 汎用項目5(数値)
+	 */
+	int getGeneralIntItem5();
+	
+	/**
+	 * @param generalIntItem5 汎用項目5(数値)
+	 */
+	void setGeneralIntItem5(int generalIntItem5);
+	
+	/**
+	 * @return 汎用項目1(浮動小数点数)
+	 */
+	double getGeneralDoubleItem1();
+	
+	/**
+	 * @param generalDoubleItem1 汎用項目1(浮動小数点数)
+	 */
+	void setGeneralDoubleItem1(double generalDoubleItem1);
+	
+	/**
+	 * @return 汎用項目2(浮動小数点数)
+	 */
+	double getGeneralDoubleItem2();
+	
+	/**
+	 * @param generalDoubleItem2 汎用項目2(浮動小数点数)
+	 */
+	void setGeneralDoubleItem2(double generalDoubleItem2);
+	
+	/**
+	 * @return 汎用項目3(浮動小数点数)
+	 */
+	double getGeneralDoubleItem3();
+	
+	/**
+	 * @param generalDoubleItem3 汎用項目3(浮動小数点数)
+	 */
+	void setGeneralDoubleItem3(double generalDoubleItem3);
+	
+	/**
+	 * @return 汎用項目4(浮動小数点数)
+	 */
+	double getGeneralDoubleItem4();
+	
+	/**
+	 * @param generalDoubleItem4 汎用項目4(浮動小数点数)
+	 */
+	void setGeneralDoubleItem4(double generalDoubleItem4);
+	
+	/**
+	 * @return 汎用項目5(浮動小数点数)
+	 */
+	double getGeneralDoubleItem5();
+	
+	/**
+	 * @param generalDoubleItem5 汎用項目5(浮動小数点数)
+	 */
+	void setGeneralDoubleItem5(double generalDoubleItem5);
 	
 }

@@ -25,11 +25,11 @@ errorPage    = "/jsp/common/error.jsp"
 import = "jp.mosp.framework.base.MospParams"
 import = "jp.mosp.framework.constant.MospConst"
 import = "jp.mosp.framework.utils.HtmlUtility"
+import = "jp.mosp.framework.utils.CalendarHtmlUtility"
 import = "jp.mosp.platform.constant.PlatformConst"
 import = "jp.mosp.platform.utils.PlatformUtility"
 import = "jp.mosp.time.comparator.settings.HolidayRequestApproverNameComparator"
 import = "jp.mosp.time.comparator.settings.HolidayRequestHolidayType1Comparator"
-import = "jp.mosp.time.comparator.settings.HolidayRequestHolidayType2Comparator"
 import = "jp.mosp.time.comparator.settings.HolidayRequestHolidayType3Comparator"
 import = "jp.mosp.time.comparator.settings.HolidayRequestRequestDateComparator"
 import = "jp.mosp.time.comparator.settings.HolidayRequestStateComparator"
@@ -39,6 +39,8 @@ import = "jp.mosp.time.input.vo.HolidayRequestVo"
 %><%
 MospParams params = (MospParams)request.getAttribute(MospConst.ATT_MOSP_PARAMS);
 HolidayRequestVo vo = (HolidayRequestVo)params.getVo();
+boolean isChanging = vo.isModeActivateDateFixed() == false;
+boolean isSearchChanging = PlatformUtility.isActivateDateChanging(vo.getJsSearchModeActivateDate());
 %>
 <div class="ListHeader">
 	<table class="EmployeeLabelTable">
@@ -48,7 +50,7 @@ HolidayRequestVo vo = (HolidayRequestVo)params.getVo();
 	</table>
 </div>
 <div class="List">
-	<table class="InputTable">
+	<table class="InputTable" id="holidayRequest_tblEdit">
 		<tr>
 			<th class="EditTableTh" colspan="4">
 				<jsp:include page="<%= TimeConst.PATH_TIME_APPLY_INFO_JSP %>" flush="false" />
@@ -57,8 +59,9 @@ HolidayRequestVo vo = (HolidayRequestVo)params.getVo();
 		<tr>
 			<td class="TitleTd"><%= params.getName("Vacation","Year","Month","Day") %></td>
 			<td class="InputTd" colspan="3">
+				<%= CalendarHtmlUtility.getCalendarDiv(CalendarHtmlUtility.TYPE_DAY, "pltEditStart", "", "", false, false, isChanging) %>
 				<select class="Number4PullDown" id="pltEditStartYear" name="pltEditStartYear">
-					<%= HtmlUtility.getSelectOption(vo.getAryPltEditStartYear(), vo.getPltEditStartYear()) %>
+					<%= HtmlUtility.getSelectOption(vo.getAryPltEditStartYear(), vo.getPltEditStartYear(), true) %>
 				</select>
 				<%= params.getName("Year") %>&nbsp;
 				<select class="Number2PullDown" id="pltEditStartMonth" name="pltEditStartMonth">
@@ -68,10 +71,10 @@ HolidayRequestVo vo = (HolidayRequestVo)params.getVo();
 				<select class="Number2PullDown" id="pltEditStartDay" name="pltEditStartDay">
 					<%= HtmlUtility.getSelectOption(vo.getAryPltEditStartDay(), vo.getPltEditStartDay()) %>
 				</select>
-				<%= params.getName("Day") %>
-				<%= params.getName("Wave") %>
+				<%= params.getName("Day","Wave") %>
+				<%= CalendarHtmlUtility.getCalendarDiv(CalendarHtmlUtility.TYPE_DAY, "pltEditEnd", "", "", false, false, isChanging) %>
 				<select class="Number4PullDown" id="pltEditEndYear" name="pltEditEndYear">
-					<%= HtmlUtility.getSelectOption(vo.getAryPltEditEndYear(), vo.getPltEditEndYear()) %>
+					<%= HtmlUtility.getSelectOption(vo.getAryPltEditEndYear(), vo.getPltEditEndYear(), true) %>
 				</select>
 				<%= params.getName("Year") %>&nbsp;
 				<select class="Number2PullDown" id="pltEditEndMonth" name="pltEditEndMonth">
@@ -132,53 +135,63 @@ HolidayRequestVo vo = (HolidayRequestVo)params.getVo();
 		</tr>
 	</table>
 	<jsp:include page="<%= TimeConst.PATH_TIME_APPLY_BUTTON_JSP %>" flush="false" />
+<%
+// 承認個人ID利用
+if(!params.isTargetApprovalUnit()) {
+%>
 	<jsp:include page="<%= TimeConst.PATH_TIME_APPROVER_PULLDOWN_JSP %>" flush="false" />
+<%
+}
+%>
 </div>
 <div class="List">
-	<table class="LeftListTable">
+	<table class="LeftTable" id="holidayRequest_tblPaidHoliday1">
 		<tr>
 			<th class="ListSelectTh" id="thFiscalYear"></th>
 			<th class="ListSelectTh" id="thGrantDate"><%= params.getName("Giving", "Day") %></th>
 			<th class="ListSelectTh" id="thExpirationDate"><%= params.getName("TimeLimit", "Day") %></th>
-			<th class="ListSelectTh" id="thGrantDays"><%= params.getName("Remainder", "Days", "Slash", "Giving", "Day") %></th>
-			<td class="Divider"></td>
-			<th class="ListSelectTh"><%= params.getName("Stock", "Remainder", "Days") %></th>
+			<th class="ListSelectTh" id="thGrantDays"><%= params.getName("Remainder", "Days", "Slash", "Giving", "Days") %></th>
+		</tr>
+<%
+for (int i = 0; i < vo.getAryLblPaidLeaveFiscalYear().length; i++) {
+%>
+		<tr>
+			<th class="ListSelectTh"><%= HtmlUtility.escapeHTML(vo.getAryLblPaidLeaveFiscalYear()[i]) %></th>
+			<td class="SelectTd"><span <%= vo.getAryLblStyle()[i] %>><%= HtmlUtility.escapeHTML(vo.getAryLblPaidLeaveGrantDate()[i]) %></span></td>
+			<td class="SelectTd"><span <%= vo.getAryLblStyle()[i] %>><%= HtmlUtility.escapeHTML(vo.getAryLblPaidLeaveExpirationDate()[i]) %></span></td>
+			<td class="SelectTd">
+				<span <%= vo.getAryLblStyle()[i] %>>
+				<%= HtmlUtility.escapeHTML(vo.getAryLblPaidLeaveRemainDays()[i]) %>
+				<%= params.getName("Slash") %>
+				<%= HtmlUtility.escapeHTML(vo.getAryLblPaidLeaveGrantDays()[i]) %>
+				</span>
+			</td>
+		</tr>
+<%
+}
+%>
+	</table>
+	<table class="RightTable" id="holidayRequest_tblPaidHoliday2">
+		<tr>
+			<th class="ListSelectTh" id="thStockDays"><%= params.getName("Stock", "Remainder", "Days") %></th>
 <%
 if (vo.isPaidLeaveByHour()) {
 %>
-			<td class="SelectTd"><%= HtmlUtility.escapeHTML(vo.getLblPaidHolidayStock()) %><%= params.getName("Day") %></td>
+			<td class="SelectTd" id="tdLabelStockDays"><%= HtmlUtility.escapeHTML(vo.getLblPaidHolidayStock()) %><%= params.getName("Day") %></td>
 			<th class="ListSelectTh" id="thPaidLeaveByHour"><%= params.getName("Time", "Unit", "Limit") %></th>
 			<td class="SelectTd"><%= HtmlUtility.escapeHTML(vo.getLblHolidayTimeUnitLimit()) %></td>
 <%
 } else {
 %>
-			<td class="SelectTd" colspan="3"><%= HtmlUtility.escapeHTML(vo.getLblPaidHolidayStock()) %><%= params.getName("Day") %></td>
+			<td class="SelectTd" colspan="3" id="tdLabelStockDaysNoHour"><%= HtmlUtility.escapeHTML(vo.getLblPaidHolidayStock()) %><%= params.getName("Day") %></td>
 <%
 }
 %>
 		</tr>
 		<tr>
-			<th class="ListSelectTh"><%= params.getName("PreviousYear", "Times") %></th>
-			<td class="SelectTd"><%= HtmlUtility.escapeHTML(vo.getLblFormerGivingDay()) %></td>
-			<td class="SelectTd"><%= HtmlUtility.escapeHTML(vo.getLblFormerLimitDay()) %></td>
-			<td class="SelectTd">
-				<%= HtmlUtility.escapeHTML(vo.getLblFormerDay()) %>
-				<%= params.getName("Slash") %>
-				<%= HtmlUtility.escapeHTML(vo.getLblFormerGrantDay()) %>
-			</td>
-			<td class="Divider"></td>
 			<td class="Blank" colspan="4"></td>
 		</tr>
 		<tr>
-			<th class="ListSelectTh"><%= params.getName("ThisYear", "Times") %></th>
-			<td class="SelectTd"><%= HtmlUtility.escapeHTML(vo.getLblCurrentGivingDay()) %></td>
-			<td class="SelectTd"><%= HtmlUtility.escapeHTML(vo.getLblCurrentLimitDay()) %></td>
-			<td class="SelectTd">
-				<%= HtmlUtility.escapeHTML(vo.getLblCurrentDay()) %>
-				<%= params.getName("Slash") %>
-				<%= HtmlUtility.escapeHTML(vo.getLblCurrentGrantDay()) %>
-			</td>
-			<td class="Divider"></td>
 			<th class="ListSelectTh" id="thPaidLeaveAutomatic">
 				<%= params.getName("PaidHolidayAbbr", "NextTime", "Giving", "FrontParentheses", "Automatic", "BackParentheses") %>
 			</th>
@@ -190,15 +203,6 @@ if (vo.isPaidLeaveByHour()) {
 			</td>
 		</tr>
 		<tr>
-			<th class="ListSelectTh" id="thTotal"><%= params.getName("SumTotal") %></th>
-			<td class="TitleTd"></td>
-			<td class="TitleTd"></td>
-			<td class="SelectTd">
-				<%= HtmlUtility.escapeHTML(vo.getLblTotalDayAndHour()) %>
-				<%= params.getName("Slash") %>
-				<%= HtmlUtility.escapeHTML(vo.getLblTotalGrantDay()) %>
-			</td>
-			<td class="Divider"></td>
 			<th class="ListSelectTh" id="thPaidLeaveManual">
 				<%= params.getName("PaidHolidayAbbr", "NextTime", "Giving", "FrontParentheses", "ManualOperation", "BackParentheses") %>
 			</th>
@@ -215,7 +219,7 @@ if (vo.isPaidLeaveByHour()) {
 <%
 if (vo.getAryLblGivingDate().length > 0) {
 %>
-	<table class="LeftListTable" id="tblSpecialHoliday">
+	<table class="LeftListTable" id="holidayRequest_tblSpecialHoliday">
 		<tr>
 			<td class="ListSelectTh"><%= params.getName("GrantDate") %>
 			<td class="ListSelectTh"><%= params.getName("Vacation","Classification") %></td>
@@ -238,7 +242,7 @@ if (vo.getAryLblGivingDate().length > 0) {
 %>
 </div>
 <div class="List">
-	<table class="InputTable SearchInputTable">
+	<table class="InputTable SearchInputTable" id="holidayRequest_tblSearch">
 		<tr>
 			<th class="ListTableTh" colspan="6">
 				<span class="TitleTh"><%= params.getName("Search") %></span>
@@ -272,9 +276,6 @@ if (vo.getAryLblGivingDate().length > 0) {
 				<select class="Name3PullDown" id="pltSearchHolidayRange1" name="pltSearchHolidayRange1">
 					<%= HtmlUtility.getSelectOption(vo.getAryPltSearchHolidayRangePaidHoliday(), vo.getPltSearchHolidayRange1()) %>
 				</select>
-				<select class="Name3PullDown" id="pltSearchHolidayRange2" name="pltSearchHolidayRange2">
-					<%= HtmlUtility.getSelectOption(params, TimeConst.CODE_HOLIDAY_TYPE3_RANGE2, vo.getPltSearchHolidayRange2(), true) %>
-				</select>
 			</td>
 			<td class="TitleTd"><%= params.getName("State") %></td>
 			<td class="InputTd">
@@ -284,8 +285,9 @@ if (vo.getAryLblGivingDate().length > 0) {
 			</td>
 			<td class="TitleTd"><%= params.getName("Display","Period") %></td>
 			<td class="InputTd">
+			<%= CalendarHtmlUtility.getCalendarDiv(CalendarHtmlUtility.TYPE_MONTH, "pltSearch", "", "", false, false, isSearchChanging) %>
 				<select class="Number4PullDown" id="pltSearchYear" name="pltSearchYear">
-					<%= HtmlUtility.getSelectOption(vo.getAryPltSearchYear(), vo.getPltSearchYear()) %>
+					<%= HtmlUtility.getSelectOption(vo.getAryPltSearchYear(), vo.getPltSearchYear(), true) %>
 				</select>
 				<%= params.getName("Year") %>
 				<select class="Number2PullDown" id="pltSearchMonth" name="pltSearchMonth">
@@ -308,7 +310,7 @@ if (vo.getAryLblGivingDate().length > 0) {
 				<th class="ListSortTh" id="thHolidayDate"     onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= HolidayRequestRequestDateComparator.class.getName() %>'), '<%= HolidayRequestAction.CMD_SORT %>')"><%= params.getName("Day") %><%= PlatformUtility.getSortMark(HolidayRequestRequestDateComparator.class.getName(), params) %></th>
 				<th class="ListSortTh" id="thHolidayType"     onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= HolidayRequestHolidayType1Comparator.class.getName() %>'), '<%= HolidayRequestAction.CMD_SORT %>')"><%= params.getName("Vacation","Type") %><%= PlatformUtility.getSortMark(HolidayRequestHolidayType1Comparator.class.getName(), params) %></th>
 				<th class="ListSortTh" id="thHolidayRange"    onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= HolidayRequestHolidayType3Comparator.class.getName() %>'), '<%= HolidayRequestAction.CMD_SORT %>')"><%= params.getName("Range") %><%= PlatformUtility.getSortMark(HolidayRequestHolidayType3Comparator.class.getName(), params) %></th>
-				<th class="ListSelectTh" id="thHolidayReason"><%= params.getName("Vacation") %><%= params.getName("Reason") %></th>
+				<th class="ListSelectTh" id="thHolidayReason"><%= params.getName("Vacation","Reason") %></th>
 				<th class="ListSortTh" id="thHolidayState"    onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= HolidayRequestStateComparator.class.getName() %>'), '<%= HolidayRequestAction.CMD_SORT %>')"><%= params.getName("State") %><%= PlatformUtility.getSortMark(HolidayRequestStateComparator.class.getName(), params) %></th>
 				<th class="ListSortTh" id="thHolidayApprover" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= HolidayRequestApproverNameComparator.class.getName() %>'), '<%= HolidayRequestAction.CMD_SORT %>')"><%= params.getName("Approver") %><%= PlatformUtility.getSortMark(HolidayRequestApproverNameComparator.class.getName(), params) %></th>
 				<th class="ListSelectTh" id="thSelect">

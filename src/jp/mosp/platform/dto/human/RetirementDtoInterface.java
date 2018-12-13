@@ -20,21 +20,17 @@ package jp.mosp.platform.dto.human;
 import java.util.Date;
 
 import jp.mosp.framework.base.BaseDtoInterface;
+import jp.mosp.platform.dto.base.PersonalIdDtoInterface;
 
 /**
  * 人事退職情報DTOインターフェース。
  */
-public interface RetirementDtoInterface extends BaseDtoInterface {
+public interface RetirementDtoInterface extends BaseDtoInterface, PersonalIdDtoInterface {
 	
 	/**
 	 * @return レコード識別ID。
 	 */
 	long getPfaHumanRetirementId();
-	
-	/**
-	 * @return 個人ID。
-	 */
-	String getPersonalId();
 	
 	/**
 	 * @return 退職日。
@@ -55,11 +51,6 @@ public interface RetirementDtoInterface extends BaseDtoInterface {
 	 * @param pfaHumanRetirementId セットする レコード識別ID。
 	 */
 	void setPfaHumanRetirementId(long pfaHumanRetirementId);
-	
-	/**
-	 * @param personalId セットする 個人ID。
-	 */
-	void setPersonalId(String personalId);
 	
 	/**
 	 * @param retirementDate セットする 退職日。

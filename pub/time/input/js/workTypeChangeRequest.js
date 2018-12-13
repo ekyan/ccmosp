@@ -46,8 +46,10 @@ function onLoadExtra() {
 		setDisabled("pltSearchRequestMonth", true);
 	} else {
 		setDisabled("pltSearchWorkType", true);
-		setDisabled("btnSearch", true);
+		setReadOnly("btnSearch", true);
 	}
+	// 期間終了日カレンダボタンクリックイベントを設定
+	setOnClickHandler(getCalendarButtonFromInput("pltEditEnd"), clickEndCalendar);
 }
 
 /**
@@ -166,3 +168,18 @@ function checkStatus(aryMessage, event, status) {
 		}
 	}
 }
+
+/**
+ * 期間終了日カレンダクリック時の処理を行う。
+ * @param event イベントオブジェクト
+ */
+function clickEndCalendar(event) {
+	// 期間指定のチェックが付いていない場合
+	if (isCheckableChecked("ckbEndDate") == false) {
+		// 処理無し
+		return;
+	}
+	// カレンダを表示
+	showCalendar(event, TYPE_CALENDAR_DAY);
+}
+

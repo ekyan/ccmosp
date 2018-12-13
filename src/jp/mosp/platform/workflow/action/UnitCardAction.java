@@ -469,9 +469,9 @@ public class UnitCardAction extends PlatformSystemAction {
 		// ユニット名称
 		dto.setUnitName(vo.getTxtUnitName());
 		// 複数決済
-		dto.setRouteStage(Integer.valueOf(vo.getPltRouteStage()));
+		dto.setRouteStage(getInt(vo.getPltRouteStage()));
 		// 無効フラグ
-		dto.setInactivateFlag(Integer.valueOf(vo.getPltEditInactivate()));
+		dto.setInactivateFlag(getInt(vo.getPltEditInactivate()));
 		// ラジオボタン
 		dto.setUnitType(vo.getRadUnitType());
 		// 承認者所属コード、承認者職位コード、承認者個人ID
@@ -480,6 +480,8 @@ public class UnitCardAction extends PlatformSystemAction {
 			dto.setApproverSectionCode(vo.getPltSectionMaster());
 			// 承認者職位コード
 			dto.setApproverPositionCode(vo.getPltPositionMaster());
+			// 承認者職位等級
+			dto.setApproverPositionGrade(vo.getPltPositionGradeRange());
 			// 社員コード
 			dto.setApproverPersonalId("");
 		} else {
@@ -487,10 +489,12 @@ public class UnitCardAction extends PlatformSystemAction {
 			dto.setApproverSectionCode("");
 			// 承認者職位コード
 			dto.setApproverPositionCode("");
+			// 承認者職位等級
+			dto.setApproverPositionGrade("");
 			// 入力された社員コードから個人IDを取得
 			// 追加予定箇所
-			dto.setApproverPersonalId(checkWithdrawal(reference().human().getPersonalIds(vo.getTxtEmployeeCode(),
-					getEditActivateDate())));
+			dto.setApproverPersonalId(checkWithdrawal(
+					reference().human().getPersonalIds(vo.getTxtEmployeeCode(), getEditActivateDate())));
 		}
 	}
 	
@@ -513,6 +517,7 @@ public class UnitCardAction extends PlatformSystemAction {
 		vo.setRadUnitType(dto.getUnitType());
 		vo.setPltSectionMaster(dto.getApproverSectionCode());
 		vo.setPltPositionMaster(dto.getApproverPositionCode());
+		vo.setPltPositionGradeRange(dto.getApproverPositionGrade());
 		// 人事マスタ参照クラス準備
 		HumanReferenceBeanInterface human = reference().human();
 		// 個人指定欄
@@ -531,6 +536,8 @@ public class UnitCardAction extends PlatformSystemAction {
 		humanSearch.setSectionCode(dto.getApproverSectionCode());
 		// 検索条件設定(職位コード)
 		humanSearch.setPositionCode(dto.getApproverPositionCode());
+		// 検索条件設定(職位等級範囲)
+		humanSearch.setPositionGradeRange(dto.getApproverPositionGrade());
 		// 検索条件設定(兼務要否)
 		humanSearch.setNeedConcurrent(true);
 		// 検索条件設定(休退職区分)

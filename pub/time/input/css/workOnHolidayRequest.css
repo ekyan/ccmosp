@@ -52,14 +52,14 @@
  * 申請理由ヘッダ幅。
  */
 .LeftListTable #thRequestReason {
-	width: 400px;
+	width: 370px;
 }
 
 /**
  * 振替日ヘッダ幅。
  */
 .LeftListTable #thSubstituteDate1 {
-	width: 100px;
+	width: 130px;
 }
 
 /**

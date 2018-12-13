@@ -61,11 +61,11 @@ for (int i = 0; i < vo.getPortalParameters(PortalAttendanceListBean.PRM_ATTENDAN
 %>
 			<tr>
 				<td class="ListSelectTd"><button type="button" class="Name2Button" id="btnSelect" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_ACTIVATE_DATE %>', '<%= HtmlUtility.escapeHTML(vo.getPortalParameters(PortalAttendanceListBean.PRM_ATTENDANCE_LIST_DATE)[i]) %>'), '<%= AttendanceCardAction.CMD_SELECT_SHOW_FROM_PORTAL %>');"><%= params.getName("Detail") %></button></td>
-				<td class="ListSelectTd"><%= HtmlUtility.escapeHTML(vo.getPortalParameters(PortalAttendanceListBean.PRM_ATTENDANCE_LIST_WORK_DATE  )[i]) %></td>
+				<td class="ListSelectTd" title = "<%= HtmlUtility.escapeHTML(vo.getPortalParameters(PortalAttendanceListBean.PRM_ATTENDANCE_LIST_DATE)[i])%>"><%= HtmlUtility.escapeHTML(vo.getPortalParameters(PortalAttendanceListBean.PRM_ATTENDANCE_LIST_WORK_DATE  )[i]) %></td>
 				<td class="ListSelectTd"><span <%= vo.getPortalParameters(PortalAttendanceListBean.PRM_ATTENDANCE_LIST_WEEK_STYLE)[i] %>><%= HtmlUtility.escapeHTML(vo.getPortalParameters(PortalAttendanceListBean.PRM_ATTENDANCE_LIST_WEEK)[i]) %></span></td>
 				<td class="ListSelectTd"><%= HtmlUtility.escapeHTML(vo.getPortalParameters(PortalAttendanceListBean.PRM_ATTENDANCE_LIST_WORK_TYPE  )[i]) %></td>
-				<td class="ListSelectTd"><%= HtmlUtility.escapeHTML(vo.getPortalParameters(PortalAttendanceListBean.PRM_ATTENDANCE_LIST_START_TIME )[i]) %></td>
-				<td class="ListSelectTd"><%= HtmlUtility.escapeHTML(vo.getPortalParameters(PortalAttendanceListBean.PRM_ATTENDANCE_LIST_END_TIME   )[i]) %></td>
+				<td class="ListSelectTd"><span <%= vo.getPortalParameters(PortalAttendanceListBean.PRM_ATTENDANCE_LIST_START_TIME_STYLE)[i] %>><%= HtmlUtility.escapeHTML(vo.getPortalParameters(PortalAttendanceListBean.PRM_ATTENDANCE_LIST_START_TIME )[i]) %></span></td>
+				<td class="ListSelectTd"><span <%= vo.getPortalParameters(PortalAttendanceListBean.PRM_ATTENDANCE_LIST_END_TIME_STYLE)[i] %>><%= HtmlUtility.escapeHTML(vo.getPortalParameters(PortalAttendanceListBean.PRM_ATTENDANCE_LIST_END_TIME   )[i]) %></span></td>
 				<td class="ListSelectTd"><%= HtmlUtility.escapeHTML(vo.getPortalParameters(PortalAttendanceListBean.PRM_ATTENDANCE_LIST_WORK_TIME  )[i]) %></td>
 				<td class="ListSelectTd"><%= HtmlUtility.escapeHTML(vo.getPortalParameters(PortalAttendanceListBean.PRM_ATTENDANCE_LIST_REST_TIME  )[i]) %></td>
 				<td class="ListSelectTd"><%= HtmlUtility.escapeHTML(vo.getPortalParameters(PortalAttendanceListBean.PRM_ATTENDANCE_LIST_PRIVATE_TIME)[i]) %></td>

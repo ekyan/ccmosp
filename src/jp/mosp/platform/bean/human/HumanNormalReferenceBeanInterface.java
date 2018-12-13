@@ -18,6 +18,8 @@
 package jp.mosp.platform.bean.human;
 
 import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import jp.mosp.framework.base.MospException;
@@ -36,21 +38,6 @@ public interface HumanNormalReferenceBeanInterface {
 	 * @param viewKey 人事汎用管理表示区分
 	 */
 	void setCommounInfo(String division, String viewKey);
-	
-	/**
-	 * 人事汎用通常情報をマップで取得する。
-	 * プルダウンの場合、プルダウン名を取得するかデータのままコードで取得するか選択する。
-	 * 履歴編集時に表示する際使用する。
-	 * @param division 人事汎用管理区分
-	 * @param viewKey 人事汎用管理表示区分
-	 * @param personalId 個人ID
-	 * @param activeDate プルダウン有効日
-	 * @param isPulldownName プルダウン名要否確認(true：プルダウン名、false：コード)
-	 * @return 人事汎用通常情報マップ
-	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
-	 */
-	Map<String, String> getHumanNormalMapInfo(String division, String viewKey, String personalId, Date activeDate,
-			boolean isPulldownName) throws MospException;
 	
 	/**
 	 * 人事汎用通常情報をマップで取得する。
@@ -79,6 +66,17 @@ public interface HumanNormalReferenceBeanInterface {
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
 	HumanNormalDtoInterface getHumanNormalInfo(String itemName, String personalId) throws MospException;
+	
+	/**
+	 * 人事汎用通常情報取得。
+	 * <p>
+	 * 項目値から人事汎用通常情報を取得する。<br>
+	 * @param itemName 項目名
+	 * @param itemValue 項目値
+	 * @return 人事汎用通常情報リスト
+	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
+	 */
+	List<HumanNormalDtoInterface> findForInfoForValue(String itemName, String itemValue) throws MospException;
 	
 	/**
 	 * 人事汎用対象プルダウン情報群を取得
@@ -115,4 +113,31 @@ public interface HumanNormalReferenceBeanInterface {
 	 * @return 項目配列(項目コード+表示項目キー)
 	 */
 	String[][] getPulldownForHumanExportImport(String division, String viewKey);
+	
+	/**
+	 * 人事汎用通常DTO情報をマップで取得する。
+	 * 日付や電話番号などは一つのマップにまとめて詰める。
+	 * プルダウンの場合、プルダウン名で取得する。
+	 * 人事情報一覧画面など表示する際に使用する。
+	 * @param division 人事汎用管理区分
+	 * @param viewKey 人事汎用管理表示区分
+	 * @param personalId 個人ID
+	 * @param activeDate プルダウン有効日
+	 * @param isPulldownName プルダウン設定
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 */
+	void getHumanNormalRecordMapInfo(String division, String viewKey, String personalId, Date activeDate,
+			boolean isPulldownName) throws MospException;
+	
+	/**
+	 * レコード識別IDマップ取得
+	 * @return マップ（項目ID、レコード識別ID）
+	 */
+	LinkedHashMap<String, Long> getRecordsMap();
+	
+	/**
+	 * 人事通常情報マップ取得
+	 * @return マップ（項目ID、項目値）
+	 */
+	Map<String, String> getNormalMap();
 }

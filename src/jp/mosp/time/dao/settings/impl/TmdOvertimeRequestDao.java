@@ -155,7 +155,7 @@ public class TmdOvertimeRequestDao extends PlatformDao implements OvertimeReques
 			setParam(index++, requestStartDate);
 			setParam(index++, requestEndDate);
 			if (!overtimeType.equals("")) {
-				setParam(index++, Integer.valueOf(overtimeType));
+				setParam(index++, Integer.parseInt(overtimeType));
 			}
 			executeQuery();
 			return mappingAll();

@@ -27,7 +27,8 @@ import jp.mosp.time.dto.settings.PaidHolidayManagementListDtoInterface;
 /**
  *
  */
-public class PaidHolidayManagementListFormerDateComparator implements Comparator<PaidHolidayManagementListDtoInterface> {
+public class PaidHolidayManagementListFormerDateComparator
+		implements Comparator<PaidHolidayManagementListDtoInterface> {
 	
 	@Override
 	public int compare(PaidHolidayManagementListDtoInterface dto1, PaidHolidayManagementListDtoInterface dto2) {

@@ -43,6 +43,7 @@ import jp.mosp.time.bean.RequestUtilBeanInterface;
 import jp.mosp.time.bean.RestReferenceBeanInterface;
 import jp.mosp.time.bean.ScheduleDateReferenceBeanInterface;
 import jp.mosp.time.bean.ScheduleReferenceBeanInterface;
+import jp.mosp.time.bean.ScheduleUtilBeanInterface;
 import jp.mosp.time.bean.SubHolidayRequestReferenceBeanInterface;
 import jp.mosp.time.bean.SubstituteReferenceBeanInterface;
 import jp.mosp.time.bean.TimeSettingReferenceBeanInterface;
@@ -66,6 +67,8 @@ import jp.mosp.time.dto.settings.TimeSettingDtoInterface;
 import jp.mosp.time.dto.settings.WorkOnHolidayRequestDtoInterface;
 import jp.mosp.time.dto.settings.WorkTypeDtoInterface;
 import jp.mosp.time.dto.settings.WorkTypeItemDtoInterface;
+import jp.mosp.time.dto.settings.impl.TmdOvertimeRequestDto;
+import jp.mosp.time.entity.RequestEntity;
 import jp.mosp.time.entity.WorkTypeEntity;
 
 /**
@@ -74,715 +77,782 @@ import jp.mosp.time.entity.WorkTypeEntity;
 public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanInterface {
 	
 	/**
+	 * 個人ID<br>
+	 */
+	protected String										personalId;
+	
+	/**
 	 * 勤務日
 	 */
-	protected Date										workDate;
+	protected Date											workDate;
 	
 	/**
 	 * 出勤時刻
 	 */
-	protected Date										startTime;
+	protected Date											startTime;
 	
 	/**
 	 * 退勤時刻
 	 */
-	protected Date										endTime;
+	protected Date											endTime;
 	
 	/**
 	 * 直行
 	 */
-	protected boolean									directStart;
+	protected boolean										directStart;
 	
 	/**
 	 * 直帰
 	 */
-	protected boolean									directEnd;
+	protected boolean										directEnd;
 	
 	/**
 	 * 遅刻理由
 	 */
-	protected String									lateReason;
+	protected String										lateReason;
 	
 	/**
 	 * 早退理由
 	 */
-	protected String									leaveEarlyReason;
+	protected String										leaveEarlyReason;
 	
 	/**
 	 * 勤務時間
 	 */
-	protected int										workTime;
+	protected int											workTime;
 	
 	/**
 	 * 所定労働時間
 	 */
-	protected int										prescribedWorkTime;
+	protected int											prescribedWorkTime;
 	
 	/**
 	 * 休暇時間
 	 */
-	protected int										totalRest;
+	protected int											totalRest;
 	
 	/**
 	 * 法定休日休憩
 	 */
-	protected int										legalHolidayRest;
+	protected int											legalHolidayRest;
 	
 	/**
 	 * 所定休日休憩
 	 */
-	protected int										prescribedHolidayRest;
+	protected int											prescribedHolidayRest;
 	
 	/**
 	 * 公用外出
 	 */
-	protected int										totalPublic;
+	protected int											totalPublic;
 	
 	/**
 	 * 私用外出
 	 */
-	protected int										totalPrivate;
+	protected int											totalPrivate;
 	
 	/**
 	 * 分単位休暇A全休
 	 */
-	protected boolean									allMinutelyHolidayA;
+	protected boolean										allMinutelyHolidayA;
 	
 	/**
 	 * 分単位休暇B全休
 	 */
-	protected boolean									allMinutelyHolidayB;
+	protected boolean										allMinutelyHolidayB;
 	
 	/**
 	 * 分単位休暇A
 	 */
-	protected int										totalMinutelyHolidayA;
+	protected int											totalMinutelyHolidayA;
 	
 	/**
 	 * 分単位休暇B
 	 */
-	protected int										totalMinutelyHolidayB;
+	protected int											totalMinutelyHolidayB;
 	
 	/**
 	 * 遅刻
 	 */
-	protected int										lateTime;
+	protected int											lateTime;
 	
 	/**
 	 * 早退
 	 */
-	protected int										leaveEarlyTime;
+	protected int											leaveEarlyTime;
 	
 	/**
 	 * 休憩リスト
 	 */
-	protected List<RestDtoInterface>					restDtoList;
+	protected List<RestDtoInterface>						restDtoList;
 	
 	/**
 	 * 公用外出リスト
 	 */
-	protected List<GoOutDtoInterface>					publicGoOutDtoList;
+	protected List<GoOutDtoInterface>						publicGoOutDtoList;
 	
 	/**
 	 * 私用外出リスト
 	 */
-	protected List<GoOutDtoInterface>					privateGoOutDtoList;
+	protected List<GoOutDtoInterface>						privateGoOutDtoList;
 	
 	/**
 	 * 分単位休暇Aリスト
 	 */
-	protected List<GoOutDtoInterface>					minutelyHolidayADtoList;
+	protected List<GoOutDtoInterface>						minutelyHolidayADtoList;
 	
 	/**
 	 * 分単位休暇Bリスト
 	 */
-	protected List<GoOutDtoInterface>					minutelyHolidayBDtoList;
+	protected List<GoOutDtoInterface>						minutelyHolidayBDtoList;
 	
 	/**
 	 * 分単位休暇A(分休)
 	 */
-	protected Map<Date, Date>							minutelyHolidayAMap;
+	protected Map<Date, Date>								minutelyHolidayAMap;
 	
 	/**
 	 * 分単位休暇B(分休)
 	 */
-	protected Map<Date, Date>							minutelyHolidayBMap;
+	protected Map<Date, Date>								minutelyHolidayBMap;
 	
 	/**
 	 * 減額対象時間
 	 */
-	protected int										decreaseTime;
+	protected int											decreaseTime;
 	
 	/**
 	 * 勤怠設定管理DTOインターフェース
 	 */
-	protected TimeSettingDtoInterface					timeSettingDto;
-	
-	/**
-	 * 勤務形態項目管理DTOインターフェース
-	 */
-	protected WorkTypeItemDtoInterface					workTypeItemDto;
+	protected TimeSettingDtoInterface						timeSettingDto;
 	
 	/**
 	 * 休日出勤申請DTOインターフェース
 	 */
-	protected WorkOnHolidayRequestDtoInterface			workOnHolidayDto;
+	protected WorkOnHolidayRequestDtoInterface				workOnHolidayDto;
 	
 	/**
 	 * 休暇申請DTOインターフェースリスト
 	 */
-	protected List<HolidayRequestDtoInterface>			holidayRequestDtoList;
+	protected List<HolidayRequestDtoInterface>				holidayRequestDtoList;
 	
 	/**
 	 * 代休申請DTOインターフェースリスト
 	 */
-	protected List<SubHolidayRequestDtoInterface>		subHolidayRequestDtoList;
-	
-	/**
-	 * カレンダマスタDTOインターフェース
-	 */
-	protected ScheduleDtoInterface						scheduleDto;
+	protected List<SubHolidayRequestDtoInterface>			subHolidayRequestDtoList;
 	
 	/**
 	 * 時差出勤申請DTOインターフェース
 	 */
-	protected DifferenceRequestDtoInterface				differenceDto;
+	protected DifferenceRequestDtoInterface					differenceDto;
 	
 	/**
 	 * カレンダ日マスタDTOインターフェース
 	 */
-	protected ScheduleDateDtoInterface					scheduleDateDto;
+	protected ScheduleDateDtoInterface						scheduleDateDto;
 	
 	/**
 	 * 残業申請DTOインターフェース(始業前)
 	 */
-	protected OvertimeRequestDtoInterface				beforeOvertimeDto;
+	protected OvertimeRequestDtoInterface					beforeOvertimeDto;
 	
 	/**
 	 * 残業申請DTOインターフェース(終業後)
 	 */
-	protected OvertimeRequestDtoInterface				afterOvertimeDto;
+	protected OvertimeRequestDtoInterface					afterOvertimeDto;
 	
 	/**
 	 * 勤務形態エンティティ。
 	 */
-	protected WorkTypeEntity							workTypeEntity;
+	protected WorkTypeEntity								workTypeEntity;
 	
 	/**
-	 * 公用外出時間
+	 * 残業時間。<br>
+	 * 休憩、遅刻早退、有給休暇、分単位休暇、法定休日等を考慮した時間外時間。<br>
 	 */
-	protected int										totalPublicTime;
+	protected int											overtimeTime;
 	
 	/**
-	 * 残業時間
+	 * 規定始業時刻。<br>
+	 * 勤務形態の始業時刻。<br>
+	 * 但し、前半休を取得している場合は、後半休の開始時刻。<br>
+	 * また、休日出勤の場合は、休日出勤申請で申請した時刻。<br>
 	 */
-	protected int										overtimeTime;
+	protected int											regWorkStart;
 	
 	/**
-	 * 規定始業時刻
+	 * 規定終業時刻。<br>
+	 * 勤務形態の終業時刻。<br>
+	 * 但し、後半休を取得している場合は、前半休の終了時刻。<br>
+	 * また、休日出勤の場合は、休日出勤申請で申請した時刻。<br>
 	 */
-	protected int										regWorkStart;
-	
-	/**
-	 * 規定終業時刻
-	 */
-	protected int										regWorkEnd;
+	protected int											regWorkEnd;
 	
 	/**
 	 * 規定労働時間
 	 */
-	protected int										regWorkTime;
-	
-	/**
-	 * 規定フル始業時刻
-	 */
-	protected int										regFullWorkStart;
+	protected int											regWorkTime;
 	
 	/**
 	 * 規定フル労働時間
 	 */
-	protected int										regFullWorkTime;
+	protected int											regFullWorkTime;
 	
 	/**
 	 * 規定休憩
 	 */
-	protected Map<Date, Date>							regRestMap;
+	protected Map<Date, Date>								regRestMap;
 	
 	/**
 	 * 前半休と後半休の間の時間
 	 */
-	protected int										betweenHalfHolidayTime;
+	protected int											betweenHalfHolidayTime;
 	
 	/**
 	 * 残前休憩
 	 */
-	protected int										overbefore;
+	protected int											overbefore;
 	
 	/**
 	 * 残業休憩時間(毎)
 	 */
-	protected int										overper;
+	protected int											overper;
 	
 	/**
 	 * 残業休憩時間
 	 */
-	protected int										overrest;
+	protected int											overrest;
 	
 	/**
 	 * 法定外残業時間
 	 */
-	protected int										overtimeOut;
+	protected int											overtimeOut;
 	
 	/**
 	 * 平日法定労働時間内労働時間
 	 */
-	protected int										workdayOvertimeIn;
+	protected int											workdayOvertimeIn;
 	
 	/**
 	 * 平日法定労働時間外労働時間
 	 */
-	protected int										workdayOvertimeOut;
+	protected int											workdayOvertimeOut;
 	
 	/**
 	 * 所定休日法定労働時間内労働時間
 	 */
-	protected int										prescribedHolidayOvertimeIn;
+	protected int											prescribedHolidayOvertimeIn;
 	
 	/**
 	 * 所定休日法定労働時間外労働時間
 	 */
-	protected int										prescribedHolidayOvertimeOut;
+	protected int											prescribedHolidayOvertimeOut;
 	
 	/**
 	 * 法定外休憩時間
 	 */
-	protected int										overRestTime;
+	protected int											overRestTime;
 	
 	/**
 	 * 深夜勤務時間
 	 */
-	protected int										nightWork;
+	protected int											nightWork;
+	
+	/**
+	 * 深夜所定労働時間内時間
+	 */
+	protected int											nightWorkWithinPrescribedWork;
+	
+	/**
+	 * 深夜時間外時間
+	 */
+	protected int											nightOvertimeWork;
+	
+	/**
+	 * 深夜休日労働時間
+	 */
+	protected int											nightWorkOnHoliday;
 	
 	/**
 	 * 深夜休憩時間
 	 */
-	protected int										nightRest;
+	protected int											nightRest;
 	
 	/**
 	 * 深夜労働時間配列
 	 */
-	protected int[]										nightWorkArray;
+	protected int[]											nightWorkArray;
 	
 	/**
 	 * 深夜休憩時間配列
 	 */
-	protected int[]										nightRestArray;
+	protected int[]											nightRestArray;
 	
 	/**
 	 * 法定休日労働
 	 */
-	protected int										legalHolidayWork;
+	protected int											legalHolidayWork;
 	
 	/**
 	 * 所定休日労働
 	 */
-	protected int										prescribedHolidayWork;
+	protected int											prescribedHolidayWork;
 	
 	/**
 	 * 法内残業
 	 */
-	protected int										withinStatutoryOvertime;
+	protected int											withinStatutoryOvertime;
 	
 	/**
 	 * 法定代休発生日数
 	 */
-	protected double									grantedLegalCompensationDays;
+	protected double										grantedLegalCompensationDays;
 	
 	/**
 	 * 所定代休発生日数
 	 */
-	protected double									grantedPrescribedCompensationDays;
+	protected double										grantedPrescribedCompensationDays;
 	
 	/**
 	 * 深夜代休発生日数
 	 */
-	protected double									grantedNightCompensationDays;
+	protected double										grantedNightCompensationDays;
 	
 	/**
 	 * 所定労働時間内法定休日労働時間
 	 */
-	protected int										statutoryHolidayWorkIn;
+	protected int											statutoryHolidayWorkIn;
 	
 	/**
 	 * 所定労働時間外法定休日労働時間
 	 */
-	protected int										statutoryHolidayWorkOut;
+	protected int											statutoryHolidayWorkOut;
 	
 	/**
 	 * 所定労働時間内所定休日労働時間
 	 */
-	protected int										prescribedHolidayWorkIn;
+	protected int											prescribedHolidayWorkIn;
 	
 	/**
 	 * 所定労働時間外所定休日労働時間
 	 */
-	protected int										prescribedHolidayWorkOut;
+	protected int											prescribedHolidayWorkOut;
 	
 	/**
 	 * 規定始業時刻前時間
 	 */
-	protected int										workBeforeTime;
+	protected int											workBeforeTime;
 	
 	/**
 	 * 規定終業時刻後時間
 	 */
-	protected int										workAfterTime;
+	protected int											workAfterTime;
 	
 	/**
 	 * 勤怠計算上の始業時刻
 	 */
-	protected int										calculatedStart;
+	protected int											calculatedStart;
 	
 	/**
 	 * 勤怠計算上の終業時刻
 	 */
-	protected int										calculatedEnd;
+	protected int											calculatedEnd;
 	
 	/**
 	 * 所定労働終了時刻
 	 */
-	protected int										prescribedWorkEnd;
+	protected int											prescribedWorkEnd;
 	
 	/**
 	 * 自動休憩計算開始時刻
 	 */
-	protected int										autoRestCalcStart;
+	protected int											autoRestCalcStart;
 	
 	/**
 	 * 遅刻休憩
 	 */
-	protected Map<Date, Date>							tardinessRestMap;
+	protected Map<Date, Date>								tardinessRestMap;
 	
 	/**
 	 * 早退休憩
 	 */
-	protected Map<Date, Date>							leaveEarlyRestMap;
+	protected Map<Date, Date>								leaveEarlyRestMap;
 	
 	/**
 	 * 規定終業時刻後時間外前休憩
 	 */
-	protected Map<Date, Date>							overtimeBeforeRestMap;
+	protected Map<Date, Date>								overtimeBeforeRestMap;
 	
 	/**
 	 * 規定終業時刻後時間外休憩
 	 */
-	protected Map<Date, Date>							overtimeRestMap;
-	
-	/**
-	 * 24時以前の有給休暇時間
-	 */
-	protected int										totalBefore24HourPaidLeave;
+	protected Map<Date, Date>								overtimeRestMap;
 	
 	/**
 	 * 24時以前の合計手動休憩時間
 	 */
-	protected int										totalBefore24HourManualRest;
+	protected int											totalBefore24HourManualRest;
 	
 	/**
 	 * 24時以前の合計残前休憩時間
 	 */
-	protected int										totalBefore24HourOvertimeBeforeRest;
+	protected int											totalBefore24HourOvertimeBeforeRest;
 	
 	/**
 	 * 24時以前の合計残業休憩時間
 	 */
-	protected int										totalBefore24HourOvertimeRest;
+	protected int											totalBefore24HourOvertimeRest;
 	
 	/**
 	 * 24時以前の合計公用外出時間
 	 */
-	protected int										totalBefore24HourPublicGoOut;
+	protected int											totalBefore24HourPublicGoOut;
 	
 	/**
 	 * 24時以前の合計私用外出時間
 	 */
-	protected int										totalBefore24HourPrivateGoOut;
+	protected int											totalBefore24HourPrivateGoOut;
 	
 	/**
 	 * 24時以前の合計分単位休暇A時間
 	 */
-	protected int										totalBefore24HourMinutelyHolidayA;
+	protected int											totalBefore24HourMinutelyHolidayA;
 	
 	/**
 	 * 24時以前の合計分単位休暇B時間
 	 */
-	protected int										totalBefore24HourMinutelyHolidayB;
+	protected int											totalBefore24HourMinutelyHolidayB;
 	
 	/**
 	 * 24時以後の有給休暇時間
 	 */
-	protected int										totalAfter24HourPaidLeave;
+	protected int											totalAfter24HourPaidLeave;
+	
+	/**
+	 * 24時以後の特別休暇時間
+	 */
+	protected int											totalAfter24HourSpecialLeave;
+	
+	/**
+	 * 24時以後のその他休暇時間
+	 */
+	protected int											totalAfter24HourOtherLeave;
+	
+	/**
+	 * 24時以後の欠勤時間
+	 */
+	protected int											totalAfter24HourAbsenceLeave;
 	
 	/**
 	 * 24時以後の合計手動休憩時間
 	 */
-	protected int										totalAfter24HourManualRest;
+	protected int											totalAfter24HourManualRest;
 	
 	/**
 	 * 24時以後の合計残前休憩時間
 	 */
-	protected int										totalAfter24HourOvertimeBeforeRest;
+	protected int											totalAfter24HourOvertimeBeforeRest;
 	
 	/**
 	 * 24時以後の合計残業休憩時間
 	 */
-	protected int										totalAfter24HourOvertimeRest;
+	protected int											totalAfter24HourOvertimeRest;
 	
 	/**
 	 * 24時以後の合計公用外出時間
 	 */
-	protected int										totalAfter24HourPublicGoOut;
+	protected int											totalAfter24HourPublicGoOut;
 	
 	/**
 	 * 24時以後の合計私用外出時間
 	 */
-	protected int										totalAfter24HourPrivateGoOut;
-	
-	/**
-	 * 24時以後の合計分単位休暇A時間
-	 */
-	protected int										totalAfter24HourMinutelyHolidayA;
-	
-	/**
-	 * 24時以後の合計分単位休暇B時間
-	 */
-	protected int										totalAfter24HourMinutelyHolidayB;
+	protected int											totalAfter24HourPrivateGoOut;
 	
 	/**
 	 * 有給休暇(前半休)
 	 */
-	protected boolean									isPaidLeaveAm;
+	protected boolean										isPaidLeaveAm;
 	
 	/**
 	 * 有給休暇(後半休)
 	 */
-	protected boolean									isPaidLeavePm;
+	protected boolean										isPaidLeavePm;
 	
 	/**
 	 * 有給休暇(時間休)
 	 */
-	protected Map<Date, Date>							paidLeaveHourMap;
+	protected Map<Date, Date>								paidLeaveHourMap;
 	
 	/**
 	 * 有給休暇時間数
 	 */
-	protected int										paidLeaveHour;
+	protected int											paidLeaveHour;
 	
 	/**
 	 * 始業時刻前の有給休暇分数
 	 */
-	protected int										beforePaidLeaveMinute;
+	protected int											beforePaidLeaveMinute;
 	
 	/**
 	 * 終業時刻後の有給休暇分数
 	 */
-	protected int										afterPaidLeaveMinute;
+	protected int											afterPaidLeaveMinute;
+	
+	/**
+	 * 始業時刻前の特別休暇分数
+	 */
+	protected int											beforeSpecialLeaveMinute;
+	
+	/**
+	 * 終業時刻後の特別休暇分数
+	 */
+	protected int											afterSpecialLeaveMinute;
+	
+	/**
+	 * 始業時刻前のその他休暇分数
+	 */
+	protected int											beforeOtherLeaveMinute;
+	
+	/**
+	 * 終業時刻後のその他休暇分数
+	 */
+	protected int											afterOtherLeaveMinute;
+	
+	/**
+	 * 始業時刻前の欠勤分数
+	 */
+	protected int											beforeAbsenceLeaveMinute;
+	
+	/**
+	 * 終業時刻後の欠勤分数
+	 */
+	protected int											afterAbsenceLeaveMinute;
 	
 	/**
 	 * 始業時刻前の分単位休暇分数
 	 */
-	protected int										beforeMinutelyHolidayMinute;
+	protected int											beforeMinutelyHolidayMinute;
 	
 	/**
 	 * 終業時刻後の分単位休暇分数
 	 */
-	protected int										afterMinutelyHolidayMinute;
+	protected int											afterMinutelyHolidayMinute;
 	
 	/**
 	 * ストック休暇(前半休)
 	 */
-	protected boolean									isStockLeaveAm;
+	protected boolean										isStockLeaveAm;
 	
 	/**
 	 * ストック休暇(後半休)
 	 */
-	protected boolean									isStockLeavePm;
+	protected boolean										isStockLeavePm;
 	
 	/**
 	 * 特別休暇(前半休)
 	 */
-	protected boolean									isSpecialLeaveAm;
+	protected boolean										isSpecialLeaveAm;
 	
 	/**
 	 * 特別休暇(後半休)
 	 */
-	protected boolean									isSpecialLeavePm;
+	protected boolean										isSpecialLeavePm;
+	
+	/**
+	 * 特別休暇(時間休)
+	 */
+	protected Map<Date, Date>								specialLeaveHourMap;
+	
+	/**
+	 * 特別休暇時間数
+	 */
+	protected int											specialLeaveHour;
 	
 	/**
 	 * その他休暇(前半休)
 	 */
-	protected boolean									isOtherLeaveAm;
+	protected boolean										isOtherLeaveAm;
 	
 	/**
 	 * その他休暇(後半休)
 	 */
-	protected boolean									isOtherLeavePm;
+	protected boolean										isOtherLeavePm;
+	
+	/**
+	 * その他休暇(時間休)
+	 */
+	protected Map<Date, Date>								otherLeaveHourMap;
+	
+	/**
+	 * その他休暇時間数
+	 */
+	protected int											otherLeaveHour;
 	
 	/**
 	 * 欠勤(前半休)
 	 */
-	protected boolean									isAbsenceAm;
+	protected boolean										isAbsenceAm;
 	
 	/**
 	 * 欠勤(後半休)
 	 */
-	protected boolean									isAbsencePm;
+	protected boolean										isAbsencePm;
+	
+	/**
+	 * 欠勤(時間休)
+	 */
+	protected Map<Date, Date>								absenceHourMap;
+	
+	/**
+	 * 欠勤時間数
+	 */
+	protected int											absenceHour;
 	
 	/**
 	 * 法定代休(前半休)
 	 */
-	protected boolean									isLegalCompensationDayAm;
+	protected boolean										isLegalCompensationDayAm;
 	
 	/**
 	 * 法定代休(後半休)
 	 */
-	protected boolean									isLegalCompensationDayPm;
+	protected boolean										isLegalCompensationDayPm;
 	
 	/**
 	 * 所定代休(前半休)
 	 */
-	protected boolean									isPrescribedCompensationDayAm;
+	protected boolean										isPrescribedCompensationDayAm;
 	
 	/**
 	 * 所定代休(後半休)
 	 */
-	protected boolean									isPrescribedCompensationDayPm;
+	protected boolean										isPrescribedCompensationDayPm;
 	
 	/**
 	 * 深夜代休(前半休)
 	 */
-	protected boolean									isNightCompensationDaysAm;
+	protected boolean										isNightCompensationDaysAm;
 	
 	/**
 	 * 深夜代休(前半休)
 	 */
-	protected boolean									isNightCompensationDaysPm;
+	protected boolean										isNightCompensationDaysPm;
 	
 	/**
 	 * 勤務形態コード
 	 */
-	protected String									workTypeCode;
+	protected String										workTypeCode;
 	
 	/**
 	 * 翌日の勤務形態コード
 	 */
-	protected String									nextDayWorkTypeCode;
+	protected String										nextDayWorkTypeCode;
 	
 	// 勤務形態エンティティ
 	/**
 	 * 時短時間1可否
 	 */
-	protected boolean									useShort1;
+	protected boolean										useShort1;
 	
 	/**
 	 * 時短時間1給与区分(true：時短時間1給与区分が有給、false：無給)
 	 */
-	protected boolean									isShort1StartTypePay;
+	protected boolean										isShort1StartTypePay;
 	
 	/**
 	 * 時短時間1開始時刻
 	 */
-	protected int										short1Start;
+	protected int											short1Start;
 	
 	/**
 	 * 時短時間1終了時刻
 	 */
-	protected int										short1End;
+	protected int											short1End;
 	
 	/**
 	 * 時短時間2可否
 	 */
-	protected boolean									useShort2;
+	protected boolean										useShort2;
 	
 	/**
 	 * 時短時間2給与区分(true：時短時間2給与区分が有給、false：無給)
 	 */
-	protected boolean									isShort2StartTypePay;
+	protected boolean										isShort2StartTypePay;
 	
 	/**
 	 * 時短時間2開始時刻
 	 */
-	protected int										short2Start;
+	protected int											short2Start;
 	
 	/**
 	 * 時短時間2終了時刻
 	 */
-	protected int										short2End;
+	protected int											short2End;
 	
 	/**
 	 * 設定適用管理参照インターフェース。<br>
 	 */
-	private ApplicationReferenceBeanInterface			applicationReference;
+	protected ApplicationReferenceBeanInterface				applicationReference;
 	/**
 	 * 勤怠設定参照インターフェース。<br>
 	 */
-	private TimeSettingReferenceBeanInterface			timeSettingReference;
+	protected TimeSettingReferenceBeanInterface				timeSettingReference;
 	/**
 	 * カレンダ管理参照インターフェース。<br>
 	 */
-	private ScheduleReferenceBeanInterface				scheduleReference;
+	protected ScheduleReferenceBeanInterface				scheduleReference;
 	/**
 	 * カレンダ日参照インターフェース。<br>
 	 */
-	private ScheduleDateReferenceBeanInterface			scheduleDateReference;
+	protected ScheduleDateReferenceBeanInterface			scheduleDateReference;
 	/**
 	 * 勤怠データ参照インターフェース。<br>
 	 */
-	private AttendanceReferenceBeanInterface			attendanceReference;
+	protected AttendanceReferenceBeanInterface				attendanceReference;
 	/**
 	 * 残業申請参照インターフェース。<br>
 	 */
-	private OvertimeRequestReferenceBeanInterface		overtimeReference;
+	protected OvertimeRequestReferenceBeanInterface			overtimeReference;
 	/**
 	 * 休暇申請参照インターフェース。<br>
 	 */
-	private HolidayRequestReferenceBeanInterface		holidayReference;
+	protected HolidayRequestReferenceBeanInterface			holidayReference;
 	/**
 	 * 代休申請参照インターフェース。<br>
 	 */
-	private SubHolidayRequestReferenceBeanInterface		subHolidayReference;
+	protected SubHolidayRequestReferenceBeanInterface		subHolidayReference;
 	/**
 	 * 休日出勤申請参照インターフェース。<br>
 	 */
-	private WorkOnHolidayRequestReferenceBeanInterface	workOnHolidayReference;
+	protected WorkOnHolidayRequestReferenceBeanInterface	workOnHolidayReference;
 	/**
 	 * 振替休日データ参照インターフェース。<br>
 	 */
-	private SubstituteReferenceBeanInterface			substituteReference;
+	protected SubstituteReferenceBeanInterface				substituteReference;
 	/**
 	 * ワークフロー参照インターフェース。<br>
 	 */
-	private WorkflowReferenceBeanInterface				workflowReference;
+	protected WorkflowReferenceBeanInterface				workflowReference;
 	/**
 	 * ワークフロー統括インターフェース。<br>
 	 */
-	private WorkflowIntegrateBeanInterface				workflowIntegrate;
+	protected WorkflowIntegrateBeanInterface				workflowIntegrate;
 	/**
 	 * 勤務形態項目参照インターフェース。<br>
 	 */
-	protected WorkTypeItemReferenceBeanInterface		workTypeItemReference;
+	protected WorkTypeItemReferenceBeanInterface			workTypeItemReference;
 	/**
 	 * 勤務形態マスタ参照インターフェース。<br>
 	 */
-	protected WorkTypeReferenceBeanInterface			workTypeReference;
+	protected WorkTypeReferenceBeanInterface				workTypeReference;
 	/**
 	 * 勤怠データ休憩情報参照インターフェース。<br>
 	 */
-	private RestReferenceBeanInterface					restReference;
+	protected RestReferenceBeanInterface					restReference;
 	/**
 	 * 勤怠データ外出情報参照インターフェース。<br>
 	 */
-	private GoOutReferenceBeanInterface					goOutReference;
+	protected GoOutReferenceBeanInterface					goOutReference;
 	
 	
 	@Override
@@ -790,16 +860,21 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 		applicationReference = (ApplicationReferenceBeanInterface)createBean(ApplicationReferenceBeanInterface.class);
 		timeSettingReference = (TimeSettingReferenceBeanInterface)createBean(TimeSettingReferenceBeanInterface.class);
 		scheduleReference = (ScheduleReferenceBeanInterface)createBean(ScheduleReferenceBeanInterface.class);
-		scheduleDateReference = (ScheduleDateReferenceBeanInterface)createBean(ScheduleDateReferenceBeanInterface.class);
+		scheduleDateReference = (ScheduleDateReferenceBeanInterface)createBean(
+				ScheduleDateReferenceBeanInterface.class);
 		attendanceReference = (AttendanceReferenceBeanInterface)createBean(AttendanceReferenceBeanInterface.class);
-		overtimeReference = (OvertimeRequestReferenceBeanInterface)createBean(OvertimeRequestReferenceBeanInterface.class);
+		overtimeReference = (OvertimeRequestReferenceBeanInterface)createBean(
+				OvertimeRequestReferenceBeanInterface.class);
 		holidayReference = (HolidayRequestReferenceBeanInterface)createBean(HolidayRequestReferenceBeanInterface.class);
-		subHolidayReference = (SubHolidayRequestReferenceBeanInterface)createBean(SubHolidayRequestReferenceBeanInterface.class);
-		workOnHolidayReference = (WorkOnHolidayRequestReferenceBeanInterface)createBean(WorkOnHolidayRequestReferenceBeanInterface.class);
+		subHolidayReference = (SubHolidayRequestReferenceBeanInterface)createBean(
+				SubHolidayRequestReferenceBeanInterface.class);
+		workOnHolidayReference = (WorkOnHolidayRequestReferenceBeanInterface)createBean(
+				WorkOnHolidayRequestReferenceBeanInterface.class);
 		substituteReference = (SubstituteReferenceBeanInterface)createBean(SubstituteReferenceBeanInterface.class);
 		workflowReference = (WorkflowReferenceBeanInterface)createBean(WorkflowReferenceBeanInterface.class);
 		workflowIntegrate = (WorkflowIntegrateBeanInterface)createBean(WorkflowIntegrateBeanInterface.class);
-		workTypeItemReference = (WorkTypeItemReferenceBeanInterface)createBean(WorkTypeItemReferenceBeanInterface.class);
+		workTypeItemReference = (WorkTypeItemReferenceBeanInterface)createBean(
+				WorkTypeItemReferenceBeanInterface.class);
 		workTypeReference = (WorkTypeReferenceBeanInterface)createBean(WorkTypeReferenceBeanInterface.class);
 		restReference = (RestReferenceBeanInterface)createBean(RestReferenceBeanInterface.class);
 		goOutReference = (GoOutReferenceBeanInterface)createBean(GoOutReferenceBeanInterface.class);
@@ -821,8 +896,8 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 			return;
 		}
 		// カレンダマスタDTOインターフェース
-		ScheduleDtoInterface scheduleDto = scheduleReference
-			.getScheduleInfo(applicationDto.getScheduleCode(), workDate);
+		ScheduleDtoInterface scheduleDto = scheduleReference.getScheduleInfo(applicationDto.getScheduleCode(),
+				workDate);
 		scheduleReference.chkExistSchedule(scheduleDto, workDate);
 		if (mospParams.hasErrorMessage()) {
 			// 該当するカレンダマスタが存在しない
@@ -836,15 +911,15 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 			return;
 		}
 		// カレンダ日マスタDTOインターフェース
-		scheduleDateDto = scheduleDateReference.getScheduleDateInfo(scheduleDto.getScheduleCode(), workDate, workDate);
+		scheduleDateDto = scheduleDateReference.getScheduleDateInfo(scheduleDto.getScheduleCode(), workDate);
 		scheduleDateReference.chkExistScheduleDate(scheduleDateDto, workDate);
 		if (mospParams.hasErrorMessage()) {
 			// 該当するカレンダマスタが存在しない
 			return;
 		}
 		// 残業申請
-		OvertimeRequestDtoInterface overtimeRequestDto = overtimeReference
-			.findForKeyOnWorkflow(personalId, workDate, 2);
+		OvertimeRequestDtoInterface overtimeRequestDto = overtimeReference.findForKeyOnWorkflow(personalId, workDate,
+				2);
 		if (overtimeRequestDto != null) {
 			WorkflowDtoInterface workflowDto = workflowReference
 				.getLatestWorkflowInfo(overtimeRequestDto.getWorkflow());
@@ -853,8 +928,10 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 				afterOvertimeDto = overtimeRequestDto;
 			}
 		}
+		
+		// 始業前の時間外労働が有効である場合
 		if (timeSettingDto.getBeforeOvertimeFlag() == TimeConst.CODE_BEFORE_OVERTIME_VALID) {
-			// 始業前の時間外労働が有効である場合
+			// 勤務前残業自動申請が無効の場合、申請確認
 			OvertimeRequestDtoInterface beforeDto = overtimeReference.findForKeyOnWorkflow(personalId, workDate, 1);
 			if (beforeDto != null) {
 				WorkflowDtoInterface workflowDto = workflowReference.getLatestWorkflowInfo(beforeDto.getWorkflow());
@@ -863,6 +940,7 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 					beforeOvertimeDto = beforeDto;
 				}
 			}
+			
 		}
 		// 休暇申請
 		holidayRequestDtoList = new ArrayList<HolidayRequestDtoInterface>();
@@ -880,8 +958,8 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 		}
 		// 代休申請
 		subHolidayRequestDtoList = new ArrayList<SubHolidayRequestDtoInterface>();
-		List<SubHolidayRequestDtoInterface> subHolidayRequestList = subHolidayReference.getSubHolidayRequestList(
-				personalId, workDate);
+		List<SubHolidayRequestDtoInterface> subHolidayRequestList = subHolidayReference
+			.getSubHolidayRequestList(personalId, workDate);
 		for (SubHolidayRequestDtoInterface requestDto : subHolidayRequestList) {
 			WorkflowDtoInterface workflowDto = workflowReference.getLatestWorkflowInfo(requestDto.getWorkflow());
 			if (workflowDto == null) {
@@ -898,52 +976,104 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 		DifferenceRequestDtoInterface differenceRequestDto = differenceReference.findForKeyOnWorkflow(personalId,
 				workDate);
 		if (differenceRequestDto != null) {
-			WorkflowDtoInterface workflowDto = workflowReference.getLatestWorkflowInfo(differenceRequestDto
-				.getWorkflow());
+			WorkflowDtoInterface workflowDto = workflowReference
+				.getLatestWorkflowInfo(differenceRequestDto.getWorkflow());
 			if (workflowDto != null && PlatformConst.CODE_STATUS_COMPLETE.equals(workflowDto.getWorkflowStatus())) {
 				// 承認完了の場合
 				differenceDto = differenceRequestDto;
 			}
 		}
-		// 休日出勤
-		WorkOnHolidayRequestDtoInterface workOnHolidayRequestDto = workOnHolidayReference.findForKeyOnWorkflow(
-				personalId, workDate);
-		if (workOnHolidayRequestDto != null) {
-			WorkflowDtoInterface workflowDto = workflowReference.getLatestWorkflowInfo(workOnHolidayRequestDto
-				.getWorkflow());
-			if (workflowDto != null
-					&& (workflowIntegrate.isApprovable(workflowDto) || workflowIntegrate.isCompleted(workflowDto))) {
-				// 承認可能又は承認済の場合
-				workOnHolidayDto = workOnHolidayRequestDto;
-				if (workOnHolidayDto.getSubstitute() == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_ON) {
-					// 振替休日を申請する場合
-					List<SubstituteDtoInterface> list = substituteReference.getSubstituteList(workOnHolidayDto
-						.getWorkflow());
-					for (SubstituteDtoInterface dto : list) {
-						ScheduleDateDtoInterface substituteScheduleDateDto = scheduleDateReference.getScheduleDateInfo(
-								scheduleDto.getScheduleCode(), workDate, dto.getSubstituteDate());
-						if (substituteScheduleDateDto == null) {
-							continue;
-						}
-						scheduleDateDto = substituteScheduleDateDto;
-						break;
-					}
-				}
-			}
-		}
+		// 休日出勤情報を設定
+		getSubstituteScheduleDateDto(scheduleDto);
 		// 勤務形態コードを取得
 		nextDayWorkTypeCode = getWorkTypeCode(personalId, DateUtility.addDay(workDate, 1), TimeBean.TIMES_WORK_DEFAULT);
-		if (differenceDto != null
-				&& (TimeConst.CODE_DIFFERENCE_TYPE_A.equals(workTypeCode)
-						|| TimeConst.CODE_DIFFERENCE_TYPE_B.equals(workTypeCode)
-						|| TimeConst.CODE_DIFFERENCE_TYPE_C.equals(workTypeCode)
-						|| TimeConst.CODE_DIFFERENCE_TYPE_D.equals(workTypeCode) || TimeConst.CODE_DIFFERENCE_TYPE_S
-					.equals(workTypeCode))) {
+		if (differenceDto != null && (TimeConst.CODE_DIFFERENCE_TYPE_A.equals(workTypeCode)
+				|| TimeConst.CODE_DIFFERENCE_TYPE_B.equals(workTypeCode)
+				|| TimeConst.CODE_DIFFERENCE_TYPE_C.equals(workTypeCode)
+				|| TimeConst.CODE_DIFFERENCE_TYPE_D.equals(workTypeCode)
+				|| TimeConst.CODE_DIFFERENCE_TYPE_S.equals(workTypeCode))) {
 			// 時差出勤の場合
 			setFields(scheduleDateDto.getWorkTypeCode(), requestUtil);
 		} else {
 			setFields(workTypeCode, requestUtil);
 		}
+		// 始業時間が有る場合
+		if (startTime != null) {
+			
+			// 規定始業時間よりも始業時刻が早い場合
+			int startTimeInt = DateUtility.getHour(startTime, workDate) * TimeConst.CODE_DEFINITION_HOUR
+					+ DateUtility.getMinute(startTime);
+			
+			if (startTimeInt < regWorkStart) {
+				// 始業前の時間外労働が無効である場合
+				if (timeSettingDto.getBeforeOvertimeFlag() == TimeConst.CODE_BEFORE_OVERTIME_INVALID) {
+					return;
+				}
+				// 勤務形態項目管理情報取得
+				WorkTypeItemDtoInterface workStartDto = workTypeItemReference.getWorkTypeItemInfo(workTypeCode,
+						workDate, TimeConst.CODE_AUTO_BEFORE_OVERWORK);
+				
+				if (workStartDto == null) {
+					return;
+				}
+				// 勤務前残業自動申請が無効である場合
+				if (workStartDto.getPreliminary()
+					.equals(String.valueOf(String.valueOf(MospConst.INACTIVATE_FLAG_ON)))) {
+					return;
+				}
+				
+				// 勤怠申請情報で前残業申請情報設定
+				beforeOvertimeDto = new TmdOvertimeRequestDto();
+				// 申請時間のみ設定
+				
+				// 勤務形態の始業時刻-startTimeIntを引いた時間を設定
+				int beforeOvertime = DateUtility.getHour(workTypeEntity.getStartWorkTime())
+						* TimeConst.CODE_DEFINITION_HOUR + DateUtility.getMinute(workTypeEntity.getStartWorkTime());
+				beforeOvertimeDto.setRequestTime(beforeOvertime - startTimeInt);
+				
+			}
+		}
+	}
+	
+	/**
+	 * 出勤日が振替日の場合を考慮しカレンダ情報を取得
+	 * @param scheduleDto カレンダマスタDTO
+	 * @throws MospException インスタンスの生成やSQLの実行に失敗した場合
+	 */
+	protected void getSubstituteScheduleDateDto(ScheduleDtoInterface scheduleDto) throws MospException {
+		// 休日出勤
+		WorkOnHolidayRequestDtoInterface workOnHolidayRequestDto = workOnHolidayReference
+			.findForKeyOnWorkflow(personalId, workDate);
+		// 振出・休出申請が無い場合
+		if (workOnHolidayRequestDto == null) {
+			return;
+		}
+		WorkflowDtoInterface workflowDto = workflowReference
+			.getLatestWorkflowInfo(workOnHolidayRequestDto.getWorkflow());
+		
+		if (workflowDto != null
+				&& (workflowIntegrate.isApprovable(workflowDto) || workflowIntegrate.isCompleted(workflowDto))) {
+			// 承認可能又は承認済の場合
+			workOnHolidayDto = workOnHolidayRequestDto;
+			
+			// 休日出勤の場合は振替日が無い為、処理終了
+			if (workOnHolidayDto.getSubstitute() == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_OFF) {
+				return;
+			}
+			
+			// 振替休日を申請する場合
+			List<SubstituteDtoInterface> list = substituteReference.getSubstituteList(workOnHolidayDto.getWorkflow());
+			for (SubstituteDtoInterface dto : list) {
+				ScheduleDateDtoInterface substituteScheduleDateDto = scheduleDateReference
+					.getScheduleDateInfo(scheduleDto.getScheduleCode(), dto.getSubstituteDate());
+				if (substituteScheduleDateDto == null) {
+					continue;
+				}
+				scheduleDateDto = substituteScheduleDateDto;
+				break;
+			}
+		}
+		
 	}
 	
 	/**
@@ -962,13 +1092,14 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 		// TODO 以下、workTypeEntityの値を使って値を設定する。
 		if (isWorkOnLegalDaysOff() || isWorkOnPrescribedDaysOff()) {
 			// 法定休日労働又は所定休日労働の場合
-			// 始業時刻
-			int daysOffWorkStart = getDefferenceMinutes(workOnHolidayDto.getRequestDate(),
-					workOnHolidayDto.getStartTime());
-			regWorkStart = daysOffWorkStart;
-			regFullWorkStart = daysOffWorkStart;
-			// 終業時刻
-			regWorkEnd = getDefferenceMinutes(workOnHolidayDto.getRequestDate(), workOnHolidayDto.getEndTime());
+			if (workOnHolidayDto != null) {
+				// 始業時刻
+				int daysOffWorkStart = getDefferenceMinutes(workOnHolidayDto.getRequestDate(),
+						workOnHolidayDto.getStartTime());
+				regWorkStart = daysOffWorkStart;
+				// 終業時刻
+				regWorkEnd = getDefferenceMinutes(workOnHolidayDto.getRequestDate(), workOnHolidayDto.getEndTime());
+			}
 			return;
 		}
 		// カレンダ日マスタに勤怠コードが設定されている場合
@@ -986,7 +1117,6 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 		if (workStartDto != null) {
 			int time = getDefferenceMinutes(getDefaultStandardDate(), workStartDto.getWorkTypeItemValue());
 			regWorkStart = time;
-			regFullWorkStart = time;
 		}
 		// 退勤時刻
 		WorkTypeItemDtoInterface workEndDto = workTypeItemReference.getWorkTypeItemInfo(localWorkTypeCode, workDate,
@@ -1045,15 +1175,17 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 		if (backEndDto != null) {
 			backEnd = getDefferenceMinutes(getDefaultStandardDate(), backEndDto.getWorkTypeItemValue());
 		}
-		if (isPmHalfDayOff(requestUtil)) {
-			// 午後休の場合
+		// 申請エンティティを取得
+		RequestEntity entity = requestUtil.getRequestEntity(personalId, workDate);
+		// 午後休の場合
+		if (entity.isPmHoliday(true)) {
 			regWorkStart = frontStart;
 			regWorkEnd = frontEnd;
 			regWorkTime = frontEnd - frontStart;
 			betweenHalfHolidayTime = backStart - frontEnd;
 		}
-		if (isAmHalfDayOff(requestUtil)) {
-			// 午前休の場合
+		// 午前休の場合
+		if (entity.isAmHoliday(true)) {
 			regWorkStart = backStart;
 			regWorkEnd = backEnd;
 			regWorkTime = backEnd - backStart;
@@ -1071,7 +1203,7 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 			return 0;
 		}
 		// 丸め単位
-		return getRoundMinute(workTime, timeSettingDto.getRoundDailyWork(), timeSettingDto.getRoundDailyWorkUnit());
+		return getRoundMinute(workTime, timeSettingDto.getRoundDailyWork(), timeSettingDto.getRoundDailyTimeWork());
 	}
 	
 	/**
@@ -1119,8 +1251,8 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 		// 半休でない場合
 		String[] restStartArray = new String[]{ TimeConst.CODE_RESTSTART1, TimeConst.CODE_RESTSTART2,
 			TimeConst.CODE_RESTSTART3, TimeConst.CODE_RESTSTART4 };
-		String[] restEndArray = new String[]{ TimeConst.CODE_RESTEND1, TimeConst.CODE_RESTEND2,
-			TimeConst.CODE_RESTEND3, TimeConst.CODE_RESTEND4 };
+		String[] restEndArray = new String[]{ TimeConst.CODE_RESTEND1, TimeConst.CODE_RESTEND2, TimeConst.CODE_RESTEND3,
+			TimeConst.CODE_RESTEND4 };
 		for (int i = 0; i < restStartArray.length; i++) {
 			WorkTypeItemDtoInterface restStartDto = workTypeItemReference.getWorkTypeItemInfo(workTypeCode, workDate,
 					restStartArray[i]);
@@ -1379,11 +1511,20 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 	protected int totalWorkTime(RequestUtilBeanInterface requestUtil) throws MospException {
 		// 有給休暇
 		int paidLeave = paidLeaveHour * TimeConst.CODE_DEFINITION_HOUR - beforePaidLeaveMinute - afterPaidLeaveMinute;
+		// 特別休暇
+		int specialLeave = specialLeaveHour * TimeConst.CODE_DEFINITION_HOUR - beforeSpecialLeaveMinute
+				- afterSpecialLeaveMinute;
+		// その他休暇
+		int otherLeave = otherLeaveHour * TimeConst.CODE_DEFINITION_HOUR - beforeOtherLeaveMinute
+				- afterOtherLeaveMinute;
+		// 欠勤
+		int absenceLeave = absenceHour * TimeConst.CODE_DEFINITION_HOUR - beforeAbsenceLeaveMinute
+				- afterAbsenceLeaveMinute;
 		// 分単位休暇
 		int minutelyHoliday = (totalMinutelyHolidayA + totalMinutelyHolidayB) - beforeMinutelyHolidayMinute
 				- afterMinutelyHolidayMinute;
-		int result = calculatedEnd - calculatedStart - totalRest - totalPublic - totalPrivate - paidLeave
-				- minutelyHoliday;
+		int result = calculatedEnd - calculatedStart - totalRest - totalPublic - totalPrivate - paidLeave - specialLeave
+				- otherLeave - absenceLeave - minutelyHoliday;
 		if (!isAmHalfDayOff(requestUtil) && useShort1 && isShort1StartTypePay && calculatedStart > short1End) {
 			// 前半休でなく且つ時短有給且つ勤怠計算上の始業時刻が時短時間1終了時刻より後の場合は、
 			// 時短時間1時間を加算する
@@ -1401,7 +1542,7 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 	 * 法定外時間の計算
 	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
 	 */
-	private void calcLegalOutTime() throws MospException {
+	protected void calcLegalOutTime() throws MospException {
 		overtimeOut = overtimeTime - withinStatutoryOvertime;
 		// 法定外休憩時間設定
 		overRestTime = 0;
@@ -1861,6 +2002,175 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 		}
 		// 始業時刻前有給休暇分数を設定
 		beforePaidLeaveMinute = paidLeave;
+		// 特別休暇
+		int specialLeave = 0;
+		for (Entry<Date, Date> entry : specialLeaveHourMap.entrySet()) {
+			int specialLeaveStart = getDefferenceMinutes(workDate, entry.getKey());
+			int specialLeaveEnd = getDefferenceMinutes(workDate, entry.getValue());
+			if (specialLeaveStart >= calculatedStart) {
+				// 特別休暇開始時刻が勤怠計算上の始業時刻以後の場合
+				continue;
+			}
+			// 特別休暇開始時刻が勤怠計算上の始業時刻より前の場合
+			if (specialLeaveEnd > calculatedStart) {
+				// 特別休暇終了時刻が勤怠計算上の始業時刻より後の場合は
+				// 勤怠計算上の始業時刻を特別休暇終了時刻とする
+				specialLeaveEnd = calculatedStart;
+			}
+			specialLeave += specialLeaveEnd - specialLeaveStart;
+			for (Entry<Date, Date> restEntry : tardinessRestMap.entrySet()) {
+				int restStart = getDefferenceMinutes(workDate, restEntry.getKey());
+				int restEnd = getDefferenceMinutes(workDate, restEntry.getValue());
+				if (specialLeaveStart >= restStart && restEnd >= specialLeaveEnd) {
+					// 特別休暇開始時刻が休憩開始時刻以後且つ特別休暇終了時刻が休憩終了時刻以前の場合
+					specialLeaveStart = 0;
+					specialLeaveEnd = 0;
+					break;
+				}
+				if (specialLeaveStart >= restEnd) {
+					// 特別休暇開始時刻が休憩終了時刻以後の場合
+					continue;
+				}
+				if (specialLeaveEnd <= restStart) {
+					// 特別休暇終了時刻が休憩開始時刻以前の場合
+					continue;
+				}
+				if (specialLeaveStart < restStart && restEnd < specialLeaveEnd) {
+					// 特別休暇開始時刻が休憩開始時刻より前且つ特別休暇終了時刻が休憩終了時刻より後の場合
+					// 休憩開始時刻から特別休暇開始時刻を引いたものを加算
+					exclusion += restStart - specialLeaveStart;
+					// 休憩終了時刻を特別休暇開始時刻とする
+					specialLeaveStart = restEnd;
+					continue;
+				}
+				if (specialLeaveStart >= restStart && specialLeaveEnd > restEnd) {
+					// 特別休暇開始時刻が休憩開始時刻以後且つ特別休暇終了時刻が休憩終了時刻より後の場合は
+					// 休憩終了時刻を特別休暇開始時刻とする
+					specialLeaveStart = restEnd;
+				}
+				if (specialLeaveStart < restStart && specialLeaveEnd <= restEnd) {
+					// 特別休暇開始時刻が休憩開始時刻より前且つ特別休暇終了時刻が休憩終了時刻以前の場合は
+					// 休憩開始時刻を特別休暇終了時刻とする
+					specialLeaveEnd = restStart;
+				}
+			}
+			exclusion += specialLeaveEnd - specialLeaveStart;
+		}
+		// 始業時刻前特別休暇分数を設定
+		beforeSpecialLeaveMinute = specialLeave;
+		// その他休暇
+		int otherLeave = 0;
+		for (Entry<Date, Date> entry : otherLeaveHourMap.entrySet()) {
+			int otherLeaveStart = getDefferenceMinutes(workDate, entry.getKey());
+			int otherLeaveEnd = getDefferenceMinutes(workDate, entry.getValue());
+			if (otherLeaveStart >= calculatedStart) {
+				// その他休暇開始時刻が勤怠計算上の始業時刻以後の場合
+				continue;
+			}
+			// その他休暇開始時刻が勤怠計算上の始業時刻より前の場合
+			if (otherLeaveEnd > calculatedStart) {
+				// その他休暇終了時刻が勤怠計算上の始業時刻より後の場合は
+				// 勤怠計算上の始業時刻をその他休暇終了時刻とする
+				otherLeaveEnd = calculatedStart;
+			}
+			otherLeave += otherLeaveEnd - otherLeaveStart;
+			for (Entry<Date, Date> restEntry : tardinessRestMap.entrySet()) {
+				int restStart = getDefferenceMinutes(workDate, restEntry.getKey());
+				int restEnd = getDefferenceMinutes(workDate, restEntry.getValue());
+				if (otherLeaveStart >= restStart && restEnd >= otherLeaveEnd) {
+					// その他休暇開始時刻が休憩開始時刻以後且つその他休暇終了時刻が休憩終了時刻以前の場合
+					otherLeaveStart = 0;
+					otherLeaveEnd = 0;
+					break;
+				}
+				if (otherLeaveStart >= restEnd) {
+					// その他休暇開始時刻が休憩終了時刻以後の場合
+					continue;
+				}
+				if (otherLeaveEnd <= restStart) {
+					// その他休暇終了時刻が休憩開始時刻以前の場合
+					continue;
+				}
+				if (otherLeaveStart < restStart && restEnd < otherLeaveEnd) {
+					// その他休暇開始時刻が休憩開始時刻より前且つその他休暇終了時刻が休憩終了時刻より後の場合
+					// 休憩開始時刻からその他休暇開始時刻を引いたものを加算
+					exclusion += restStart - otherLeaveStart;
+					// 休憩終了時刻をその他休暇開始時刻とする
+					otherLeaveStart = restEnd;
+					continue;
+				}
+				if (otherLeaveStart >= restStart && otherLeaveEnd > restEnd) {
+					// その他休暇開始時刻が休憩開始時刻以後且つその他休暇終了時刻が休憩終了時刻より後の場合は
+					// 休憩終了時刻をその他休暇開始時刻とする
+					otherLeaveStart = restEnd;
+				}
+				if (otherLeaveStart < restStart && otherLeaveEnd <= restEnd) {
+					// その他休暇開始時刻が休憩開始時刻より前且つその他休暇終了時刻が休憩終了時刻以前の場合は
+					// 休憩開始時刻をその他休暇終了時刻とする
+					otherLeaveEnd = restStart;
+				}
+			}
+			exclusion += otherLeaveEnd - otherLeaveStart;
+		}
+		// 始業時刻前その他休暇分数を設定
+		beforeOtherLeaveMinute = otherLeave;
+		// 欠勤
+		int absenceLeave = 0;
+		for (Entry<Date, Date> entry : absenceHourMap.entrySet()) {
+			int absenceLeaveStart = getDefferenceMinutes(workDate, entry.getKey());
+			int absenceLeaveEnd = getDefferenceMinutes(workDate, entry.getValue());
+			if (absenceLeaveStart >= calculatedStart) {
+				// 欠勤開始時刻が勤怠計算上の始業時刻以後の場合
+				continue;
+			}
+			// 欠勤開始時刻が勤怠計算上の始業時刻より前の場合
+			if (absenceLeaveEnd > calculatedStart) {
+				// 欠勤終了時刻が勤怠計算上の始業時刻より後の場合は
+				// 勤怠計算上の始業時刻を欠勤終了時刻とする
+				absenceLeaveEnd = calculatedStart;
+			}
+			absenceLeave += absenceLeaveEnd - absenceLeaveStart;
+			for (Entry<Date, Date> restEntry : tardinessRestMap.entrySet()) {
+				int restStart = getDefferenceMinutes(workDate, restEntry.getKey());
+				int restEnd = getDefferenceMinutes(workDate, restEntry.getValue());
+				if (absenceLeaveStart >= restStart && restEnd >= absenceLeaveEnd) {
+					// 欠勤開始時刻が休憩開始時刻以後且つ欠勤終了時刻が休憩終了時刻以前の場合
+					absenceLeaveStart = 0;
+					absenceLeaveEnd = 0;
+					break;
+				}
+				if (absenceLeaveStart >= restEnd) {
+					// 欠勤開始時刻が欠勤終了時刻以後の場合
+					continue;
+				}
+				if (absenceLeaveEnd <= restStart) {
+					// 欠勤終了時刻が休憩開始時刻以前の場合
+					continue;
+				}
+				if (absenceLeaveStart < restStart && restEnd < absenceLeaveEnd) {
+					// 欠勤開始時刻が休憩開始時刻より前且つ欠勤終了時刻が休憩終了時刻より後の場合
+					// 休憩開始時刻から欠勤開始時刻を引いたものを加算
+					exclusion += restStart - absenceLeaveStart;
+					// 休憩終了時刻を欠勤開始時刻とする
+					absenceLeaveStart = restEnd;
+					continue;
+				}
+				if (absenceLeaveStart >= restStart && absenceLeaveEnd > restEnd) {
+					// 欠勤開始時刻が休憩開始時刻以後且つ欠勤終了時刻が休憩終了時刻より後の場合は
+					// 休憩終了時刻を欠勤開始時刻とする
+					absenceLeaveStart = restEnd;
+				}
+				if (absenceLeaveStart < restStart && absenceLeaveEnd <= restEnd) {
+					// 欠勤開始時刻が休憩開始時刻より前且つ欠勤終了時刻が休憩終了時刻以前の場合は
+					// 休憩開始時刻を欠勤終了時刻とする
+					absenceLeaveEnd = restStart;
+				}
+			}
+			exclusion += absenceLeaveEnd - absenceLeaveStart;
+		}
+		// 始業時刻前その他休暇分数を設定
+		beforeAbsenceLeaveMinute = absenceLeave;
+		
 		int tardinessWorkStart = calculatedStart;
 		int tardinessRegWorkStart = regWorkStart;
 		if (!isAmHalfDayOff(requestUtil) && useShort1) {
@@ -2080,6 +2390,174 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 		}
 		// 始業時刻後有給休暇分数を設定
 		afterPaidLeaveMinute = paidLeave;
+		// 特別休暇
+		int specialLeave = 0;
+		for (Entry<Date, Date> entry : specialLeaveHourMap.entrySet()) {
+			int specialLeaveStart = getDefferenceMinutes(workDate, entry.getKey());
+			int specialLeaveEnd = getDefferenceMinutes(workDate, entry.getValue());
+			if (specialLeaveEnd <= calculatedEnd) {
+				// 特別休暇終了時刻が勤怠計算上の終業時刻以前の場合
+				continue;
+			}
+			// 特別休暇終了時刻が勤怠計算上の始業時刻より後の場合
+			if (specialLeaveStart < calculatedEnd) {
+				// 特別休暇開始時刻が勤怠計算上の終業時刻より前の場合は
+				// 勤怠計算上の終業時刻を特別休暇開始時刻とする
+				specialLeaveStart = calculatedEnd;
+			}
+			specialLeave += specialLeaveEnd - specialLeaveStart;
+			for (Entry<Date, Date> restEntry : leaveEarlyRestMap.entrySet()) {
+				int restStart = getDefferenceMinutes(workDate, restEntry.getKey());
+				int restEnd = getDefferenceMinutes(workDate, restEntry.getValue());
+				if (specialLeaveStart >= restStart && restEnd >= specialLeaveEnd) {
+					// 特別休暇開始時刻が休憩開始時刻以後且つ特別休暇終了時刻が休憩終了時刻以前の場合
+					specialLeaveStart = 0;
+					specialLeaveEnd = 0;
+					break;
+				}
+				if (specialLeaveStart >= restEnd) {
+					// 特別休暇開始時刻が休憩終了時刻以後の場合
+					continue;
+				}
+				if (specialLeaveEnd <= restStart) {
+					// 特別休暇終了時刻が休憩開始時刻以前の場合
+					continue;
+				}
+				if (specialLeaveStart < restStart && restEnd < specialLeaveEnd) {
+					// 特別休暇開始時刻が休憩開始時刻より前且つ有給休暇終了時刻が休憩終了時刻より後の場合
+					// 休憩開始時刻から特別休暇開始時刻を引いたものを加算
+					exclusion += restStart - specialLeaveStart;
+					// 休憩終了時刻を特別休暇開始時刻とする
+					specialLeaveStart = restEnd;
+					continue;
+				}
+				if (specialLeaveStart >= restStart && specialLeaveEnd > restEnd) {
+					// 特別休暇開始時刻が休憩開始時刻以後且つ特別休暇終了時刻が休憩終了時刻より後の場合は
+					// 休憩終了時刻を特別休暇開始時刻とする
+					specialLeaveStart = restEnd;
+				}
+				if (specialLeaveStart < restStart && specialLeaveEnd <= restEnd) {
+					// 有給休暇開始時刻が休憩開始時刻より前且つ有給休暇終了時刻が休憩終了時刻以前の場合は
+					// 休憩開始時刻を有給休暇終了時刻とする
+					specialLeaveEnd = restStart;
+				}
+			}
+			exclusion += specialLeaveEnd - specialLeaveStart;
+		}
+		// 始業時刻後特別休暇分数を設定
+		afterSpecialLeaveMinute = specialLeave;
+		// その他休暇
+		int otherLeave = 0;
+		for (Entry<Date, Date> entry : otherLeaveHourMap.entrySet()) {
+			int otherLeaveStart = getDefferenceMinutes(workDate, entry.getKey());
+			int otherLeaveEnd = getDefferenceMinutes(workDate, entry.getValue());
+			if (otherLeaveEnd <= calculatedEnd) {
+				// その他休暇終了時刻が勤怠計算上の終業時刻以前の場合
+				continue;
+			}
+			// その他休暇終了時刻が勤怠計算上の始業時刻より後の場合
+			if (otherLeaveStart < calculatedEnd) {
+				// その他休暇開始時刻が勤怠計算上の終業時刻より前の場合は
+				// 勤怠計算上の終業時刻をその他休暇開始時刻とする
+				otherLeaveStart = calculatedEnd;
+			}
+			otherLeave += otherLeaveEnd - otherLeaveStart;
+			for (Entry<Date, Date> restEntry : leaveEarlyRestMap.entrySet()) {
+				int restStart = getDefferenceMinutes(workDate, restEntry.getKey());
+				int restEnd = getDefferenceMinutes(workDate, restEntry.getValue());
+				if (otherLeaveStart >= restStart && restEnd >= otherLeaveEnd) {
+					// その他休暇開始時刻が休憩開始時刻以後且つその他休暇終了時刻が休憩終了時刻以前の場合
+					otherLeaveStart = 0;
+					otherLeaveEnd = 0;
+					break;
+				}
+				if (otherLeaveStart >= restEnd) {
+					// その他休暇開始時刻が休憩終了時刻以後の場合
+					continue;
+				}
+				if (otherLeaveEnd <= restStart) {
+					// その他休暇終了時刻が休憩開始時刻以前の場合
+					continue;
+				}
+				if (otherLeaveStart < restStart && restEnd < otherLeaveEnd) {
+					// その他休暇開始時刻が休憩開始時刻より前且つその他休暇終了時刻が休憩終了時刻より後の場合
+					// 休憩開始時刻からその他休暇開始時刻を引いたものを加算
+					exclusion += restStart - otherLeaveStart;
+					// 休憩終了時刻をその他休暇開始時刻とする
+					otherLeaveStart = restEnd;
+					continue;
+				}
+				if (otherLeaveStart >= restStart && otherLeaveEnd > restEnd) {
+					// その他休暇開始時刻が休憩開始時刻以後且つその他休暇終了時刻が休憩終了時刻より後の場合は
+					// 休憩終了時刻をその他休暇開始時刻とする
+					otherLeaveStart = restEnd;
+				}
+				if (otherLeaveStart < restStart && otherLeaveEnd <= restEnd) {
+					// その他休暇開始時刻が休憩開始時刻より前且つその他休暇終了時刻が休憩終了時刻以前の場合は
+					// 休憩開始時刻をその他休暇終了時刻とする
+					otherLeaveEnd = restStart;
+				}
+			}
+			exclusion += otherLeaveEnd - otherLeaveStart;
+		}
+		// 始業時刻後その他休暇分数を設定
+		afterOtherLeaveMinute = otherLeave;
+		// 欠勤
+		int absenceLeave = 0;
+		for (Entry<Date, Date> entry : absenceHourMap.entrySet()) {
+			int absenceLeaveStart = getDefferenceMinutes(workDate, entry.getKey());
+			int absenceLeaveEnd = getDefferenceMinutes(workDate, entry.getValue());
+			if (absenceLeaveEnd <= calculatedEnd) {
+				// 欠勤終了時刻が勤怠計算上の終業時刻以前の場合
+				continue;
+			}
+			// 欠勤終了時刻が勤怠計算上の始業時刻より後の場合
+			if (absenceLeaveStart < calculatedEnd) {
+				// 欠勤開始時刻が勤怠計算上の終業時刻より前の場合は
+				// 勤怠計算上の終業時刻を欠勤開始時刻とする
+				absenceLeaveStart = calculatedEnd;
+			}
+			absenceLeave += absenceLeaveEnd - absenceLeaveStart;
+			for (Entry<Date, Date> restEntry : leaveEarlyRestMap.entrySet()) {
+				int restStart = getDefferenceMinutes(workDate, restEntry.getKey());
+				int restEnd = getDefferenceMinutes(workDate, restEntry.getValue());
+				if (absenceLeaveStart >= restStart && restEnd >= absenceLeaveEnd) {
+					// 欠勤開始時刻が休憩開始時刻以後且つ欠勤終了時刻が休憩終了時刻以前の場合
+					absenceLeaveStart = 0;
+					absenceLeaveEnd = 0;
+					break;
+				}
+				if (absenceLeaveStart >= restEnd) {
+					// 欠勤開始時刻が休憩終了時刻以後の場合
+					continue;
+				}
+				if (absenceLeaveEnd <= restStart) {
+					// 欠勤終了時刻が休憩開始時刻以前の場合
+					continue;
+				}
+				if (absenceLeaveStart < restStart && restEnd < absenceLeaveEnd) {
+					// 欠勤開始時刻が休憩開始時刻より前且つ欠勤終了時刻が休憩終了時刻より後の場合
+					// 休憩開始時刻から欠勤開始時刻を引いたものを加算
+					exclusion += restStart - absenceLeaveStart;
+					// 休憩終了時刻を欠勤開始時刻とする
+					absenceLeaveStart = restEnd;
+					continue;
+				}
+				if (absenceLeaveStart >= restStart && absenceLeaveEnd > restEnd) {
+					// 欠勤開始時刻が休憩開始時刻以後且つ欠勤終了時刻が休憩終了時刻より後の場合は
+					// 休憩終了時刻を欠勤開始時刻とする
+					absenceLeaveStart = restEnd;
+				}
+				if (absenceLeaveStart < restStart && absenceLeaveEnd <= restEnd) {
+					// 欠勤開始時刻が休憩開始時刻より前且つ欠勤終了時刻が休憩終了時刻以前の場合は
+					// 休憩開始時刻を欠勤終了時刻とする
+					absenceLeaveEnd = restStart;
+				}
+			}
+			exclusion += absenceLeaveEnd - absenceLeaveStart;
+		}
+		// 始業時刻後欠勤分数を設定
+		afterAbsenceLeaveMinute = absenceLeave;
 		int leaveEarlyWorkEnd = calculatedEnd;
 		int leaveEarlyRegWorkEnd = regWorkEnd;
 		if (!isAmHalfDayOff(requestUtil) && useShort1 && calculatedEnd < short1End) {
@@ -2117,32 +2595,6 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 			return;
 		}
 		int twentyFourHours = TimeConst.TIME_DAY_ALL_HOUR * TimeConst.CODE_DEFINITION_HOUR;
-		// 24時以前の合計有給休暇時間
-		int before24HourPaidLeave = 0;
-		for (Entry<Date, Date> entry : paidLeaveHourMap.entrySet()) {
-			int start = getDefferenceMinutes(workDate, entry.getKey());
-			int end = getDefferenceMinutes(workDate, entry.getValue());
-			if (start >= twentyFourHours) {
-				// 有給休暇開始時刻が24時以後の場合
-				continue;
-			}
-			if (end <= calculatedStart) {
-				// 有給休暇終了時刻が勤怠計算上の始業時刻以前の場合
-				continue;
-			}
-			if (start < calculatedStart) {
-				// 有給休暇開始時刻が勤怠計算上の始業時刻より前の場合は
-				// 勤怠計算上の始業時刻を有給休暇開始時刻とする
-				start = calculatedStart;
-			}
-			if (end > twentyFourHours) {
-				// 有給休暇終了時刻が24時より後の場合は
-				// 24時を有給休暇終了時刻とする
-				end = twentyFourHours;
-			}
-			before24HourPaidLeave += end - start;
-		}
-		totalBefore24HourPaidLeave = before24HourPaidLeave;
 		// 24時以前の合計手動休憩時間
 		int before24HourManualRest = 0;
 		for (RestDtoInterface dto : restDtoList) {
@@ -2302,6 +2754,81 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 			after24HourPaidLeave += end - start;
 		}
 		totalAfter24HourPaidLeave = after24HourPaidLeave;
+		// 24時以後の合計特別休暇時間
+		int after24HourSpecialLeave = 0;
+		for (Entry<Date, Date> entry : specialLeaveHourMap.entrySet()) {
+			int start = getDefferenceMinutes(workDate, entry.getKey());
+			int end = getDefferenceMinutes(workDate, entry.getValue());
+			if (start >= calculatedEnd) {
+				// 特別休暇開始時刻が勤怠計算上の終業時刻以後の場合
+				continue;
+			}
+			if (end <= twentyFourHours) {
+				// 特別休暇終了時刻が24時以前の場合
+				continue;
+			}
+			if (start < twentyFourHours) {
+				// 特別休暇開始時刻が24時より前の場合は
+				// 24時を有給休暇開始時刻とする
+				start = twentyFourHours;
+			}
+			if (end > calculatedEnd) {
+				// 特別休暇終了時刻が勤怠計算上の終業時刻より後の場合は
+				// 勤怠計算上の終業時刻を特別休暇終了時刻とする
+			}
+			after24HourSpecialLeave += end - start;
+		}
+		totalAfter24HourSpecialLeave = after24HourSpecialLeave;
+		// 24時以後の合計その他休暇時間
+		int after24HourOtherLeave = 0;
+		for (Entry<Date, Date> entry : otherLeaveHourMap.entrySet()) {
+			int start = getDefferenceMinutes(workDate, entry.getKey());
+			int end = getDefferenceMinutes(workDate, entry.getValue());
+			if (start >= calculatedEnd) {
+				// その他休暇開始時刻が勤怠計算上の終業時刻以後の場合
+				continue;
+			}
+			if (end <= twentyFourHours) {
+				// その他休暇終了時刻が24時以前の場合
+				continue;
+			}
+			if (start < twentyFourHours) {
+				// その他休暇開始時刻が24時より前の場合は
+				// 24時を有給休暇開始時刻とする
+				start = twentyFourHours;
+			}
+			if (end > calculatedEnd) {
+				// その他休暇終了時刻が勤怠計算上の終業時刻より後の場合は
+				// 勤怠計算上の終業時刻を特別休暇終了時刻とする
+			}
+			after24HourOtherLeave += end - start;
+		}
+		totalAfter24HourOtherLeave = after24HourOtherLeave;
+		// 24時以後の合計欠勤時間
+		int after24HourAbsenceLeave = 0;
+		for (Entry<Date, Date> entry : absenceHourMap.entrySet()) {
+			int start = getDefferenceMinutes(workDate, entry.getKey());
+			int end = getDefferenceMinutes(workDate, entry.getValue());
+			if (start >= calculatedEnd) {
+				// 欠勤開始時刻が勤怠計算上の終業時刻以後の場合
+				continue;
+			}
+			if (end <= twentyFourHours) {
+				// 欠勤終了時刻が24時以前の場合
+				continue;
+			}
+			if (start < twentyFourHours) {
+				// 欠勤開始時刻が24時より前の場合は
+				// 24時を有給休暇開始時刻とする
+				start = twentyFourHours;
+			}
+			if (end > calculatedEnd) {
+				// 欠勤終了時刻が勤怠計算上の終業時刻より後の場合は
+				// 勤怠計算上の終業時刻を特別休暇終了時刻とする
+			}
+			after24HourAbsenceLeave += end - start;
+		}
+		totalAfter24HourAbsenceLeave = after24HourAbsenceLeave;
 		// 24時以後の合計手動休憩時間
 		int after24HourManualRest = 0;
 		for (RestDtoInterface dto : restDtoList) {
@@ -2380,61 +2907,10 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 			}
 		}
 		totalAfter24HourPrivateGoOut = after24HourPrivateGoOut;
-		// 24時以後の合計分単位休暇A時間
-		int after24HourMinutelyHolidayA = 0;
-		for (Entry<Date, Date> entry : minutelyHolidayAMap.entrySet()) {
-			int start = getDefferenceMinutes(workDate, entry.getKey());
-			int end = getDefferenceMinutes(workDate, entry.getValue());
-			if (start >= calculatedEnd) {
-				// 分単位休暇A開始時刻が勤怠計算上の終業時刻以後の場合
-				continue;
-			}
-			if (end <= twentyFourHours) {
-				// 分単位休暇A終了時刻が24時以前の場合
-				continue;
-			}
-			if (start < twentyFourHours) {
-				// 分単位休暇A開始時刻が24時より前の場合は
-				// 24時を分単位休暇A開始時刻とする
-				start = twentyFourHours;
-			}
-			if (end > calculatedEnd) {
-				// 分単位休暇A終了時刻が勤怠計算上の終業時刻より後の場合は
-				// 勤怠計算上の終業時刻を分単位休暇A終了時刻とする
-			}
-			after24HourMinutelyHolidayA += end - start;
-		}
-		totalAfter24HourMinutelyHolidayA = after24HourMinutelyHolidayA;
-		// 24時以後の合計分単位休暇B時間
-		int after24HourMinutelyHolidayB = 0;
-		for (Entry<Date, Date> entry : minutelyHolidayBMap.entrySet()) {
-			int start = getDefferenceMinutes(workDate, entry.getKey());
-			int end = getDefferenceMinutes(workDate, entry.getValue());
-			if (start >= calculatedEnd) {
-				// 分単位休暇B開始時刻が勤怠計算上の終業時刻以後の場合
-				continue;
-			}
-			if (end <= twentyFourHours) {
-				// 分単位休暇B終了時刻が24時以前の場合
-				continue;
-			}
-			if (start < twentyFourHours) {
-				// 分単位休暇B開始時刻が24時より前の場合は
-				// 24時を分単位休暇B開始時刻とする
-				start = twentyFourHours;
-			}
-			if (end > calculatedEnd) {
-				// 分単位休暇B終了時刻が勤怠計算上の終業時刻より後の場合は
-				// 勤怠計算上の終業時刻を分単位休暇B終了時刻とする
-			}
-			after24HourMinutelyHolidayB += end - start;
-		}
-		totalAfter24HourMinutelyHolidayB = after24HourMinutelyHolidayB;
-		
+		// 法定休日労働でなく且つ勤怠計算上の終業時刻が24時以前の場合、
+		// 又は法定休日労働でなく且つ翌日が法定休日又は法定休日労働でない場合
 		if ((!isWorkOnLegalDaysOff() && calculatedEnd <= twentyFourHours)
 				|| (!isWorkOnLegalDaysOff() && !nextDayWorkOnLegalDaysOff)) {
-			// 法定休日労働でなく且つ勤怠計算上の終業時刻が24時以前の場合、
-			// 又は法定休日労働でなく且つ翌日が法定休日又は法定休日労働でない場合
 			// 合計手動休憩時間
 			int totalManualRest = 0;
 			for (RestDtoInterface dto : restDtoList) {
@@ -2459,19 +2935,19 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 					totalPrivate, beforeMinutelyHolidayMinute, afterMinutelyHolidayMinute, requestUtil);
 			// 残業時間の設定
 			overtimeTime = getRoundMinute(overtime, timeSettingDto.getRoundDailyWork(),
-					timeSettingDto.getRoundDailyWorkUnit());
+					timeSettingDto.getRoundDailyTimeWork());
 		} else if (!isWorkOnLegalDaysOff() && nextDayWorkOnLegalDaysOff && calculatedEnd > twentyFourHours) {
 			// 法定休日労働でなく且つ翌日が法定休日又は法定休日労働且つ勤怠計算上の終業時刻が24時より後の場合
 			int overtime = getcalcOvertimeWorkCaseWorkDay(calculatedStart, totalBefore24HourManualRest,
 					totalBefore24HourOvertimeBeforeRest, totalBefore24HourOvertimeRest, totalBefore24HourPublicGoOut,
-					totalBefore24HourPrivateGoOut, totalBefore24HourMinutelyHolidayA,
-					totalBefore24HourMinutelyHolidayB, prescribedWorkTime, lateTime, leaveEarlyTime, requestUtil);
+					totalBefore24HourPrivateGoOut, totalBefore24HourMinutelyHolidayA, totalBefore24HourMinutelyHolidayB,
+					prescribedWorkTime, lateTime, leaveEarlyTime, requestUtil);
 			if (overtime < 0) {
 				// 0未満の場合は0とする
 				overtime = 0;
 			}
 			overtimeTime = getRoundMinute(overtime, timeSettingDto.getRoundDailyWork(),
-					timeSettingDto.getRoundDailyWorkUnit());
+					timeSettingDto.getRoundDailyTimeWork());
 		} else if (isWorkOnLegalDaysOff() && !nextDayWorkOnLegalDaysOff && calculatedEnd > twentyFourHours) {
 			// 法定休日労働且つ翌日が法定休日又は法定休日労働でなく且つ勤怠計算上の終業時刻が24時より後の場合
 			int nextDayWork = getNextDayTime(calculatedEnd, totalAfter24HourManualRest,
@@ -2482,7 +2958,7 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 				nextDayWork = 0;
 			}
 			overtimeTime = getRoundMinute(nextDayWork, timeSettingDto.getRoundDailyWork(),
-					timeSettingDto.getRoundDailyWorkUnit());
+					timeSettingDto.getRoundDailyTimeWork());
 		}
 		int afterTime = overtimeTime - workBeforeTime;
 		if (afterTime < 0) {
@@ -2564,10 +3040,10 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 			int overtime = TimeConst.TIME_DAY_ALL_HOUR * TimeConst.CODE_DEFINITION_HOUR - calculatedStart
 					- before24HourManualRest - before24HourOvertimeBeforeRest - before24HourOvertimeRest
 					- before24HourPublicGoOut - before24HourMinutelyHolidayA - before24HourMinutelyHolidayB
-//			- before24HourPrivateGoOut
-					- prescribedWorkTime + lateTime + leaveEarlyTime + beforePaidLeaveMinute
-					+ beforeMinutelyHolidayMinute
-			
+					//			- before24HourPrivateGoOut
+					- prescribedWorkTime + lateTime + leaveEarlyTime + beforePaidLeaveMinute + beforeSpecialLeaveMinute
+					+ beforeOtherLeaveMinute + beforeAbsenceLeaveMinute + beforeMinutelyHolidayMinute
+					
 //			+ afterPaidLeaveMinute+ afterMinutelyHolidayMinute
 			;
 			if (useShort1) {
@@ -2651,8 +3127,9 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 		int overtime = TimeConst.TIME_DAY_ALL_HOUR * TimeConst.CODE_DEFINITION_HOUR - regWorkStart
 				- before24HourManualRest - before24HourOvertimeBeforeRest - before24HourOvertimeRest
 				- before24HourPublicGoOut - before24HourMinutelyHolidayA - before24HourMinutelyHolidayB
-//				- before24HourPrivateGoOut
-				- prescribedWorkTime + lateTime + leaveEarlyTime + beforePaidLeaveMinute + beforeMinutelyHolidayMinute
+				//				- before24HourPrivateGoOut
+				- prescribedWorkTime + lateTime + leaveEarlyTime + beforePaidLeaveMinute + beforeSpecialLeaveMinute
+				+ beforeOtherLeaveMinute + beforeAbsenceLeaveMinute + beforeMinutelyHolidayMinute
 //				+ afterPaidLeaveMinute + afterMinutelyHolidayMinute
 		;
 		if (useShort1) {
@@ -2763,7 +3240,8 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 	protected int getNextDayHolidayWork() {
 		return calculatedEnd - (TimeConst.TIME_DAY_ALL_HOUR * TimeConst.CODE_DEFINITION_HOUR)
 				- totalAfter24HourManualRest - totalAfter24HourOvertimeBeforeRest - totalAfter24HourOvertimeRest
-				- totalAfter24HourPublicGoOut - totalAfter24HourPrivateGoOut - totalAfter24HourPaidLeave;
+				- totalAfter24HourPublicGoOut - totalAfter24HourPrivateGoOut - totalAfter24HourPaidLeave
+				- totalAfter24HourSpecialLeave - totalAfter24HourOtherLeave - totalAfter24HourAbsenceLeave;
 	}
 	
 	/**
@@ -2794,6 +3272,72 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 				paidLeaveEnd = end;
 			}
 			paidLeave += paidLeaveEnd - paidLeaveStart;
+		}
+		//  特別時間計算
+		int specialLeave = 0;
+		for (Entry<Date, Date> entry : specialLeaveHourMap.entrySet()) {
+			int specialLeaveStart = getDefferenceMinutes(workDate, entry.getKey());
+			int specialLeaveEnd = getDefferenceMinutes(workDate, entry.getValue());
+			if (specialLeaveStart >= end || specialLeaveEnd <= start) {
+				// 特別休暇開始時刻が終了時刻以後の場合
+				// 又は特別休暇終了時刻が開始時刻以前の場合
+				continue;
+			}
+			if (specialLeaveStart < start) {
+				// 特別休暇開始時刻が開始時刻より前の場合は
+				// 開始時刻を特別休暇開始時刻とする
+				specialLeaveStart = start;
+			}
+			if (specialLeaveEnd > end) {
+				// 特別休暇終了時刻が終了時刻より後の場合は
+				// 終了時刻を特別休暇終了時刻とする
+				specialLeaveEnd = end;
+			}
+			specialLeave += specialLeaveEnd - specialLeaveStart;
+		}
+		//  その他時間計算
+		int otherLeave = 0;
+		for (Entry<Date, Date> entry : otherLeaveHourMap.entrySet()) {
+			int otherLeaveStart = getDefferenceMinutes(workDate, entry.getKey());
+			int otherLeaveEnd = getDefferenceMinutes(workDate, entry.getValue());
+			if (otherLeaveStart >= end || otherLeaveEnd <= start) {
+				// その他休暇開始時刻が終了時刻以後の場合
+				// 又はその他休暇終了時刻が開始時刻以前の場合
+				continue;
+			}
+			if (otherLeaveStart < start) {
+				// その他休暇開始時刻が開始時刻より前の場合は
+				// 開始時刻をその他休暇開始時刻とする
+				otherLeaveStart = start;
+			}
+			if (otherLeaveEnd > end) {
+				// その他休暇終了時刻が終了時刻より後の場合は
+				// 終了時刻をその他休暇終了時刻とする
+				otherLeaveEnd = end;
+			}
+			otherLeave += otherLeaveEnd - otherLeaveStart;
+		}
+		//  欠勤時間計算
+		int absenceLeave = 0;
+		for (Entry<Date, Date> entry : absenceHourMap.entrySet()) {
+			int absenceLeaveStart = getDefferenceMinutes(workDate, entry.getKey());
+			int absenceLeaveEnd = getDefferenceMinutes(workDate, entry.getValue());
+			if (absenceLeaveStart >= end || absenceLeaveEnd <= start) {
+				// 欠勤開始時刻が終了時刻以後の場合
+				// 又は欠勤終了時刻が開始時刻以前の場合
+				continue;
+			}
+			if (absenceLeaveStart < start) {
+				// 欠勤開始時刻が開始時刻より前の場合は
+				// 開始時刻を欠勤開始時刻とする
+				absenceLeaveStart = start;
+			}
+			if (absenceLeaveEnd > end) {
+				// 欠勤終了時刻が終了時刻より後の場合は
+				// 終了時刻を欠勤終了時刻とする
+				absenceLeaveEnd = end;
+			}
+			absenceLeave += absenceLeaveEnd - absenceLeaveStart;
 		}
 		int rest = 0;
 		for (RestDtoInterface dto : restDtoList) {
@@ -2866,10 +3410,10 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 		}
 		int privateGoOut = 0;
 		for (GoOutDtoInterface dto : privateGoOutDtoList) {
-			Date startTime = getRoundMinute(dto.getGoOutStart(), timeSettingDto.getRoundDailyPublicStart(),
-					timeSettingDto.getRoundDailyPublicStartUnit());
-			Date endTime = getRoundMinute(dto.getGoOutEnd(), timeSettingDto.getRoundDailyPublicEnd(),
-					timeSettingDto.getRoundDailyPublicEndUnit());
+			Date startTime = getRoundMinute(dto.getGoOutStart(), timeSettingDto.getRoundDailyPrivateStart(),
+					timeSettingDto.getRoundDailyPrivateStartUnit());
+			Date endTime = getRoundMinute(dto.getGoOutEnd(), timeSettingDto.getRoundDailyPrivateEnd(),
+					timeSettingDto.getRoundDailyPrivateEndUnit());
 			int startTimeInt = getDefferenceMinutes(workDate, startTime);
 			int endTimeInt = getDefferenceMinutes(workDate, endTime);
 			if (startTimeInt >= end || endTimeInt <= start) {
@@ -2920,8 +3464,8 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 			minutelyHolidayB += endTimeInt - startTimeInt;
 		}
 		
-		return end - start - paidLeave - rest - overtimeBeforeRest - overtimeRest - publicGoOut - privateGoOut
-				- minutelyHolidayA - minutelyHolidayB;
+		return end - start - paidLeave - specialLeave - otherLeave - absenceLeave - rest - overtimeBeforeRest
+				- overtimeRest - publicGoOut - privateGoOut - minutelyHolidayA - minutelyHolidayB;
 	}
 	
 	/**
@@ -2942,8 +3486,10 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 			int afterMinutelyHolidayMinute, RequestUtilBeanInterface requestUtil) throws MospException {
 		// 残業時間設定
 		int overtime = calculatedEnd - calculatedStart - workBeforeTime + lateTime - prescribedWorkTime
-				+ beforePaidLeaveMinute + afterPaidLeaveMinute - totalManualRest - totalOvertimeRest
-				+ beforeMinutelyHolidayMinute + afterMinutelyHolidayMinute - totalOvertimeBeforeRest;
+				+ beforePaidLeaveMinute + afterPaidLeaveMinute + beforeSpecialLeaveMinute + afterSpecialLeaveMinute
+				+ beforeOtherLeaveMinute + afterOtherLeaveMinute + beforeAbsenceLeaveMinute + afterAbsenceLeaveMinute
+				- totalManualRest - totalOvertimeRest + beforeMinutelyHolidayMinute + afterMinutelyHolidayMinute
+				- totalOvertimeBeforeRest;
 		if (useShort1) {
 			// 時短の場合
 			if (isAmHalfDayOff(requestUtil)) {
@@ -3010,13 +3556,14 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 			// 法定休日労働且つ翌日が法定休日又は法定休日労働でなく且つ勤怠計算上の終業時刻が24時より後の場合
 			int todayStatutoryHolidayWork = getOvertimeWorkCaseLegalDay(calculatedStart, totalBefore24HourManualRest,
 					totalBefore24HourOvertimeBeforeRest, totalBefore24HourOvertimeRest, totalBefore24HourPublicGoOut,
-					totalBefore24HourPrivateGoOut, totalBefore24HourMinutelyHolidayA, totalBefore24HourMinutelyHolidayB);
+					totalBefore24HourPrivateGoOut, totalBefore24HourMinutelyHolidayA,
+					totalBefore24HourMinutelyHolidayB);
 			if (todayStatutoryHolidayWork < 0) {
 				// 0未満の場合は0とする
 				todayStatutoryHolidayWork = 0;
 			}
 			int roundedTodayStatutoryHolidayWork = getRoundMinute(todayStatutoryHolidayWork,
-					timeSettingDto.getRoundDailyWork(), timeSettingDto.getRoundDailyWorkUnit());
+					timeSettingDto.getRoundDailyWork(), timeSettingDto.getRoundDailyTimeWork());
 			legalHolidayWork = roundedTodayStatutoryHolidayWork;
 			legalHolidayRest = totalBefore24HourManualRest + totalBefore24HourOvertimeBeforeRest
 					+ totalBefore24HourOvertimeRest;
@@ -3034,7 +3581,7 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 				nextDayLegalHolidayWork += short2End - short2Start;
 			}
 			legalHolidayWork = getRoundMinute(nextDayLegalHolidayWork, timeSettingDto.getRoundDailyWork(),
-					timeSettingDto.getRoundDailyWorkUnit());
+					timeSettingDto.getRoundDailyTimeWork());
 			legalHolidayRest = totalAfter24HourManualRest + totalAfter24HourOvertimeBeforeRest
 					+ totalAfter24HourOvertimeRest;
 			if (prescribedWorkEnd > twentyFourHours) {
@@ -3108,7 +3655,8 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 			prescribedHolidayWorkIn = 0;
 			prescribedHolidayWorkOut = getWorkTime();
 		} else if ((isWorkOnPrescribedDaysOff() && nextDayLegalDayOff && calculatedEnd > twentyFourHours)
-				|| (isWorkOnPrescribedDaysOff() && !nextDayPrescribedDayOff && !nextDayLegalDayOff && isCalendarDay && calculatedEnd > twentyFourHours)) {
+				|| (isWorkOnPrescribedDaysOff() && !nextDayPrescribedDayOff && !nextDayLegalDayOff && isCalendarDay
+						&& calculatedEnd > twentyFourHours)) {
 			// 所定休日労働且つ翌日が法定休日又は法定休日労働且つ勤怠計算上の終業時刻が24時より後の場合、
 			// 又は所定休日労働且つ翌日が所定休日又は所定休日労働でなく
 			// 且つ翌日が法定休日又は法定休日労働でなく且つ暦日且つ終業時刻が24時より後の場合
@@ -3121,14 +3669,15 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 				todayPrescribedHolidayWork = 0;
 			}
 			int roundedTodayPrescribedHolidayWork = getRoundMinute(todayPrescribedHolidayWork,
-					timeSettingDto.getRoundDailyWork(), timeSettingDto.getRoundDailyWorkUnit());
+					timeSettingDto.getRoundDailyWork(), timeSettingDto.getRoundDailyTimeWork());
 			prescribedHolidayWork = roundedTodayPrescribedHolidayWork;
 			prescribedHolidayRest = totalBefore24HourManualRest + totalBefore24HourOvertimeBeforeRest
 					+ totalBefore24HourOvertimeRest;
 			prescribedHolidayWorkIn = 0;
 			prescribedHolidayWorkOut = roundedTodayPrescribedHolidayWork;
 		} else if ((isWorkOnLegalDaysOff() && nextDayPrescribedDayOff && calculatedEnd > twentyFourHours)
-				|| (!isWorkOnPrescribedDaysOff() && !isWorkOnLegalDaysOff() && nextDayPrescribedDayOff && isCalendarDay && calculatedEnd > twentyFourHours)) {
+				|| (!isWorkOnPrescribedDaysOff() && !isWorkOnLegalDaysOff() && nextDayPrescribedDayOff && isCalendarDay
+						&& calculatedEnd > twentyFourHours)) {
 			// 法定休日労働且つ翌日が所定休日又は所定休日労働且つ勤怠計算上の終業時刻が24時より後の場合、
 			// 又は所定休日労働でなく且つ法定休日労働でなく且つ翌日が所定休日又は所定休日労働
 			// 且つ暦日且つ終業時刻が24時より後の場合
@@ -3142,7 +3691,7 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 				nextDayPrescribedHolidayWork += short2End - short2Start;
 			}
 			prescribedHolidayWork = getRoundMinute(nextDayPrescribedHolidayWork, timeSettingDto.getRoundDailyWork(),
-					timeSettingDto.getRoundDailyWorkUnit());
+					timeSettingDto.getRoundDailyTimeWork());
 			prescribedHolidayRest = totalAfter24HourManualRest + totalAfter24HourOvertimeBeforeRest
 					+ totalAfter24HourOvertimeRest;
 			if (prescribedWorkEnd > twentyFourHours) {
@@ -3268,8 +3817,9 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 		calcNightWorkTime(TimeConst.TIME_NIGHT_WORK_START * TimeConst.CODE_DEFINITION_HOUR,
 				TimeConst.TIME_NIGHT_WORK_END * TimeConst.CODE_DEFINITION_HOUR, 1);
 		// 46:00から48:00までの深夜労働時間・深夜休憩時間の計算
-		calcNightWorkTime((TimeConst.TIME_NIGHT_WORK_START + TimeConst.TIME_DAY_ALL_HOUR)
-				* TimeConst.CODE_DEFINITION_HOUR, 48 * TimeConst.CODE_DEFINITION_HOUR, 2);
+		calcNightWorkTime(
+				(TimeConst.TIME_NIGHT_WORK_START + TimeConst.TIME_DAY_ALL_HOUR) * TimeConst.CODE_DEFINITION_HOUR,
+				48 * TimeConst.CODE_DEFINITION_HOUR, 2);
 		// 合計深夜労働時間
 		int totalNightWorkTime = 0;
 		for (int time : nightWorkArray) {
@@ -3343,6 +3893,72 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 				paidLeaveEnd = nightWorkEnd;
 			}
 			totalPaidLeave += paidLeaveEnd - paidLeaveStart;
+		}
+		// 深夜労働開始時刻から深夜労働終了時刻までの合計特別休暇時間
+		int totalSpecialLeave = 0;
+		for (Entry<Date, Date> entry : specialLeaveHourMap.entrySet()) {
+			int specialLeaveStart = getDefferenceMinutes(workDate, entry.getKey());
+			int specialLeaveEnd = getDefferenceMinutes(workDate, entry.getValue());
+			if (specialLeaveStart >= nightWorkEnd || specialLeaveEnd <= nightWorkStart) {
+				// 特別休暇開始時刻が深夜労働終了時刻以後の場合
+				// 又は特別休暇終了時刻が深夜労働開始時刻以前の場合
+				continue;
+			}
+			if (specialLeaveStart < nightWorkStart) {
+				// 特別休暇開始時刻が深夜労働開始時刻より前の場合は
+				// 深夜労働開始時刻を特別休暇開始時刻とする
+				specialLeaveStart = nightWorkStart;
+			}
+			if (specialLeaveEnd > nightWorkEnd) {
+				// 特別休暇終了時刻が深夜労働終了時刻より後の場合は
+				// 深夜労働終了時刻を特別休暇終了時刻とする
+				specialLeaveEnd = nightWorkEnd;
+			}
+			totalSpecialLeave += specialLeaveEnd - specialLeaveStart;
+		}
+		// 深夜労働開始時刻から深夜労働終了時刻までの合計その他休暇時間
+		int totalOtherLeave = 0;
+		for (Entry<Date, Date> entry : otherLeaveHourMap.entrySet()) {
+			int otherLeaveStart = getDefferenceMinutes(workDate, entry.getKey());
+			int otherLeaveEnd = getDefferenceMinutes(workDate, entry.getValue());
+			if (otherLeaveStart >= nightWorkEnd || otherLeaveEnd <= nightWorkStart) {
+				// その他休暇開始時刻が深夜労働終了時刻以後の場合
+				// 又はその他休暇終了時刻が深夜労働開始時刻以前の場合
+				continue;
+			}
+			if (otherLeaveStart < nightWorkStart) {
+				// その他休暇開始時刻が深夜労働開始時刻より前の場合は
+				// 深夜労働開始時刻をその他休暇開始時刻とする
+				otherLeaveStart = nightWorkStart;
+			}
+			if (otherLeaveEnd > nightWorkEnd) {
+				// その他休暇終了時刻が深夜労働終了時刻より後の場合は
+				// 深夜労働終了時刻をその他休暇終了時刻とする
+				otherLeaveEnd = nightWorkEnd;
+			}
+			totalOtherLeave += otherLeaveEnd - otherLeaveStart;
+		}
+		// 深夜労働開始時刻から深夜労働終了時刻までの合計欠勤時間
+		int totalAbsenceLeave = 0;
+		for (Entry<Date, Date> entry : absenceHourMap.entrySet()) {
+			int absenceLeaveStart = getDefferenceMinutes(workDate, entry.getKey());
+			int absenceLeaveEnd = getDefferenceMinutes(workDate, entry.getValue());
+			if (absenceLeaveStart >= nightWorkEnd || absenceLeaveEnd <= nightWorkStart) {
+				// 欠勤開始時刻が深夜労働終了時刻以後の場合
+				// 又は欠勤終了時刻が深夜労働開始時刻以前の場合
+				continue;
+			}
+			if (absenceLeaveStart < nightWorkStart) {
+				// 欠勤開始時刻が深夜労働開始時刻より前の場合は
+				// 深夜労働開始時刻を欠勤開始時刻とする
+				absenceLeaveStart = nightWorkStart;
+			}
+			if (absenceLeaveEnd > nightWorkEnd) {
+				// 欠勤終了時刻が深夜労働終了時刻より後の場合は
+				// 深夜労働終了時刻を欠勤終了時刻とする
+				absenceLeaveEnd = nightWorkEnd;
+			}
+			totalAbsenceLeave += absenceLeaveEnd - absenceLeaveStart;
 		}
 		// 深夜労働開始時刻から深夜労働終了時刻までの合計規定終業時刻後時間外前休憩時間
 		int totalOvertimeBeforeRest = 0;
@@ -3466,19 +4082,375 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 				totalMinutelyHolidayB += end - start;
 			}
 		}
-		
 		// 深夜労働時間
 		int night = nightWorkTime(nightWorkEnd, nightWorkStart, totalManualRest, totalOvertimeBeforeRest,
 				totalOvertimeRest, totalPublicGoOut, totalPrivateGoOut, totalMinutelyHolidayA, totalMinutelyHolidayB);
-		// 有給休暇時間数を減算する
-		night -= totalPaidLeave;
+		// 有給休暇・特別休暇・その他休暇・欠勤時間数を減算する
+		night -= totalPaidLeave + totalSpecialLeave + totalOtherLeave + totalAbsenceLeave;
 		if (night < 0) {
 			// 深夜労働時間が0未満の場合は0とする
 			night = 0;
 		}
 		nightWorkArray[i] = getRoundMinute(night, timeSettingDto.getRoundDailyWork(),
-				timeSettingDto.getRoundDailyWorkUnit());
+				timeSettingDto.getRoundDailyTimeWork());
 		nightRestArray[i] = totalManualRest + totalOvertimeBeforeRest + totalOvertimeRest;
+	}
+	
+	/**
+	 * 深夜所定労働時間内時間・深夜時間外時間の計算
+	 * @param requestUtil 申請ユーティリティ
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	protected void calcNightOvertimeWork(RequestUtilBeanInterface requestUtil) throws MospException {
+		boolean workOnLegalDaysOff = isWorkOnLegalDaysOff();
+		boolean nextDayLegalDayOff = isNextDayWorkOnLegalDaysOff() || isNextDayLegalDaysOff();
+		int totalWork = 0;
+		int totalNightWorkWithin = 0;
+		int totalNightOvertimeWork = 0;
+		int zeroHours = 0 * TimeConst.CODE_DEFINITION_HOUR;
+		int fiveHours = 5 * TimeConst.CODE_DEFINITION_HOUR;
+		int twentyTwoHours = 22 * TimeConst.CODE_DEFINITION_HOUR;
+		int twentyFourHours = 24 * TimeConst.CODE_DEFINITION_HOUR;
+		int twentyNineHours = 29 * TimeConst.CODE_DEFINITION_HOUR;
+		int fortySixHours = 46 * TimeConst.CODE_DEFINITION_HOUR;
+		int fortyEightHours = 48 * TimeConst.CODE_DEFINITION_HOUR;
+		int[] nightStartArray = new int[]{ zeroHours, fiveHours, twentyTwoHours, twentyNineHours, fortySixHours };
+		int[] nightEndArray = new int[]{ fiveHours, twentyTwoHours, twentyNineHours, fortySixHours, fortyEightHours };
+		if (workOnLegalDaysOff && nextDayLegalDayOff) {
+			// 法定休日労働且つ翌日が法定休日又は法定休日労働の場合
+			nightWorkWithinPrescribedWork = 0;
+			nightOvertimeWork = 0;
+			return;
+		} else if (workOnLegalDaysOff) {
+			// 法定休日労働の場合
+			nightStartArray = new int[]{ zeroHours, zeroHours, twentyFourHours, twentyNineHours, fortySixHours };
+			nightEndArray = new int[]{ zeroHours, twentyFourHours, twentyNineHours, fortySixHours, fortyEightHours };
+		} else if (nextDayLegalDayOff) {
+			// 翌日が法定休日又は法定休日労働の場合
+			nightStartArray = new int[]{ zeroHours, fiveHours, twentyTwoHours };
+			nightEndArray = new int[]{ fiveHours, twentyTwoHours, twentyFourHours };
+		}
+		for (int i = 0; i < nightStartArray.length; i++) {
+			int night = getNightWork(nightStartArray[i], nightEndArray[i]);
+			if (i % 2 != 0) {
+				// 深夜でない場合
+				totalWork += night;
+				continue;
+			}
+			// 深夜である場合
+			night += getNightShortPaid(requestUtil, nightStartArray[i], nightEndArray[i]);
+			if (totalWork >= prescribedWorkTime) {
+				// 所定労働時間以上の場合
+				totalWork += night;
+				totalNightOvertimeWork += night;
+				continue;
+			} else if (totalWork + night <= prescribedWorkTime) {
+				// 所定労働時間以下の場合
+				totalWork += night;
+				totalNightWorkWithin += night;
+				continue;
+			}
+			int add = prescribedWorkTime - totalWork;
+			int over = totalWork + night - prescribedWorkTime;
+			totalWork += night;
+			totalNightWorkWithin += add;
+			totalNightOvertimeWork += over;
+		}
+		nightWorkWithinPrescribedWork = getRoundMinute(totalNightWorkWithin, timeSettingDto.getRoundDailyWork(),
+				timeSettingDto.getRoundDailyTimeWork());
+		nightOvertimeWork = getRoundMinute(totalNightOvertimeWork, timeSettingDto.getRoundDailyWork(),
+				timeSettingDto.getRoundDailyTimeWork());
+	}
+	
+	/**
+	 * 深夜休日労働時間の計算。
+	 * @param requestUtil 申請ユーティリティ
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	protected void calcNightWorkOnDayOff(RequestUtilBeanInterface requestUtil) throws MospException {
+		boolean workOnLegalDaysOff = isWorkOnLegalDaysOff();
+		boolean nextDayLegalDayOff = isNextDayWorkOnLegalDaysOff() || isNextDayLegalDaysOff();
+		int zeroHours = 0 * TimeConst.CODE_DEFINITION_HOUR;
+		int fiveHours = 5 * TimeConst.CODE_DEFINITION_HOUR;
+		int twentyTwoHours = 22 * TimeConst.CODE_DEFINITION_HOUR;
+		int twentyFourHours = 24 * TimeConst.CODE_DEFINITION_HOUR;
+		int twentyNineHours = 29 * TimeConst.CODE_DEFINITION_HOUR;
+		int fortySixHours = 46 * TimeConst.CODE_DEFINITION_HOUR;
+		int fortyEightHours = 48 * TimeConst.CODE_DEFINITION_HOUR;
+		int[] nightStartArray = new int[0];
+		int[] nightEndArray = new int[0];
+		if (workOnLegalDaysOff && nextDayLegalDayOff) {
+			// 法定休日労働且つ翌日が法定休日又は法定休日労働の場合
+			nightStartArray = new int[]{ zeroHours, twentyTwoHours, fortySixHours };
+			nightEndArray = new int[]{ fiveHours, twentyNineHours, fortyEightHours };
+		} else if (workOnLegalDaysOff) {
+			// 法定休日労働の場合
+			nightStartArray = new int[]{ zeroHours, twentyTwoHours };
+			nightEndArray = new int[]{ fiveHours, twentyFourHours };
+		} else if (nextDayLegalDayOff) {
+			// 翌日が法定休日又は法定休日労働の場合
+			nightStartArray = new int[]{ twentyFourHours, fortySixHours };
+			nightEndArray = new int[]{ twentyNineHours, fortyEightHours };
+		} else {
+			return;
+		}
+		int work = 0;
+		for (int i = 0; i < nightStartArray.length; i++) {
+			work += getRoundMinute(getNightWork(nightStartArray[i], nightEndArray[i]),
+					timeSettingDto.getRoundDailyWork(), timeSettingDto.getRoundDailyTimeWork());
+			work += getNightShortPaid(requestUtil, nightStartArray[i], nightEndArray[i]);
+		}
+		nightWorkOnHoliday = work;
+	}
+	
+	/**
+	 * 深夜労働時間を取得する。
+	 * @param regNightWorkStart 規定深夜労働開始時刻
+	 * @param regNightWorkEnd 規定深夜労働終了時刻
+	 * @return 深夜休日労働時間
+	 */
+	protected int getNightWork(int regNightWorkStart, int regNightWorkEnd) {
+		// 始業時刻が規定深夜労働終了時刻以後又は終業時刻が規定深夜労働開始時刻以前の場合
+		if (calculatedStart >= regNightWorkEnd || calculatedEnd <= regNightWorkStart) {
+			return 0;
+		}
+		// 深夜労働開始時刻
+		int nightWorkStart = regNightWorkStart;
+		if (calculatedStart >= regNightWorkStart) {
+			// 始業時刻が規定深夜労働開始時刻以後の場合は
+			// 始業時刻を深夜労働開始時刻とする
+			nightWorkStart = calculatedStart;
+		}
+		// 深夜労働終了時刻
+		int nightWorkEnd = regNightWorkEnd;
+		if (calculatedEnd <= regNightWorkEnd) {
+			// 終業時刻が規定深夜労働終了時刻以前の場合は
+			// 終業時刻を深夜労働終了時刻とする
+			nightWorkEnd = calculatedEnd;
+		}
+		// 深夜労働開始時刻から深夜労働終了時刻までの合計有給休暇時間
+		int totalPaidLeave = 0;
+		for (Entry<Date, Date> entry : paidLeaveHourMap.entrySet()) {
+			int paidLeaveStart = getDefferenceMinutes(workDate, entry.getKey());
+			int paidLeaveEnd = getDefferenceMinutes(workDate, entry.getValue());
+			if (paidLeaveStart >= nightWorkEnd || paidLeaveEnd <= nightWorkStart) {
+				// 有給休暇開始時刻が深夜労働終了時刻以後の場合
+				// 又は有給休暇終了時刻が深夜労働開始時刻以前の場合
+				continue;
+			}
+			if (paidLeaveStart < nightWorkStart) {
+				// 有給休暇開始時刻が深夜労働開始時刻より前の場合は
+				// 深夜労働開始時刻を有給休暇開始時刻とする
+				paidLeaveStart = nightWorkStart;
+			}
+			if (paidLeaveEnd > nightWorkEnd) {
+				// 有給休暇終了時刻が深夜労働終了時刻より後の場合は
+				// 深夜労働終了時刻を有給休暇終了時刻とする
+				paidLeaveEnd = nightWorkEnd;
+			}
+			totalPaidLeave += paidLeaveEnd - paidLeaveStart;
+		}
+		// 深夜労働開始時刻から深夜労働終了時刻までの合計特別休暇時間
+		int totalSpecialLeave = 0;
+		for (Entry<Date, Date> entry : specialLeaveHourMap.entrySet()) {
+			int specialLeaveStart = getDefferenceMinutes(workDate, entry.getKey());
+			int specialLeaveEnd = getDefferenceMinutes(workDate, entry.getValue());
+			if (specialLeaveStart >= nightWorkEnd || specialLeaveEnd <= nightWorkStart) {
+				// 特別休暇開始時刻が深夜労働終了時刻以後の場合
+				// 又は特別休暇終了時刻が深夜労働開始時刻以前の場合
+				continue;
+			}
+			if (specialLeaveStart < nightWorkStart) {
+				// 特別休暇開始時刻が深夜労働開始時刻より前の場合は
+				// 深夜労働開始時刻を特別休暇開始時刻とする
+				specialLeaveStart = nightWorkStart;
+			}
+			if (specialLeaveEnd > nightWorkEnd) {
+				// 特別休暇終了時刻が深夜労働終了時刻より後の場合は
+				// 深夜労働終了時刻を特別休暇終了時刻とする
+				specialLeaveEnd = nightWorkEnd;
+			}
+			totalSpecialLeave += specialLeaveEnd - specialLeaveStart;
+		}
+		// 深夜労働開始時刻から深夜労働終了時刻までの合計その他休暇時間
+		int totalOtherLeave = 0;
+		for (Entry<Date, Date> entry : otherLeaveHourMap.entrySet()) {
+			int otherLeaveStart = getDefferenceMinutes(workDate, entry.getKey());
+			int otherLeaveEnd = getDefferenceMinutes(workDate, entry.getValue());
+			if (otherLeaveStart >= nightWorkEnd || otherLeaveEnd <= nightWorkStart) {
+				// その他休暇開始時刻が深夜労働終了時刻以後の場合
+				// 又はその他休暇終了時刻が深夜労働開始時刻以前の場合
+				continue;
+			}
+			if (otherLeaveStart < nightWorkStart) {
+				// その他休暇開始時刻が深夜労働開始時刻より前の場合は
+				// 深夜労働開始時刻をその他休暇開始時刻とする
+				otherLeaveStart = nightWorkStart;
+			}
+			if (otherLeaveEnd > nightWorkEnd) {
+				// その他休暇終了時刻が深夜労働終了時刻より後の場合は
+				// 深夜労働終了時刻をその他休暇終了時刻とする
+				otherLeaveEnd = nightWorkEnd;
+			}
+			totalOtherLeave += otherLeaveEnd - otherLeaveStart;
+		}
+		// 深夜労働開始時刻から深夜労働終了時刻までの合計欠勤時間
+		int totalAbsenceLeave = 0;
+		for (Entry<Date, Date> entry : absenceHourMap.entrySet()) {
+			int absenceLeaveStart = getDefferenceMinutes(workDate, entry.getKey());
+			int absenceLeaveEnd = getDefferenceMinutes(workDate, entry.getValue());
+			if (absenceLeaveStart >= nightWorkEnd || absenceLeaveEnd <= nightWorkStart) {
+				// 欠勤開始時刻が深夜労働終了時刻以後の場合
+				// 又は欠勤終了時刻が深夜労働開始時刻以前の場合
+				continue;
+			}
+			if (absenceLeaveStart < nightWorkStart) {
+				// 欠勤開始時刻が深夜労働開始時刻より前の場合は
+				// 深夜労働開始時刻を欠勤開始時刻とする
+				absenceLeaveStart = nightWorkStart;
+			}
+			if (absenceLeaveEnd > nightWorkEnd) {
+				// 欠勤終了時刻が深夜労働終了時刻より後の場合は
+				// 深夜労働終了時刻を欠勤終了時刻とする
+				absenceLeaveEnd = nightWorkEnd;
+			}
+			totalAbsenceLeave += absenceLeaveEnd - absenceLeaveStart;
+		}
+		// 深夜労働開始時刻から深夜労働終了時刻までの合計規定終業時刻後時間外前休憩時間
+		int totalOvertimeBeforeRest = 0;
+		// 深夜労働開始時刻から深夜労働終了時刻までの合計残業休憩時間
+		int totalOvertimeRest = 0;
+		// 深夜労働開始時刻から深夜労働終了時刻までの合計手動休憩時間
+		int totalManualRest = 0;
+		if (!workTypeEntity.isNightRestExclude()) {
+			// 割増休憩除外が有効でない場合
+			for (Entry<Date, Date> entry : overtimeBeforeRestMap.entrySet()) {
+				int start = getDefferenceMinutes(workDate, entry.getKey());
+				int end = getDefferenceMinutes(workDate, entry.getValue());
+				if (start < nightWorkEnd && end > nightWorkStart) {
+					if (start < nightWorkStart) {
+						start = nightWorkStart;
+					}
+					if (end > nightWorkEnd) {
+						end = nightWorkEnd;
+					}
+					totalOvertimeBeforeRest += end - start;
+				}
+			}
+			for (Entry<Date, Date> entry : overtimeRestMap.entrySet()) {
+				int start = getDefferenceMinutes(workDate, entry.getKey());
+				int end = getDefferenceMinutes(workDate, entry.getValue());
+				if (start < nightWorkEnd && end > nightWorkStart) {
+					if (start < nightWorkStart) {
+						start = nightWorkStart;
+					}
+					if (end > nightWorkEnd) {
+						end = nightWorkEnd;
+					}
+					totalOvertimeRest += end - start;
+				}
+			}
+			for (RestDtoInterface dto : restDtoList) {
+				Date startTime = getRoundMinute(dto.getRestStart(), timeSettingDto.getRoundDailyRestStart(),
+						timeSettingDto.getRoundDailyRestStartUnit());
+				Date endTime = getRoundMinute(dto.getRestEnd(), timeSettingDto.getRoundDailyRestEnd(),
+						timeSettingDto.getRoundDailyRestEndUnit());
+				int start = getDefferenceMinutes(workDate, startTime);
+				int end = getDefferenceMinutes(workDate, endTime);
+				if (start < nightWorkEnd && end > nightWorkStart) {
+					if (start < nightWorkStart) {
+						start = nightWorkStart;
+					}
+					if (end > nightWorkEnd) {
+						end = nightWorkEnd;
+					}
+					totalManualRest += getRoundMinute(end - start, timeSettingDto.getRoundDailyRestTime(),
+							timeSettingDto.getRoundDailyRestTimeUnit());
+				}
+			}
+		}
+		// 深夜労働開始時刻から深夜労働終了時刻までの合計公用外出時間
+		int totalPublicGoOut = 0;
+		for (GoOutDtoInterface dto : publicGoOutDtoList) {
+			Date startTime = getRoundMinute(dto.getGoOutStart(), timeSettingDto.getRoundDailyPublicStart(),
+					timeSettingDto.getRoundDailyPublicStartUnit());
+			Date endTime = getRoundMinute(dto.getGoOutEnd(), timeSettingDto.getRoundDailyPublicEnd(),
+					timeSettingDto.getRoundDailyPublicEndUnit());
+			int start = getDefferenceMinutes(workDate, startTime);
+			int end = getDefferenceMinutes(workDate, endTime);
+			if (start < nightWorkEnd && end > nightWorkStart) {
+				if (start < nightWorkStart) {
+					start = nightWorkStart;
+				}
+				if (end > nightWorkEnd) {
+					end = nightWorkEnd;
+				}
+				totalPublicGoOut += end - start;
+			}
+		}
+		// 深夜労働開始時刻から深夜労働終了時刻までの合計私用外出時間
+		int totalPrivateGoOut = 0;
+		for (GoOutDtoInterface dto : privateGoOutDtoList) {
+			Date startTime = getRoundMinute(dto.getGoOutStart(), timeSettingDto.getRoundDailyPrivateStart(),
+					timeSettingDto.getRoundDailyPrivateStartUnit());
+			Date endTime = getRoundMinute(dto.getGoOutEnd(), timeSettingDto.getRoundDailyPrivateEnd(),
+					timeSettingDto.getRoundDailyPrivateEndUnit());
+			int start = getDefferenceMinutes(workDate, startTime);
+			int end = getDefferenceMinutes(workDate, endTime);
+			if (start < nightWorkEnd && end > nightWorkStart) {
+				if (start < nightWorkStart) {
+					start = nightWorkStart;
+				}
+				if (end > nightWorkEnd) {
+					end = nightWorkEnd;
+				}
+				totalPrivateGoOut += end - start;
+			}
+		}
+		// 深夜労働開始時刻から深夜労働終了時刻までの合計分単位休暇A時間
+		int totalMinutelyHolidayA = 0;
+		for (GoOutDtoInterface dto : minutelyHolidayADtoList) {
+			Date startTime = dto.getGoOutStart();
+			Date endTime = dto.getGoOutEnd();
+			int start = getDefferenceMinutes(workDate, startTime);
+			int end = getDefferenceMinutes(workDate, endTime);
+			if (start < nightWorkEnd && end > nightWorkStart) {
+				if (start < nightWorkStart) {
+					start = nightWorkStart;
+				}
+				if (end > nightWorkEnd) {
+					end = nightWorkEnd;
+				}
+				totalMinutelyHolidayA += end - start;
+			}
+		}
+		// 深夜労働開始時刻から深夜労働終了時刻までの合計分単位休暇B時間
+		int totalMinutelyHolidayB = 0;
+		for (GoOutDtoInterface dto : minutelyHolidayBDtoList) {
+			Date startTime = dto.getGoOutStart();
+			Date endTime = dto.getGoOutEnd();
+			int start = getDefferenceMinutes(workDate, startTime);
+			int end = getDefferenceMinutes(workDate, endTime);
+			if (start < nightWorkEnd && end > nightWorkStart) {
+				if (start < nightWorkStart) {
+					start = nightWorkStart;
+				}
+				if (end > nightWorkEnd) {
+					end = nightWorkEnd;
+				}
+				totalMinutelyHolidayB += end - start;
+			}
+		}
+		// 深夜労働時間
+		int night = nightWorkTime(nightWorkEnd, nightWorkStart, totalManualRest, totalOvertimeBeforeRest,
+				totalOvertimeRest, totalPublicGoOut, totalPrivateGoOut, totalMinutelyHolidayA, totalMinutelyHolidayB);
+		// 有給休暇・特別休暇・その他休暇・欠勤時間数を減算する
+		night -= totalPaidLeave + totalSpecialLeave + totalOtherLeave + totalAbsenceLeave;
+		if (night < 0) {
+			// 深夜労働時間が0未満の場合は0とする
+			night = 0;
+		}
+		return night;
 	}
 	
 	/**
@@ -3515,58 +4487,71 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 		int[] endArray = { 5 * TimeConst.CODE_DEFINITION_HOUR,
 			TimeConst.TIME_NIGHT_WORK_END * TimeConst.CODE_DEFINITION_HOUR, 48 * TimeConst.CODE_DEFINITION_HOUR };
 		for (int i = 0; i < startArray.length; i++) {
-			int nightStart = startArray[i];
-			int nightEnd = endArray[i];
-			if (!isAmHalfDayOff(requestUtil) && useShort1 && isShort1StartTypePay && calculatedStart > short1End) {
-				// 前半休でなく且つ時短有給且つ勤怠計算上の始業時刻が時短時間1終了時刻より後の場合
-				if (short1Start <= nightStart) {
-					// 時短時間1開始時刻が深夜開始時刻以前の場合
-					if (short1End >= nightEnd) {
-						// 時短時間1終了時刻が深夜終了時刻以後の場合は、
-						// 深夜終了時刻から深夜開始時刻を引いたものを加算する
-						shortPaid += nightEnd - nightStart;
-					} else if (short1End > nightStart) {
-						// 時短時間1終了時刻が深夜開始時刻より後の場合は、
-						// 時短時間1終了時刻から深夜開始時刻を引いたものを加算する
-						shortPaid += short1End - nightStart;
-					}
-				} else if (short1Start < nightEnd) {
-					// 時短時間1開始時刻が深夜終了時刻より前の場合
-					if (short1End >= nightEnd) {
-						// 時短時間1終了時刻が深夜終了時刻以後の場合は、
-						// 深夜終了時刻から時短時間1開始時刻を引いたものを加算する
-						shortPaid += nightEnd - short1Start;
-					} else if (short1End > nightStart) {
-						// 時短時間1終了時刻が深夜開始時刻より後の場合は、
-						// 時短時間1終了時刻から時短時間1開始時刻を引いたものを加算する
-						shortPaid += short1End - short1Start;
-					}
+			shortPaid += getNightShortPaid(requestUtil, startArray[i], endArray[i]);
+		}
+		return shortPaid;
+	}
+	
+	/**
+	 * 深夜有給時短時間を取得する。
+	 * @param requestUtil 申請ユーティリティ
+	 * @param nightStart 深夜労働開始時刻
+	 * @param nightEnd 規定深夜労働終了時刻
+	 * @return 深夜有給時短時間
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	protected int getNightShortPaid(RequestUtilBeanInterface requestUtil, int nightStart, int nightEnd)
+			throws MospException {
+		int shortPaid = 0;
+		if (!isAmHalfDayOff(requestUtil) && useShort1 && isShort1StartTypePay && calculatedStart > short1End) {
+			// 前半休でなく且つ時短有給且つ勤怠計算上の始業時刻が時短時間1終了時刻より後の場合
+			if (short1Start <= nightStart) {
+				// 時短時間1開始時刻が深夜開始時刻以前の場合
+				if (short1End >= nightEnd) {
+					// 時短時間1終了時刻が深夜終了時刻以後の場合は、
+					// 深夜終了時刻から深夜開始時刻を引いたものを加算する
+					shortPaid += nightEnd - nightStart;
+				} else if (short1End > nightStart) {
+					// 時短時間1終了時刻が深夜開始時刻より後の場合は、
+					// 時短時間1終了時刻から深夜開始時刻を引いたものを加算する
+					shortPaid += short1End - nightStart;
+				}
+			} else if (short1Start < nightEnd) {
+				// 時短時間1開始時刻が深夜終了時刻より前の場合
+				if (short1End >= nightEnd) {
+					// 時短時間1終了時刻が深夜終了時刻以後の場合は、
+					// 深夜終了時刻から時短時間1開始時刻を引いたものを加算する
+					shortPaid += nightEnd - short1Start;
+				} else if (short1End > nightStart) {
+					// 時短時間1終了時刻が深夜開始時刻より後の場合は、
+					// 時短時間1終了時刻から時短時間1開始時刻を引いたものを加算する
+					shortPaid += short1End - short1Start;
 				}
 			}
-			if (!isPmHalfDayOff(requestUtil) && useShort2 && isShort2StartTypePay && calculatedEnd < short2Start) {
-				// 後半休でなく且つ時短有給且つ勤怠計算上の終業時刻が時短時間2開始時刻より前の場合
-				if (short2Start <= nightStart) {
-					// 時短時間2開始時刻が深夜開始時刻以前の場合
-					if (short2End >= nightEnd) {
-						// 時短時間2終了時刻が深夜終了時刻以後の場合は、
-						// 深夜終了時刻から深夜開始時刻を引いたものを加算する
-						shortPaid += nightEnd - nightStart;
-					} else if (short2End > nightStart) {
-						// 時短時間2終了時刻が深夜開始時刻より後の場合は、
-						// 時短時間2終了時刻から深夜開始時刻を引いたものを加算する
-						shortPaid += short2End - nightStart;
-					}
-				} else if (short2Start < nightEnd) {
-					// 時短時間2開始時刻が深夜終了時刻より前の場合
-					if (short2End >= nightEnd) {
-						// 時短時間2終了時刻が深夜終了時刻以後の場合は、
-						// 深夜終了時刻から時短時間2開始時刻を引いたものを加算する
-						shortPaid += nightEnd - short2Start;
-					} else if (short2End > nightStart) {
-						// 時短時間2終了時刻が深夜開始時刻より後の場合は、
-						// 時短時間2終了時刻から時短時間2開始時刻を引いたものを加算する
-						shortPaid += short2End - short2Start;
-					}
+		}
+		if (!isPmHalfDayOff(requestUtil) && useShort2 && isShort2StartTypePay && calculatedEnd < short2Start) {
+			// 後半休でなく且つ時短有給且つ勤怠計算上の終業時刻が時短時間2開始時刻より前の場合
+			if (short2Start <= nightStart) {
+				// 時短時間2開始時刻が深夜開始時刻以前の場合
+				if (short2End >= nightEnd) {
+					// 時短時間2終了時刻が深夜終了時刻以後の場合は、
+					// 深夜終了時刻から深夜開始時刻を引いたものを加算する
+					shortPaid += nightEnd - nightStart;
+				} else if (short2End > nightStart) {
+					// 時短時間2終了時刻が深夜開始時刻より後の場合は、
+					// 時短時間2終了時刻から深夜開始時刻を引いたものを加算する
+					shortPaid += short2End - nightStart;
+				}
+			} else if (short2Start < nightEnd) {
+				// 時短時間2開始時刻が深夜終了時刻より前の場合
+				if (short2End >= nightEnd) {
+					// 時短時間2終了時刻が深夜終了時刻以後の場合は、
+					// 深夜終了時刻から時短時間2開始時刻を引いたものを加算する
+					shortPaid += nightEnd - short2Start;
+				} else if (short2End > nightStart) {
+					// 時短時間2終了時刻が深夜開始時刻より後の場合は、
+					// 時短時間2終了時刻から時短時間2開始時刻を引いたものを加算する
+					shortPaid += short2End - short2Start;
 				}
 			}
 		}
@@ -3635,9 +4620,17 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 	protected void calcWithinStatutoryOvertime() {
 		// 有給休暇
 		int paidLeave = paidLeaveHour * TimeConst.CODE_DEFINITION_HOUR;
+		// 特別休暇
+		int specialLeave = specialLeaveHour * TimeConst.CODE_DEFINITION_HOUR;
+		// その他休暇
+		int otherLeave = otherLeaveHour * TimeConst.CODE_DEFINITION_HOUR;
+		// 欠勤
+		int absenceLeave = absenceHour * TimeConst.CODE_DEFINITION_HOUR;
+		// その他休暇
 		// 法定労働時間と所定労働時間の差に遅刻時間、早退時間及び私用外出時間を加算する
 		int differenceTime = TimeConst.TIME_WORKING_HOUR * TimeConst.CODE_DEFINITION_HOUR - prescribedWorkTime
-				+ lateTime + leaveEarlyTime + totalPrivate + paidLeave + totalMinutelyHolidayA + totalMinutelyHolidayB;
+				+ lateTime + leaveEarlyTime + totalPrivate + paidLeave + specialLeave + otherLeave + absenceLeave
+				+ totalMinutelyHolidayA + totalMinutelyHolidayB;
 		if (differenceTime < 0) {
 			// 差が0未満の場合
 			return;
@@ -3846,6 +4839,10 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 		calcPrescribedHolidayWork(requestUtil);
 		// 深夜労働時間の計算
 		calcNightWorkTime(requestUtil);
+		// 深夜所定労働時間内時間・深夜時間外時間
+		calcNightOvertimeWork(requestUtil);
+		// 深夜休日労働時間
+		calcNightWorkOnDayOff(requestUtil);
 		// 減額対象時間の計算
 		calcReducedTargetTime();
 		// 法内残業の計算
@@ -3882,21 +4879,17 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 		totalMinutelyHolidayB = 0;
 		decreaseTime = 0;
 		timeSettingDto = null;
-		workTypeItemDto = null;
 		workOnHolidayDto = null;
 		holidayRequestDtoList = new ArrayList<HolidayRequestDtoInterface>();
 		subHolidayRequestDtoList = new ArrayList<SubHolidayRequestDtoInterface>();
-		scheduleDto = null;
 		differenceDto = null;
 		scheduleDateDto = null;
 		beforeOvertimeDto = null;
 		afterOvertimeDto = null;
-		totalPublicTime = 0;
 		overtimeTime = 0;
 		regWorkStart = 0;
 		regWorkEnd = 0;
 		regWorkTime = 0;
-		regFullWorkStart = 0;
 		regFullWorkTime = 0;
 		betweenHalfHolidayTime = 0;
 		overbefore = 0;
@@ -3909,6 +4902,9 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 		prescribedHolidayOvertimeOut = 0;
 		overRestTime = 0;
 		nightWork = 0;
+		nightWorkWithinPrescribedWork = 0;
+		nightOvertimeWork = 0;
+		nightWorkOnHoliday = 0;
 		nightRest = 0;
 		nightWorkArray = new int[0];
 		nightRestArray = new int[0];
@@ -3927,7 +4923,6 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 		calculatedStart = 0;
 		calculatedEnd = 0;
 		prescribedWorkEnd = 0;
-		totalBefore24HourPaidLeave = 0;
 		totalBefore24HourManualRest = 0;
 		totalBefore24HourOvertimeBeforeRest = 0;
 		totalBefore24HourOvertimeRest = 0;
@@ -3936,13 +4931,14 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 		totalBefore24HourMinutelyHolidayA = 0;
 		totalBefore24HourMinutelyHolidayB = 0;
 		totalAfter24HourPaidLeave = 0;
+		totalAfter24HourSpecialLeave = 0;
+		totalAfter24HourOtherLeave = 0;
+		totalAfter24HourAbsenceLeave = 0;
 		totalAfter24HourManualRest = 0;
 		totalAfter24HourOvertimeBeforeRest = 0;
 		totalAfter24HourOvertimeRest = 0;
 		totalAfter24HourPublicGoOut = 0;
 		totalAfter24HourPrivateGoOut = 0;
-		totalAfter24HourMinutelyHolidayA = 0;
-		totalAfter24HourMinutelyHolidayB = 0;
 		regRestMap = new TreeMap<Date, Date>();
 		tardinessRestMap = new TreeMap<Date, Date>();
 		leaveEarlyRestMap = new TreeMap<Date, Date>();
@@ -3951,12 +4947,24 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 		isPaidLeaveAm = false;
 		isPaidLeavePm = false;
 		paidLeaveHourMap = new TreeMap<Date, Date>();
+		specialLeaveHourMap = new TreeMap<Date, Date>();
+		otherLeaveHourMap = new TreeMap<Date, Date>();
+		absenceHourMap = new TreeMap<Date, Date>();
 		minutelyHolidayAMap = new TreeMap<Date, Date>();
 		minutelyHolidayBMap = new TreeMap<Date, Date>();
 		paidLeaveHour = 0;
+		specialLeaveHour = 0;
+		otherLeaveHour = 0;
+		absenceHour = 0;
 		beforePaidLeaveMinute = 0;
+		beforeSpecialLeaveMinute = 0;
+		beforeOtherLeaveMinute = 0;
+		beforeAbsenceLeaveMinute = 0;
 		beforeMinutelyHolidayMinute = 0;
 		afterPaidLeaveMinute = 0;
+		afterSpecialLeaveMinute = 0;
+		afterOtherLeaveMinute = 0;
+		afterAbsenceLeaveMinute = 0;
 		afterMinutelyHolidayMinute = 0;
 		isStockLeaveAm = false;
 		isStockLeavePm = false;
@@ -3973,11 +4981,13 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 		isNightCompensationDaysAm = false;
 		isNightCompensationDaysPm = false;
 		workTypeCode = "";
+		// 個人ID
+		personalId = attendanceDto.getPersonalId();
 		// 勤務日
 		workDate = attendanceDto.getWorkDate();
 		// 出勤時刻
 		startTime = attendanceDto.getStartTime();
-		// 退勤時刻 
+		// 退勤時刻
 		endTime = attendanceDto.getEndTime();
 		// 直行
 		directStart = attendanceDto.getDirectStart() == 1;
@@ -4021,6 +5031,9 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 		attendanceDto.setDecreaseTime(decreaseTime);
 		attendanceDto.setGeneralWorkTime(prescribedWorkTime);
 		attendanceDto.setLateNightTime(nightWork);
+		attendanceDto.setNightWorkWithinPrescribedWork(nightWorkWithinPrescribedWork);
+		attendanceDto.setNightOvertimeWork(nightOvertimeWork);
+		attendanceDto.setNightWorkOnHoliday(nightWorkOnHoliday);
 		attendanceDto.setLegalWorkTime(legalHolidayWork);
 		attendanceDto.setNightRestTime(nightRest);
 		attendanceDto.setOverRestTime(overRestTime);
@@ -4109,16 +5122,19 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 			// 特別休暇の場合
 			attendanceDto.setSpecialLeaveDays(TimeConst.HOLIDAY_TIMES_HALF);
 		}
+		attendanceDto.setSpecialLeaveHours(specialLeaveHour);
 		attendanceDto.setOtherLeaveDays(0);
 		if (isOtherLeaveAm || isOtherLeavePm) {
 			// その他休暇の場合
 			attendanceDto.setOtherLeaveDays(TimeConst.HOLIDAY_TIMES_HALF);
 		}
+		attendanceDto.setOtherLeaveHours(otherLeaveHour);
 		attendanceDto.setAbsenceDays(0);
 		if (isAbsenceAm || isAbsencePm) {
 			// 欠勤の場合
 			attendanceDto.setAbsenceDays(TimeConst.HOLIDAY_TIMES_HALF);
 		}
+		attendanceDto.setAbsenceHours(absenceHour);
 		attendanceDto.setGrantedLegalCompensationDays(grantedLegalCompensationDays);
 		attendanceDto.setGrantedPrescribedCompensationDays(grantedPrescribedCompensationDays);
 		attendanceDto.setGrantedNightCompensationDays(grantedNightCompensationDays);
@@ -4166,6 +5182,11 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 				dto.setLateReason(TimeConst.CODE_TARDINESS_WHY_INDIVIDU);
 			}
 		}
+		// 遅刻時間が0且つ遅刻理由が個人都合の場合
+		if (lateTime == 0 && TimeConst.CODE_TARDINESS_WHY_INDIVIDU.equals(dto.getLateReason())) {
+			// 遅刻理由を空欄とする
+			dto.setLateReason("");
+		}
 	}
 	
 	/**
@@ -4197,6 +5218,11 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 				// 早退理由がない場合は個人都合とする
 				dto.setLeaveEarlyReason(TimeConst.CODE_LEAVEEARLY_WHY_INDIVIDU);
 			}
+		}
+		// 早退時間が0且つ早退理由が個人都合の場合
+		if (leaveEarlyTime == 0 && TimeConst.CODE_LEAVEEARLY_WHY_INDIVIDU.equals(dto.getLeaveEarlyReason())) {
+			// 早退理由を空欄とする
+			dto.setLeaveEarlyReason("");
 		}
 	}
 	
@@ -4250,6 +5276,8 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 	
 	/**
 	 * 午前休かどうか確認。<br>
+	 * 午前休であるかどうかのみを判断する。<br>
+	 * 半日＋半日で全休となる可能性あるが、全休の場合は勤怠計算が行われないため考慮しない。<br>
 	 * @param requestUtil 申請ユーティリティ
 	 * @return 午前休であればtrue、午前休でなければfalse
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
@@ -4261,14 +5289,21 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 			return true;
 		}
 		// 代休申請
-		if (requestUtil.checkHolidayRangeSubHoliday(requestUtil.getSubHolidayList(true)) == TimeConst.CODE_HOLIDAY_RANGE_AM) {
+		if (requestUtil
+			.checkHolidayRangeSubHoliday(requestUtil.getSubHolidayList(true)) == TimeConst.CODE_HOLIDAY_RANGE_AM) {
 			// 午前休の場合
 			return true;
 		}
-		// 振替休日
-		if (requestUtil.checkHolidayRangeSubstitute(requestUtil.getSubstituteList(true)) == TimeConst.CODE_HOLIDAY_RANGE_AM) {
+		// 振替休日(振替の振替も考慮)
+		if (requestUtil
+			.checkHolidayRangeSubstitute(requestUtil.getSubstituteList(true)) == TimeConst.CODE_HOLIDAY_RANGE_AM) {
 			// 午前休の場合
 			return true;
+		}
+		// 振替休日リストがある場合
+		if (requestUtil.getSubstituteList(true).isEmpty() == false) {
+			// 振替休日（振替の振替も考慮）午前休でない事を確認済
+			return false;
 		}
 		// 振出・休出申請
 		WorkOnHolidayRequestDtoInterface workOnHolidayRequestDto = requestUtil.getWorkOnHolidayDto(true);
@@ -4280,6 +5315,8 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 	
 	/**
 	 * 午後休かどうか確認。<br>
+	 * 午後休であるかどうかのみを判断する。<br>
+	 * 半日＋半日で全休となる可能性あるが、全休の場合は勤怠計算が行われないため考慮しない。<br>
 	 * @param requestUtil 申請ユーティリティ
 	 * @return 午後休であればtrue、午後休でなければfalse
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
@@ -4291,20 +5328,28 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 			return true;
 		}
 		// 代休申請
-		if (requestUtil.checkHolidayRangeSubHoliday(requestUtil.getSubHolidayList(true)) == TimeConst.CODE_HOLIDAY_RANGE_PM) {
+		if (requestUtil
+			.checkHolidayRangeSubHoliday(requestUtil.getSubHolidayList(true)) == TimeConst.CODE_HOLIDAY_RANGE_PM) {
 			// 午前休の場合
 			return true;
 		}
-		// 振替休日
-		if (requestUtil.checkHolidayRangeSubstitute(requestUtil.getSubstituteList(true)) == TimeConst.CODE_HOLIDAY_RANGE_PM) {
+		// 振替休日(振替の振替も考慮)
+		if (requestUtil
+			.checkHolidayRangeSubstitute(requestUtil.getSubstituteList(true)) == TimeConst.CODE_HOLIDAY_RANGE_PM) {
 			// 午前休の場合
 			return true;
+		}
+		// 振替休日リストがある場合
+		if (requestUtil.getSubstituteList(true).isEmpty() == false) {
+			// 振替休日（振替の振替も考慮）午前休でない事を確認済
+			return false;
 		}
 		// 振出・休出申請
 		WorkOnHolidayRequestDtoInterface workOnHolidayRequestDto = requestUtil.getWorkOnHolidayDto(true);
 		if (workOnHolidayRequestDto == null) {
 			return false;
 		}
+		// 午前出勤する場合
 		return workOnHolidayRequestDto.getSubstitute() == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_AM;
 	}
 	
@@ -4372,6 +5417,18 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 					// 有給休暇の場合は使用時間数を加算する
 					paidLeaveHour += dto.getUseHour();
 					paidLeaveHourMap.put(dto.getStartTime(), dto.getEndTime());
+				} else if (isSpecialLeave) {
+					// 特別休暇の場合は使用時間数を加算する
+					specialLeaveHour += dto.getUseHour();
+					specialLeaveHourMap.put(dto.getStartTime(), dto.getEndTime());
+				} else if (isOtherLeave) {
+					// その他休暇の場合は使用時間数を加算する
+					otherLeaveHour += dto.getUseHour();
+					otherLeaveHourMap.put(dto.getStartTime(), dto.getEndTime());
+				} else if (isAbsence) {
+					// 欠勤の場合は使用時間数を加算する
+					absenceHour += dto.getUseHour();
+					absenceHourMap.put(dto.getStartTime(), dto.getEndTime());
 				}
 			}
 		}
@@ -4429,11 +5486,11 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 		List<GoOutDtoInterface> privateGoOutList = goOutReference.getPrivateGoOutList(attendanceDto.getPersonalId(),
 				attendanceDto.getWorkDate());
 		// 分単位休暇Aリストの取得
-		List<GoOutDtoInterface> minutelyHolidayAList = goOutReference.getMinutelyHolidayAList(
-				attendanceDto.getPersonalId(), attendanceDto.getWorkDate());
+		List<GoOutDtoInterface> minutelyHolidayAList = goOutReference
+			.getMinutelyHolidayAList(attendanceDto.getPersonalId(), attendanceDto.getWorkDate());
 		// 分単位休暇Bリストの取得
-		List<GoOutDtoInterface> minutelyHolidayBList = goOutReference.getMinutelyHolidayBList(
-				attendanceDto.getPersonalId(), attendanceDto.getWorkDate());
+		List<GoOutDtoInterface> minutelyHolidayBList = goOutReference
+			.getMinutelyHolidayBList(attendanceDto.getPersonalId(), attendanceDto.getWorkDate());
 		// 日々の自動計算処理
 		attendanceCalc(attendanceDto, restList, publicGoOutList, privateGoOutList, minutelyHolidayAList,
 				minutelyHolidayBList);
@@ -4445,16 +5502,16 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 			List<GoOutDtoInterface> minutelyHolidayAList, List<GoOutDtoInterface> minutelyHolidayBList)
 			throws MospException {
 		// 個人ID・勤務日取得
-		String personalId = attendanceDto.getPersonalId();
-		Date targetDate = attendanceDto.getWorkDate();
+		personalId = attendanceDto.getPersonalId();
+		workDate = attendanceDto.getWorkDate();
 		// 計算基準値設定
 		setCalcInfo(attendanceDto, restList, publicGoOutList, privateGoOutList, minutelyHolidayAList,
 				minutelyHolidayBList);
 		// 申請設定
 		RequestUtilBeanInterface requestUtil = (RequestUtilBeanInterface)createBean(RequestUtilBeanInterface.class);
-		requestUtil.setRequests(attendanceDto.getPersonalId(), attendanceDto.getWorkDate());
+		requestUtil.setRequests(personalId, workDate);
 		// 基本情報取得
-		initAttendanceTotal(attendanceDto.getPersonalId(), attendanceDto.getWorkTypeCode(), requestUtil);
+		initAttendanceTotal(personalId, attendanceDto.getWorkTypeCode(), requestUtil);
 		if (mospParams.hasErrorMessage()) {
 			return;
 		}
@@ -4465,8 +5522,8 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 		// 代休申請日数計算
 		calcSubHolidayRequestDays(requestUtil);
 		// 分単位休暇時間数計算
-		minutelyHolidayADtoList = goOutReference.getMinutelyHolidayAList(personalId, targetDate);
-		minutelyHolidayBDtoList = goOutReference.getMinutelyHolidayBList(personalId, targetDate);
+		minutelyHolidayADtoList = goOutReference.getMinutelyHolidayAList(personalId, workDate);
+		minutelyHolidayBDtoList = goOutReference.getMinutelyHolidayBList(personalId, workDate);
 		calcMinutelyHolidayATime();
 		calcMinutelyHolidayBTime();
 		// 自動計算
@@ -4490,8 +5547,8 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 				new ArrayList<GoOutDtoInterface>(), new ArrayList<GoOutDtoInterface>(),
 				new ArrayList<GoOutDtoInterface>());
 		// 個人ID・勤務日取得
-		String personalId = attendanceDto.getPersonalId();
-		Date workDate = attendanceDto.getWorkDate();
+		personalId = attendanceDto.getPersonalId();
+		workDate = attendanceDto.getWorkDate();
 		// 申請設定
 		RequestUtilBeanInterface requestUtil = (RequestUtilBeanInterface)createBean(RequestUtilBeanInterface.class);
 		requestUtil.setRequests(personalId, workDate);
@@ -4542,8 +5599,9 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 	 * 実始業時刻を日出勤丸め(勤怠設定情報)で丸めた時刻を、実始業時刻に設定する。<br>
 	 * <br>
 	 * @param attendanceDto 勤怠データDTO
+	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
 	 */
-	protected void setActualStartTime(AttendanceDtoInterface attendanceDto) {
+	protected void setActualStartTime(AttendanceDtoInterface attendanceDto) throws MospException {
 		// 実始業時刻確認
 		if (attendanceDto.getActualStartTime() == null) {
 			return;
@@ -4552,6 +5610,17 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 		if (timeSettingDto.getUseScheduledTime() == MospConst.INACTIVATE_FLAG_ON) {
 			return;
 		}
+		
+		// 勤務形態設定情報取得
+		WorkTypeItemDtoInterface workStartDto = workTypeItemReference.getWorkTypeItemInfo(workTypeCode, workDate,
+				TimeConst.CODE_AUTO_BEFORE_OVERWORK);
+		if (workStartDto != null) {
+			// 勤務前残業自動申請が有効である場合
+			if (workStartDto.getPreliminary().equals(String.valueOf(MospConst.INACTIVATE_FLAG_OFF))) {
+				return;
+			}
+		}
+		
 		// 実始業時刻(丸め)(分)を取得
 		int actualStartMinute = getRoundMinute(getDefferenceMinutes(workDate, attendanceDto.getActualStartTime()),
 				timeSettingDto.getRoundDailyStart(), timeSettingDto.getRoundDailyStartUnit());
@@ -4564,7 +5633,7 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 			return;
 		}
 		// 実始業時刻(丸め)が時間単位有給休暇の範囲内の場合
-		if (isIncludedInHourlyPaidHoliday(actualStartTime)) {
+		if (isIncludedInHourlyHoliday(actualStartTime)) {
 			// 実始業時刻に実始業時刻(丸め)を再設定
 			attendanceDto.setActualStartTime(actualStartTime);
 			return;
@@ -4609,7 +5678,7 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 			return;
 		}
 		// 実終業時刻(丸め)が時間単位有給休暇の範囲内の場合
-		if (isIncludedInHourlyPaidHoliday(actualEndTime)) {
+		if (isIncludedInHourlyHoliday(actualEndTime)) {
 			// 実終業時刻に実終業時刻(丸め)を再設定
 			attendanceDto.setActualEndTime(actualEndTime);
 			return;
@@ -4620,14 +5689,35 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 	}
 	
 	/**
-	 * 対象時刻が時間単位有給休暇に含まれるかを確認する。<br>
+	 * 対象時刻が時間単位休暇に含まれるかを確認する。<br>
 	 * @param targetTime 対象時刻
-	 * @return 確認結果(true：時間単位有給休暇に含まれる、false：含まれない)
+	 * @return 確認結果(true：時間単位休暇に含まれる、false：含まれない)
 	 */
-	protected boolean isIncludedInHourlyPaidHoliday(Date targetTime) {
+	protected boolean isIncludedInHourlyHoliday(Date targetTime) {
 		// 時間単位有給休暇情報毎に処理
 		for (Entry<Date, Date> entry : paidLeaveHourMap.entrySet()) {
 			// 対象時刻が時間単位有給休暇に含まれるかを確認
+			if (targetTime.before(entry.getKey()) == false && targetTime.after(entry.getValue()) == false) {
+				return true;
+			}
+		}
+		// 時間単位特別休暇情報毎に処理
+		for (Entry<Date, Date> entry : specialLeaveHourMap.entrySet()) {
+			// 対象時刻が時間単位特別休暇に含まれるかを確認
+			if (targetTime.before(entry.getKey()) == false && targetTime.after(entry.getValue()) == false) {
+				return true;
+			}
+		}
+		// 時間単位その他休暇情報毎に処理
+		for (Entry<Date, Date> entry : otherLeaveHourMap.entrySet()) {
+			// 対象時刻が時間単位その他休暇に含まれるかを確認
+			if (targetTime.before(entry.getKey()) == false && targetTime.after(entry.getValue()) == false) {
+				return true;
+			}
+		}
+		// 時間単位欠勤情報毎に処理
+		for (Entry<Date, Date> entry : absenceHourMap.entrySet()) {
+			// 対象時刻が時間単位欠勤に含まれるかを確認
 			if (targetTime.before(entry.getKey()) == false && targetTime.after(entry.getValue()) == false) {
 				return true;
 			}
@@ -4721,6 +5811,12 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 		}
 		// 法定休日労働又は所定休日労働の場合
 		if (isWorkOnLegalDaysOff() || isWorkOnPrescribedDaysOff()) {
+			if (directStart) {
+				// 直行である場合は規定始業時刻を勤怠計算上の始業時刻とする
+				calculatedStart = regWorkStart;
+				return;
+			}
+			// 直行でない場合
 			// 実際の始業時刻を規定始業時刻とする
 			regWorkStart = actualWorkBegin;
 			// 実際の始業時刻を勤怠計算上の始業時刻とする
@@ -4761,25 +5857,8 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 		if (actualWorkBegin >= regWorkStart) {
 			// 直行の場合
 			if (directStart) {
-				if (isAmHalfDayOff(requestUtil)) {
-					// 前半休である場合は規定始業時刻を勤怠計算上の始業時刻とする
-					calculatedStart = regWorkStart;
-					return;
-				}
-				// 前半休でない場合
-				if (useShort1) {
-					// 時短である場合
-					if (isShort1StartTypePay) {
-						// 有給の場合は時短時間1開始時刻を勤怠計算上の始業時刻とする
-						calculatedStart = short1Start;
-						return;
-					}
-					// 無給の場合は時短時間1終了時刻を勤怠計算上の始業時刻とする
-					calculatedStart = short1End;
-					return;
-				}
-				// 時短でない場合は規定始業時刻を勤怠計算上の始業時刻とする
-				calculatedStart = regWorkStart;
+				// 実始業時刻が規定始業時刻以降で直行の場合の始業時刻(勤怠計算上)を取得
+				calculatedStart = getDirectCalculatedStart(requestUtil);
 				return;
 			}
 			// 直行でない場合
@@ -4800,7 +5879,8 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 			}
 			if (!isPmHalfDayOff(requestUtil)) {
 				// 後半休でない場合
-				if (useShort2 && isShort2StartTypePay && actualWorkBegin > short2Start && actualWorkBegin <= short2End) {
+				if (useShort2 && isShort2StartTypePay && actualWorkBegin > short2Start
+						&& actualWorkBegin <= short2End) {
 					// 時短有給且つ実際の始業時刻が時短時間2開始時刻より後且つ時短時間2終了時刻以前の場合は、
 					// 時短時間2開始時刻を勤怠計算上の始業時刻とする
 					calculatedStart = short2Start;
@@ -4828,6 +5908,10 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 				return;
 			}
 			calculatedStart = regWorkStart;
+			return;
+		}
+		// 拡張クラスの読み出し
+		if (calcCalculatedStartEx(requestUtil) == false) {
 			return;
 		}
 		if (isAmHalfDayOff(requestUtil)) {
@@ -4995,8 +6079,8 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 				minutelyHolidayB += end - start;
 			}
 		}
-		int beforeTime = getbeforeTime(regWorkStart, calculatedStart, rest, publicGoOut, privateGoOut,
-				minutelyHolidayA, minutelyHolidayB);
+		int beforeTime = getbeforeTime(regWorkStart, calculatedStart, rest, publicGoOut, privateGoOut, minutelyHolidayA,
+				minutelyHolidayB);
 		if (beforeTime < 0) {
 			beforeTime = 0;
 		}
@@ -5016,13 +6100,21 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 		for (Entry<Date, Date> entry : paidLeaveHourMap.entrySet()) {
 			roundStartTimeMap.put(entry.getKey(), entry.getValue());
 		}
+		for (Entry<Date, Date> entry : specialLeaveHourMap.entrySet()) {
+			roundStartTimeMap.put(entry.getKey(), entry.getValue());
+		}
+		for (Entry<Date, Date> entry : otherLeaveHourMap.entrySet()) {
+			roundStartTimeMap.put(entry.getKey(), entry.getValue());
+		}
+		for (Entry<Date, Date> entry : absenceHourMap.entrySet()) {
+			roundStartTimeMap.put(entry.getKey(), entry.getValue());
+		}
 		for (Entry<Date, Date> entry : minutelyHolidayAMap.entrySet()) {
 			roundStartTimeMap.put(entry.getKey(), entry.getValue());
 		}
 		for (Entry<Date, Date> entry : minutelyHolidayBMap.entrySet()) {
 			roundStartTimeMap.put(entry.getKey(), entry.getValue());
 		}
-		// 
 		int roundLeaveEnd = actualWorkBegin;
 		// 全丸めマップ毎に処理
 		for (Entry<Date, Date> entry : roundStartTimeMap.entrySet()) {
@@ -5076,7 +6168,8 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 	 * @param requestUtil 申請ユーティリティ
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
-	protected void calcCalculatedEnd(boolean useBetweenTime, RequestUtilBeanInterface requestUtil) throws MospException {
+	protected void calcCalculatedEnd(boolean useBetweenTime, RequestUtilBeanInterface requestUtil)
+			throws MospException {
 		int betweenTime = 0;
 		// 午前休間の前残業の場合
 		if (useBetweenTime && beforeOvertimeDto != null && isAmHalfDayOff(requestUtil)) {
@@ -5098,7 +6191,7 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 				betweenTime = betweenHalfHolidayTime;
 			}
 		}
-		// 実際の終業時刻
+		// 実際の終業時刻(入力された時刻を勤怠設定で丸めたもの)
 		int actualWorkEnd = getRoundMinute(getDefferenceMinutes(workDate, endTime), timeSettingDto.getRoundDailyEnd(),
 				timeSettingDto.getRoundDailyEndUnit());
 		// 分単位全休の場合
@@ -5110,6 +6203,12 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 		}
 		// 法定休日労働又は所定休日労働の場合
 		if (isWorkOnLegalDaysOff() || isWorkOnPrescribedDaysOff()) {
+			if (directEnd) {
+				// 直帰である場合は規定終業時刻を勤怠計算上の終業時刻とする
+				calculatedEnd = regWorkEnd;
+				return;
+			}
+			// 直行でない場合
 			// 実際の終業時刻を勤怠計算上の終業時刻とする
 			calculatedEnd = actualWorkEnd;
 			return;
@@ -5141,26 +6240,8 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 		if (actualWorkEnd <= regWorkEnd) {
 			// 実際の終業時刻が規定終業時刻以前の場合
 			if (directEnd) {
-				// 直帰である場合
-				if (isPmHalfDayOff(requestUtil)) {
-					// 後半休である場合は規定終業時刻を勤怠計算上の終業時刻とする
-					calculatedEnd = regWorkEnd;
-					return;
-				}
-				// 後半休でない場合
-				if (useShort2) {
-					// 時短である場合
-					if (isShort2StartTypePay) {
-						// 有給の場合は時短時間2終了時刻を勤怠計算上の終業時刻とする
-						calculatedEnd = short2End;
-						return;
-					}
-					// 無給の場合は時短時間2始業時刻を勤怠計算上の終業時刻とする
-					calculatedEnd = short2Start;
-					return;
-				}
-				// 時短でない場合は規定終業時刻を勤怠計算上の終業時刻とする
-				calculatedEnd = regWorkEnd;
+				// 実終業時刻が規定終業時刻以前で直帰の場合の終業時刻(勤怠計算上)を取得
+				calculatedEnd = getDirectCalculatedEnd(requestUtil);
 				return;
 			}
 			// 直帰でない場合
@@ -5214,6 +6295,34 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 						whileFlag = true;
 					}
 				}
+				for (Entry<Date, Date> entry : specialLeaveHourMap.entrySet()) {
+					int specialLeaveHourStart = getDefferenceMinutes(workDate, entry.getKey());
+					int specialLeaveHourEnd = getDefferenceMinutes(workDate, entry.getValue());
+					if (paidLeaveStart > specialLeaveHourStart && paidLeaveStart <= specialLeaveHourEnd) {
+						// 時間休開始時刻以後且つ時間休終了時刻より前の場合
+						paidLeaveStart = specialLeaveHourStart;
+						whileFlag = true;
+					}
+				}
+				for (Entry<Date, Date> entry : otherLeaveHourMap.entrySet()) {
+					int otherLeaveHourStart = getDefferenceMinutes(workDate, entry.getKey());
+					int otherLeaveHourEnd = getDefferenceMinutes(workDate, entry.getValue());
+					if (paidLeaveStart > otherLeaveHourStart && paidLeaveStart <= otherLeaveHourEnd) {
+						// 時間休開始時刻以後且つ時間休終了時刻より前の場合
+						paidLeaveStart = otherLeaveHourStart;
+						whileFlag = true;
+					}
+				}
+				for (Entry<Date, Date> entry : absenceHourMap.entrySet()) {
+					int absenceHourStart = getDefferenceMinutes(workDate, entry.getKey());
+					int absenceHourEnd = getDefferenceMinutes(workDate, entry.getValue());
+					if (paidLeaveStart > absenceHourStart && paidLeaveStart <= absenceHourEnd) {
+						// 時間休開始時刻以後且つ時間休終了時刻より前の場合
+						paidLeaveStart = absenceHourStart;
+						whileFlag = true;
+					}
+				}
+				
 			}
 			if (actualWorkEnd > paidLeaveStart) {
 				// 実際の終業時刻が有給休暇開始時刻より後の場合
@@ -5230,6 +6339,12 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 			calculatedEnd = actualWorkEnd;
 			return;
 		}
+		// 拡張クラスの読み出し
+		if (!calcCalculatedEndEx(requestUtil)) {
+			return;
+			
+		}
+		
 		if (isPmHalfDayOff(requestUtil)) {
 			// 午後休の場合
 			// 終業後労働予定時間
@@ -5258,6 +6373,108 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 			return;
 		}
 		calculatedEnd = actualWorkEnd;
+	}
+	
+	/**
+	 * 実始業時刻が規定始業時刻以降で直行の場合の始業時刻(勤怠計算上)を取得する。<br>
+	 * <br>
+	 * 1.前半休の場合：<br>
+	 * 規定始業時刻を返す。<br>
+	 * <br>
+	 * 2.時短時間1(無給)が設定されている場合：<br>
+	 * 時短時間1終了時刻を返す。<br>
+	 * 但し、時短時間1終了時刻と時間単位有給休暇が接する場合は、
+	 * 時間単位有給休暇の終了時刻を返す。<br>
+	 * <br>
+	 * 3.既定始業時刻と時間単位有給休暇が接する場合：<br>
+	 * 時間単位有給休暇の終了時刻を返す。<br>
+	 * <br>
+	 * 4.それ以外の場合：<br>
+	 * 既定始業時刻を返す。<br>
+	 * <br>
+	 * @param requestUtil   申請ユーティリティ
+	 * @return 実終業時刻が規定終業時刻以前で直帰の場合の終業時刻(勤怠計算上)
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	protected int getDirectCalculatedStart(RequestUtilBeanInterface requestUtil) throws MospException {
+		// 1.前半休の場合
+		if (isAmHalfDayOff(requestUtil)) {
+			// 規定始業時刻を取得
+			return regWorkStart;
+		}
+		// 申請エンティティを取得
+		RequestEntity requestEntity = requestUtil.getRequestEntity(personalId, workDate);
+		// 初回連続時間休時刻(開始時刻及び終了時刻)(分)を取得
+		List<Integer> holidayMinuteList = requestEntity.getHourlyHolidayFirstSequenceMinutes();
+		// 2.時短時間1(無給)が設定されている場合
+		if (useShort1 && isShort1StartTypePay == false) {
+			// 時短時間1開始時刻と時間単位有給休暇が接する場合
+			if (holidayMinuteList.isEmpty() == false && holidayMinuteList.get(0) == short1End) {
+				// 時間単位有給休暇の終了時刻を取得
+				return holidayMinuteList.get(1);
+			}
+			// 時短時間1終了時刻を取得
+			return short1End;
+		}
+		// 3.既定始業時刻と時間単位有給休暇が接する場合
+		if (holidayMinuteList.isEmpty() == false && holidayMinuteList.get(0) == regWorkStart) {
+			// 時間単位有給休暇の終了時刻を取得
+			return holidayMinuteList.get(1);
+		}
+		// 4.それ以外の場合
+		// 既定始業時刻を取得
+		return regWorkStart;
+	}
+	
+	/**
+	 * 実終業時刻が規定終業時刻以前で直帰の場合の終業時刻(勤怠計算上)を取得する。<br>
+	 * <br>
+	 * 1.後半休の場合：<br>
+	 * 規定終業時刻を返す。<br>
+	 * <br>
+	 * 2.時短時間2(無給)が設定されている場合：<br>
+	 * 時短時間2開始時刻を返す。<br>
+	 * 但し、時短時間2開始時刻と時間単位有給休暇が接する場合は、
+	 * 時間単位有給休暇の開始時刻を返す。<br>
+	 * <br>
+	 * 3.既定終業時刻と時間単位有給休暇が接する場合：<br>
+	 * 時間単位有給休暇の開始時刻を返す。<br>
+	 * <br>
+	 * 4.それ以外の場合：<br>
+	 * 既定終業時刻を返す。<br>
+	 * <br>
+	 * @param requestUtil   申請ユーティリティ
+	 * @return 実終業時刻が規定終業時刻以前で直帰の場合の終業時刻(勤怠計算上)
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	protected int getDirectCalculatedEnd(RequestUtilBeanInterface requestUtil) throws MospException {
+		// 1.後半休の場合
+		if (isPmHalfDayOff(requestUtil)) {
+			// 規定終業時刻を取得
+			return regWorkEnd;
+		}
+		// 申請エンティティを取得
+		RequestEntity requestEntity = requestUtil.getRequestEntity(personalId, workDate);
+		// 最終連続時間休時刻(開始時刻及び終了時刻)(分)を取得
+		List<Integer> holidayMinuteList = requestEntity.getHourlyHolidayLastSequenceMinutes();
+		// 2.時短時間2(無給)が設定されている場合
+		if (useShort2 && isShort2StartTypePay == false) {
+			// 時短時間2開始時刻と時間単位有給休暇が接する場合
+			if (holidayMinuteList.isEmpty() == false && holidayMinuteList.get(1) == short2Start) {
+				// 時間単位有給休暇の開始時刻を取得
+				return holidayMinuteList.get(0);
+			}
+			// 時短時間1終了時刻を取得
+			return short2Start;
+		}
+		// 3.既定終業時刻と時間単位有給休暇が接する場合
+		if (holidayMinuteList.isEmpty() == false && holidayMinuteList.get(1) == regWorkEnd) {
+			// 時間単位有給休暇の開始時刻を取得
+			return holidayMinuteList.get(0);
+		}
+		// 4.それ以外の場合
+		// 既定終業時刻を取得
+		return regWorkEnd;
 	}
 	
 	/**
@@ -5462,7 +6679,8 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 				}
 				if (isOverlapOvertime) {
 					// 残業休憩と重複している場合
-					addOverlapOvertimeRestErrorMessage(minutelyHolidayANameArray[i], overtimeArray[0], overtimeArray[1]);
+					addOverlapOvertimeRestErrorMessage(minutelyHolidayANameArray[i], overtimeArray[0],
+							overtimeArray[1]);
 				}
 				break;
 			}
@@ -5486,7 +6704,8 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 				}
 				if (isOverlapOvertime) {
 					// 残業休憩と重複している場合
-					addOverlapOvertimeRestErrorMessage(minutelyHolidayBNameArray[i], overtimeArray[0], overtimeArray[1]);
+					addOverlapOvertimeRestErrorMessage(minutelyHolidayBNameArray[i], overtimeArray[0],
+							overtimeArray[1]);
 				}
 				break;
 			}
@@ -5629,87 +6848,9 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 				return dto.getWorkTypeCode();
 			}
 		}
-		List<SubstituteDtoInterface> substituteList = substituteReference.getSubstituteList(personalId, workDate);
-		for (SubstituteDtoInterface substituteDto : substituteList) {
-			WorkflowDtoInterface substituteWorkflowDto = workflowReference.getLatestWorkflowInfo(substituteDto
-				.getWorkflow());
-			if (substituteWorkflowDto == null
-					|| !PlatformConst.CODE_STATUS_COMPLETE.equals(substituteWorkflowDto.getWorkflowStatus())) {
-				continue;
-			}
-			if (substituteDto.getSubstituteRange() == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_ON) {
-				return substituteDto.getSubstituteType();
-			}
-		}
-		DifferenceRequestReferenceBeanInterface differenceReference = (DifferenceRequestReferenceBeanInterface)createBean(
-				DifferenceRequestReferenceBeanInterface.class, workDate);
-		DifferenceRequestDtoInterface differenceRequestDto = differenceReference.findForKeyOnWorkflow(personalId,
-				workDate);
-		if (differenceRequestDto != null) {
-			WorkflowDtoInterface differenceRequestWorkflowDto = workflowReference
-				.getLatestWorkflowInfo(differenceRequestDto.getWorkflow());
-			if (differenceRequestWorkflowDto != null
-					&& PlatformConst.CODE_STATUS_COMPLETE.equals(differenceRequestWorkflowDto.getWorkflowStatus())) {
-				return differenceRequestDto.getDifferenceType();
-			}
-		}
-		Date scheduleWorkDate = workDate;
-//		int scheduleTimesWork = timesWork;
-		// 休日出勤申請からレコードを取得
-		WorkOnHolidayRequestDtoInterface workOnHolidayRequestDto = workOnHolidayReference.findForKeyOnWorkflow(
-				personalId, workDate);
-		if (workOnHolidayRequestDto == null) {
-			if (workflowDto != null) {
-				return dto.getWorkTypeCode();
-			}
-		} else {
-			// ワークフロー番号取得
-			long workflow = workOnHolidayRequestDto.getWorkflow();
-			WorkflowDtoInterface workOnHolidayRequestWorkflowDto = workflowReference.getLatestWorkflowInfo(workflow);
-			// 最新のワークフローを取得でき承認済状態の場合
-			if (workOnHolidayRequestWorkflowDto != null
-					&& PlatformConst.CODE_STATUS_COMPLETE.equals(workOnHolidayRequestWorkflowDto.getWorkflowStatus())) {
-				// 振替申請種類取得
-				int substitute = workOnHolidayRequestDto.getSubstitute();
-				if (substitute == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_ON) {
-					// 振り替える場合
-					// 振替休日データリストを取得
-					List<SubstituteDtoInterface> list = substituteReference.getSubstituteList(workflow);
-					// 振替休日データリスト毎に処理
-					for (SubstituteDtoInterface substituteDto : list) {
-						// 振替日取得
-						scheduleWorkDate = substituteDto.getSubstituteDate();
-//						scheduleTimesWork = substituteDto.getTimesWork();
-						break;
-					}
-				} else if (substitute == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_OFF) {
-					// 振り替えない場合
-					if (TimeConst.CODE_HOLIDAY_LEGAL_HOLIDAY.equals(workOnHolidayRequestDto.getWorkOnHolidayType())) {
-						// 法定休日労働の場合
-						return TimeConst.CODE_WORK_ON_LEGAL_HOLIDAY;
-					} else if (TimeConst.CODE_HOLIDAY_PRESCRIBED_HOLIDAY.equals(workOnHolidayRequestDto
-						.getWorkOnHolidayType())) {
-						// 所定休日労働の場合
-						return TimeConst.CODE_WORK_ON_PRESCRIBED_HOLIDAY;
-					}
-				}
-			}
-		}
-		ApplicationDtoInterface applicationDto = applicationReference.findForPerson(personalId, scheduleWorkDate);
-		if (applicationDto == null) {
-			return null;
-		}
-		ScheduleDtoInterface scheduleDto = scheduleReference.getScheduleInfo(applicationDto.getScheduleCode(),
-				scheduleWorkDate);
-		if (scheduleDto == null) {
-			return null;
-		}
-		ScheduleDateDtoInterface scheduleDateDto = scheduleDateReference.getScheduleDateInfo(
-				scheduleDto.getScheduleCode(), scheduleDto.getActivateDate(), scheduleWorkDate);
-		if (scheduleDateDto == null) {
-			return null;
-		}
-		return scheduleDateDto.getWorkTypeCode();
+		// 勤怠が承認済でない場合
+		ScheduleUtilBeanInterface scheduleUtil = (ScheduleUtilBeanInterface)createBean(ScheduleUtilBeanInterface.class);
+		return scheduleUtil.getScheduledWorkTypeCode(personalId, workDate, true);
 	}
 	
 	@Override
@@ -5777,6 +6918,28 @@ public class AttendanceCalcBean extends TimeBean implements AttendanceCalcBeanIn
 	@Override
 	public int getRoundMinute(int time, int type, int unit) {
 		return super.getRoundMinute(time, type, unit);
+	}
+	
+	/**
+	 * アドオン用の拡張クラス
+	 * @param requestUtil リクエストUtil
+	 * @return 処理続行判断（true:処理継続、false:処理終了）
+	 * @throws MospException インスタンスの生成或いはSQLの実行に失敗した場合
+	 */
+	protected boolean calcCalculatedStartEx(RequestUtilBeanInterface requestUtil) throws MospException {
+		// 継承先で実行されるメソッド
+		return true;
+	}
+	
+	/**
+	 * アドオン用の拡張クラス
+	 * @param requestUtil リクエストUtil
+	 * @return 処理続行判断（true:処理継続、false:処理終了）
+	 * @throws MospException インスタンスの生成或いはSQLの実行に失敗した場合
+	 */
+	protected boolean calcCalculatedEndEx(RequestUtilBeanInterface requestUtil) throws MospException {
+		// 継承先で実行されるメソッド
+		return true;
 	}
 	
 }

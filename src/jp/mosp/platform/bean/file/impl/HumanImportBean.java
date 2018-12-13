@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.base.MospParams;
@@ -38,6 +39,7 @@ import jp.mosp.platform.bean.human.EntranceReferenceBeanInterface;
 import jp.mosp.platform.bean.human.EntranceRegistBeanInterface;
 import jp.mosp.platform.bean.human.HumanArrayRegistBeanInterface;
 import jp.mosp.platform.bean.human.HumanGeneralBeanInterface;
+import jp.mosp.platform.bean.human.HumanGeneralCheckBeanInterface;
 import jp.mosp.platform.bean.human.HumanHistoryRegistBeanInterface;
 import jp.mosp.platform.bean.human.HumanNormalRegistBeanInterface;
 import jp.mosp.platform.bean.human.HumanReferenceBeanInterface;
@@ -46,6 +48,7 @@ import jp.mosp.platform.bean.human.RetirementRegistBeanInterface;
 import jp.mosp.platform.bean.human.impl.HumanRegistBean;
 import jp.mosp.platform.constant.PlatformFileConst;
 import jp.mosp.platform.constant.PlatformMessageConst;
+import jp.mosp.platform.dao.file.ImportFieldDaoInterface;
 import jp.mosp.platform.dto.file.ImportDtoInterface;
 import jp.mosp.platform.dto.file.ImportFieldDtoInterface;
 import jp.mosp.platform.dto.human.EntranceDtoInterface;
@@ -110,6 +113,11 @@ public class HumanImportBean extends HumanRegistBean implements HumanImportBeanI
 	protected HumanGeneralBeanInterface						humanGeneral;
 	
 	/**
+	 * 人事汎用管理チェッククラス<br>
+	 */
+	protected HumanGeneralCheckBeanInterface				humanGeneralCheckBean;
+	
+	/**
 	 * 人事情報リスト。<br>
 	 */
 	protected List<HumanDtoInterface>						humanList;
@@ -140,10 +148,20 @@ public class HumanImportBean extends HumanRegistBean implements HumanImportBeanI
 	protected Map<String, List<HumanArrayDtoInterface>>		arrayMap;
 	
 	/**
+	 * 人事汎用管理区分セット。<br>
+	 */
+	protected HashSet<String>								divisionKeySet;
+	
+	/**
 	 * 人事マスタ情報。<br>
 	 * データ取得時及び登録時に、対象人事マスタ情報を保持しておく。<br>
 	 */
 	protected HumanDtoInterface								human;
+	
+	/**
+	 * インポートフィールド管理DAOインターフェース<br>
+	 */
+	protected ImportFieldDaoInterface						importFieldDao;
 	
 	
 	/**
@@ -175,6 +193,8 @@ public class HumanImportBean extends HumanRegistBean implements HumanImportBeanI
 		humanHistory = (HumanHistoryRegistBeanInterface)createBean(HumanHistoryRegistBeanInterface.class);
 		humanArray = (HumanArrayRegistBeanInterface)createBean(HumanArrayRegistBeanInterface.class);
 		humanGeneral = (HumanGeneralBeanInterface)createBean(HumanGeneralBeanInterface.class);
+		humanGeneralCheckBean = (HumanGeneralCheckBeanInterface)createBean(HumanGeneralCheckBeanInterface.class);
+		importFieldDao = (ImportFieldDaoInterface)createDao(ImportFieldDaoInterface.class);
 	}
 	
 	@Override
@@ -236,6 +256,10 @@ public class HumanImportBean extends HumanRegistBean implements HumanImportBeanI
 		if (mospParams.hasErrorMessage()) {
 			return;
 		}
+		
+		// 人事汎用区分セット準備
+		divisionKeySet = new HashSet<String>();
+		
 		// 登録情報リスト毎に処理
 		for (int i = 0; i < dataList.size(); i++) {
 			// 登録情報取得
@@ -253,9 +277,39 @@ public class HumanImportBean extends HumanRegistBean implements HumanImportBeanI
 			entranceList.add(getEntranceDto(fieldList, data, i));
 			// 人事退職情報取得及び確認
 			retirementList.add(getRetirementDto(fieldList, data, i));
-			// 人事汎用区分情報取得及び確認
+			// 人事汎用区分情報取得
 			getHumanGeneralList(fieldList, data, humanDto);
 		}
+		
+		// 人事汎用管理機能入力チェック
+		for (String divisionKey : divisionKeySet) {
+			//管理表示設定情報を取得
+			ViewConfigProperty viewConfig = mospParams.getProperties().getViewConfigProperties().get(divisionKey);
+			// 画面タイプ取得
+			String type = viewConfig.getType();
+			
+			// 通常
+			if (type.equals(PlatformHumanConst.PRM_HUMAN_DIVISION_TYPE_NORMAL)) {
+				for (Entry<String, List<HumanNormalDtoInterface>> entry : normalMap.entrySet()) {
+					humanGeneralCheckBean.validate(divisionKey, entry.getValue());
+				}
+			}
+			
+			// 履歴
+			if (type.equals(PlatformHumanConst.PRM_HUMAN_DIVISION_TYPE_HISTORY)) {
+				for (Entry<String, List<HumanHistoryDtoInterface>> entry : historyMap.entrySet()) {
+					humanGeneralCheckBean.validate(divisionKey, entry.getValue());
+				}
+			}
+			// 一覧
+			if (type.equals(PlatformHumanConst.PRM_HUMAN_DIVISION_TYPE_ARRAY)) {
+				for (Entry<String, List<HumanArrayDtoInterface>> entry : arrayMap.entrySet()) {
+					humanGeneralCheckBean.validate(divisionKey, entry.getValue());
+				}
+			}
+			
+		}
+		
 	}
 	
 	/**
@@ -267,8 +321,8 @@ public class HumanImportBean extends HumanRegistBean implements HumanImportBeanI
 	 * @return 人事マスタ情報
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
-	protected String getHumanGeneralActivateDate(List<ImportFieldDtoInterface> fieldList, String[] data, String division)
-			throws MospException {
+	protected String getHumanGeneralActivateDate(List<ImportFieldDtoInterface> fieldList, String[] data,
+			String division) throws MospException {
 		// インポートフィールド管理情報毎に処理
 		for (ImportFieldDtoInterface field : fieldList) {
 			// フィールド名配列取得
@@ -287,14 +341,22 @@ public class HumanImportBean extends HumanRegistBean implements HumanImportBeanI
 			}
 			// 有効日取得
 			String date = data[field.getFieldOrder() - 1];
-			// 有効日がある場合
-			if (date != null && date.isEmpty() == false) {
-				return date;
+			// 有効日がない場合
+			if (date == null || date.isEmpty()) {
+				// エラーメッセージ追加
+				mospParams.addErrorMessage(PlatformMessageConst.MSG_HUMAN_GENERAL_NOT_ACTIVATE_DATE,
+						mospParams.getName(division));
+				return null;
 			}
+			// 日付にできない場合
+			if (getDate(date) == null) {
+				String[] rep = { mospParams.getName(division), getNameActivateDate() };
+				mospParams.addErrorMessage(PlatformMessageConst.MSG_HUMAN_GENERAL_IMPORT_NOT_INPUT, rep);
+				return null;
+			}
+			return date;
 		}
-		// エラーメッセージ追加
-		mospParams.addErrorMessage(PlatformMessageConst.MSG_HUMAN_GENERAL_NOT_ACTIVATE_DATE,
-				mospParams.getName(division));
+		
 		return null;
 	}
 	
@@ -453,8 +515,6 @@ public class HumanImportBean extends HumanRegistBean implements HumanImportBeanI
 		Map<String, List<String>> normalRegistedMap = new HashMap<String, List<String>>();
 		Map<String, List<String>> historyRegistedMap = new HashMap<String, List<String>>();
 		Map<String, List<String>> arrayRegistedMap = new HashMap<String, List<String>>();
-		// 人事汎用区分セット準備
-		HashSet<String> divisionImportSet = new HashSet<String>();
 		// インポート情報リスト毎に処理
 		for (ImportFieldDtoInterface field : fieldList) {
 			// 有効日初期化
@@ -468,7 +528,7 @@ public class HumanImportBean extends HumanRegistBean implements HumanImportBeanI
 			// 人事汎用区分取得
 			String division = fieldName[0];
 			// 人事汎用区分セットに追加
-			divisionImportSet.add(division);
+			divisionKeySet.add(division);
 			// 項目名・項目値取得
 			String itemName = fieldName[1];
 			String itemValue = data[field.getFieldOrder() - 1];
@@ -503,7 +563,7 @@ public class HumanImportBean extends HumanRegistBean implements HumanImportBeanI
 			// 履歴の場合
 			if (type.equals(PlatformHumanConst.PRM_HUMAN_DIVISION_TYPE_HISTORY)) {
 				// 人事履歴情報取得及び確認
-				getHistoryDto(itemName, itemValue, division, DateUtility.getDate(activeDate), employeeCode);
+				getHistoryDto(itemName, itemValue, division, getDate(activeDate), employeeCode);
 				// 登録済情報リスト追加
 				List<String> itemHistorylList = historyRegistedMap.get(division);
 				if (itemHistorylList == null || itemHistorylList.isEmpty()) {
@@ -518,7 +578,7 @@ public class HumanImportBean extends HumanRegistBean implements HumanImportBeanI
 			// 一覧の場合
 			if (type.equals(PlatformHumanConst.PRM_HUMAN_DIVISION_TYPE_ARRAY)) {
 				// 人事一覧情報取得及び確認
-				getArrayDto(itemName, itemValue, division, DateUtility.getDate(activeDate), employeeCode);
+				getArrayDto(itemName, itemValue, division, getDate(activeDate), employeeCode);
 				// 登録済情報リスト追加
 				// 登録済情報リスト追加
 				List<String> itemArrayList = arrayRegistedMap.get(division);
@@ -532,46 +592,50 @@ public class HumanImportBean extends HumanRegistBean implements HumanImportBeanI
 				continue;
 			}
 		}
+		
 		// 人事画面区分毎に処理
-		for (String importDivisionName : divisionImportSet) {
+		for (String importDivisionName : divisionKeySet) {
 			//管理表示設定情報を取得
 			ViewConfigProperty viewConfig = mospParams.getProperties().getViewConfigProperties()
 				.get(importDivisionName);
 			// 画面タイプ取得
 			String type = viewConfig.getType();
+			
 			// 通常の場合
 			if (type.equals(PlatformHumanConst.PRM_HUMAN_DIVISION_TYPE_NORMAL)) {
 				// 登録済人事汎用画面区分項目リスト取得
 				List<String> normalList = normalRegistedMap.get(importDivisionName);
 				// 空でない場合
-				if (normalList.isEmpty() == false) {
+				if (normalList != null) {
 					// 余った項目を値を空にして追加
 					getNormalSpereDtoList(normalList, employeeCode, importDivisionName);
 					continue;
 				}
+				
 			}
-			// 通常の場合
+			// 履歴の場合
 			if (type.equals(PlatformHumanConst.PRM_HUMAN_DIVISION_TYPE_HISTORY)) {
 				// 登録済人事汎用画面区分項目リスト取得
 				List<String> historyList = historyRegistedMap.get(importDivisionName);
 				// 空でない場合
-				if (historyList.isEmpty() == false) {
+				if (historyList != null) {
 					// 余った項目を値を空にして追加
 					getHistorySpereDtoList(historyList, employeeCode, importDivisionName);
 					continue;
 				}
 			}
-			// 通常の場合
+			// 一覧の場合
 			if (type.equals(PlatformHumanConst.PRM_HUMAN_DIVISION_TYPE_ARRAY)) {
 				// 登録済人事汎用画面区分項目リスト取得
 				List<String> arrayList = arrayRegistedMap.get(importDivisionName);
 				// 空でない場合
-				if (arrayList.isEmpty() == false) {
+				if (arrayList != null) {
 					// 余った項目を値を空にして追加
 					getArraySpereDtoList(arrayList, employeeCode, importDivisionName);
 					continue;
 				}
 			}
+			
 		}
 	}
 	
@@ -875,7 +939,8 @@ public class HumanImportBean extends HumanRegistBean implements HumanImportBeanI
 		String lastKana = getFieldValue(PlatformFileConst.FIELD_LAST_KANA, fieldList, data);
 		String firstKana = getFieldValue(PlatformFileConst.FIELD_FIRST_KANA, fieldList, data);
 		String workPlaceCode = getFieldValue(PlatformFileConst.FIELD_WORK_PLACE_CODE, fieldList, data);
-		String employmentContractCode = getFieldValue(PlatformFileConst.FIELD_EMPLOYMENT_CONTRACT_CODE, fieldList, data);
+		String employmentContractCode = getFieldValue(PlatformFileConst.FIELD_EMPLOYMENT_CONTRACT_CODE, fieldList,
+				data);
 		String sectionCode = getFieldValue(PlatformFileConst.FIELD_SECTION_CODE, fieldList, data);
 		String positionCode = getFieldValue(PlatformFileConst.FIELD_POSITION_CODE, fieldList, data);
 		// 人事マスタ情報に登録情報の内容を設定(nullの場合は設定しない)
@@ -1004,6 +1069,7 @@ public class HumanImportBean extends HumanRegistBean implements HumanImportBeanI
 		if (list == null || list.isEmpty()) {
 			return;
 		}
+		
 		// 人事通常情報リスト毎に処理
 		for (HumanNormalDtoInterface dto : list) {
 			// 人事退職情報確認
@@ -1087,5 +1153,13 @@ public class HumanImportBean extends HumanRegistBean implements HumanImportBeanI
 			// 人事通常情報登録
 			humanArray.insert(dto);
 		}
+	}
+	
+	@Override
+	public boolean isExistLikeFieldName(String importCode, String[] aryFieldName) throws MospException {
+		List<ImportFieldDtoInterface> list = importFieldDao.findLikeStartNameList(importCode, aryFieldName);
+		list = list == null ? new ArrayList<ImportFieldDtoInterface>() : list;
+		
+		return list.isEmpty() ? false : true;
 	}
 }

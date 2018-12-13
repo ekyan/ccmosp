@@ -17,6 +17,7 @@
  */
 package jp.mosp.platform.bean.human;
 
+import java.util.LinkedHashMap;
 import java.util.Set;
 
 import jp.mosp.framework.base.MospException;
@@ -55,9 +56,11 @@ public interface HumanNormalRegistBeanInterface {
 	 * @param division 人事汎用管理区分
 	 * @param viewKey 人事汎用管理表示区分
 	 * @param personalId 個人ID
+	 * @param map 識別IDマップ
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
-	void regist(String division, String viewKey, String personalId) throws MospException;
+	void regist(String division, String viewKey, String personalId, LinkedHashMap<String, Long> map)
+			throws MospException;
 	
 	/**
 	 * 登録を行う。
@@ -75,15 +78,6 @@ public interface HumanNormalRegistBeanInterface {
 	void delete(HumanNormalDtoInterface dto) throws MospException;
 	
 	/**
-	 * 論理削除を行う。<br>
-	 * @param division 人事汎用管理区分
-	 * @param viewKey 人事汎用管理表示区分
-	 * @param personalId 個人ID
-	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
-	 */
-	void delete(String division, String viewKey, String personalId) throws MospException;
-	
-	/**
 	 * 未使用管理項目の論理削除を行う。<br>
 	 * @param divisions 人事汎用管理区分
 	 * @param viewKey 人事汎用管理表示区分
@@ -99,5 +93,16 @@ public interface HumanNormalRegistBeanInterface {
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
 	void validate(HumanNormalDtoInterface dto, Integer row) throws MospException;
+	
+	/**
+	 * 論理削除を行う。<br>
+	 * @param division 人事汎用管理区分
+	 * @param viewKey 人事汎用管理表示区分
+	 * @param personalId 個人ID
+	 * @param map レコード識別ID
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 */
+	void delete(String division, String viewKey, String personalId, LinkedHashMap<String, Long> map)
+			throws MospException;
 	
 }

@@ -24,7 +24,29 @@
  */
 function onLoadExtra() {
 	if (modeCardEdit == MODE_CARD_EDIT_INSERT) {
-		setDisabled("btnRegist", true);
+		setReadOnly("btnRegist", true);
+	}
+}
+
+var MSG_RELEASE = "承認解除申請" ;
+
+/**
+ * 入力チェックを行った後、更新系確認メッセージを出し、リクエストを送信する。<br>
+ * データ登録、更新時等に用いる。<br>
+ * @param event          イベントオブジェクト
+ * @param validateTarget 入力チェック対象(null：チェックを行わない、""：全体をチェック)
+ * @param objExtraCheck  追加チェック関数オブジェクト(null：追加チェック無し)
+ * @param cmd            コマンド
+ * @return 無し
+ */
+function submitRegist(event, validateTarget, objExtraCheck, cmd) {
+	// 入力チェック
+	if (validate(validateTarget, objExtraCheck, event)) {
+		// 更新系確認メッセージ
+		if (confirm(getMessage(MSG_REGIST_CONFIRMATION, MSG_RELEASE))) {
+			// リクエスト送信
+			doSubmit(document.form, cmd);
+		}
 	}
 }
 

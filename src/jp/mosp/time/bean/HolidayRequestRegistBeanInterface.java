@@ -50,15 +50,6 @@ public interface HolidayRequestRegistBeanInterface {
 	void update(HolidayRequestDtoInterface dto) throws MospException;
 	
 	/**
-	 * 一括更新処理を行う。<br>
-	 * @param idArray 対象レコード識別ID配列
-	 * @return 午前休又は午後休が含まれる場合はtrue、そうでない場合はfalse
-	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
-	 */
-	@Deprecated
-	boolean update(long[] idArray) throws MospException;
-	
-	/**
 	 * 登録処理を行う。<br>
 	 * @param dto 対象DTO
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
@@ -103,7 +94,7 @@ public interface HolidayRequestRegistBeanInterface {
 	/**
 	 * 下書時の確認処理を行う。<br>
 	 * @param dto 対象DTO
-	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合 
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
 	void checkDraft(HolidayRequestDtoInterface dto) throws MospException;
 	
@@ -148,47 +139,6 @@ public interface HolidayRequestRegistBeanInterface {
 	void checkCancel(HolidayRequestDtoInterface dto);
 	
 	/**
-	 * 申請時の入力チェック。休暇申請の重複チェック。<br>
-	 * <p>
-	 * 同日中に同じ残業区分が申請されている場合、エラーメッセージを設定する。
-	 * </p>
-	 * @param dto 対象DTO
-	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
-	 */
-	@Deprecated
-	void checkHolidayOverlap(HolidayRequestDtoInterface dto) throws MospException;
-	
-	/**
-	 * 申請時の入力チェック。他の申請チェック。<br>
-	 * <p>
-	 * 申請年月日に他の申請日が行われている場合、エラーメッセージを設定する。
-	 * </p>
-	 * @param dto 対象DTO
-	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
-	 */
-	@Deprecated
-	void checkRequest(HolidayRequestDtoInterface dto) throws MospException;
-	
-	/**
-	 * 有効日設定時の入力チェック。他の申請チェック。<br>
-	 * @param dto 対象DTO
-	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
-	 */
-	@Deprecated
-	void checkRequestForSetActivationDate(HolidayRequestDtoInterface dto) throws MospException;
-	
-	/**
-	 * 申請時の入力チェック。勤怠の申請チェック。<br>
-	 * <p>
-	 * 勤怠が申請されている場合、エラーメッセージを設定する。
-	 * </p>
-	 * @param dto 対象DTO
-	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
-	 */
-	@Deprecated
-	void checkAttendance(HolidayRequestDtoInterface dto) throws MospException;
-	
-	/**
 	 * 申請時の入力チェック。取得期限チェック。<br>
 	 * @param dto 対象DTO
 	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
@@ -200,8 +150,9 @@ public interface HolidayRequestRegistBeanInterface {
 	 * @param dto 対象DTO
 	 * @param targetDate 対象日
 	 * @param workTypeCode 勤務形態コード
+	 * @throws  MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
 	 */
-	void checkWorkType(HolidayRequestDtoInterface dto, Date targetDate, String workTypeCode);
+	void checkWorkType(HolidayRequestDtoInterface dto, Date targetDate, String workTypeCode) throws MospException;
 	
 	/**
 	 * 勤務形態チェック。
@@ -213,32 +164,11 @@ public interface HolidayRequestRegistBeanInterface {
 	void checkWorkType(Date startDate, Date endDate, Date targetDate, String workTypeCode);
 	
 	/**
-	 * 法定休日かどうか確認。
-	 * @param workTypeCode 勤務形態コード
-	 * @return 法定休日であればtrue、法定休日でなければfalse
+	 * 休暇申請情報をDTOに設定する。<br>
+	 * @param dto 対象DTO
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
-	boolean isLegalDaysOff(String workTypeCode);
-	
-	/**
-	 * 所定休日かどうか確認。<br>
-	 * @param workTypeCode 勤務形態コード
-	 * @return 所定休日であればtrue、所定休日でなければfalse
-	 */
-	boolean isPrescribedDaysOff(String workTypeCode);
-	
-	/**
-	 * 法定休日労働かどうか確認。<br>
-	 * @param workTypeCode 勤務形態コード
-	 * @return 法定休日労働であればtrue、法定休日労働でなければfalse
-	 */
-	boolean isWorkOnLegalDaysOff(String workTypeCode);
-	
-	/**
-	 * 所定休日労働かどうか確認。<br>
-	 * @param workTypeCode 勤務形態コード
-	 * @return 所定休日労働であればtrue、所定休日労働でなければfalse
-	 */
-	boolean isWorkOnPrescribedDaysOff(String workTypeCode);
+	void setHolidayRequest(HolidayRequestDtoInterface dto) throws MospException;
 	
 	/**
 	 * カレンダ勤務形態コードを取得する。<br>

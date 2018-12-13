@@ -25,12 +25,7 @@ import java.util.Map;
 import jp.mosp.framework.base.MospException;
 import jp.mosp.platform.constant.PlatformConst;
 import jp.mosp.platform.dao.human.ConcurrentDaoInterface;
-import jp.mosp.platform.dao.human.EntranceDaoInterface;
-import jp.mosp.platform.dao.human.HumanDaoInterface;
-import jp.mosp.platform.dao.human.HumanHistoryDaoInterface;
 import jp.mosp.platform.dao.human.HumanSearchDaoInterface;
-import jp.mosp.platform.dao.human.RetirementDaoInterface;
-import jp.mosp.platform.dao.human.SuspensionDaoInterface;
 import jp.mosp.platform.dao.system.EmploymentContractDaoInterface;
 import jp.mosp.platform.dao.system.PositionDaoInterface;
 import jp.mosp.platform.dao.system.SectionDaoInterface;
@@ -44,173 +39,139 @@ import jp.mosp.platform.dto.human.HumanDtoInterface;
 public class HumanSearchDao extends PfmHumanDao implements HumanSearchDaoInterface {
 	
 	/**
-	 * 人事マスタDAOクラス(サブクエリ等取得用)。
-	 */
-	HumanDaoInterface			humanDao;
-	
-	/**
-	 * 人事汎用履歴情報DAOクラス(サブクエリ等取得用)。
-	 */
-	HumanHistoryDaoInterface	humanHistoryDao;
-	
-	/**
 	 * 所属マスタDAOクラス(サブクエリ等取得用)。
 	 */
-	SectionDaoInterface			sectionDao;
+	protected SectionDaoInterface		sectionDao;
 	
 	/**
 	 * 職位マスタDAOクラス(サブクエリ等取得用)。
 	 */
-	PositionDaoInterface		positionDao;
+	protected PositionDaoInterface		positionDao;
 	
 	/**
 	 * 人事兼務情報DAOクラス(サブクエリ等取得用)。
 	 */
-	ConcurrentDaoInterface		concurrentDao;
+	protected ConcurrentDaoInterface	concurrentDao;
 	
-	/**
-	 * 人事休職情報DAOクラス(サブクエリ等取得用)。
-	 */
-	SuspensionDaoInterface		suspensionDao;
-	
-	/**
-	 * 人事退職情報DAOクラス(サブクエリ等取得用)。
-	 */
-	RetirementDaoInterface		retirementDao;
-	
-	/**
-	 * 人事入社情報DAOクラス(サブクエリ等取得用)。
-	 */
-	EntranceDaoInterface		entranceDao;
 	/**
 	 * ユーザマスタDAOクラス(サブクエリ等取得用)。
 	 */
-	UserMasterDaoInterface		userDao;
+	protected UserMasterDaoInterface	userDao;
 	
 	/**
 	 * 検索条件(対象日)。
 	 */
-	private Date				targetDate;
+	protected Date						targetDate;
 	
 	/**
 	 * 検索条件(社員コード)。
 	 */
-	private String				employeeCode;
+	protected String					employeeCode;
 	
 	/**
 	 * 検索条件(from社員コード)。
 	 */
-	private String				fromEmployeeCode;
+	protected String					fromEmployeeCode;
 	
 	/**
 	 * 検索条件(to社員コード)。
 	 */
-	private String				toEmployeeCode;
+	protected String					toEmployeeCode;
 	
 	/**
 	 * 検索条件(社員コード検索条件区分)。
 	 */
-	private String				employeeCodeType;
+	protected String					employeeCodeType;
 	
 	/**
 	 * 検索条件(姓)。
 	 */
-	private String				lastName;
+	protected String					lastName;
 	
 	/**
 	 * 検索条件(姓検索条件区分)。
 	 */
-	private String				lastNameType;
+	protected String					lastNameType;
 	
 	/**
 	 * 検索条件(名)。
 	 */
-	private String				firstName;
+	protected String					firstName;
 	
 	/**
 	 * 検索条件(名検索条件区分)。
 	 */
-	private String				firstNameType;
+	protected String					firstNameType;
 	
 	/**
 	 * 検索条件(姓(カナ))。
 	 */
-	private String				lastKana;
+	protected String					lastKana;
 	
 	/**
 	 * 検索条件(姓(カナ)検索条件区分)。
 	 */
-	private String				lastKanaType;
+	protected String					lastKanaType;
 	
 	/**
 	 * 検索条件(名(カナ))。
 	 */
-	private String				firstKana;
+	protected String					firstKana;
 	
 	/**
 	 * 検索条件(名(カナ)検索条件区分)。
 	 */
-	private String				firstKanaType;
+	protected String					firstKanaType;
 	
 	/**
 	 * 検索条件(氏名)。
 	 */
-	private String				employeeName;
+	protected String					employeeName;
 	
 	/**
 	 * 検索条件(勤務地コード)。
 	 */
-	private String				workPlaceCode;
+	protected String					workPlaceCode;
 	
 	/**
 	 * 検索条件(雇用契約コード)。
 	 */
-	private String				employmentContractCode;
+	protected String					employmentContractCode;
 	
 	/**
 	 * 検索条件(所属コード)。
 	 */
-	private String				sectionCode;
+	protected String					sectionCode;
 	
 	/**
 	 * 検索条件(下位所属要否)。
 	 */
-	private boolean				needLowerSection;
+	protected boolean					needLowerSection;
 	
 	/**
 	 * 検索条件(職位コード)。
 	 */
-	private String				positionCode;
+	protected String					positionCode;
+	
+	/**
+	 * 検索条件(職位等級範囲)。
+	 */
+	protected String					positionGradeRange;
 	
 	/**
 	 * 検索条件(兼務要否)。
 	 */
-	private boolean				needConcurrent;
-	
-	/**
-	 * 検索条件(休退職区分)。
-	 */
-	private String				employeeState;
+	protected boolean					needConcurrent;
 	
 	/**
 	 * 検索条件(不要個人ID)。
 	 */
-	private String				unnecessaryPersonalId;
+	protected String					unnecessaryPersonalId;
 	
 	/**
 	 * 検索条件(承認権限要否)。
 	 */
-	private boolean				needApproverRole;
-	
-	/**
-	 * 検索条件(期間開始日)。
-	 */
-	private Date				startDate;
-	
-	/**
-	 * 検索条件(期間終了日)。
-	 */
-	private Date				endDate;
+	protected boolean					needApproverRole;
 	
 	
 	/**
@@ -254,15 +215,10 @@ public class HumanSearchDao extends PfmHumanDao implements HumanSearchDaoInterfa
 	 */
 	protected void setDaoInstances() throws MospException {
 		// インスタンス生成(サブクエリ等を取得するためのDAOクラス生成)
-		humanDao = (HumanDaoInterface)loadDao(HumanDaoInterface.class);
-		humanHistoryDao = (HumanHistoryDaoInterface)loadDao(HumanHistoryDaoInterface.class);
 		sectionDao = (SectionDaoInterface)loadDao(SectionDaoInterface.class);
 		positionDao = (PositionDaoInterface)loadDao(PositionDaoInterface.class);
 		concurrentDao = (ConcurrentDaoInterface)loadDao(ConcurrentDaoInterface.class);
-		suspensionDao = (SuspensionDaoInterface)loadDao(SuspensionDaoInterface.class);
-		retirementDao = (RetirementDaoInterface)loadDao(RetirementDaoInterface.class);
 		userDao = (UserMasterDaoInterface)loadDao(UserMasterDaoInterface.class);
-		entranceDao = (EntranceDaoInterface)loadDao(EntranceDaoInterface.class);
 	}
 	
 	/**
@@ -289,12 +245,10 @@ public class HumanSearchDao extends PfmHumanDao implements HumanSearchDaoInterfa
 		sectionCode = getSearchParam(param, HumanSearchDaoInterface.SEARCH_SECTION_CODE);
 		needLowerSection = getSearchBoolParam(param, HumanSearchDaoInterface.SEARCH_NEED_LOWER_SECTION);
 		positionCode = getSearchParam(param, HumanSearchDaoInterface.SEARCH_POSITION_CODE);
+		positionGradeRange = getSearchParam(param, SEARCH_POSITION_GRADE_RANGE);
 		needConcurrent = getSearchBoolParam(param, HumanSearchDaoInterface.SEARCH_NEED_CONCURRENT);
-		employeeState = getSearchParam(param, HumanSearchDaoInterface.SEARCH_EMPLOYEE_STATE);
 		unnecessaryPersonalId = getSearchParam(param, HumanSearchDaoInterface.SEARCH_UNNECESSARY_PERSONAL_ID);
 		needApproverRole = getSearchBoolParam(param, HumanSearchDaoInterface.SEARCH_NEED_APPROVER_ROLE);
-		startDate = (Date)param.get(HumanSearchDaoInterface.SEARCH_START_DATE);
-		endDate = (Date)param.get(HumanSearchDaoInterface.SEARCH_END_DATE);
 	}
 	
 	/**
@@ -389,17 +343,35 @@ public class HumanSearchDao extends PfmHumanDao implements HumanSearchDaoInterfa
 			sb.append(rightParenthesis());
 		}
 		// 職位条件SQL追加
-		if (positionCode.isEmpty() == false) {
-			sb.append(and());
-			sb.append(leftParenthesis());
-			// 人事マスタの職位
-			sb.append(equal(COL_POSITION_CODE));
-			// 人事兼務情報の職位
-			if (needConcurrent) {
-				sb.append(or());
-				sb.append(concurrentDao.getQueryForPosition(COL_PERSONAL_ID));
+		if (positionGradeRange.isEmpty()) {
+			if (!positionCode.isEmpty()) {
+				sb.append(and());
+				sb.append(leftParenthesis());
+				// 人事マスタの職位
+				sb.append(equal(COL_POSITION_CODE));
+				// 人事兼務情報の職位
+				if (needConcurrent) {
+					sb.append(or());
+					sb.append(concurrentDao.getQueryForPosition(COL_PERSONAL_ID));
+				}
+				sb.append(rightParenthesis());
 			}
-			sb.append(rightParenthesis());
+		} else {
+			boolean greaterEqual = "1".equals(positionGradeRange);
+			if (!positionCode.isEmpty()) {
+				sb.append(and());
+				sb.append(leftParenthesis());
+				sb.append(COL_POSITION_CODE);
+				sb.append(in());
+				sb.append(leftParenthesis());
+				sb.append(positionDao.getQueryForPositionGrade(greaterEqual));
+				sb.append(rightParenthesis());
+				if (needConcurrent) {
+					sb.append(or());
+					sb.append(concurrentDao.getQueryForPositionGrade(greaterEqual, COL_PERSONAL_ID));
+				}
+				sb.append(rightParenthesis());
+			}
 		}
 		// 不要個人ID条件SQL追加
 		if (unnecessaryPersonalId.isEmpty() == false) {
@@ -411,8 +383,6 @@ public class HumanSearchDao extends PfmHumanDao implements HumanSearchDaoInterfa
 			sb.append(userDao.getQueryForApprover(COL_PERSONAL_ID));
 			sb.append(positionDao.getQueryForApprover(COL_POSITION_CODE));
 		}
-		// 休退職区分条件SQL追加
-		sb.append(getQueryForEmployeeState());
 		// 範囲条件SQL追加
 		sb.append(getQueryForRange(param, COL_PERSONAL_ID));
 		// その他条件SQL追加
@@ -494,11 +464,20 @@ public class HumanSearchDao extends PfmHumanDao implements HumanSearchDaoInterfa
 			}
 		}
 		// 職位検索条件設定
-		if (positionCode.isEmpty() == false) {
-			setParam(index++, positionCode);
-			// 人事兼務情報の職位
-			if (needConcurrent) {
-				index = concurrentDao.setParamsForPosition(index, positionCode, targetDate, ps);
+		if (positionGradeRange.isEmpty()) {
+			if (!positionCode.isEmpty()) {
+				setParam(index++, positionCode);
+				// 人事兼務情報の職位
+				if (needConcurrent) {
+					index = concurrentDao.setParamsForPosition(index, positionCode, targetDate, ps);
+				}
+			}
+		} else {
+			if (!positionCode.isEmpty()) {
+				index = positionDao.setParamsForPositionGrande(index, positionCode, targetDate, ps);
+				if (needConcurrent) {
+					index = concurrentDao.setParamsForPositionGrade(index, positionCode, targetDate, ps);
+				}
 			}
 		}
 		// 不要個人ID条件パラメータ追加
@@ -510,107 +489,8 @@ public class HumanSearchDao extends PfmHumanDao implements HumanSearchDaoInterfa
 			index = userDao.setParamsForApprover(index, targetDate, ps);
 			index = positionDao.setParamsForApprover(index, targetDate, ps);
 		}
-		// 休退職区分検索条件設定
-		setParamsForEmployeeState();
 		// 範囲検索条件パラメータ設定
 		setParamsForRange(param);
-	}
-	
-	/**
-	 * 休退職区分条件SQLを作成する。<br>
-	 * @return 休退職区分条件SQL
-	 */
-	protected String getQueryForEmployeeState() {
-		// SQL作成準備
-		StringBuffer sb = new StringBuffer();
-		// 休退職区分条件確認
-		if (employeeState.isEmpty()) {
-			return sb.toString();
-		}
-		if (employeeState.equals(PlatformConst.EMPLOYEE_STATE_PRESENCE)) {
-			// 在職
-			sb.append(and());
-			sb.append(COL_PERSONAL_ID);
-			sb.append(in());
-			sb.append(leftParenthesis());
-			sb.append(entranceDao.getQueryForEntrancedPerson());
-			sb.append(rightParenthesis());
-			sb.append(and());
-			sb.append(COL_PERSONAL_ID);
-			sb.append(notIn());
-			sb.append(leftParenthesis());
-			sb.append(retirementDao.getQueryForRetiredPerson());
-			sb.append(rightParenthesis());
-			sb.append(and());
-			sb.append(COL_PERSONAL_ID);
-			sb.append(notIn());
-			sb.append(leftParenthesis());
-			sb.append(suspensionDao.getQueryForSuspendedPerson());
-			sb.append(rightParenthesis());
-		} else if (employeeState.equals(PlatformConst.EMPLOYEE_STATE_SUSPEND)) {
-			// 休職
-			sb.append(and());
-			sb.append(COL_PERSONAL_ID);
-			sb.append(in());
-			sb.append(leftParenthesis());
-			sb.append(suspensionDao.getQueryForSuspendedPerson());
-			sb.append(rightParenthesis());
-		} else if (employeeState.equals(PlatformConst.EMPLOYEE_STATE_RETIRE)) {
-			// 退職
-			sb.append(and());
-			sb.append(COL_PERSONAL_ID);
-			sb.append(in());
-			sb.append(leftParenthesis());
-			sb.append(retirementDao.getQueryForRetiredPerson());
-			sb.append(rightParenthesis());
-		}
-		return sb.toString();
-	}
-	
-	/**
-	 * フリーワード検索条件パラメータを設定する。<br>
-	 * 設定したパラメータの数だけ、パラメータインデックスが加算される。<br>
-	 * @throws MospException SQL例外が発生した場合
-	 */
-	protected void setParamsForEmployeeState() throws MospException {
-		// 休退職区分条件確認
-		if (employeeState.isEmpty()) {
-			return;
-		}
-		if (employeeState.equals(PlatformConst.EMPLOYEE_STATE_PRESENCE)) {
-			// 在職
-			if (startDate != null && endDate != null) {
-				setParam(index++, endDate);
-				setParam(index++, startDate);
-				setParam(index++, startDate);
-				setParam(index++, endDate);
-				setParam(index++, endDate);
-			} else {
-				setParam(index++, targetDate);
-				setParam(index++, targetDate);
-				setParam(index++, targetDate);
-				setParam(index++, targetDate);
-				setParam(index++, targetDate);
-			}
-		} else if (employeeState.equals(PlatformConst.EMPLOYEE_STATE_SUSPEND)) {
-			// 休職
-			if (startDate != null && endDate != null) {
-				setParam(index++, startDate);
-				setParam(index++, endDate);
-				setParam(index++, endDate);
-			} else {
-				setParam(index++, targetDate);
-				setParam(index++, targetDate);
-				setParam(index++, targetDate);
-			}
-		} else if (employeeState.equals(PlatformConst.EMPLOYEE_STATE_RETIRE)) {
-			// 退職
-			if (endDate != null) {
-				setParam(index++, startDate);
-			} else {
-				setParam(index++, targetDate);
-			}
-		}
 	}
 	
 	/**

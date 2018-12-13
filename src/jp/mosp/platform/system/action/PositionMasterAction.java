@@ -573,12 +573,12 @@ public class PositionMasterAction extends PlatformSystemAction {
 		PositionMasterVo vo = (PositionMasterVo)mospParams.getVo();
 		dto.setPfmPositionId(vo.getRecordId());
 		dto.setActivateDate(getEditActivateDate());
-		dto.setInactivateFlag(Integer.valueOf(vo.getPltEditInactivate()));
+		dto.setInactivateFlag(getInt(vo.getPltEditInactivate()));
 		dto.setPositionCode(vo.getTxtEditPositionCode());
 		dto.setPositionName(vo.getTxtEditPositionName());
 		dto.setPositionAbbr(vo.getTxtEditPositionAbbr());
-		dto.setPositionGrade(Integer.valueOf(vo.getTxtEditPositionGrade()));
-		dto.setPositionLevel(Integer.valueOf(vo.getTxtEditPositionLevel()));
+		dto.setPositionGrade(getInt(vo.getTxtEditPositionGrade()));
+		dto.setPositionLevel(getInt(vo.getTxtEditPositionLevel()));
 	}
 	
 	/**

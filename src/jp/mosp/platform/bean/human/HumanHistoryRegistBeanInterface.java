@@ -18,6 +18,7 @@
 package jp.mosp.platform.bean.human;
 
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.Set;
 
 import jp.mosp.framework.base.MospException;
@@ -92,6 +93,14 @@ public interface HumanHistoryRegistBeanInterface {
 	void regist(HumanHistoryDtoInterface dto) throws MospException;
 	
 	/**
+	 * 未使用管理項目の論理削除を行う。<br>
+	 * @param divisions 人事汎用管理区分
+	 * @param viewKey 人事汎用管理表示区分
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 */
+	void deleteDeadInputItem(Set<String> divisions, String viewKey) throws MospException;
+	
+	/**
 	 * 履歴編集を行う。【人事汎用】<br>
 	 * 履歴更新を行う。<br>
 	 * MosP処理情報からリクエストパラメータ群を取得し、人事汎用通常情報を登録する。<br>
@@ -100,26 +109,19 @@ public interface HumanHistoryRegistBeanInterface {
 	 * @param viewKey 人事汎用管理表示区分
 	 * @param personalId 個人ID
 	 * @param activeDate 有効日
+	 * @param recordsMap レコード識別ID
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
-	void update(String division, String viewKey, String personalId, Date activeDate) throws MospException;
+	void update(String division, String viewKey, String personalId, Date activeDate,
+			LinkedHashMap<String, Long> recordsMap) throws MospException;
 	
 	/**
 	 * 論理削除を行う。【人事汎用】<br>
 	 * @param division 人事汎用管理区分
 	 * @param viewKey 人事汎用管理表示区分
-	 * @param personalId 個人ID
-	 * @param targetDate 削除対象有効日
+	 * @param recordsMap レコード識別IDマップ（K:項目ID,V：レコード識別ID）
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
-	void delete(String division, String viewKey, String personalId, Date targetDate) throws MospException;
-	
-	/**
-	 * 未使用管理項目の論理削除を行う。<br>
-	 * @param divisions 人事汎用管理区分
-	 * @param viewKey 人事汎用管理表示区分
-	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
-	 */
-	void deleteDeadInputItem(Set<String> divisions, String viewKey) throws MospException;
+	void delete(String division, String viewKey, LinkedHashMap<String, Long> recordsMap) throws MospException;
 	
 }

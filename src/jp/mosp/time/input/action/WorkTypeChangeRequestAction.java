@@ -375,8 +375,8 @@ public class WorkTypeChangeRequestAction extends TimeAction {
 			startMonth = requestMonth;
 			endMonth = requestMonth;
 		}
-		CutoffDtoInterface startMonthCutoffDto = cutoffUtil
-			.getCutoffForPersonalId(vo.getPersonalId(), year, startMonth);
+		CutoffDtoInterface startMonthCutoffDto = cutoffUtil.getCutoffForPersonalId(vo.getPersonalId(), year,
+				startMonth);
 		if (mospParams.hasErrorMessage()) {
 			// 検索結果無しメッセージ設定
 			addNoSearchResultMessage();
@@ -415,7 +415,7 @@ public class WorkTypeChangeRequestAction extends TimeAction {
 		// ソート
 		sort();
 		// 検索結果確認
-		if (list.isEmpty()) {
+		if (list.isEmpty() && mospParams.getCommand().equals(CMD_SEARCH)) {
 			// 検索結果無しメッセージ設定
 			addNoSearchResultMessage();
 		}
@@ -586,8 +586,8 @@ public class WorkTypeChangeRequestAction extends TimeAction {
 	protected void setEditUpdateMode(Date requestDate) throws MospException {
 		// VO取得
 		WorkTypeChangeRequestVo vo = (WorkTypeChangeRequestVo)mospParams.getVo();
-		WorkTypeChangeRequestDtoInterface dto = timeReference().workTypeChangeRequest().findForKeyOnWorkflow(
-				vo.getPersonalId(), requestDate);
+		WorkTypeChangeRequestDtoInterface dto = timeReference().workTypeChangeRequest()
+			.findForKeyOnWorkflow(vo.getPersonalId(), requestDate);
 		// 存在確認
 		checkSelectedDataExist(dto);
 		// VOにセット
@@ -680,9 +680,7 @@ public class WorkTypeChangeRequestAction extends TimeAction {
 					PlatformConst.WORKFLOW_TYPE_TIME);
 			if (workflowDto != null) {
 				// ワークフローコメント登録
-				platform().workflowCommentRegist().addComment(
-						workflowDto,
-						mospParams.getUser().getPersonalId(),
+				platform().workflowCommentRegist().addComment(workflowDto, mospParams.getUser().getPersonalId(),
 						mospParams.getProperties().getMessage(PlatformMessageConst.MSG_PROCESS_SUCCEED,
 								new String[]{ mospParams.getName("WorkPaper") }));
 				// ワークフロー番号セット
@@ -864,9 +862,7 @@ public class WorkTypeChangeRequestAction extends TimeAction {
 		workflowDto = platform().workflowRegist().withdrawn(workflowDto);
 		if (workflowDto != null) {
 			// ワークフローコメント登録
-			platform().workflowCommentRegist().addComment(
-					workflowDto,
-					mospParams.getUser().getPersonalId(),
+			platform().workflowCommentRegist().addComment(workflowDto, mospParams.getUser().getPersonalId(),
 					mospParams.getProperties().getMessage(PlatformMessageConst.MSG_PROCESS_SUCCEED,
 							new String[]{ mospParams.getName("TakeDown") }));
 		}
@@ -907,8 +903,8 @@ public class WorkTypeChangeRequestAction extends TimeAction {
 		checkSelectedDataExist(workflowDto);
 		// 削除する
 		platform().workflowRegist().delete(workflowDto);
-		platform().workflowCommentRegist().deleteList(
-				reference().workflowComment().getWorkflowCommentList(workflowDto.getWorkflow()));
+		platform().workflowCommentRegist()
+			.deleteList(reference().workflowComment().getWorkflowCommentList(workflowDto.getWorkflow()));
 		regist.delete(dto);
 		// 削除結果確認
 		if (mospParams.hasErrorMessage()) {
@@ -1173,8 +1169,8 @@ public class WorkTypeChangeRequestAction extends TimeAction {
 		if (!vo.getPltSearchRequestMonth().isEmpty()) {
 			searchRequestMonth = getInt(vo.getPltSearchRequestMonth());
 		}
-		return MonthUtility
-			.getYearMonthTargetDate(getInt(vo.getPltSearchRequestYear()), searchRequestMonth, mospParams);
+		return MonthUtility.getYearMonthTargetDate(getInt(vo.getPltSearchRequestYear()), searchRequestMonth,
+				mospParams);
 	}
 	
 	/**

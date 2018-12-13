@@ -17,8 +17,13 @@
  */
 package jp.mosp.platform.utils;
 
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+
 import jp.mosp.framework.base.MospParams;
 import jp.mosp.platform.constant.PlatformConst;
+import jp.mosp.platform.dto.base.WorkflowNumberDtoInterface;
 import jp.mosp.platform.dto.workflow.WorkflowDtoInterface;
 
 /**
@@ -31,6 +36,21 @@ public class WorkflowUtility {
 	 */
 	private WorkflowUtility() {
 		// 処理無し
+	}
+	
+	/**
+	 * コレクションからワークフロー番号群を取得する。<br>
+	 * @param collection コレクション
+	 * @return ワークフロー番号群
+	 */
+	public static Set<Long> getWorkflowSet(Collection<? extends WorkflowNumberDtoInterface> collection) {
+		// ワークフロー番号群準備
+		Set<Long> set = new HashSet<Long>();
+		// コレクションの要素毎に処理
+		for (WorkflowNumberDtoInterface dto : collection) {
+			set.add(dto.getWorkflow());
+		}
+		return set;
 	}
 	
 	/**
@@ -85,6 +105,73 @@ public class WorkflowUtility {
 	}
 	
 	/**
+	 * 対象ワークフローが未承認であるかを確認する。<br>
+	 * 次の何れかに当てはまるワークフローが、未承認であると判断される。<br>
+	 * <ul><li>
+	 * ワークフロー状況が解除申
+	 * </li><li>
+	 * ワークフロー状況が承認解除
+	 * </li><li>
+	 * ワークフロー状況が差戻(一次戻に限らず)
+	 * </li><li>
+	 * ワークフロー状況が承認
+	 * </li><li>
+	 * ワークフロー状況が未承認
+	 * </li></ul>
+	 * <br>
+	 * @param dto 対象ワークフロー情報
+	 * @return 確認結果(true：未承認である、false：未承認でない)
+	 */
+	public static boolean isNotApproved(WorkflowDtoInterface dto) {
+		// 解除申の場合
+		if (WorkflowUtility.isCancelApply(dto)) {
+			return true;
+		}
+		// 解除申(取下希望)である場合
+		if (WorkflowUtility.isCancelWithDrawnApply(dto)) {
+			return true;
+		}
+		// 承認解除の場合
+		if (WorkflowUtility.isCancel(dto)) {
+			return true;
+		}
+		// 差戻の場合
+		if (WorkflowUtility.isReverted(dto)) {
+			return true;
+		}
+		// 承認の場合
+		if (WorkflowUtility.isApproved(dto)) {
+			return true;
+		}
+		// 未承認の場合
+		if (WorkflowUtility.isApply(dto)) {
+			return true;
+		}
+		// 未承認でない
+		return false;
+	}
+	
+	/**
+	 * 対象ワークフローの承認状況が合致するかを確認する。<br>
+	 * <br>
+	 * 承認済申請のみである場合、承認済であるかを確認する。<br>
+	 * 申請済申請含む場合、申請済(一次戻含む)であるかを確認する。<br>
+	 * <br>
+	 * @param dto         対象ワークフロー情報
+	 * @param isCompleted 承認済フラグ(true：承認済申請のみ、false：申請済申請含む)
+	 * @return 確認結果(true：承認状況が合致する、false：合致しない)
+	 */
+	public static boolean isStatusMatch(WorkflowDtoInterface dto, boolean isCompleted) {
+		// 承認済申請のみである場合
+		if (isCompleted) {
+			// 承認済であるかを確認
+			return WorkflowUtility.isCompleted(dto);
+		}
+		// 申請済(一次戻含む)であるかを確認
+		return WorkflowUtility.isApplied(dto) || WorkflowUtility.isFirstReverted(dto);
+	}
+	
+	/**
 	 * 対象ワークフローの承認状況が、承認済であるかを確認する。<br>
 	 * @param dto 対象ワークフロー情報
 	 * @return 確認結果(true：承認済である、false：そうでない)
@@ -101,6 +188,15 @@ public class WorkflowUtility {
 	 */
 	public static boolean isCancelApply(WorkflowDtoInterface dto) {
 		return isTheStatus(dto, PlatformConst.CODE_STATUS_CANCEL_APPLY);
+	}
+	
+	/**
+	 * 対象ワークフローの承認状況が、解除申であるかを確認する。<br>
+	 * @param dto 対象ワークフロー情報
+	 * @return 確認結果(true：解除申である、false：そうでない)
+	 */
+	public static boolean isCancelWithDrawnApply(WorkflowDtoInterface dto) {
+		return isTheStatus(dto, PlatformConst.CODE_STATUS_CANCEL_WITHDRAWN_APPLY);
 	}
 	
 	/**
@@ -223,7 +319,8 @@ public class WorkflowUtility {
 			// 承認済
 			return getNameFinish(mospParams);
 		}
-		if (PlatformConst.CODE_STATUS_CANCEL_APPLY.equals(status)) {
+		if (PlatformConst.CODE_STATUS_CANCEL_APPLY.equals(status)
+				|| PlatformConst.CODE_STATUS_CANCEL_WITHDRAWN_APPLY.equals(status)) {
 			// 解除申
 			return getNameCancelAppli(mospParams);
 		}

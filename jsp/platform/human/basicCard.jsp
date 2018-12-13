@@ -31,11 +31,12 @@ import = "jp.mosp.platform.human.action.BasicListAction"
 import = "jp.mosp.platform.human.action.HumanInfoAction"
 import = "jp.mosp.platform.human.constant.PlatformHumanConst"
 import = "jp.mosp.platform.human.vo.BasicCardVo"
+import = "jp.mosp.platform.utils.PlatformNamingUtility"
 %><%
 MospParams params = (MospParams)request.getAttribute(MospConst.ATT_MOSP_PARAMS);
 BasicCardVo vo = (BasicCardVo)params.getVo();
 %>
-<jsp:include page="<%= PlatformHumanConst.PATH_HUMAN_COMMON_INFO_JSP %>" flush="false" />
+<jsp:include page="<%= params.getApplicationProperty(PlatformHumanConst.APP_HUMAN_COMMON_INFO_JSP) %>" flush="false" />
 <div class="List">
 	<table class="ListTable" id="tblCard">
 		<tr>
@@ -48,7 +49,7 @@ BasicCardVo vo = (BasicCardVo)params.getVo();
 				<input type="text" class="Number2RequiredTextBox" id="txtActivateDay" name="txtActivateDay" value="<%= HtmlUtility.escapeHTML(vo.getTxtActivateDay()) %>" />&nbsp;<label for="txtActivateDay"><%= params.getName("Day") %></label>
 				<button type="button" class="Name2Button" id="btnActivateDate" onclick="submitForm(event, 'tdActivateDate', null, '<%= BasicCardAction.CMD_SET_ACTIVATION_DATE %>')"><%= vo.getModeActivateDate().equals(PlatformConst.MODE_ACTIVATE_DATE_FIXED) ? params.getName("Change") : params.getName("Decision") %></button>
 			</td>
-			<td class="TitleTd"><span class="RequiredLabel">*&nbsp;</span><span><label for="txtEmployeeCode"><%= params.getName("Employee") %><%= params.getName("Code") %></label></span></td>
+			<td class="TitleTd"><span class="RequiredLabel">*&nbsp;</span><span><label for="txtEmployeeCode"><%= PlatformNamingUtility.employeeCode(params) %></label></span></td>
 			<td class="InputTd">
 				<input type="text" class="Code10RequiredTextBox" id="txtEmployeeCode" name="txtEmployeeCode" value="<%= HtmlUtility.escapeHTML(vo.getTxtEmployeeCode()) %>" />
 			</td>
@@ -80,7 +81,7 @@ BasicCardVo vo = (BasicCardVo)params.getVo();
 			</td>
 		</tr>
 		<tr>
-			<td class="TitleTd"><span><label for="pltEmploymentName"><%= params.getName("EmploymentContract") %><%= params.getName("Type") %></label></span></td>
+			<td class="TitleTd"><span><label for="pltEmploymentName"><%= params.getName("EmploymentContract") %></label></span></td>
 			<td class="InputTd">
 				<select class="Name15PullDown" id="pltEmploymentName" name="pltEmploymentName">
 					<%= HtmlUtility.getSelectOption(vo.getAryPltEmployment(), vo.getPltEmploymentName()) %>

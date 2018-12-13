@@ -104,12 +104,18 @@ public class StockHolidayDataGrantBean extends TimeApplicationBean implements St
 	public void initBean() throws MospException {
 		super.initBean();
 		stockHolidayRefer = (StockHolidayReferenceBeanInterface)createBean(StockHolidayReferenceBeanInterface.class);
-		stockHolidayDataRefer = (StockHolidayDataReferenceBeanInterface)createBean(StockHolidayDataReferenceBeanInterface.class);
-		stockHolidayDataRegist = (StockHolidayDataRegistBeanInterface)createBean(StockHolidayDataRegistBeanInterface.class);
-		stockHolidayTransactionRefer = (StockHolidayTransactionReferenceBeanInterface)createBean(StockHolidayTransactionReferenceBeanInterface.class);
-		paidHolidayDataRefer = (PaidHolidayDataReferenceBeanInterface)createBean(PaidHolidayDataReferenceBeanInterface.class);
-		paidHolidayTransactionRefer = (PaidHolidayTransactionReferenceBeanInterface)createBean(PaidHolidayTransactionReferenceBeanInterface.class);
-		holidayRequestRefer = (HolidayRequestReferenceBeanInterface)createBean(HolidayRequestReferenceBeanInterface.class);
+		stockHolidayDataRefer = (StockHolidayDataReferenceBeanInterface)createBean(
+				StockHolidayDataReferenceBeanInterface.class);
+		stockHolidayDataRegist = (StockHolidayDataRegistBeanInterface)createBean(
+				StockHolidayDataRegistBeanInterface.class);
+		stockHolidayTransactionRefer = (StockHolidayTransactionReferenceBeanInterface)createBean(
+				StockHolidayTransactionReferenceBeanInterface.class);
+		paidHolidayDataRefer = (PaidHolidayDataReferenceBeanInterface)createBean(
+				PaidHolidayDataReferenceBeanInterface.class);
+		paidHolidayTransactionRefer = (PaidHolidayTransactionReferenceBeanInterface)createBean(
+				PaidHolidayTransactionReferenceBeanInterface.class);
+		holidayRequestRefer = (HolidayRequestReferenceBeanInterface)createBean(
+				HolidayRequestReferenceBeanInterface.class);
 	}
 	
 	@Override
@@ -283,8 +289,8 @@ public class StockHolidayDataGrantBean extends TimeApplicationBean implements St
 	 */
 	protected double getPaidHolidayRemainderDay(String personalId, Date expirationDate) throws MospException {
 		double totalDay = 0;
-		List<PaidHolidayDataDtoInterface> paidHolidayDataList = paidHolidayDataRefer.findForExpirationDateList(
-				personalId, expirationDate);
+		List<PaidHolidayDataDtoInterface> paidHolidayDataList = paidHolidayDataRefer
+			.findForExpirationDateList(personalId, expirationDate);
 		for (PaidHolidayDataDtoInterface paidHolidayDataDto : paidHolidayDataList) {
 			double givingDay = 0;
 			int givingHour = 0;

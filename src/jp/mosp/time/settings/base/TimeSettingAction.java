@@ -148,6 +148,17 @@ public abstract class TimeSettingAction extends TimeAction {
 	}
 	
 	/**
+	 * VOからレコード識別IDを取得する。<br>
+	 * @return レコード識別ID
+	 */
+	protected long getRecordId() {
+		// VOを準備
+		TimeSettingVo vo = (TimeSettingVo)mospParams.getVo();
+		// レコード識別IDを取得
+		return vo.getRecordId();
+	}
+	
+	/**
 	 * 一覧選択情報を初期化する。<br>
 	 */
 	protected void initCkbSelect() {

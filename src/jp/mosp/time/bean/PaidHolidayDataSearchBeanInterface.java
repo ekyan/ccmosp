@@ -37,6 +37,24 @@ public interface PaidHolidayDataSearchBeanInterface {
 	List<PaidHolidayDataGrantListDtoInterface> getSearchList() throws MospException;
 	
 	/**
+	 * 開始日を取得する。<br>
+	 * @param personalId 個人ID
+	 * @param grantTimes 有給休暇付与回数
+	 * @param grantDate 付与日
+	 * @return 開始日
+	 * @throws MospException インスタンスの取得、SQLの作成及び実行に失敗した場合
+	 */
+	Date getStartDate(String personalId, int grantTimes, Date grantDate) throws MospException;
+	
+	/**
+	 * 終了日を取得する。
+	 * @param startDate 開始日
+	 * @param grantTimes 有給休暇付与回数
+	 * @return 終了日
+	 */
+	Date getEndDate(Date startDate, int grantTimes);
+	
+	/**
 	 * @param activateDate セットする 有効日。
 	 */
 	void setActivateDate(Date activateDate);

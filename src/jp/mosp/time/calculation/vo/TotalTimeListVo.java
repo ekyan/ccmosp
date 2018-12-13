@@ -80,6 +80,9 @@ public class TotalTimeListVo extends TotalTimeBaseVo {
 	
 	private boolean				jsSearchConditionRequired;
 	
+	// 未承認検索項目：前日チェックボックス
+	private String				ckbYesterday;
+	
 	
 	/**
 	 * @return txtEditFromEmployeeCode
@@ -808,14 +811,14 @@ public class TotalTimeListVo extends TotalTimeBaseVo {
 	 * @param aryNeedDetail セットする aryNeedDetail
 	 */
 	public void setAryNeedDetail(boolean[] aryNeedDetail) {
-		this.aryNeedDetail = aryNeedDetail;
+		this.aryNeedDetail = getBooleanArrayClone(aryNeedDetail);
 	}
 	
 	/**
 	 * @return aryNeedDetail
 	 */
 	public boolean[] getAryNeedDetail() {
-		return aryNeedDetail;
+		return getBooleanArrayClone(aryNeedDetail);
 	}
 	
 	/**
@@ -838,6 +841,20 @@ public class TotalTimeListVo extends TotalTimeBaseVo {
 	 */
 	public void setJsSearchConditionRequired(boolean jsSearchConditionRequired) {
 		this.jsSearchConditionRequired = jsSearchConditionRequired;
+	}
+	
+	/**
+	 * @return ckbYesterday
+	 */
+	public String getCkbYesterday() {
+		return ckbYesterday;
+	}
+	
+	/**
+	 * @param ckbYesterday セットする ckbYesterday
+	 */
+	public void setCkbYesterday(String ckbYesterday) {
+		this.ckbYesterday = ckbYesterday;
 	}
 	
 }

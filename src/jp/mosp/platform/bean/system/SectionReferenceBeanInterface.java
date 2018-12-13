@@ -19,6 +19,7 @@ package jp.mosp.platform.bean.system;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 import jp.mosp.framework.base.MospException;
 import jp.mosp.platform.dto.system.SectionDtoInterface;
@@ -218,6 +219,20 @@ public interface SectionReferenceBeanInterface {
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
 	String getHigherSectionCode(String sectionCode, Date targetDate, int level) throws MospException;
+	
+	/**
+	 * 所属コード群を取得する。<br>
+	 * <br>
+	 * 所属コードFromと所属コードToで、所属コード群を取得する。<br>
+	 * <br>
+	 * @param sectionCodeFrom 所属コードFrom
+	 * @param sectionCodeTo   所属コードTo
+	 * @param activateDate    有効日
+	 * @return 所属コード群
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	Set<String> getSectionCodeSetForCodeRange(String sectionCodeFrom, String sectionCodeTo, Date activateDate)
+			throws MospException;
 	
 	/**
 	 * 経路文字列から所属コードの配列を取得する。

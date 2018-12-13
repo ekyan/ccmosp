@@ -75,6 +75,16 @@ public interface ApprovalUnitDtoInterface extends PlatformDtoInterface {
 	void setApproverPositionCode(String approverPositionCode);
 	
 	/**
+	 * @return 承認者職位等級範囲。
+	 */
+	String getApproverPositionGrade();
+	
+	/**
+	 * @param approverPositionGrade セットする 承認者職位等級範囲。
+	 */
+	void setApproverPositionGrade(String approverPositionGrade);
+	
+	/**
 	 * @return ユニット名称。
 	 */
 	String getUnitName();

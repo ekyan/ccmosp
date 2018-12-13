@@ -41,7 +41,7 @@ public class StockHolidayRegistBean extends PlatformBean implements StockHoliday
 	/**
 	 * ストック休暇設定DAOクラス。<br>
 	 */
-	StockHolidayDaoInterface	dao;
+	StockHolidayDaoInterface dao;
 	
 	
 	/**

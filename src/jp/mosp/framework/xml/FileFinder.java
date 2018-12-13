@@ -1,5 +1,19 @@
-/**
- *
+/*
+ * MosP - Mind Open Source Project    http://www.mosp.jp/
+ * Copyright (C) MIND Co., Ltd.       http://www.e-mind.co.jp/
+ * 
+ * This program is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU Affero General Public License
+ * as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package jp.mosp.framework.xml;
 
@@ -9,8 +23,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * @author yoshida
- *
+ * MosP設定情報ファイルを取得する。<br>
  */
 public class FileFinder implements FileFinderInterface {
 	
@@ -57,7 +70,7 @@ public class FileFinder implements FileFinderInterface {
 		}
 		list.addAll(propertyList);
 		// アドオン設定ファイルパス設定
-		list.addAll(getFilePathList(xmlDirPath + PATH_ADDON_PROPERTY, true));
+		list.addAll(getFilePathList(xmlDirPath + PATH_ADDON_PROPERTY, false));
 		// ユーザ作成設定ファイルパス設定
 		list.addAll(getFilePathList(xmlDirPath + PATH_USER_PROPERTY, false));
 		return list;

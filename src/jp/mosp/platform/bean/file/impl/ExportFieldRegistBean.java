@@ -37,7 +37,7 @@ public class ExportFieldRegistBean extends PlatformBean implements ExportFieldRe
 	/**
 	 * エクスポートフィールドマスタDAOクラス。<br>
 	 */
-	ExportFieldDaoInterface	dao;
+	ExportFieldDaoInterface dao;
 	
 	
 	/**
@@ -201,8 +201,8 @@ public class ExportFieldRegistBean extends PlatformBean implements ExportFieldRe
 	 * @param fieldName フィールド名称
 	 * @param i フィールド順序
 	 */
-	protected void setDtoFields(ExportFieldDtoInterface dto, String exportCode, String inactivateFlag,
-			String fieldName, int i) {
+	protected void setDtoFields(ExportFieldDtoInterface dto, String exportCode, String inactivateFlag, String fieldName,
+			int i) {
 		dto.setExportCode(exportCode);
 		dto.setFieldName(fieldName);
 		dto.setFieldOrder(i);

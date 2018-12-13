@@ -18,16 +18,17 @@
 package jp.mosp.platform.bean.workflow.impl;
 
 import java.sql.Connection;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.base.MospParams;
+import jp.mosp.framework.constant.MospConst;
 import jp.mosp.framework.utils.MospUtility;
 import jp.mosp.platform.base.PlatformBean;
+import jp.mosp.platform.bean.system.PlatformMasterBeanInterface;
 import jp.mosp.platform.bean.workflow.ApprovalRouteReferenceBeanInterface;
-import jp.mosp.platform.bean.workflow.RouteApplicationReferenceBeanInterface;
+import jp.mosp.platform.bean.workflow.WorkflowCommentReferenceBeanInterface;
 import jp.mosp.platform.bean.workflow.WorkflowCommentRegistBeanInterface;
 import jp.mosp.platform.bean.workflow.WorkflowRegistBeanInterface;
 import jp.mosp.platform.constant.PlatformConst;
@@ -35,6 +36,7 @@ import jp.mosp.platform.constant.PlatformMessageConst;
 import jp.mosp.platform.dao.workflow.WorkflowDaoInterface;
 import jp.mosp.platform.dto.workflow.ApprovalRouteDtoInterface;
 import jp.mosp.platform.dto.workflow.RouteApplicationDtoInterface;
+import jp.mosp.platform.dto.workflow.WorkflowCommentDtoInterface;
 import jp.mosp.platform.dto.workflow.WorkflowDtoInterface;
 import jp.mosp.platform.dto.workflow.impl.PftWorkflowDto;
 import jp.mosp.platform.utils.PlatformMessageUtility;
@@ -47,22 +49,27 @@ public class WorkflowRegistBean extends PlatformBean implements WorkflowRegistBe
 	/**
 	 * ワークフローDAOクラス。<br>
 	 */
-	protected WorkflowDaoInterface						dao;
+	protected WorkflowDaoInterface					dao;
 	
 	/**
 	 * 承認ルート参照クラス。
 	 */
-	protected ApprovalRouteReferenceBeanInterface		routeReference;
+	protected ApprovalRouteReferenceBeanInterface	routeReference;
 	
 	/**
-	 * 承認ルート適用参照クラス。
+	 * プラットフォームマスタ参照クラス。<br>
 	 */
-	protected RouteApplicationReferenceBeanInterface	routeAppReference;
+	protected PlatformMasterBeanInterface			platformMaster;
+	
+	/**
+	 * ワークフローコメント参照クラス。<br>
+	 */
+	protected WorkflowCommentReferenceBeanInterface	workflowCommentRefer;
 	
 	/**
 	 * ワークフローコメント登録クラス。<br>
 	 */
-	protected WorkflowCommentRegistBeanInterface		workflowCommentRegist;
+	protected WorkflowCommentRegistBeanInterface	workflowCommentRegist;
 	
 	
 	/**
@@ -86,8 +93,11 @@ public class WorkflowRegistBean extends PlatformBean implements WorkflowRegistBe
 		// クラス準備
 		dao = (WorkflowDaoInterface)createDao(WorkflowDaoInterface.class);
 		routeReference = (ApprovalRouteReferenceBeanInterface)createBean(ApprovalRouteReferenceBeanInterface.class);
-		routeAppReference = (RouteApplicationReferenceBeanInterface)createBean(RouteApplicationReferenceBeanInterface.class);
-		workflowCommentRegist = (WorkflowCommentRegistBeanInterface)createBean(WorkflowCommentRegistBeanInterface.class);
+		platformMaster = (PlatformMasterBeanInterface)createBean(PlatformMasterBeanInterface.class);
+		workflowCommentRefer = (WorkflowCommentReferenceBeanInterface)createBean(
+				WorkflowCommentReferenceBeanInterface.class);
+		workflowCommentRegist = (WorkflowCommentRegistBeanInterface)createBean(
+				WorkflowCommentRegistBeanInterface.class);
 	}
 	
 	@Override
@@ -112,6 +122,11 @@ public class WorkflowRegistBean extends PlatformBean implements WorkflowRegistBe
 		validate(dto);
 		// 下書可否確認
 		checkDraft(dto);
+		if (mospParams.hasErrorMessage()) {
+			return null;
+		}
+		// 承認ルート設定
+		setApprovalRoute(dto, personalId, targetDate, workflowType);
 		if (mospParams.hasErrorMessage()) {
 			return null;
 		}
@@ -202,7 +217,8 @@ public class WorkflowRegistBean extends PlatformBean implements WorkflowRegistBe
 	}
 	
 	@Override
-	public WorkflowDtoInterface cancelAppli(WorkflowDtoInterface dto, String workflowComment) throws MospException {
+	public WorkflowDtoInterface cancelAppli(WorkflowDtoInterface dto, String workflowComment, String ckbWithdrawn)
+			throws MospException {
 		// 登録情報妥当性確認
 		validate(dto);
 		// 申請可否確認
@@ -210,12 +226,59 @@ public class WorkflowRegistBean extends PlatformBean implements WorkflowRegistBe
 		if (mospParams.hasErrorMessage()) {
 			return null;
 		}
-		// 承認解除申請へ変更
-		dto.setWorkflowStatus(PlatformConst.CODE_STATUS_CANCEL_APPLY);
+		if (ckbWithdrawn.equals(MospConst.CHECKBOX_ON)) {
+			// 承認解除申請(取下希望)へ変更
+			dto.setWorkflowStatus(PlatformConst.CODE_STATUS_CANCEL_WITHDRAWN_APPLY);
+		} else {
+			// 承認解除申請へ変更
+			dto.setWorkflowStatus(PlatformConst.CODE_STATUS_CANCEL_APPLY);
+		}
 		// 自己承認確認
 		if (isSelfApproval(dto)) {
-			// 差戻へ変更
-			dto.setWorkflowStatus(PlatformConst.CODE_STATUS_REVERT);
+			if (dto.getWorkflowStatus().equals(PlatformConst.CODE_STATUS_CANCEL_WITHDRAWN_APPLY)) {
+				// 取下希望チェックがついている場合
+				// 取下へ変更
+				dto.setWorkflowStatus(PlatformConst.CODE_STATUS_WITHDRAWN);
+			} else {
+				// 差戻へ変更
+				dto.setWorkflowStatus(PlatformConst.CODE_STATUS_REVERT);
+			}
+		}
+		// 戻値用ワークフロー準備
+		WorkflowDtoInterface workflowDto = add(dto);
+		// ワークフロー情報確認
+		if (mospParams.hasErrorMessage()) {
+			return null;
+		}
+		// ワークフローコメント設定
+		addWorkflowComment(workflowDto, workflowComment);
+		return workflowDto;
+	}
+	
+	@Override
+	public WorkflowDtoInterface cancelAttendanceAppli(WorkflowDtoInterface dto, String workflowComment,
+			String ckbWithdrawn) throws MospException {
+		// 登録情報妥当性確認
+		validate(dto);
+		// 申請可否確認
+		checkCancelAppli(dto);
+		if (mospParams.hasErrorMessage()) {
+			return null;
+		}
+		if (ckbWithdrawn.equals(MospConst.CHECKBOX_ON)) {
+			// 承認解除申請(取下希望)へ変更
+			dto.setWorkflowStatus(PlatformConst.CODE_STATUS_CANCEL_WITHDRAWN_APPLY);
+		} else {
+			// 承認解除申請へ変更
+			dto.setWorkflowStatus(PlatformConst.CODE_STATUS_CANCEL_APPLY);
+		}
+		// 自己承認確認
+		if (isSelfApproval(dto)) {
+			if (dto.getWorkflowStatus().equals(PlatformConst.CODE_STATUS_CANCEL_APPLY)) {
+				// 自己承認かつ取下げ希望じゃない場合
+				// 差戻へ変更
+				dto.setWorkflowStatus(PlatformConst.CODE_STATUS_REVERT);
+			}
 		}
 		// 戻値用ワークフロー準備
 		WorkflowDtoInterface workflowDto = add(dto);
@@ -300,8 +363,15 @@ public class WorkflowRegistBean extends PlatformBean implements WorkflowRegistBe
 		if (mospParams.hasErrorMessage()) {
 			return null;
 		}
+		// 登録ワークフローコメント準備
+		String comment = workflowComment;
+		// ワークフローコメント確認
+		if (workflowComment == null || workflowComment.isEmpty()) {
+			// デフォルト承認ワークフローコメント取得
+			comment = getDefaultRevertComment();
+		}
 		// ワークフローコメント設定
-		addWorkflowComment(workflowDto, workflowComment);
+		addWorkflowComment(workflowDto, comment);
 		return workflowDto;
 	}
 	
@@ -358,41 +428,6 @@ public class WorkflowRegistBean extends PlatformBean implements WorkflowRegistBe
 		// 承認解除へ変更
 		dto.setWorkflowStatus(PlatformConst.CODE_STATUS_CANCEL);
 		// 自己承認確認
-		if (dto.getApproverId().equals(PlatformConst.APPROVAL_ROUTE_SELF)
-				|| dto.getRouteCode().equals(PlatformConst.APPROVAL_ROUTE_SELF)) {
-			// 差戻へ変更
-			dto.setWorkflowStatus(PlatformConst.CODE_STATUS_REVERT);
-		}
-		// 承認解除処理
-		WorkflowDtoInterface workflowDto = add(dto);
-		if (mospParams.hasErrorMessage()) {
-			return null;
-		}
-		// ワークフローコメント設定
-		// 登録ワークフローコメント準備
-		String comment = workflowComment;
-		// ワークフローコメント確認
-		if (workflowComment == null || workflowComment.isEmpty()) {
-			// デフォルト承認解除ワークフローコメント取得
-			comment = getDefaultCancelComment();
-		}
-		// ワークフローコメント設定
-		addWorkflowComment(workflowDto, comment);
-		return workflowDto;
-	}
-	
-	@Override
-	public WorkflowDtoInterface cancelApprove(WorkflowDtoInterface dto, String workflowComment) throws MospException {
-		// 登録情報妥当性確認
-		validate(dto);
-		// 承認解除の確認
-		checkCancelApproval(dto);
-		if (mospParams.hasErrorMessage()) {
-			return null;
-		}
-		// 承認解除へ変更
-		dto.setWorkflowStatus(PlatformConst.CODE_STATUS_CANCEL);
-		// 自己承認確認
 		if (isSelfApproval(dto)) {
 			// 差戻へ変更
 			dto.setWorkflowStatus(PlatformConst.CODE_STATUS_REVERT);
@@ -412,6 +447,88 @@ public class WorkflowRegistBean extends PlatformBean implements WorkflowRegistBe
 		}
 		// ワークフローコメント設定
 		addWorkflowComment(workflowDto, comment);
+		// 自己承認でない場合
+		if (!isSelfApproval(dto)) {
+			// 差戻処理
+			revert(workflowDto, workflowType, getDefaultCancelComment());
+			if (mospParams.hasErrorMessage()) {
+				return null;
+			}
+		}
+		return workflowDto;
+	}
+	
+	@Override
+	public WorkflowDtoInterface cancelApprove(WorkflowDtoInterface dto, String workflowComment) throws MospException {
+		// 登録情報妥当性確認
+		validate(dto);
+		// 承認解除の確認
+		checkCancelApproval(dto);
+		if (mospParams.hasErrorMessage()) {
+			return null;
+		}
+		// 承認解除へ変更
+		dto.setWorkflowStatus(PlatformConst.CODE_STATUS_CANCEL);
+		// 承認解除処理
+		WorkflowDtoInterface workflowDto = add(dto);
+		if (mospParams.hasErrorMessage()) {
+			return null;
+		}
+		// ワークフローコメント設定
+		// 登録ワークフローコメント準備
+		String comment = workflowComment;
+		// ワークフローコメント確認
+		if (workflowComment == null || workflowComment.isEmpty()) {
+			// デフォルト承認解除ワークフローコメント取得
+			comment = getDefaultCancelComment();
+		}
+		// ワークフローコメント設定
+		addWorkflowComment(workflowDto, comment);
+		// 差戻処理
+		revert(workflowDto, PlatformConst.WORKFLOW_TYPE_TIME, getDefaultCancelComment());
+		if (mospParams.hasErrorMessage()) {
+			return null;
+		}
+		return workflowDto;
+	}
+	
+	@Override
+	public WorkflowDtoInterface cancelWithdrawnApprove(WorkflowDtoInterface dto, String workflowComment)
+			throws MospException {
+		// 登録情報妥当性確認
+		validate(dto);
+		// 承認解除の確認
+		checkCancelWithdrawnApproval(dto);
+		if (mospParams.hasErrorMessage()) {
+			return null;
+		}
+		// 承認解除へ変更
+		dto.setWorkflowStatus(PlatformConst.CODE_STATUS_CANCEL);
+		// 承認解除処理
+		WorkflowDtoInterface workflowDto = add(dto);
+		if (mospParams.hasErrorMessage()) {
+			return null;
+		}
+		// ワークフローコメント設定
+		// 登録ワークフローコメント準備
+		String comment = workflowComment;
+		// ワークフローコメント確認
+		if (workflowComment == null || workflowComment.isEmpty()) {
+			// デフォルト承認解除ワークフローコメント取得
+			comment = getDefaultCancelComment();
+		}
+		// ワークフローコメント設定
+		addWorkflowComment(workflowDto, comment);
+		// 取下げ処理
+		workflowDto = withdrawn(workflowDto);
+		if (workflowDto != null) {
+			// ワークフローコメント登録
+			workflowCommentRegist.addComment(dto, mospParams.getUser().getPersonalId(), mospParams.getProperties()
+				.getMessage(PlatformMessageConst.MSG_PROCESS_SUCCEED, new String[]{ mospParams.getName("TakeDown") }));
+		}
+		if (mospParams.hasErrorMessage()) {
+			return null;
+		}
 		return workflowDto;
 	}
 	
@@ -548,6 +665,14 @@ public class WorkflowRegistBean extends PlatformBean implements WorkflowRegistBe
 				&& dto.getWorkflowStatus().equals(PlatformConst.CODE_STATUS_REVERT)) {
 			return;
 		}
+		// ワークフロー状態が解除申請(取下げ希望)の場合
+		if (PlatformConst.CODE_STATUS_CANCEL_WITHDRAWN_APPLY.equals(dto.getWorkflowStatus())) {
+			return;
+		}
+		// ワークフロー状態が承認解除の場合
+		if (PlatformConst.CODE_STATUS_CANCEL.equals(dto.getWorkflowStatus())) {
+			return;
+		}
 		// エラーメッセージ設定
 		addWorkflowProcessFailedErrorMessage();
 	}
@@ -607,11 +732,26 @@ public class WorkflowRegistBean extends PlatformBean implements WorkflowRegistBe
 	
 	/**
 	 * 解除承認時の確認処理を行う。<br>
+	 * 解除申請か確認する。<br>
 	 * @param dto 対象DTO
 	 */
 	protected void checkCancelApproval(WorkflowDtoInterface dto) {
-		// ワークフローが解除申の場合
+		// ワークフローが解除申・解除申(取下げ希望)の場合
 		if (dto.getWorkflowStatus().equals(PlatformConst.CODE_STATUS_CANCEL_APPLY)) {
+			return;
+		}
+		// エラーメッセージ設定
+		addWorkflowProcessFailedErrorMessage();
+	}
+	
+	/**
+	 * 解除承認時の確認処理を行う。<br>
+	 * 解除申請(取下希望)か確認する。<br>
+	 * @param dto 対象DTO
+	 */
+	protected void checkCancelWithdrawnApproval(WorkflowDtoInterface dto) {
+		// ワークフローが解除申・解除申(取下げ希望)の場合
+		if (dto.getWorkflowStatus().equals(PlatformConst.CODE_STATUS_CANCEL_WITHDRAWN_APPLY)) {
 			return;
 		}
 		// エラーメッセージ設定
@@ -655,7 +795,8 @@ public class WorkflowRegistBean extends PlatformBean implements WorkflowRegistBe
 	 */
 	protected void checkCancelRevert(WorkflowDtoInterface dto) {
 		// ワークフロー状態が解除申の場合
-		if (dto.getWorkflowStatus().equals(PlatformConst.CODE_STATUS_CANCEL_APPLY)) {
+		if (dto.getWorkflowStatus().equals(PlatformConst.CODE_STATUS_CANCEL_APPLY)
+				|| dto.getWorkflowStatus().equals(PlatformConst.CODE_STATUS_CANCEL_WITHDRAWN_APPLY)) {
 			return;
 		}
 		// エラーメッセージ設定
@@ -695,13 +836,28 @@ public class WorkflowRegistBean extends PlatformBean implements WorkflowRegistBe
 	 */
 	@Override
 	public void setDtoApproverIds(WorkflowDtoInterface dto, String[] aryApproverId) {
-		// 承認者ID確認
-		if (aryApproverId == null) {
+		// 対象承認者がユニットの場合
+		if (mospParams.isTargetApprovalUnit()) {
+			// 承認者ID空白設定
 			dto.setApproverId("");
 			return;
+		} else {
+			// 承認者ID確認
+			if (aryApproverId == null) {
+				dto.setApproverId("");
+				return;
+			}
+			// 承認者ID設定(カンマ区切)
+			dto.setApproverId(MospUtility.toSeparatedString(aryApproverId, SEPARATOR_DATA));
+			// ルートコード設定(空白)
+			dto.setRouteCode("");
 		}
-		// 承認者ID設定(カンマ区切)
-		dto.setApproverId(MospUtility.toSeparatedString(aryApproverId, SEPARATOR_DATA));
+	}
+	
+	@Override
+	public void setSelfApproval(WorkflowDtoInterface dto) {
+		// 自己承認設定
+		dto.setApproverId(PlatformConst.APPROVAL_ROUTE_SELF);
 		// ルートコード設定(空白)
 		dto.setRouteCode("");
 	}
@@ -721,8 +877,8 @@ public class WorkflowRegistBean extends PlatformBean implements WorkflowRegistBe
 			return approvers.length;
 		}
 		// ルート情報取得
-		ApprovalRouteDtoInterface route = routeReference
-			.getApprovalRouteInfo(dto.getRouteCode(), dto.getWorkflowDate());
+		ApprovalRouteDtoInterface route = routeReference.getApprovalRouteInfo(dto.getRouteCode(),
+				dto.getWorkflowDate());
 		if (route == null) {
 			return 0;
 		}
@@ -764,7 +920,8 @@ public class WorkflowRegistBean extends PlatformBean implements WorkflowRegistBe
 			return;
 		}
 		// ルート適用情報取得及び確認
-		RouteApplicationDtoInterface routeApp = routeAppReference.findForPerson(personalId, targetDate, workflowType);
+		RouteApplicationDtoInterface routeApp = platformMaster.getRouteApplication(personalId, targetDate,
+				workflowType);
 		if (routeApp == null) {
 			// メッセージ設定
 			addNoApprovalRouteErrorMessage();
@@ -778,6 +935,21 @@ public class WorkflowRegistBean extends PlatformBean implements WorkflowRegistBe
 	public void delete(WorkflowDtoInterface dto) throws MospException {
 		// 論理削除
 		logicalDelete(dao, dto.getPftWorkflowId());
+	}
+	
+	@Override
+	public void delete(long workflow) throws MospException {
+		// ワークフロー情報を取得
+		WorkflowDtoInterface workflowDto = dao.findForKey(workflow);
+		// ワークフローコメント情報を取得
+		List<WorkflowCommentDtoInterface> commentList = workflowCommentRefer.getWorkflowCommentList(workflow);
+		// ワークフロー情報が存在する場合
+		if (workflowDto != null) {
+			// 論理削除
+			delete(workflowDto);
+		}
+		// ワークフローコメント削除
+		workflowCommentRegist.deleteList(commentList);
 	}
 	
 	/**
@@ -808,6 +980,14 @@ public class WorkflowRegistBean extends PlatformBean implements WorkflowRegistBe
 	}
 	
 	/**
+	 * デフォルト承認ワークフローコメントを取得する。<br>
+	 * @return デフォルト承認ワークフローコメント
+	 */
+	protected String getDefaultRevertComment() {
+		return mospParams.getMessage(PlatformMessageConst.MSG_PROCESS_SUCCEED, mospParams.getName("SendingBack"));
+	}
+	
+	/**
 	 * デフォルト承認解除ワークフローコメントを取得する。<br>
 	 * @return デフォルト承認解除ワークフローコメント
 	 */
@@ -831,21 +1011,4 @@ public class WorkflowRegistBean extends PlatformBean implements WorkflowRegistBe
 		PlatformMessageUtility.addErrorWorkflowProcessFailed(mospParams);
 	}
 	
-	@Override
-	public void approval(long[] aryId, String[] aryPersonalId, Date[] aryRequestDate, int workflowType,
-			String workflowComment) throws MospException {
-		// 処理ワークフロー情報リスト準備
-		List<WorkflowDtoInterface> workflowList = new ArrayList<WorkflowDtoInterface>();
-		// ワークフロー毎に承認
-		for (long element : aryId) {
-			// DTOの準備
-			WorkflowDtoInterface dto = (WorkflowDtoInterface)findForKey(dao, element, false);
-			// 承認処理(当メソッドで取得するためロックは不要)
-			approveWorkflow(dto, workflowType, workflowComment);
-			// 処理ワークフロー情報リストへ追加
-			if (dto != null) {
-				workflowList.add(dto);
-			}
-		}
-	}
 }

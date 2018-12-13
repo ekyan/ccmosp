@@ -62,10 +62,7 @@ public class RoleMenuProperty implements IndexedDtoInterface {
 		return key;
 	}
 	
-	/**
-	 * インデックスを取得する。
-	 * @return インデックス
-	 */
+	@Override
 	public int getIndex() {
 		return index == null ? 0 : index.intValue();
 	}

@@ -38,7 +38,7 @@ public class ApprovalUnitReferenceBean extends PlatformBean implements ApprovalU
 	/**
 	 * 承認ユニットマスタDAO。
 	 */
-	private ApprovalUnitDaoInterface	dao;
+	private ApprovalUnitDaoInterface dao;
 	
 	
 	/**

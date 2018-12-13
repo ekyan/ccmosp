@@ -45,7 +45,7 @@ public class PaidHolidayRegistBean extends PlatformBean implements PaidHolidayRe
 	/**
 	 * 有給休暇設定DAOクラス。<br>
 	 */
-	PaidHolidayDaoInterface	dao;
+	PaidHolidayDaoInterface dao;
 	
 	
 	/**
@@ -373,7 +373,8 @@ public class PaidHolidayRegistBean extends PlatformBean implements PaidHolidayRe
 		// 削除対象の有効日以前で最新の設定適用マスタリストを取得
 		List<ApplicationDtoInterface> appList = appDao.findForActivateDate(dto.getActivateDate());
 		// 無効期間で設定適用マスタ履歴情報を取得(対象DTOの有効日～次の履歴の有効日)
-		appList.addAll(appDao.findForTerm(dto.getActivateDate(), getNextActivateDate(dto.getActivateDate(), list)));
+		appList
+			.addAll(appDao.findForCheckTerm(dto.getActivateDate(), getNextActivateDate(dto.getActivateDate(), list)));
 		return appList;
 	}
 	

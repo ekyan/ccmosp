@@ -171,8 +171,8 @@ public class HumanBinaryHistoryListAction extends PlatformHumanAction {
 		// 人事汎用管理区分設定
 		vo.setDivision(getTransferredType());
 		// パンくず名設定
-		TopicPathUtility.setTopicPathName(mospParams, vo.getClassName(), mospParams.getName(vo.getDivision())
-				+ mospParams.getName("List"));
+		TopicPathUtility.setTopicPathName(mospParams, vo.getClassName(),
+				mospParams.getName(vo.getDivision()) + mospParams.getName("List"));
 		// 人事管理共通情報利用設定
 		setPlatformHumanSettings(CMD_SEARCH, PlatformHumanConst.MODE_HUMAN_NO_ACTIVATE_DATE);
 		// 人事管理共通情報設定
@@ -222,13 +222,13 @@ public class HumanBinaryHistoryListAction extends PlatformHumanAction {
 	protected void deleteHistoryBasicInfo() throws MospException {
 		// VO取得
 		HumanBinaryHistoryListVo vo = (HumanBinaryHistoryListVo)mospParams.getVo();
-		// 人事汎用管理区分設定
-		String division = getTransferredType();
 		// 有効日取得
 		Date activeDate = DateUtility.getDate(getTransferredActivateDate());
+		
+		Long recordId = vo.getHidRecordIdMap().get(activeDate);
+		
 		// 削除対象DTO取得
-		HumanBinaryHistoryDtoInterface dto = reference().humanBinaryHistory().findForKey(vo.getPersonalId(), division,
-				activeDate);
+		HumanBinaryHistoryDtoInterface dto = reference().humanBinaryHistory().findForKey(recordId, false);
 		// 削除
 		platform().humanBinaryHistoryRegist().delete(dto);
 		if (mospParams.hasErrorMessage()) {
@@ -318,7 +318,6 @@ public class HumanBinaryHistoryListAction extends PlatformHumanAction {
 		// 件数確認フラグ設定
 		vo.setJsIsLastHistory(isLastHistory);
 		// 設定配列準備
-		String[] aryPfaHumanBinaryHistoryId = new String[list.size()];
 		String[] aryActiveteDate = new String[list.size()];
 		String[] aryFileType = new String[list.size()];
 		String[] aryFileName = new String[list.size()];
@@ -329,8 +328,6 @@ public class HumanBinaryHistoryListAction extends PlatformHumanAction {
 			HumanBinaryHistoryDtoInterface dto = list.get(list.size() - 1 - i);
 			// 個人ID
 			vo.setPersonalId(dto.getPersonalId());
-			// 識別ID
-			aryPfaHumanBinaryHistoryId[i] = String.valueOf(dto.getPfaHumanBinaryHistoryId());
 			// 有効日設定
 			aryActiveteDate[i] = getStringDate(dto.getActivateDate());
 			// ファイル区分
@@ -339,10 +336,11 @@ public class HumanBinaryHistoryListAction extends PlatformHumanAction {
 			aryFileName[i] = dto.getFileName();
 			// ファイル備考
 			aryFileRemark[i] = dto.getFileRemark();
+			// レコード識別IDマップに追加
+			vo.putHidRecordIdMap(dto.getActivateDate(), dto.getPfaHumanBinaryHistoryId());
 		}
 		// VOに設定
 		vo.setAryActiveteDate(aryActiveteDate);
-		vo.setAryPfaHumanBinaryHistoryId(aryPfaHumanBinaryHistoryId);
 		vo.setAryFileType(aryFileType);
 		vo.setAryFileName(aryFileName);
 		vo.setAryFileRemark(aryFileRemark);

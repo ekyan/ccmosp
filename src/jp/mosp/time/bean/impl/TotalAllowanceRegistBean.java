@@ -38,7 +38,7 @@ public class TotalAllowanceRegistBean extends PlatformBean implements TotalAllow
 	/**
 	 * 勤怠集計手当データDAOクラス。<br>
 	 */
-	TotalAllowanceDaoInterface	totalAllowanceDao;
+	TotalAllowanceDaoInterface totalAllowanceDao;
 	
 	
 	/**

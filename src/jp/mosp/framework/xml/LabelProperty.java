@@ -20,15 +20,18 @@ package jp.mosp.framework.xml;
 import jp.mosp.framework.property.BaseProperty;
 
 /**
- * 人事汎用表示形式設定情報を格納する。
+ * 人事汎用表示形式設定情報を格納する。<br>
  */
 public class LabelProperty implements BaseProperty {
 	
 	/**
-	 * 人事汎用表示形式。
+	 * 人事汎用表示形式。<br>
 	 */
 	private final String	key;
 	
+	/**
+	 * フォーマット。<br>
+	 */
 	private final String	format;
 	
 	/**
@@ -54,8 +57,8 @@ public class LabelProperty implements BaseProperty {
 	
 	/**
 	 * 人事汎用表示形式設定情報を生成する。
-	 * @param key
-	 * @param format
+	 * @param key       人事汎用表示形式
+	 * @param format    フォーマット
 	 * @param css       CSS
 	 * @param codeKey   MosPコードキー
 	 * @param namingKey 名称区分

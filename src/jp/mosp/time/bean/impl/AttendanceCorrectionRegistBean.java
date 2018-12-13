@@ -29,9 +29,6 @@ import jp.mosp.platform.base.PlatformBean;
 import jp.mosp.time.bean.AttendanceCorrectionRegistBeanInterface;
 import jp.mosp.time.constant.TimeConst;
 import jp.mosp.time.dao.settings.AttendanceCorrectionDaoInterface;
-import jp.mosp.time.dao.settings.AttendanceDaoInterface;
-import jp.mosp.time.dao.settings.GoOutDaoInterface;
-import jp.mosp.time.dao.settings.RestDaoInterface;
 import jp.mosp.time.dto.settings.AllowanceDtoInterface;
 import jp.mosp.time.dto.settings.AttendanceCorrectionDtoInterface;
 import jp.mosp.time.dto.settings.AttendanceDtoInterface;
@@ -47,27 +44,8 @@ public class AttendanceCorrectionRegistBean extends PlatformBean implements Atte
 	/**
 	 * 勤怠修正データDAOクラス。<br>
 	 */
-	AttendanceCorrectionDaoInterface	attendanceCorrectionDao;
+	AttendanceCorrectionDaoInterface attendanceCorrectionDao;
 	
-	/**
-	 * 勤怠データDAOクラス。<br>
-	 */
-	AttendanceDaoInterface				attendanceDao;
-	
-	/**
-	 * 勤怠データDAOクラス。<br>
-	 */
-	RestDaoInterface					restDao;
-	
-	/**
-	 * 休出DAOクラス。<br>
-	 */
-	GoOutDaoInterface					goOutDao;
-	
-	
-	/**
-	 * 勤怠データDAOクラス。<br>
-	 */
 	
 	/**
 	 * {@link PlatformBean#PlatformBean()}を実行する。<br>
@@ -88,10 +66,6 @@ public class AttendanceCorrectionRegistBean extends PlatformBean implements Atte
 	@Override
 	public void initBean() throws MospException {
 		attendanceCorrectionDao = (AttendanceCorrectionDaoInterface)createDao(AttendanceCorrectionDaoInterface.class);
-		attendanceDao = (AttendanceDaoInterface)createDao(AttendanceDaoInterface.class);
-		restDao = (RestDaoInterface)createDao(RestDaoInterface.class);
-		goOutDao = (GoOutDaoInterface)createDao(GoOutDaoInterface.class);
-		
 	}
 	
 	@Override
@@ -371,39 +345,48 @@ public class AttendanceCorrectionRegistBean extends PlatformBean implements Atte
 			AllowanceDtoInterface oldAllowanceDto, AllowanceDtoInterface newAllowanceDto) {
 		if (newAllowanceDto.getAllowanceCode().equals(TimeConst.CODE_ALLOWANCE_CODE_INFO1)) {
 			// 手当てコード1の場合
-			setAllowanceColection(dto, oldAllowanceDto, newAllowanceDto, TimeConst.CODE_ATTENDANCE_ITEM_NAME_ALLOWANCE1);
+			setAllowanceColection(dto, oldAllowanceDto, newAllowanceDto,
+					TimeConst.CODE_ATTENDANCE_ITEM_NAME_ALLOWANCE1);
 		}
 		if (newAllowanceDto.getAllowanceCode().equals(TimeConst.CODE_ALLOWANCE_CODE_INFO2)) {
 			// 手当てコード2の場合
-			setAllowanceColection(dto, oldAllowanceDto, newAllowanceDto, TimeConst.CODE_ATTENDANCE_ITEM_NAME_ALLOWANCE2);
+			setAllowanceColection(dto, oldAllowanceDto, newAllowanceDto,
+					TimeConst.CODE_ATTENDANCE_ITEM_NAME_ALLOWANCE2);
 		}
 		if (newAllowanceDto.getAllowanceCode().equals(TimeConst.CODE_ALLOWANCE_CODE_INFO3)) {
 			// 手当てコード3の場合
-			setAllowanceColection(dto, oldAllowanceDto, newAllowanceDto, TimeConst.CODE_ATTENDANCE_ITEM_NAME_ALLOWANCE3);
+			setAllowanceColection(dto, oldAllowanceDto, newAllowanceDto,
+					TimeConst.CODE_ATTENDANCE_ITEM_NAME_ALLOWANCE3);
 		}
 		if (newAllowanceDto.getAllowanceCode().equals(TimeConst.CODE_ALLOWANCE_CODE_INFO4)) {
 			// 手当てコード4の場合
-			setAllowanceColection(dto, oldAllowanceDto, newAllowanceDto, TimeConst.CODE_ATTENDANCE_ITEM_NAME_ALLOWANCE4);
+			setAllowanceColection(dto, oldAllowanceDto, newAllowanceDto,
+					TimeConst.CODE_ATTENDANCE_ITEM_NAME_ALLOWANCE4);
 		}
 		if (newAllowanceDto.getAllowanceCode().equals(TimeConst.CODE_ALLOWANCE_CODE_INFO5)) {
 			// 手当てコード5の場合
-			setAllowanceColection(dto, oldAllowanceDto, newAllowanceDto, TimeConst.CODE_ATTENDANCE_ITEM_NAME_ALLOWANCE5);
+			setAllowanceColection(dto, oldAllowanceDto, newAllowanceDto,
+					TimeConst.CODE_ATTENDANCE_ITEM_NAME_ALLOWANCE5);
 		}
 		if (newAllowanceDto.getAllowanceCode().equals(TimeConst.CODE_ALLOWANCE_CODE_INFO6)) {
 			// 手当てコード6の場合
-			setAllowanceColection(dto, oldAllowanceDto, newAllowanceDto, TimeConst.CODE_ATTENDANCE_ITEM_NAME_ALLOWANCE6);
+			setAllowanceColection(dto, oldAllowanceDto, newAllowanceDto,
+					TimeConst.CODE_ATTENDANCE_ITEM_NAME_ALLOWANCE6);
 		}
 		if (newAllowanceDto.getAllowanceCode().equals(TimeConst.CODE_ALLOWANCE_CODE_INFO7)) {
 			// 手当てコード7の場合
-			setAllowanceColection(dto, oldAllowanceDto, newAllowanceDto, TimeConst.CODE_ATTENDANCE_ITEM_NAME_ALLOWANCE7);
+			setAllowanceColection(dto, oldAllowanceDto, newAllowanceDto,
+					TimeConst.CODE_ATTENDANCE_ITEM_NAME_ALLOWANCE7);
 		}
 		if (newAllowanceDto.getAllowanceCode().equals(TimeConst.CODE_ALLOWANCE_CODE_INFO8)) {
 			// 手当てコード8の場合
-			setAllowanceColection(dto, oldAllowanceDto, newAllowanceDto, TimeConst.CODE_ATTENDANCE_ITEM_NAME_ALLOWANCE8);
+			setAllowanceColection(dto, oldAllowanceDto, newAllowanceDto,
+					TimeConst.CODE_ATTENDANCE_ITEM_NAME_ALLOWANCE8);
 		}
 		if (newAllowanceDto.getAllowanceCode().equals(TimeConst.CODE_ALLOWANCE_CODE_INFO9)) {
 			// 手当てコード9の場合
-			setAllowanceColection(dto, oldAllowanceDto, newAllowanceDto, TimeConst.CODE_ATTENDANCE_ITEM_NAME_ALLOWANCE9);
+			setAllowanceColection(dto, oldAllowanceDto, newAllowanceDto,
+					TimeConst.CODE_ATTENDANCE_ITEM_NAME_ALLOWANCE9);
 		}
 		if (newAllowanceDto.getAllowanceCode().equals(TimeConst.CODE_ALLOWANCE_CODE_INF10)) {
 			// 手当てコード10の場合
@@ -544,9 +527,9 @@ public class AttendanceCorrectionRegistBean extends PlatformBean implements Atte
 		}
 		if (oldGoOutDto != null) {
 			if (oldGoOutDto.getGoOutStart() != null) {
-				dto.setCorrectionBefore(DateUtility.getStringTime(oldGoOutDto.getGoOutStart(),
-						oldGoOutDto.getWorkDate())
-						+ hyphen + DateUtility.getStringTime(oldGoOutDto.getGoOutEnd(), oldGoOutDto.getWorkDate()));
+				dto.setCorrectionBefore(
+						DateUtility.getStringTime(oldGoOutDto.getGoOutStart(), oldGoOutDto.getWorkDate()) + hyphen
+								+ DateUtility.getStringTime(oldGoOutDto.getGoOutEnd(), oldGoOutDto.getWorkDate()));
 			} else {
 				dto.setCorrectionBefore(hyphen);
 			}

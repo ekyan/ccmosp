@@ -22,6 +22,7 @@ import java.util.Date;
 import jp.mosp.framework.base.BaseVo;
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.utils.DateUtility;
+import jp.mosp.framework.utils.RoleUtility;
 import jp.mosp.framework.utils.TopicPathUtility;
 import jp.mosp.platform.base.PlatformAction;
 import jp.mosp.platform.bean.human.HumanArrayReferenceBeanInterface;
@@ -160,6 +161,8 @@ public class HumanArrayCardAction extends PlatformHumanAction {
 		} else {
 			throwInvalidCommandException();
 		}
+		// 当該画面共通情報設定
+		setCardCommonInfo();
 	}
 	
 	/**
@@ -211,8 +214,8 @@ public class HumanArrayCardAction extends PlatformHumanAction {
 		// 人事汎用管理区分設定
 		vo.setDivision(getTransferredType());
 		// パンくず名設定
-		TopicPathUtility.setTopicPathName(mospParams, vo.getClassName(), mospParams.getName(vo.getDivision())
-				+ mospParams.getName("Information", "Add"));
+		TopicPathUtility.setTopicPathName(mospParams, vo.getClassName(),
+				mospParams.getName(vo.getDivision()) + mospParams.getName("Information", "Add"));
 		// 人事管理共通情報利用設定
 		setPlatformHumanSettings(CMD_SEARCH, PlatformHumanConst.MODE_HUMAN_NO_ACTIVATE_DATE);
 		// 人事管理共通情報設定
@@ -237,8 +240,8 @@ public class HumanArrayCardAction extends PlatformHumanAction {
 		// 表示区分取得
 		String division = vo.getDivision();
 		// 有効日取得
-		Date activeDate = DateUtility
-			.getDate(vo.getTxtActivateYear(), vo.getTxtActivateMonth(), vo.getTxtActivateDay());
+		Date activeDate = DateUtility.getDate(vo.getTxtActivateYear(), vo.getTxtActivateMonth(),
+				vo.getTxtActivateDay());
 		// 入力値確認
 		validate();
 		// 結果確認
@@ -250,7 +253,7 @@ public class HumanArrayCardAction extends PlatformHumanAction {
 		// 登録クラス取得
 		HumanArrayRegistBeanInterface regist = platform().humanArrayRegist();
 		// 登録処理
-		regist.regist(division, KEY_VIEW_ARRAY_CARD, vo.getPersonalId(), activeDate, rowId);
+		regist.regist(division, KEY_VIEW_ARRAY_CARD, vo.getPersonalId(), activeDate, rowId, vo.getAryRecordIdMap());
 		// 登録結果確認
 		if (mospParams.hasErrorMessage()) {
 			// 登録失敗メッセージ設定
@@ -266,10 +269,7 @@ public class HumanArrayCardAction extends PlatformHumanAction {
 		// VOに設定
 		vo.setRowId(getInt(newRowId));
 		// 値再設定
-		vo.putArrayItem(
-				division,
-				reference().humanArray().getHumanArrayMapInfo(division, KEY_VIEW_ARRAY_CARD, vo.getPersonalId(),
-						getInt(newRowId)));
+		getArrayItem(division, getInt(newRowId));
 		// 履歴編集モード設定
 		vo.setModeCardEdit(PlatformConst.MODE_CARD_EDIT_EDIT);
 	}
@@ -301,11 +301,10 @@ public class HumanArrayCardAction extends PlatformHumanAction {
 		// 一覧参照クラス取得
 		HumanArrayReferenceBeanInterface arrayRefere = reference().humanArray();
 		// 人事汎用一覧情報取得
-		vo.putArrayItem(division,
-				arrayRefere.getHumanArrayMapInfo(division, KEY_VIEW_ARRAY_CARD, vo.getPersonalId(), rowId));
+		getArrayItem(division, rowId);
 		// 有効日取得
-		Date date = DateUtility.getDate(vo.getArrayItem(division, String.valueOf(rowId),
-				PlatformHumanConst.PRM_HUMAN_ARRAY_DATE));
+		Date date = DateUtility
+			.getDate(vo.getArrayItem(division, String.valueOf(rowId), PlatformHumanConst.PRM_HUMAN_ARRAY_DATE));
 		// 有効日編集項目に設定
 		vo.setTxtActivateYear(DateUtility.getStringYear(date));
 		vo.setTxtActivateMonth(DateUtility.getStringMonth(date));
@@ -318,11 +317,14 @@ public class HumanArrayCardAction extends PlatformHumanAction {
 		vo.setModeCardEdit(PlatformConst.MODE_CARD_EDIT_EDIT);
 		// MosP処理情報に追加
 		mospParams.addGeneralParam(KEY_VIEW_ARRAY_CARD, CMD_EDIT_SELECT);
+		// 人事汎用管理区分参照権限設定
+		vo.setJsIsReferenceDivision(RoleUtility.getReferenceDivisionsList(mospParams).contains(getTransferredType()));
+		
 	}
 	
 	/**
 	 * 削除処理を行う。<br>
-	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合 
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
 	protected void delete() throws MospException {
 		// VO取得
@@ -330,7 +332,7 @@ public class HumanArrayCardAction extends PlatformHumanAction {
 		// 登録クラス取得
 		HumanArrayRegistBeanInterface regist = platform().humanArrayRegist();
 		// 削除処理
-		regist.delete(vo.getDivision(), KEY_VIEW_ARRAY_CARD, vo.getPersonalId(), vo.getTargetDate(), vo.getRowId());
+		regist.delete(vo.getDivision(), KEY_VIEW_ARRAY_CARD, vo.getRowId(), vo.getAryRecordIdMap());
 		// 削除結果確認
 		if (mospParams.hasErrorMessage()) {
 			// 削除失敗メッセージ設定
@@ -382,6 +384,9 @@ public class HumanArrayCardAction extends PlatformHumanAction {
 		vo.setModeActivateDate(PlatformConst.MODE_ACTIVATE_DATE_CHANGING);
 		// 編集モード設定
 		vo.setModeCardEdit(PlatformConst.MODE_CARD_EDIT_ADD);
+		// 人事汎用管理区分参照権限設定
+		vo.setJsIsReferenceDivision(RoleUtility.getReferenceDivisionsList(mospParams).contains(getTransferredType()));
+		
 		// プルダウン設定
 		setPulldown();
 	}
@@ -412,7 +417,39 @@ public class HumanArrayCardAction extends PlatformHumanAction {
 	 * @throws MospException 日付の変換に失敗した場合
 	 */
 	protected void validate() throws MospException {
-		// TODO
+		
 	}
 	
+	/**
+	 * 当該画面の共通情報を設定する
+	 */
+	public void setCardCommonInfo() {
+		// VO取得
+		HumanArrayCardVo vo = (HumanArrayCardVo)mospParams.getVo();
+		// 人事汎用管理区分参照権限設定
+		vo.setJsIsReferenceDivision(RoleUtility.getReferenceDivisionsList(mospParams).contains(getTransferredType()));
+	}
+	
+	/**
+	 * 一覧情報を取得
+	 * @param division 人事汎用管理区分
+	 * @param rowId 行ID
+	 * @throws MospException SQLの実行時例外が発生した場合
+	 */
+	protected void getArrayItem(String division, int rowId) throws MospException {
+		// VO取得
+		HumanArrayCardVo vo = (HumanArrayCardVo)mospParams.getVo();
+		// 人事汎用通常情報参照クラス取得
+		HumanArrayReferenceBeanInterface normalReference = reference().humanArray();
+		
+		// 表示情報のMaPを取得
+		normalReference.getHumanArrayDtoMapInfo(division, KEY_VIEW_ARRAY_CARD, vo.getPersonalId(), rowId);
+		
+		// レコード識別ID
+		vo.setAryRecordIdMap(normalReference.getRecordsMap());
+		
+		// 登録情報を取得しVOに設定
+		vo.putArrayItem(division, normalReference.getArrayHumanInfoMap());
+		
+	}
 }

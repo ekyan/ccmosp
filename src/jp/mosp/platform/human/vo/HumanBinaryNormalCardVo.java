@@ -51,6 +51,11 @@ public class HumanBinaryNormalCardVo extends PlatformHumanVo {
 	 */
 	private boolean				isExsistDto;
 	
+	/**
+	 * レコード識別ID
+	 */
+	private Long				hidRecordId;
+	
 	
 	/**
 	 * @param aryPltFileType セットする aryPltFileType
@@ -120,5 +125,19 @@ public class HumanBinaryNormalCardVo extends PlatformHumanVo {
 	 */
 	public boolean isExsistDto() {
 		return isExsistDto;
+	}
+	
+	/**
+	 * @return hidRecordId
+	 */
+	public Long getHidRecordId() {
+		return hidRecordId;
+	}
+	
+	/**
+	 * @param hidRecordId セットする hidRecordId
+	 */
+	public void setHidRecordId(Long hidRecordId) {
+		this.hidRecordId = hidRecordId;
 	}
 }

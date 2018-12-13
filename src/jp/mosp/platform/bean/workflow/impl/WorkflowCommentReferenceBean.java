@@ -32,7 +32,7 @@ import jp.mosp.platform.dto.workflow.WorkflowCommentDtoInterface;
  */
 public class WorkflowCommentReferenceBean extends PlatformBean implements WorkflowCommentReferenceBeanInterface {
 	
-	private WorkflowCommentDaoInterface	dao;
+	private WorkflowCommentDaoInterface dao;
 	
 	
 	/**

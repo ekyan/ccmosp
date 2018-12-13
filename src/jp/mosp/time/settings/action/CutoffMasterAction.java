@@ -43,6 +43,8 @@ import jp.mosp.time.settings.vo.CutoffMasterVo;
  * </li><li>
  * {@link #CMD_SEARCH}
  * </li><li>
+ * {@link #CMD_RE_SHOW}
+ * </li><li>
  * {@link #CMD_REGIST}
  * </li><li>
  * {@link #CMD_DELETE}
@@ -54,6 +56,8 @@ import jp.mosp.time.settings.vo.CutoffMasterVo;
  * {@link #CMD_INSERT_MODE}
  * </li><li>
  * {@link #CMD_EDIT_MODE}
+ * </li><li>
+ * {@link #CMD_ADD_MODE}
  * </li><li>
  * {@link #CMD_BATCH_UPDATE}
  * </li></ul>
@@ -541,8 +545,8 @@ public class CutoffMasterAction extends TimeSettingAction {
 			aryCutoffName[i] = dto.getCutoffName();
 			aryCutoffAbbr[i] = dto.getCutoffAbbr();
 			aryCutOffDate[i] = getCodeName(String.valueOf(dto.getCutoffDate()), cutoffDateArray);
-			aryNoApproval[i] = getCodeName(String.valueOf(dto.getNoApproval()), mospParams.getProperties()
-				.getCodeArray(TimeConst.CODE_KEY_NO_APPROVAL, false));
+			aryNoApproval[i] = getCodeName(String.valueOf(dto.getNoApproval()),
+					mospParams.getProperties().getCodeArray(TimeConst.CODE_KEY_NO_APPROVAL, false));
 			arySelfTightening[i] = getInactivateFlagName(dto.getSelfTightening());
 			aryInactivateFlag[i] = getInactivateFlagName(dto.getInactivateFlag());
 		}

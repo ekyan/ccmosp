@@ -38,6 +38,7 @@ import = "jp.mosp.time.comparator.settings.ApplicationReferenceScheduleComparato
 import = "jp.mosp.time.comparator.settings.ApplicationReferenceTimeSettingComparator"
 import = "jp.mosp.time.settings.action.ApplicationReferenceAction"
 import = "jp.mosp.time.settings.vo.ApplicationReferenceVo"
+import = "jp.mosp.platform.utils.PlatformNamingUtility"
 %><%
 MospParams params = (MospParams)request.getAttribute(MospConst.ATT_MOSP_PARAMS);
 ApplicationReferenceVo vo = (ApplicationReferenceVo)params.getVo();
@@ -60,7 +61,7 @@ ApplicationReferenceVo vo = (ApplicationReferenceVo)params.getVo();
 					<button type="button" class="Name2Button" onclick="submitForm(event, 'divSearchActiveDate', null, '<%= ApplicationReferenceAction.CMD_SET_ACTIVATION_DATE %>')"><%= vo.getModeActivateDate().equals(PlatformConst.MODE_ACTIVATE_DATE_FIXED) ? params.getName("Change") : params.getName("Decision") %></button>
 				</div>
 			</td>
-			<td class="TitleTd"><label for="txtSearchEmployeeCode"><%= params.getName("Employee","Code") %></label></td>
+			<td class="TitleTd"><label for="txtSearchEmployeeCode"><%= PlatformNamingUtility.employeeCode(params) %></label></td>
 			<td class="InputTd">
 				<input type="text" class="Code10TextBox" id="txtSearchEmployeeCode" name="txtSearchEmployeeCode" value="<%= HtmlUtility.escapeHTML(vo.getTxtSearchEmployeeCode()) %>" />
 			</td>
@@ -153,7 +154,7 @@ ApplicationReferenceVo vo = (ApplicationReferenceVo)params.getVo();
 	<table class="LeftListTable" id="list">
 		<thead>
 			<tr>
-				<th class="ListSortTh" id="thEmployeeCode" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= EmployeeCodeComparator.class.getName() %>'), '<%= ApplicationReferenceAction.CMD_SORT %>')"><%= params.getName("Employee","Code") %><%= PlatformUtility.getSortMark(EmployeeCodeComparator.class.getName(), params) %></th>
+				<th class="ListSortTh" id="thEmployeeCode" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= EmployeeCodeComparator.class.getName() %>'), '<%= ApplicationReferenceAction.CMD_SORT %>')"><%= PlatformNamingUtility.employeeCode(params) %><%= PlatformUtility.getSortMark(EmployeeCodeComparator.class.getName(), params) %></th>
 				<th class="ListSortTh" id="thEmployeeName" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= EmployeeNameComparator.class.getName() %>'), '<%= ApplicationReferenceAction.CMD_SORT %>')"><%= params.getName("FullName") %><%= PlatformUtility.getSortMark(EmployeeNameComparator.class.getName(), params) %></th>
 				<th class="ListSortTh" id="tdBorderLeft" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= ActivateDateComparator.class.getName() %>'), '<%= ApplicationReferenceAction.CMD_SORT %>')"><%= params.getName("ActivateDate") %><%= PlatformUtility.getSortMark(ActivateDateComparator.class.getName(), params) %></th>
 				<th class="ListSortTh" id="thApplicationCode" onclick="submitTransfer(event, null, null, new Array('<%= PlatformConst.PRM_TRANSFERRED_SORT_KEY %>', '<%= ApplicationReferenceApplicationCodeComparator.class.getName() %>'), '<%= ApplicationReferenceAction.CMD_SORT %>')"><%= params.getName("Code") %><%= PlatformUtility.getSortMark(ApplicationReferenceApplicationCodeComparator.class.getName(), params) %></th>

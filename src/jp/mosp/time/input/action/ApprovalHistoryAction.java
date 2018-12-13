@@ -22,6 +22,7 @@ import java.util.List;
 
 import jp.mosp.framework.base.BaseVo;
 import jp.mosp.framework.base.MospException;
+import jp.mosp.framework.constant.MospConst;
 import jp.mosp.framework.utils.DateUtility;
 import jp.mosp.framework.utils.MospUtility;
 import jp.mosp.platform.constant.PlatformConst;
@@ -61,6 +62,8 @@ import jp.mosp.time.input.vo.ApprovalHistoryVo;
  * {@link #CMD_APPROVAL_HISTORY_LIEU_SELECT_SHOW}
  * </li><li>
  * {@link #CMD_DIFFERENCE_WORK_APPROVAL_HISTORY_SELECT_SHOW}
+ * </li><li>
+ * {@link #CMD_WORK_TYPE_CHANGE_APPROVAL_HISTORY_SELECT_SHOW}
  * </li></ul>
  */
 public class ApprovalHistoryAction extends TimeAction {
@@ -242,8 +245,8 @@ public class ApprovalHistoryAction extends TimeAction {
 		// 人事情報をVOに設定
 		setEmployeeInfo(workflowDto.getPersonalId(), workflowDto.getWorkflowDate());
 		// ワークフロー状態をVOに設定
-		vo.setLblAttendanceState(getStatusStageValueView(workflowDto.getWorkflowStatus(),
-				workflowDto.getWorkflowStage()));
+		vo.setLblAttendanceState(
+				getStatusStageValueView(workflowDto.getWorkflowStatus(), workflowDto.getWorkflowStage()));
 		// 勤怠情報を取得
 		AttendanceListDto dto = timeReference().attendanceList().getAttendanceListDto(workflowDto.getPersonalId(),
 				workflowDto.getWorkflowDate());
@@ -310,9 +313,10 @@ public class ApprovalHistoryAction extends TimeAction {
 		// ワークフロー情報取得
 		WorkflowDtoInterface workflowDto = reference().workflow().getLatestWorkflowInfo(vo.getWorkflow());
 		// ワークフロー状態をVOに設定
-		vo.setLblOverTimeState(getStatusStageValueView(workflowDto.getWorkflowStatus(), workflowDto.getWorkflowStage()));
-		vo.setLblOverTimeApprover(getWorkflowCommentDtoLastFirstName(workflowDto, reference().workflowComment()
-			.getLatestWorkflowCommentInfo(dto.getWorkflow())));
+		vo.setLblOverTimeState(
+				getStatusStageValueView(workflowDto.getWorkflowStatus(), workflowDto.getWorkflowStage()));
+		vo.setLblOverTimeApprover(getWorkflowCommentDtoLastFirstName(workflowDto,
+				reference().workflowComment().getLatestWorkflowCommentInfo(dto.getWorkflow())));
 	}
 	
 	/**
@@ -347,8 +351,8 @@ public class ApprovalHistoryAction extends TimeAction {
 		// 区分の設定
 		vo.setLblHolidayType1(getHolidayType1Name(dto.getHolidayType1(), dto.getHolidayType2()));
 		// 種別の設定
-		vo.setLblHolidayType2(getHolidayType2Abbr(dto.getHolidayType1(), dto.getHolidayType2(),
-				dto.getRequestStartDate()));
+		vo.setLblHolidayType2(
+				getHolidayType2Abbr(dto.getHolidayType1(), dto.getHolidayType2(), dto.getRequestStartDate()));
 		// 範囲の設定
 		if (dto.getHolidayRange() == TimeConst.CODE_HOLIDAY_RANGE_ALL) {
 			// 全休の場合
@@ -369,8 +373,8 @@ public class ApprovalHistoryAction extends TimeAction {
 		WorkflowDtoInterface workflowDto = reference().workflow().getLatestWorkflowInfo(vo.getWorkflow());
 		// ワークフローの設定
 		vo.setLblHolidayState(getStatusStageValueView(workflowDto.getWorkflowStatus(), workflowDto.getWorkflowStage()));
-		vo.setLblHolidayApprover(getWorkflowCommentDtoLastFirstName(workflowDto, reference().workflowComment()
-			.getLatestWorkflowCommentInfo(dto.getWorkflow())));
+		vo.setLblHolidayApprover(getWorkflowCommentDtoLastFirstName(workflowDto,
+				reference().workflowComment().getLatestWorkflowCommentInfo(dto.getWorkflow())));
 	}
 	
 	/**
@@ -392,7 +396,7 @@ public class ApprovalHistoryAction extends TimeAction {
 		List<SubstituteDtoInterface> substituteList = timeReference().substitute().getSubstituteList(dto.getWorkflow());
 		// 休日出勤承認履歴
 		vo.setLblWorkOnHolidayWorkDate(DateUtility.getStringDateAndDay(dto.getRequestDate()));
-		vo.setLblWorkOnHolidayTime(getTimeWaveFormat(dto.getStartTime(), dto.getEndTime(), dto.getRequestDate()));
+		vo.setLblWorkOnHolidayTime(getWorkOnHolidaySchedule(dto));
 		vo.setLblWorkOnHolidayReason(dto.getRequestReason());
 		vo.setLblWorkOnHolidayDate1("");
 		vo.setLblWorkOnHolidayDate2("");
@@ -402,17 +406,15 @@ public class ApprovalHistoryAction extends TimeAction {
 			int substituteRange = substituteDto.getSubstituteRange();
 			if (i == 0) {
 				vo.setLblWorkOnHolidayDate1(getHolidayDate(substituteDate, substituteRange));
-			} else if (i == 1) {
-				vo.setLblWorkOnHolidayDate2(getHolidayDate(substituteDate, substituteRange));
 			}
 			i++;
 		}
 		// ワークフロー
 		WorkflowDtoInterface workflowDto = reference().workflow().getLatestWorkflowInfo(dto.getWorkflow());
-		vo.setLblWorkOnHolidayState(getStatusStageValueView(workflowDto.getWorkflowStatus(),
-				workflowDto.getWorkflowStage()));
-		vo.setLblWorkOnHolidayApprover(getWorkflowCommentDtoLastFirstName(workflowDto, reference().workflowComment()
-			.getLatestWorkflowCommentInfo(dto.getWorkflow())));
+		vo.setLblWorkOnHolidayState(
+				getStatusStageValueView(workflowDto.getWorkflowStatus(), workflowDto.getWorkflowStage()));
+		vo.setLblWorkOnHolidayApprover(getWorkflowCommentDtoLastFirstName(workflowDto,
+				reference().workflowComment().getLatestWorkflowCommentInfo(dto.getWorkflow())));
 	}
 	
 	/**
@@ -443,10 +445,10 @@ public class ApprovalHistoryAction extends TimeAction {
 		vo.setLblSubHolidayWorkDate(sb.toString());
 		// ワークフロー
 		WorkflowDtoInterface workflowDto = reference().workflow().getLatestWorkflowInfo(dto.getWorkflow());
-		vo.setLblSubHolidayState(getStatusStageValueView(workflowDto.getWorkflowStatus(),
-				workflowDto.getWorkflowStage()));
-		vo.setLblSubHolidayApprover(getWorkflowCommentDtoLastFirstName(workflowDto, reference().workflowComment()
-			.getLatestWorkflowCommentInfo(dto.getWorkflow())));
+		vo.setLblSubHolidayState(
+				getStatusStageValueView(workflowDto.getWorkflowStatus(), workflowDto.getWorkflowStage()));
+		vo.setLblSubHolidayApprover(getWorkflowCommentDtoLastFirstName(workflowDto,
+				reference().workflowComment().getLatestWorkflowCommentInfo(dto.getWorkflow())));
 	}
 	
 	/**
@@ -475,10 +477,10 @@ public class ApprovalHistoryAction extends TimeAction {
 		vo.setLblDifferenceReason(dto.getRequestReason());
 		// ワークフロー
 		WorkflowDtoInterface workflowDto = reference().workflow().getLatestWorkflowInfo(dto.getWorkflow());
-		vo.setLblDifferenceState(getStatusStageValueView(workflowDto.getWorkflowStatus(),
-				workflowDto.getWorkflowStage()));
-		vo.setLblDifferenceApprover(getWorkflowCommentDtoLastFirstName(workflowDto, reference().workflowComment()
-			.getLatestWorkflowCommentInfo(dto.getWorkflow())));
+		vo.setLblDifferenceState(
+				getStatusStageValueView(workflowDto.getWorkflowStatus(), workflowDto.getWorkflowStage()));
+		vo.setLblDifferenceApprover(getWorkflowCommentDtoLastFirstName(workflowDto,
+				reference().workflowComment().getLatestWorkflowCommentInfo(dto.getWorkflow())));
 	}
 	
 	/**
@@ -494,23 +496,23 @@ public class ApprovalHistoryAction extends TimeAction {
 		// VO準備
 		ApprovalHistoryVo vo = (ApprovalHistoryVo)mospParams.getVo();
 		// DTO準備
-		WorkTypeChangeRequestDtoInterface dto = timeReference().workTypeChangeRequest().findForWorkflow(
-				vo.getWorkflow());
+		WorkTypeChangeRequestDtoInterface dto = timeReference().workTypeChangeRequest()
+			.findForWorkflow(vo.getWorkflow());
 		// 存在確認
 		checkSelectedDataExist(dto);
 		// 出勤日
 		vo.setLblWorkTypeChangeDate(DateUtility.getStringDateAndDay(dto.getRequestDate()));
 		// 変更後勤務形態
-		vo.setLblWorkTypeChangeWorkType(timeReference().workType().getWorkTypeAbbrAndTime(dto.getWorkTypeCode(),
-				dto.getRequestDate()));
+		vo.setLblWorkTypeChangeWorkType(
+				timeReference().workType().getWorkTypeAbbrAndTime(dto.getWorkTypeCode(), dto.getRequestDate()));
 		// 理由
 		vo.setLblWorkTypeChangeReason(dto.getRequestReason());
 		// ワークフロー
 		WorkflowDtoInterface workflowDto = reference().workflow().getLatestWorkflowInfo(dto.getWorkflow());
-		vo.setLblWorkTypeChangeState(getStatusStageValueView(workflowDto.getWorkflowStatus(),
-				workflowDto.getWorkflowStage()));
-		vo.setLblWorkTypeChangeApprover(getWorkflowCommentDtoLastFirstName(workflowDto, reference().workflowComment()
-			.getLatestWorkflowCommentInfo(dto.getWorkflow())));
+		vo.setLblWorkTypeChangeState(
+				getStatusStageValueView(workflowDto.getWorkflowStatus(), workflowDto.getWorkflowStage()));
+		vo.setLblWorkTypeChangeApprover(getWorkflowCommentDtoLastFirstName(workflowDto,
+				reference().workflowComment().getLatestWorkflowCommentInfo(dto.getWorkflow())));
 	}
 	
 	/**
@@ -540,8 +542,8 @@ public class ApprovalHistoryAction extends TimeAction {
 		// 人事情報をVOに設定
 		setEmployeeInfo(dto.getPersonalId(), dto.getWorkflowDate());
 		// DTO準備
-		List<WorkflowCommentDtoInterface> list = reference().workflowComment().getWorkflowCommentHistory(
-				dto.getWorkflow());
+		List<WorkflowCommentDtoInterface> list = reference().workflowComment()
+			.getWorkflowCommentHistory(dto.getWorkflow());
 		// データ配列初期化
 		String[] aryLblApprovalState = new String[list.size()];
 		String[] aryLblApprovalResult = new String[list.size()];
@@ -571,10 +573,23 @@ public class ApprovalHistoryAction extends TimeAction {
 	 * @param date 振替日
 	 * @param range 振替範囲
 	 * @return 一覧に表示する振替日の文字列
+	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
 	 */
-	protected String getHolidayDate(Date date, int range) {
+	protected String getHolidayDate(Date date, int range) throws MospException {
 		// 半日の振替休日が実装された場合は振替休日の範囲も表示する
-		return DateUtility.getStringDateAndDay(date);
+		String base = DateUtility.getStringDateAndDay(date);
+		// 半日振替の場合
+		if (timeReference().workOnHolidayRequest().useHalfSubstitute()) {
+			// 全休の場合
+			if (range == TimeConst.CODE_HOLIDAY_RANGE_ALL) {
+				return base + MospConst.STR_SB_SPACE + getCodeName(range, TimeConst.CODE_SUBSTITUTE_WORK_RANGE);
+			}
+			// 午前・午後の場合
+			if (range == TimeConst.CODE_HOLIDAY_RANGE_AM || range == TimeConst.CODE_HOLIDAY_RANGE_PM) {
+				return base + MospConst.STR_SB_SPACE + getCodeName(range, TimeConst.CODE_SUBSTITUTE_HOLIDAY_RANGE);
+			}
+		}
+		return base;
 	}
 	
 	/**

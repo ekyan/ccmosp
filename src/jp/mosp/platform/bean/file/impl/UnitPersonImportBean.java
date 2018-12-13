@@ -38,7 +38,7 @@ public class UnitPersonImportBean extends UnitImportBean {
 	 * 区切文字(承認者社員コード)。<br>
 	 * 入力の際の区切文字として用いる。<br>
 	 */
-	protected static final String	SEPARATOR_EMPLOYEE_CODES	= ";";
+	protected static final String SEPARATOR_EMPLOYEE_CODES = ";";
 	
 	
 	/**
@@ -65,7 +65,7 @@ public class UnitPersonImportBean extends UnitImportBean {
 			throws MospException {
 		// 継承基のメソッドを実行
 		ApprovalUnitDtoInterface dto = super.getUnitDto(fieldList, data);
-		// 登録情報の内容を取得(登録情報に含まれない場合はnull)
+		// 登録情報の内容を取得(登録情報に含まれない場合は空白)
 		String employeeCodes = getFieldValue(PfmApprovalUnitDao.COL_APPROVER_PERSONAL_ID, fieldList, data);
 		// 承認者個人ID(カンマ区切)を取得
 		String approverPersonalId = getApproverPersonalId(employeeCodes, dto.getActivateDate());
@@ -74,6 +74,7 @@ public class UnitPersonImportBean extends UnitImportBean {
 		// 承認者所属及び職位設定(空白)
 		dto.setApproverSectionCode("");
 		dto.setApproverPositionCode("");
+		dto.setApproverPositionGrade("");
 		// 承認者個人ID設定
 		dto.setApproverPersonalId(approverPersonalId);
 		return dto;
@@ -94,7 +95,8 @@ public class UnitPersonImportBean extends UnitImportBean {
 		// 区切文字を変換(セミコロン→カンマ)
 		String csvEmployeeCodes = employeeCodes.replaceAll(SEPARATOR_EMPLOYEE_CODES, SEPARATOR_DATA);
 		// 人事情報参照クラス取得
-		HumanReferenceBeanInterface humanRefer = (HumanReferenceBeanInterface)createBean(HumanReferenceBeanInterface.class);
+		HumanReferenceBeanInterface humanRefer = (HumanReferenceBeanInterface)createBean(
+				HumanReferenceBeanInterface.class);
 		// 承認者個人ID(カンマ区切)を取得
 		return humanRefer.getPersonalIds(csvEmployeeCodes, targetDate);
 	}

@@ -141,6 +141,37 @@ public interface WorkflowDaoInterface extends BaseDaoInterface {
 	List<WorkflowDtoInterface> findApprovable(Set<String> functionCodeSet) throws MospException;
 	
 	/**
+	 * 承認可能ワークフロー情報リストを取得する。<br>
+	 * 機能コードセットに含まれるワークフロー情報が抽出される。<br>
+	 * 次の何れかに当てはまるワークフローが、承認可能と判断される。<br>
+	 * <ul><li>
+	 * ワークフロー状況が未承認
+	 * </li><li>
+	 * ワークフロー状況が承認
+	 * </li><li>
+	 * ワークフロー状況が差戻で、ワークフロー段階が0でない
+	 * </li><li>
+	 * ワークフロー状況が承認解除
+	 * </li><li>
+	 * ワークフロー状況が解除申
+	 * </li></ul>
+	 * @param fromDate 期間自
+	 * @param toDate 期間至
+	 * @return ワークフロー情報リスト
+	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
+	 */
+	List<WorkflowDtoInterface> findApprovable(Date fromDate, Date toDate) throws MospException;
+	
+	/**
+	 * 一時戻ワークフロー情報リストを取得する。<br>
+	 * @param fromDate 期間自
+	 * @param toDate 期間至
+	 * @return ワークフロー情報リスト
+	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
+	 */
+	List<WorkflowDtoInterface> findFirstReverted(Date fromDate, Date toDate) throws MospException;
+	
+	/**
 	 * ワークフロー情報リストを取得する。<br>
 	 * 設定された条件で、検索を行う。<br>
 	 * @param fromDate         期間自
@@ -170,6 +201,19 @@ public interface WorkflowDaoInterface extends BaseDaoInterface {
 	/**
 	 * ワークフロー情報リストを取得する。<br>
 	 * 設定された条件で、検索を行う。<br>
+	 * 個人IDで申請を検索する。<br>
+	 * @param personalId 申請者個人ID
+	 * @param fromDate         期間自
+	 * @param toDate           期間至
+	 * @return 有効ワークフロー情報リスト
+	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
+	 */
+	Map<Long, WorkflowDtoInterface> findForCondition(String personalId, Date fromDate, Date toDate)
+			throws MospException;
+	
+	/**
+	 * ワークフロー情報リストを取得する。<br>
+	 * 設定された条件で、検索を行う。<br>
 	 * @param personalId 個人ID
 	 * @param fromDate 期間自
 	 * @param toDate 期間至
@@ -191,5 +235,15 @@ public interface WorkflowDaoInterface extends BaseDaoInterface {
 	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
 	 */
 	Map<Long, WorkflowDtoInterface> findForPersonAndDay(String personalId, Date workflowDate) throws MospException;
+	
+	/**
+	 * 個人IDが合致する
+	 * ワークフロー情報群を取得する。<br>
+	 * <br>
+	 * @param personalId   個人ID
+	 * @return ワークフロー情報群
+	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
+	 */
+	List<WorkflowDtoInterface> findForPerson(String personalId) throws MospException;
 	
 }

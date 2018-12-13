@@ -69,4 +69,12 @@ public interface PaidHolidayDataRegistBeanInterface {
 	 */
 	void checkModify(PaidHolidayDataDtoInterface dto) throws MospException;
 	
+	/**
+	 * 削除時の整合性確認を行う。<br>
+	 * 削除対象有給休暇データが休暇申請で使用されていないか確認。
+	 * 削除対象有給休暇データが有給手動付与されていないか確認。
+	 * @param dto 対象DTO
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 */
+	void checkDeleteConfirm(PaidHolidayDataDtoInterface dto) throws MospException;
 }

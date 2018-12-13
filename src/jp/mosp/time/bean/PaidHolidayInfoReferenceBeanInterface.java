@@ -22,23 +22,14 @@ import java.util.List;
 import java.util.Map;
 
 import jp.mosp.framework.base.MospException;
+import jp.mosp.platform.dto.human.HumanDtoInterface;
 import jp.mosp.time.dto.settings.HolidayRequestDtoInterface;
 import jp.mosp.time.dto.settings.PaidHolidayDataDtoInterface;
 
 /**
  * 有給休暇情報参照インターフェース。
  */
-public interface PaidHolidayInfoReferenceBeanInterface {
-	
-	/**
-	 * 有給休暇データ集計リストを取得する。<br><br>
-	 * @param personalId 個人ID
-	 * @param targetDate 対象年月日
-	 * @return 有給休暇情報
-	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
-	 */
-	@Deprecated
-	List<PaidHolidayDataDtoInterface> getPaidHolidayCalcInfo(String personalId, Date targetDate) throws MospException;
+public interface PaidHolidayInfoReferenceBeanInterface extends PaidHolidayRequestReferenceBeanInterface {
 	
 	/**
 	 * 有給休暇情報を取得する。<br><br>
@@ -51,6 +42,7 @@ public interface PaidHolidayInfoReferenceBeanInterface {
 	
 	/**
 	 * 有給休暇情報を取得する。<br>
+	 * 支給日数/時間、廃棄日数/時間、利用日数/時間を累計で取得する。<br>
 	 * @param personalId 個人ID
 	 * @param targetDate 対象年月日
 	 * @param containNotApproved 未承認要否フラグ(true：未承認申請も含める、false：承認済のみ)
@@ -58,6 +50,20 @@ public interface PaidHolidayInfoReferenceBeanInterface {
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
 	Map<String, Object> getPaidHolidayInfo(String personalId, Date targetDate, boolean containNotApproved)
+			throws MospException;
+	
+	/**
+	 * 承認済の有給休暇情報を取得する。<br>
+	 * 個別有給休暇確認画面で利用する。<br>
+	 * 支給日数/時間、廃棄日数/時間、利用日数/時間を
+	 * 累計ではなく月毎に取得する。<br>
+	 * @param personalId 個人ID
+	 * @param firstDate 対象締期間初日
+	 * @param lastDate 対象締期間最終日
+	 * @return 有給休暇情報
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	Map<String, Object> getPaidHolidayReferenceInfo(String personalId, Date firstDate, Date lastDate)
 			throws MospException;
 	
 	/**
@@ -73,14 +79,25 @@ public interface PaidHolidayInfoReferenceBeanInterface {
 			throws MospException;
 	
 	/**
-	 * 有給休暇申請可能数を取得する。<br><br>
-	 * 休暇申請の承認状況が未承認・承認・差戻・承認解除・承認済は残日数から減算する。
-	 * @param personalId 個人ID
-	 * @param targetDate 対象年月日
-	 * @return 有給休暇申請可能数
+	 * 前年度残、今年度付与日数、対象期間利用(休暇申請)日数を取得する。<br>
+	 * 統計情報一覧で使用する。<br>
+	 * @param humanDto    人事基本情報
+	 * @param displayYear 表示年度
+	 * @param targetDate  対象日
+	 * @return 前年度残、 今年度付与日数、対象期間利用(休暇申請)日数
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
-	Map<String, Object> getPaidHolidayPossibleRequest(String personalId, Date targetDate) throws MospException;
+	Map<String, Object> getSubordinateFiscalPaidHolidayInfo(HumanDtoInterface humanDto, int displayYear,
+			Date targetDate) throws MospException;
+	
+	/**
+	 * 表示用有給休暇リストを取得する。<br>
+	 * @param personalId 個人ID
+	 * @param targetDate 対象年月日
+	 * @return 表示用有給休暇リスト
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	List<Map<String, Object>> getPaidHolidayDataListForView(String personalId, Date targetDate) throws MospException;
 	
 	/**
 	 * 有給休暇次回付与予定を取得する。<br><br>
@@ -116,50 +133,6 @@ public interface PaidHolidayInfoReferenceBeanInterface {
 	String getNextManualGivingDaysAndHours(String personalId) throws MospException;
 	
 	/**
-	 * 有給休暇データ次月リストを取得する。<br><br>
-	 * @param personalId 個人ID
-	 * @param cutoffDate 締日
-	 * @param calculationYear 集計年
-	 * @param calculationMonth 集計月
-	 * @param list 有給休暇データリスト
-	 * @return 有給休暇データ次月リスト
-	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
-	 */
-	List<PaidHolidayDataDtoInterface> getPaidHolidayNextMonthInfo(String personalId, Date cutoffDate,
-			int calculationYear, int calculationMonth, List<PaidHolidayDataDtoInterface> list) throws MospException;
-	
-	/**
-	 * 有給休暇期限切れ日数を取得する。<br><br>
-	 * @param list 有給休暇データリスト
-	 * @param cutoffDate 締日
-	 * @return 有給休暇期限切れ日数
-	 */
-	Double getExpirationDay(List<PaidHolidayDataDtoInterface> list, Date cutoffDate);
-	
-	/**
-	 * 有給休暇新規データを取得する。<br><br>
-	 * @param personalId 個人ID
-	 * @param cutoffDate 締日
-	 * @param calculationYear 集計年
-	 * @param calculationMonth 集計月
-	 * @return 有給休暇仮付与データ
-	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
-	 */
-	PaidHolidayDataDtoInterface getNewPaidHolidayInfo(String personalId, Date cutoffDate, int calculationYear,
-			int calculationMonth) throws MospException;
-	
-	/**
-	 * 有給休暇新規データを取得する。<br><br>
-	 * @param personalId 個人ID
-	 * @param calculationYear 集計年
-	 * @param calculationMonth 集計月
-	 * @return 有給休暇仮付与データ
-	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
-	 */
-	PaidHolidayDataDtoInterface getNewPaidHolidayInfo(String personalId, int calculationYear, int calculationMonth)
-			throws MospException;
-	
-	/**
 	 * 有給休暇付与回数を取得する。<br>
 	 * 入社初年度を1、次年度を2、次々年度を3とする。
 	 * @param personalId 個人ID
@@ -179,20 +152,20 @@ public interface PaidHolidayInfoReferenceBeanInterface {
 	 * @return 出勤率
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
-	double getAttendanceRatio(String personalId, Date activateDate, int calculationYear, int calculationMonth, int grant)
-			throws MospException;
+	double getAttendanceRatio(String personalId, Date activateDate, int calculationYear, int calculationMonth,
+			int grant) throws MospException;
 	
 	/**
 	 * 有給休暇時間休の時間単位限度を取得する。
 	 * 時間休申請が承認済みの場合計算する。
-	 * @param personalId 個人ID
-	 * @param targetDate 対象日
-	 * @param isStatus 承認状態(true：承認済、false：下書・取下以外)
+	 * @param personalId        個人ID
+	 * @param targetDate        対象日
+	 * @param isCompleted       承認済フラグ(true：承認済申請のみ、false：申請済申請含む)
 	 * @param holidayRequestDto 休暇申請DTO
 	 * @return 時間単位残限度配列：○日、○時間、時間限度
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
-	int[] getHolidayTimeUnitLimit(String personalId, Date targetDate, boolean isStatus,
+	int[] getHolidayTimeUnitLimit(String personalId, Date targetDate, boolean isCompleted,
 			HolidayRequestDtoInterface holidayRequestDto) throws MospException;
 	
 	/**
@@ -230,5 +203,17 @@ public interface PaidHolidayInfoReferenceBeanInterface {
 	 * @throws MospException SQL例外が発生した場合
 	 */
 	void unlockTable() throws MospException;
+	
+	/**
+	 * 勤怠関連マスタ参照クラスを設定する。<br>
+	 * <br>
+	 * 勤怠関連マスタ参照クラスはinitBeanでは生成せず、
+	 * 別のBeanから設定される。<br>
+	 * より多くのBeanで勤怠関連マスタ参照クラスを共有することで、
+	 * パフォーマンスの向上を図る。<br>
+	 * <br>
+	 * @param timeMaster 勤怠関連マスタ参照クラス
+	 */
+	void setTimeMasterBean(TimeMasterBeanInterface timeMaster);
 	
 }

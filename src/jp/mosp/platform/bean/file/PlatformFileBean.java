@@ -30,7 +30,6 @@ import jp.mosp.orangesignal.OrangeSignalParams;
 import jp.mosp.orangesignal.OrangeSignalUtility;
 import jp.mosp.platform.base.PlatformBean;
 import jp.mosp.platform.bean.human.HumanReferenceBeanInterface;
-import jp.mosp.platform.bean.human.base.PlatformHumanBean;
 import jp.mosp.platform.constant.PlatformFileConst;
 import jp.mosp.platform.constant.PlatformMessageConst;
 import jp.mosp.platform.dao.human.impl.PfmHumanDao;
@@ -44,7 +43,7 @@ import jp.mosp.platform.dto.file.ImportFieldDtoInterface;
 public abstract class PlatformFileBean extends PlatformBean {
 	
 	/**
-	 * {@link PlatformHumanBean}を生成する。<br>
+	 * {@link PlatformFileBean}を生成する。<br>
 	 */
 	public PlatformFileBean() {
 		// 処理無し
@@ -106,10 +105,11 @@ public abstract class PlatformFileBean extends PlatformBean {
 	 * @param fieldList         インポートフィールド情報リスト
 	 * @param dataList          登録情報リスト
 	 * @param activateDateField 有効日フィールド名
+	 * @param activateDateName  有効日名
 	 * @throws MospException 人事情報の取得に失敗した場合
 	 */
 	protected void convertEmployeeCodeIntoPersonalId(List<ImportFieldDtoInterface> fieldList, List<String[]> dataList,
-			String activateDateField) throws MospException {
+			String activateDateField, String activateDateName) throws MospException {
 		// 個人ID(社員コード)及び有効日のフィールドインデックスを取得
 		Integer personalIdIndex = getFieldIndex(PfmHumanDao.COL_PERSONAL_ID, fieldList);
 		Integer activateDateIndex = getFieldIndex(activateDateField, fieldList);
@@ -132,7 +132,7 @@ public abstract class PlatformFileBean extends PlatformBean {
 			// 必須確認(ユニットコード)
 			checkRequired(employeeCode, getNameEmployeeCode(), row);
 			// 必須確認(有効日)
-			checkRequired(activateDate, getNameActivateDate(), row);
+			checkRequired(activateDate, activateDateName, row);
 			// 個人ID及び有効日を確認
 			if (employeeCode == null || employeeCode.isEmpty() || activateDate == null) {
 				continue;
@@ -156,7 +156,7 @@ public abstract class PlatformFileBean extends PlatformBean {
 	protected void convertEmployeeCodeIntoPersonalId(List<ImportFieldDtoInterface> fieldList, List<String[]> dataList)
 			throws MospException {
 		// 登録情報リストの社員コードを個人IDに変換
-		convertEmployeeCodeIntoPersonalId(fieldList, dataList, PfmHumanDao.COL_ACTIVATE_DATE);
+		convertEmployeeCodeIntoPersonalId(fieldList, dataList, PfmHumanDao.COL_ACTIVATE_DATE, getNameActivateDate());
 	}
 	
 	/**
@@ -178,18 +178,6 @@ public abstract class PlatformFileBean extends PlatformBean {
 	 */
 	protected List<String[]> parse(InputStream stream, OrangeSignalParams orangeParams) throws MospException {
 		List<String[]> list = OrangeSignalUtility.parse(stream, orangeParams);
-		// TODO インポートの際の空白除去(コードのみ除去したい)
-		/*
-		for (String[] array : list) {
-			if (array == null) {
-				continue;
-			}
-			for (int i = 0; i < array.length; i++) {
-				// 空白抜く
-				array[i] = array[i] == null ? "" : array[i].trim();
-			}
-		}
-		*/
 		return list;
 	}
 	
@@ -208,7 +196,8 @@ public abstract class PlatformFileBean extends PlatformBean {
 	 */
 	protected List<ImportFieldDtoInterface> getImportFieldList(String importCode) throws MospException {
 		// インポートフィールド情報取得準備
-		ImportFieldReferenceBeanInterface refer = (ImportFieldReferenceBeanInterface)createBean(ImportFieldReferenceBeanInterface.class);
+		ImportFieldReferenceBeanInterface refer = (ImportFieldReferenceBeanInterface)createBean(
+				ImportFieldReferenceBeanInterface.class);
 		// インポートフィールド情報取得
 		return refer.getImportFieldList(importCode);
 	}
@@ -228,7 +217,7 @@ public abstract class PlatformFileBean extends PlatformBean {
 		for (ImportFieldDtoInterface field : fieldList) {
 			// フィールド確認
 			if (field.getFieldName().equals(fieldName)) {
-				return new Integer(field.getFieldOrder() - 1);
+				return Integer.valueOf(field.getFieldOrder() - 1);
 			}
 		}
 		return null;
@@ -247,7 +236,7 @@ public abstract class PlatformFileBean extends PlatformBean {
 		Integer fieldIndex = getFieldIndex(fieldName, fieldList);
 		// フィールドインデックスを確認
 		if (fieldIndex == null) {
-			return null;
+			return "";
 		}
 		// フィールドに対応する値を取得
 		return data[fieldIndex];
@@ -383,17 +372,6 @@ public abstract class PlatformFileBean extends PlatformBean {
 	protected void addFileDataNotExistMessage() {
 		String[] rep = { mospParams.getName("Insert", "Data") };
 		mospParams.addErrorMessage(PlatformMessageConst.MSG_NO_ITEM, rep);
-	}
-	
-	/**
-	 * 更新元人事マスタ情報が取得できなかった場合のエラーメッセージを追加する。<br>
-	 * @param row          対象行インデックス
-	 * @param employeeCode 社員コード
-	 * @param activateDate 有効日
-	 */
-	protected void addEmployeeHistoryNotExistMessage(int row, String employeeCode, Date activateDate) {
-		String rep = getRowColonName(row) + getStringDate(activateDate);
-		mospParams.addErrorMessage(PlatformMessageConst.MSG_EMP_HISTORY_NOT_EXIST, rep, employeeCode);
 	}
 	
 	/**

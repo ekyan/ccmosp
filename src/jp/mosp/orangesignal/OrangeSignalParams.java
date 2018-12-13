@@ -19,6 +19,7 @@ package jp.mosp.orangesignal;
 
 import java.util.List;
 
+import jp.mosp.framework.constant.MospConst;
 import jp.sf.orangesignal.csv.CsvConfig;
 
 /**
@@ -42,6 +43,11 @@ public class OrangeSignalParams {
 	private char				quote;
 	
 	/**
+	 * 囲み文字無効フラグ
+	 */
+	private boolean				quoteDisabled;
+	
+	/**
 	 * エスケープ文字。
 	 */
 	private char				escape;
@@ -57,6 +63,11 @@ public class OrangeSignalParams {
 	private String				encoding;
 	
 	/**
+	 * 改行文字列
+	 */
+	private String				lineSeparator;
+	
+	/**
 	 * 出力対象リスト。<br>
 	 */
 	private List<String[]>		csvDataList;
@@ -70,12 +81,16 @@ public class OrangeSignalParams {
 		separator = CsvConfig.DEFAULT_SEPARATOR;
 		// 囲み文字(")
 		quote = CsvConfig.DEFAULT_QUOTE;
+		// 囲み文字無効フラグ(")
+		quoteDisabled = false;
 		// エスケープ文字(\)
 		escape = CsvConfig.DEFAULT_ESCAPE;
 		// 文字コード
 		encoding = DEFAULT_ENCODING;
 		// 空行無視フラグ(空行無視)
 		ignoreEmptyLines = true;
+		// 改行文字列(OSの改行文字列)
+		lineSeparator = MospConst.LINE_SEPARATOR;
 	}
 	
 	/**
@@ -107,6 +122,22 @@ public class OrangeSignalParams {
 	}
 	
 	/**
+	 * 囲み文字無効フラグの取得
+	 * @return 囲み文字無効フラグ
+	 */
+	public boolean getQuoteDisabled() {
+		return quoteDisabled;
+	}
+	
+	/**
+	 * 囲み文字無効フラグの設定
+	 * @param quoteDisabled セットする囲み文字無効フラグ
+	 */
+	public void setQuoteDisabled(boolean quoteDisabled) {
+		this.quoteDisabled = quoteDisabled;
+	}
+	
+	/**
 	 * @return escape
 	 */
 	public char getEscape() {
@@ -132,6 +163,22 @@ public class OrangeSignalParams {
 	 */
 	public void setIgnoreEmptyLines(boolean ignoreEmptyLines) {
 		this.ignoreEmptyLines = ignoreEmptyLines;
+	}
+	
+	/**
+	 * 改行文字列の取得
+	 * @return 改行文字列
+	 */
+	public String getLineSeparator() {
+		return lineSeparator;
+	}
+	
+	/**
+	 * 改行文字列の設定
+	 * @param lineSeparator セットする改行文字列
+	 */
+	public void setLineSeparator(String lineSeparator) {
+		this.lineSeparator = lineSeparator;
 	}
 	
 	/**

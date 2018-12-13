@@ -35,6 +35,7 @@ import jp.mosp.platform.dto.human.HumanBinaryNormalDtoInterface;
 import jp.mosp.platform.dto.human.HumanDtoInterface;
 import jp.mosp.platform.dto.human.impl.PfaHumanBinaryNormalDto;
 import jp.mosp.platform.human.constant.PlatformHumanConst;
+import jp.mosp.platform.utils.PlatformMessageUtility;
 
 /**
  * 人事汎用バイナリ通常情報登録クラス。
@@ -191,7 +192,7 @@ public class HumanBinaryNormalRegistBean extends PlatformHumanBean implements Hu
 		// 人事入社情報確認
 		if (entranceDate == null) {
 			// 社員が入社していない場合のメッセージを追加
-			addEmployeeNotEnteredMessage();
+			PlatformMessageUtility.addErrorEmployeeNotJoin(mospParams);
 			return;
 		}
 	}

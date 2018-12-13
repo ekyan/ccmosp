@@ -162,6 +162,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<Naming key="GoMosp">
 		MosPへGO！
 	</Naming>
+	<Naming key="GoDemo">
+		デモへGO！
+	</Naming>
 	<Naming key="DbConfirmM1">
 		この画面ではDBに接続します。
 	</Naming>
@@ -178,7 +181,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		新規ユーザを登録します。後ほどMosP内で変更できます。
 	</Naming>
 	<Naming key="SetupMessage">
-		これでセットアップは完了しました。下のボタン押下してMosPにログインしてください。
+		これでセットアップは完了しました。"MosPへGO！"ボタン押下してMosPにログインしてください。
+	</Naming>
+	<Naming key="DemoMessage">
+		デモサイトを参考にしながら各種登録を進めてください。
 	</Naming>
 	<Naming key="XmlCreate">
 		XML設定ファイル作成

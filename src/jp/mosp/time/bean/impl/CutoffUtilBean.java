@@ -18,6 +18,7 @@
 package jp.mosp.time.bean.impl;
 
 import java.sql.Connection;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -35,11 +36,13 @@ import jp.mosp.platform.utils.MonthUtility;
 import jp.mosp.time.base.TimeApplicationBean;
 import jp.mosp.time.base.TimeBean;
 import jp.mosp.time.bean.CutoffUtilBeanInterface;
+import jp.mosp.time.bean.TimeMasterBeanInterface;
 import jp.mosp.time.bean.TotalTimeEmployeeTransactionReferenceBeanInterface;
 import jp.mosp.time.constant.TimeConst;
 import jp.mosp.time.dto.settings.ApplicationDtoInterface;
 import jp.mosp.time.dto.settings.CutoffDtoInterface;
 import jp.mosp.time.dto.settings.TimeSettingDtoInterface;
+import jp.mosp.time.entity.ApplicationEntity;
 import jp.mosp.time.utils.TimeMessageUtility;
 import jp.mosp.time.utils.TimeUtility;
 
@@ -58,6 +61,11 @@ public class CutoffUtilBean extends TimeApplicationBean implements CutoffUtilBea
 	 * 社員勤怠集計管理参照クラス。
 	 */
 	TotalTimeEmployeeTransactionReferenceBeanInterface	totalTimeEmployeeRefer;
+	
+	/**
+	 * 勤怠関連マスタ参照クラス。<br>
+	 */
+	protected TimeMasterBeanInterface					timeMaster;
 	
 	
 	/**
@@ -82,7 +90,9 @@ public class CutoffUtilBean extends TimeApplicationBean implements CutoffUtilBea
 		super.initBean();
 		// 各種クラスの取得
 		humanSearch = (HumanSearchBeanInterface)createBean(HumanSearchBeanInterface.class);
-		totalTimeEmployeeRefer = (TotalTimeEmployeeTransactionReferenceBeanInterface)createBean(TotalTimeEmployeeTransactionReferenceBeanInterface.class);
+		totalTimeEmployeeRefer = (TotalTimeEmployeeTransactionReferenceBeanInterface)createBean(
+				TotalTimeEmployeeTransactionReferenceBeanInterface.class);
+		timeMaster = (TimeMasterBeanInterface)createBean(TimeMasterBeanInterface.class);
 	}
 	
 	@Override
@@ -95,34 +105,22 @@ public class CutoffUtilBean extends TimeApplicationBean implements CutoffUtilBea
 		if (mospParams.hasErrorMessage()) {
 			return idSet;
 		}
+		// 締日を取得
+		int cutoffDate = cutoffDto.getCutoffDate();
 		// 対象年月における締期間の基準日及び初日、最終日取得
-		Date cutoffTermTargetDate = TimeUtility.getCutoffTermTargetDate(cutoffDto.getCutoffDate(), targetYear,
-				targetMonth);
-		Date firstDate = TimeUtility.getCutoffFirstDate(cutoffDto.getCutoffDate(), targetYear, targetMonth);
-		Date lastDate = TimeUtility.getCutoffLastDate(cutoffDto.getCutoffDate(), targetYear, targetMonth);
+		Date cutoffTermTargetDate = TimeUtility.getCutoffTermTargetDate(cutoffDate, targetYear, targetMonth);
+		Date firstDate = TimeUtility.getCutoffFirstDate(cutoffDate, targetYear, targetMonth);
+		Date lastDate = TimeUtility.getCutoffLastDate(cutoffDate, targetYear, targetMonth);
 		// 有効な個人IDセット取得(対象日は締期間の基準日)
-		Map<String, HumanDtoInterface> activateMap = getActivatePersonalIdMap(cutoffTermTargetDate, firstDate, lastDate);
-		// 締日コード及び基準日で勤怠設定情報リスト取得
-		List<String> workSettingCodeList = timeSettingRefer.getWorkSettingCode(cutoffCode, cutoffTermTargetDate);
-		if (workSettingCodeList.isEmpty()) {
-			// 勤怠設定コードが存在しないなら処理終了
-			mospParams.addErrorMessage(PlatformMessageConst.MSG_NO_ITEM, mospParams.getName("menuTimeSettings"));
-			return idSet;
-		}
-		// 締期間の基準日の設定適用情報を取得
-		Map<Integer, Set<ApplicationDtoInterface>> map = applicationRefer
-			.getApplicationInfoForTargetDate(cutoffTermTargetDate);
-		
+		Map<String, HumanDtoInterface> activateMap = getActivatePersonalIdMap(cutoffTermTargetDate, firstDate,
+				lastDate);
+		// 人事情報毎に処理
 		for (HumanDtoInterface humanDto : activateMap.values()) {
-			
-			// 設定適用情報を取得(対象日は締期間の基準日)
-			ApplicationDtoInterface applicationDto = applicationRefer.findForPerson(humanDto, map);
-			//  設定適用情報確認
-			if (applicationDto == null) {
-				continue;
-			}
-			// 勤怠設定コード確認
-			if (workSettingCodeList.contains(applicationDto.getWorkSettingCode())) {
+			// 設定適用エンティティを取得
+			ApplicationEntity entity = timeMaster.getApplicationEntity(humanDto, cutoffTermTargetDate);
+			// 締日が同じ場合
+			if (entity.getCutoffCode().equals(cutoffCode)) {
+				// 有効な個人IDセットに
 				idSet.add(humanDto.getPersonalId());
 			}
 		}
@@ -135,11 +133,50 @@ public class CutoffUtilBean extends TimeApplicationBean implements CutoffUtilBea
 	}
 	
 	@Override
+	public List<HumanDtoInterface> getCutoffHumanDto(String cutoffCode, int targetYear, int targetMonth)
+			throws MospException {
+		// 人事情報リスト準備
+		List<HumanDtoInterface> humanList = new ArrayList<HumanDtoInterface>();
+		
+		// 年月を指定して締日情報を取得
+		CutoffDtoInterface cutoffDto = getCutoff(cutoffCode, targetYear, targetMonth);
+		// 処理結果確認
+		if (mospParams.hasErrorMessage()) {
+			return humanList;
+		}
+		// 締日を取得
+		int cutoffDate = cutoffDto.getCutoffDate();
+		// 対象年月における締期間の基準日及び初日、最終日取得
+		Date cutoffTermTargetDate = TimeUtility.getCutoffTermTargetDate(cutoffDate, targetYear, targetMonth);
+		Date firstDate = TimeUtility.getCutoffFirstDate(cutoffDate, targetYear, targetMonth);
+		Date lastDate = TimeUtility.getCutoffLastDate(cutoffDate, targetYear, targetMonth);
+		// 有効な個人IDセット取得(対象日は締期間の基準日)
+		Map<String, HumanDtoInterface> activateMap = getActivatePersonalIdMap(cutoffTermTargetDate, firstDate,
+				lastDate);
+		// 人事情報毎に処理
+		for (HumanDtoInterface humanDto : activateMap.values()) {
+			// 設定適用エンティティを取得
+			ApplicationEntity entity = timeMaster.getApplicationEntity(humanDto, cutoffTermTargetDate);
+			// 締日が同じ場合
+			if (entity.getCutoffCode().equals(cutoffCode)) {
+				// 有効な人事情報追加
+				humanList.add(humanDto);
+			}
+		}
+		// 人事情報リスト確認
+		if (humanList.isEmpty()) {
+			// 登録失敗メッセージ設定
+			mospParams.addErrorMessage(PlatformMessageConst.MSG_NO_ITEM, mospParams.getName("Employee"));
+		}
+		return humanList;
+	}
+	
+	@Override
 	public CutoffDtoInterface getCutoff(String cutoffCode, int targetYear, int targetMonth) throws MospException {
 		// 年月指定時の基準日を取得
 		Date yearMonthTargetDate = MonthUtility.getYearMonthTargetDate(targetYear, targetMonth, mospParams);
 		// 締日コードと対象日から締日マスタを取得 
-		CutoffDtoInterface cutoffDto = cutoffRefer.getCutoffInfo(cutoffCode, yearMonthTargetDate);
+		CutoffDtoInterface cutoffDto = timeMaster.getCutoff(cutoffCode, yearMonthTargetDate);
 		// 確認
 		cutoffRefer.chkExistCutoff(cutoffDto, yearMonthTargetDate);
 		return cutoffDto;
@@ -148,7 +185,7 @@ public class CutoffUtilBean extends TimeApplicationBean implements CutoffUtilBea
 	@Override
 	public CutoffDtoInterface getCutoff(String cutoffCode, Date targetDate) throws MospException {
 		// 締日コードと対象日から締日マスタを取得 
-		CutoffDtoInterface cutoffDto = cutoffRefer.getCutoffInfo(cutoffCode, targetDate);
+		CutoffDtoInterface cutoffDto = timeMaster.getCutoff(cutoffCode, targetDate);
 		// 確認
 		cutoffRefer.chkExistCutoff(cutoffDto, targetDate);
 		return cutoffDto;
@@ -197,6 +234,10 @@ public class CutoffUtilBean extends TimeApplicationBean implements CutoffUtilBea
 	public Date getCutoffCalculationDate(String cutoffCode, int targetYear, int targetMonth) throws MospException {
 		// 締日コードと対象日から締日マスタを取得 
 		CutoffDtoInterface cutoffDto = getCutoff(cutoffCode, targetYear, targetMonth);
+		// 処理結果確認
+		if (mospParams.hasErrorMessage()) {
+			return null;
+		}
 		// 締日取得
 		int cutoffDate = cutoffDto.getCutoffDate();
 		// 対象日付及び締日から集計日を取得
@@ -207,6 +248,10 @@ public class CutoffUtilBean extends TimeApplicationBean implements CutoffUtilBea
 	public Date getCutoffTermTargetDate(String cutoffCode, int targetYear, int targetMonth) throws MospException {
 		// 締日コードと対象日から締日マスタを取得 
 		CutoffDtoInterface cutoffDto = getCutoff(cutoffCode, targetYear, targetMonth);
+		// 処理結果確認
+		if (mospParams.hasErrorMessage()) {
+			return null;
+		}
 		// 締日取得
 		int cutoffDate = cutoffDto.getCutoffDate();
 		// 対象日付及び締日から基準日を取得
@@ -352,6 +397,28 @@ public class CutoffUtilBean extends TimeApplicationBean implements CutoffUtilBea
 		}
 		// 勤怠設定取得
 		return timeSettingDto;
+	}
+	
+	@Override
+	public int getNoApproval(String cutoffCode, Date targetDate) throws MospException {
+		// 締日情報取得
+		CutoffDtoInterface cutoffDto = getCutoff(cutoffCode, targetDate);
+		if (mospParams.hasErrorMessage()) {
+			return 0;
+		}
+		// 未承認仮締取得
+		return cutoffDto.getNoApproval();
+	}
+	
+	@Override
+	public int getNoApproval(String cutoffCode, int targetYear, int targetMonth) throws MospException {
+		// 締日情報取得
+		CutoffDtoInterface cutoffDto = getCutoff(cutoffCode, targetYear, targetMonth);
+		if (mospParams.hasErrorMessage()) {
+			return 0;
+		}
+		// 未承認仮締取得
+		return cutoffDto.getNoApproval();
 	}
 	
 }

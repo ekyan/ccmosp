@@ -44,26 +44,36 @@ public class TmdTotalAbsenceDao extends PlatformDao implements TotalAbsenceDaoIn
 	 * レコード識別ID。
 	 */
 	public static final String	COL_TMD_TOTAL_ABSENCE_ID	= "tmd_total_absence_id";
+	
 	/**
 	 * 個人ID。
 	 */
 	public static final String	COL_PERSONAL_ID				= "personal_id";
+	
 	/**
 	 * 年。
 	 */
 	public static final String	COL_CALCULATION_YEAR		= "calculation_year";
+	
 	/**
 	 * 月。
 	 */
 	public static final String	COL_CALCULATION_MONTH		= "calculation_month";
+	
 	/**
 	 * 欠勤コード。
 	 */
 	public static final String	COL_ABSENCE_CODE			= "absence_code";
+	
 	/**
 	 * 欠勤日数。
 	 */
 	public static final String	COL_TIMES					= "times";
+	
+	/**
+	 * 欠勤時間数。
+	 */
+	public static final String	COL_HOURS					= "hours";
 	
 	/**
 	 * キー。
@@ -91,6 +101,7 @@ public class TmdTotalAbsenceDao extends PlatformDao implements TotalAbsenceDaoIn
 		dto.setCalculationMonth(getInt(COL_CALCULATION_MONTH));
 		dto.setAbsenceCode(getString(COL_ABSENCE_CODE));
 		dto.setTimes(getDouble(COL_TIMES));
+		dto.setHours(getInt(COL_HOURS));
 		mappingCommonInfo(dto);
 		return dto;
 	}
@@ -150,6 +161,7 @@ public class TmdTotalAbsenceDao extends PlatformDao implements TotalAbsenceDaoIn
 		setParam(index++, dto.getCalculationMonth());
 		setParam(index++, dto.getAbsenceCode());
 		setParam(index++, dto.getTimes());
+		setParam(index++, dto.getHours());
 		setCommonParams(baseDto, isInsert);
 	}
 	

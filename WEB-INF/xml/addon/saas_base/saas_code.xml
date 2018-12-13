@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE MosP>
+<!--
+MosP - Mind Open Source Project    http://www.mosp.jp/
+Copyright (C) MIND Co., Ltd.       http://www.e-mind.co.jp/
+
+This program is free software: you can redistribute it and/or
+modify it under the terms of the GNU Affero General Public License
+as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<MosP>
+	
+	<!-- コード -->
+	<Code key="SaasStatusType">
+		<CodeItem key="10">
+			<ItemName>申込</ItemName>
+			<ViewIndex>10</ViewIndex>
+		</CodeItem>
+		<CodeItem key="30">
+			<ItemName>稼働</ItemName>
+			<ViewIndex>30</ViewIndex>
+		</CodeItem>
+		<CodeItem key="50">
+			<ItemName>停止</ItemName>
+			<ViewIndex>50</ViewIndex>
+		</CodeItem>
+		<CodeItem key="70">
+			<ItemName>退会</ItemName>
+			<ViewIndex>70</ViewIndex>
+		</CodeItem>
+		<CodeItem key="90">
+			<ItemName>削除</ItemName>
+			<ViewIndex>90</ViewIndex>
+		</CodeItem>
+	</Code>
+	<Code key="SaasIndustryType">
+		<CodeItem key="A">
+			<ItemName>農業，林業</ItemName>
+			<ViewIndex>1</ViewIndex>
+		</CodeItem>
+		<CodeItem key="B">
+			<ItemName>漁業</ItemName>
+			<ViewIndex>2</ViewIndex>
+		</CodeItem>
+		<CodeItem key="C">
+			<ItemName>鉱業，採石業，砂利採取業</ItemName>
+			<ViewIndex>3</ViewIndex>
+		</CodeItem>
+		<CodeItem key="D">
+			<ItemName>建設業</ItemName>
+			<ViewIndex>4</ViewIndex>
+		</CodeItem>
+		<CodeItem key="E">
+			<ItemName>製造業</ItemName>
+			<ViewIndex>5</ViewIndex>
+		</CodeItem>
+		<CodeItem key="F">
+			<ItemName>電気・ガス・熱供給・水道業</ItemName>
+			<ViewIndex>6</ViewIndex>
+		</CodeItem>
+		<CodeItem key="G">
+			<ItemName>情報通信業</ItemName>
+			<ViewIndex>7</ViewIndex>
+		</CodeItem>
+		<CodeItem key="H">
+			<ItemName>運輸業，郵便業</ItemName>
+			<ViewIndex>8</ViewIndex>
+		</CodeItem>
+		<CodeItem key="I">
+			<ItemName>卸売業，小売業</ItemName>
+			<ViewIndex>9</ViewIndex>
+		</CodeItem>
+		<CodeItem key="J">
+			<ItemName>金融業，保険業</ItemName>
+			<ViewIndex>10</ViewIndex>
+		</CodeItem>
+		<CodeItem key="K">
+			<ItemName>不動産業，物品賃貸業</ItemName>
+			<ViewIndex>11</ViewIndex>
+		</CodeItem>
+		<CodeItem key="L">
+			<ItemName>学術研究，専門・技術サービス業</ItemName>
+			<ViewIndex>12</ViewIndex>
+		</CodeItem>
+		<CodeItem key="M">
+			<ItemName>宿泊業，飲食サービス業</ItemName>
+			<ViewIndex>13</ViewIndex>
+		</CodeItem>
+		<CodeItem key="N">
+			<ItemName>生活関連サービス業，娯楽業</ItemName>
+			<ViewIndex>14</ViewIndex>
+		</CodeItem>
+		<CodeItem key="O">
+			<ItemName>教育，学習支援業</ItemName>
+			<ViewIndex>15</ViewIndex>
+		</CodeItem>
+		<CodeItem key="P">
+			<ItemName>医療，福祉</ItemName>
+			<ViewIndex>16</ViewIndex>
+		</CodeItem>
+		<CodeItem key="Q">
+			<ItemName>複合サービス事業</ItemName>
+			<ViewIndex>17</ViewIndex>
+		</CodeItem>
+		<CodeItem key="R">
+			<ItemName>サービス業（他に分類されないもの）</ItemName>
+			<ViewIndex>18</ViewIndex>
+		</CodeItem>
+		<CodeItem key="S">
+			<ItemName>公務（他に分類されるものを除く）</ItemName>
+			<ViewIndex>19</ViewIndex>
+		</CodeItem>
+		<CodeItem key="T">
+			<ItemName>分類不能の産業</ItemName>
+			<ViewIndex>20</ViewIndex>
+		</CodeItem>
+	</Code>
+	<Code key="SaasPayMethod">
+		<!--
+		<CodeItem key="1">
+			<ItemName>クレジットカード</ItemName>
+			<ViewIndex>1</ViewIndex>
+		</CodeItem>
+		-->
+		<CodeItem key="5">
+			<ItemName>請求書</ItemName>
+			<ViewIndex>5</ViewIndex>
+		</CodeItem>
+	</Code>
+	<Code key="SaasCollectType">
+		<CodeItem key="Employees">
+			<ItemName>有効社員数</ItemName>
+			<ViewIndex>1</ViewIndex>
+		</CodeItem>
+		<CodeItem key="Retires">
+			<ItemName>退職社員数</ItemName>
+			<ViewIndex>2</ViewIndex>
+		</CodeItem>
+	</Code>
+	<!-- オプション(サービスに応じて設定) -->
+	<!-- 
+	<Code key="SaasOption_xxxx">
+	</Code>
+	<Code key="SaasOptionUsers_xxxx">
+	</Code>
+	<Code key="SaasOptionPrice_xxxx">
+	</Code>
+	<Code key="SaasOptionDefault">
+	</Code>
+	-->
+	<!-- DBサーバ(環境に応じて設定) -->
+	<!-- 
+	<Code key="DbServer">
+	</Code>
+	-->
+	
+</MosP>

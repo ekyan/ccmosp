@@ -54,8 +54,7 @@ String imageName = (String)params.getGeneralParam(HumanArrayCardAction.KEY_VIEW_
 params.addGeneralParam(HumanArrayCardAction.KEY_VIEW_ARRAY_CARD, imageName);
 
 %>
-<jsp:include page="<%= PlatformHumanConst.PATH_HUMAN_COMMON_INFO_JSP %>" flush="false" />
-
+<jsp:include page="<%= params.getApplicationProperty(PlatformHumanConst.APP_HUMAN_COMMON_INFO_JSP) %>" flush="false" />
 <%
 //表示テーブル毎に処理
 for (String viewTable : viewTables) {

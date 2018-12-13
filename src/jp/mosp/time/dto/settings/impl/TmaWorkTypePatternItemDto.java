@@ -69,7 +69,7 @@ public class TmaWorkTypePatternItemDto extends BaseDto implements WorkTypePatter
 	
 	@Override
 	public Date getActivateDate() {
-		return activateDate;
+		return getDateClone(activateDate);
 	}
 	
 	@Override
@@ -99,7 +99,7 @@ public class TmaWorkTypePatternItemDto extends BaseDto implements WorkTypePatter
 	
 	@Override
 	public void setActivateDate(Date activateDate) {
-		this.activateDate = activateDate;
+		this.activateDate = getDateClone(activateDate);
 	}
 	
 	@Override

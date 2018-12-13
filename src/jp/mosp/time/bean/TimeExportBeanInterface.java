@@ -35,11 +35,12 @@ public interface TimeExportBeanInterface {
 	 * @param workPlaceCode 勤務地コード
 	 * @param employmentContractCode 雇用契約コード
 	 * @param sectionCode 所属コード
+	 * @param ckbNeedLowerSection 下位所属含む
 	 * @param positionCode 職位コード
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
 	void export(String exportCode, int startYear, int startMonth, int endYear, int endMonth, String cutoffCode,
-			String workPlaceCode, String employmentContractCode, String sectionCode, String positionCode)
-			throws MospException;
+			String workPlaceCode, String employmentContractCode, String sectionCode, int ckbNeedLowerSection,
+			String positionCode) throws MospException;
 	
 }

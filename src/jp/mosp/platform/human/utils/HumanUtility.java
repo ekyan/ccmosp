@@ -26,6 +26,8 @@ import jp.mosp.framework.utils.BinaryUtility;
 import jp.mosp.framework.utils.DateUtility;
 import jp.mosp.platform.dto.human.HumanDtoInterface;
 import jp.mosp.platform.dto.human.HumanHistoryDtoInterface;
+import jp.mosp.platform.dto.human.RetirementDtoInterface;
+import jp.mosp.platform.dto.human.SuspensionDtoInterface;
 import jp.mosp.platform.dto.system.EmploymentContractDtoInterface;
 import jp.mosp.platform.dto.system.PositionDtoInterface;
 import jp.mosp.platform.dto.system.SectionDtoInterface;
@@ -71,9 +73,20 @@ public class HumanUtility {
 	 */
 	public static String getDuration(int amountMonth, MospParams mospParams) {
 		// 経過月取得
-		String countYear = String.valueOf(amountMonth / 12);
-		String countMonth = String.valueOf(amountMonth % 12);
-		return countYear + mospParams.getName("Year") + countMonth + mospParams.getName("AmountMonth");
+		int countYear = amountMonth / 12;
+		int countMonth = amountMonth % 12;
+		// マイナスの場合0に変換
+		if (countYear < 0) {
+			countYear = 0;
+		}
+		if (countMonth < 0) {
+			countMonth = 0;
+		}
+		// 文字列取得
+		String stringCountYear = String.valueOf(countYear);
+		String stringCountMonth = String.valueOf(countMonth);
+		
+		return stringCountYear + mospParams.getName("Year") + stringCountMonth + mospParams.getName("AmountMonth");
 	}
 	
 	/**
@@ -101,12 +114,14 @@ public class HumanUtility {
 	 * @param humanList 対象人事情報履歴一覧
 	 * @param targetDate 対象日
 	 * @param workPlaceDto 勤務地情報
+	 * @param retirementDto 退職情報
 	 * @param mospParams MosP処理情報
 	 * @return 勤務地名(○年○ヶ月)
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
 	public static String getWorkPlaceStayMonths(HumanDtoInterface dto, List<HumanDtoInterface> humanList,
-			Date targetDate, WorkPlaceDtoInterface workPlaceDto, MospParams mospParams) throws MospException {
+			Date targetDate, WorkPlaceDtoInterface workPlaceDto, RetirementDtoInterface retirementDto,
+			MospParams mospParams) throws MospException {
 		// 勤務地情報かつ勤務地コード確認
 		if (workPlaceDto == null || dto.getWorkPlaceCode().isEmpty()) {
 			return "";
@@ -129,8 +144,7 @@ public class HumanUtility {
 			firstDate = firstDto.getActivateDate();
 		}
 		// 経過月取得
-		int amountMonth = DateUtility.getMonthDifference(firstDate, targetDate);
-		return getDurationName(workPlaceDto.getWorkPlaceName(), amountMonth, mospParams);
+		return getDurationName(workPlaceDto.getWorkPlaceName(), targetDate, firstDate, retirementDto, mospParams);
 	}
 	
 	/**
@@ -139,12 +153,14 @@ public class HumanUtility {
 	 * @param humanList 対象人事情報履歴一覧
 	 * @param targetDate 対象日
 	 * @param sectionDto 対象所属情報
+	 * @param retirementDto 退職情報
 	 * @param mospParams MosP処理情報
 	 * @return 所属名(○年○ヶ月)
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
-	public static String getSectionStayMonths(HumanDtoInterface dto, List<HumanDtoInterface> humanList,
-			Date targetDate, SectionDtoInterface sectionDto, MospParams mospParams) throws MospException {
+	public static String getSectionStayMonths(HumanDtoInterface dto, List<HumanDtoInterface> humanList, Date targetDate,
+			SectionDtoInterface sectionDto, RetirementDtoInterface retirementDto, MospParams mospParams)
+			throws MospException {
 		// 所属情報かつ所属コード確認
 		if (sectionDto == null || dto.getSectionCode().isEmpty()) {
 			return "";
@@ -171,8 +187,8 @@ public class HumanUtility {
 			firstDate = firstDto.getActivateDate();
 		}
 		// 経過月取得
-		int amountMonth = DateUtility.getMonthDifference(firstDate, targetDate);
-		return getDurationName(sectionDto.getSectionName(), amountMonth, mospParams);
+		
+		return getDurationName(sectionDto.getSectionName(), targetDate, firstDate, retirementDto, mospParams);
 	}
 	
 	/**
@@ -182,11 +198,13 @@ public class HumanUtility {
 	 * @param targetDate 対象日
 	 * @param mospParams MosP処理情報
 	 * @param positionDto 職位情報
+	 * @param retirementDto 退職情報
 	 * @return 職位名(○年○ヶ月)
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
 	public static String getPositionStayMonths(HumanDtoInterface dto, List<HumanDtoInterface> humanList,
-			Date targetDate, PositionDtoInterface positionDto, MospParams mospParams) throws MospException {
+			Date targetDate, PositionDtoInterface positionDto, RetirementDtoInterface retirementDto,
+			MospParams mospParams) throws MospException {
 		// 職位情報かつ職位コード確認
 		if (positionDto == null || dto.getPositionCode().isEmpty()) {
 			return "";
@@ -213,8 +231,7 @@ public class HumanUtility {
 			firstDate = firstDto.getActivateDate();
 		}
 		// 経過月取得
-		int amountMonth = DateUtility.getMonthDifference(firstDate, targetDate);
-		return getDurationName(positionDto.getPositionName(), amountMonth, mospParams);
+		return getDurationName(positionDto.getPositionName(), targetDate, firstDate, retirementDto, mospParams);
 	}
 	
 	/**
@@ -223,13 +240,14 @@ public class HumanUtility {
 	 * @param humanList 対象人事情報履歴一覧
 	 * @param targetDate 対象日
 	 * @param employmentContractDto 雇用契約情報
+	 * @param retirementDto 退職情報
 	 * @param mospParams MosP処理情報
 	 * @return 雇用契約名(○年○ヶ月)
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
 	public static String getEmploymentStayMonths(HumanDtoInterface dto, List<HumanDtoInterface> humanList,
-			Date targetDate, EmploymentContractDtoInterface employmentContractDto, MospParams mospParams)
-			throws MospException {
+			Date targetDate, EmploymentContractDtoInterface employmentContractDto, RetirementDtoInterface retirementDto,
+			MospParams mospParams) throws MospException {
 		// 雇用契約情報かつ雇用契約コード確認
 		if (employmentContractDto == null || dto.getEmploymentContractCode().isEmpty()) {
 			return "";
@@ -252,8 +270,8 @@ public class HumanUtility {
 			firstDate = firstDto.getActivateDate();
 		}
 		// 経過月取得
-		int amountMonth = DateUtility.getMonthDifference(firstDate, targetDate);
-		return getDurationName(employmentContractDto.getEmploymentContractName(), amountMonth, mospParams);
+		return getDurationName(employmentContractDto.getEmploymentContractName(), targetDate, firstDate, retirementDto,
+				mospParams);
 	}
 	
 	/**
@@ -263,14 +281,15 @@ public class HumanUtility {
 	 * @param targetDate 対象日
 	 * @param postList 役職情報リスト
 	 * @param postDto 対象役職情報
+	 * @param retirementDto 退職情報
 	 * @param mospParams MosP処理情報リスト
 	 * @param name 役職名称
 	 * @return 役職名(○年○ヶ月)
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
 	public static String getPostStayMonths(HumanDtoInterface dto, List<HumanDtoInterface> humanList, Date targetDate,
-			List<HumanHistoryDtoInterface> postList, HumanHistoryDtoInterface postDto, MospParams mospParams,
-			String name) throws MospException {
+			List<HumanHistoryDtoInterface> postList, HumanHistoryDtoInterface postDto,
+			RetirementDtoInterface retirementDto, MospParams mospParams, String name) throws MospException {
 		// 役職情報かつ役職情報リスト確認
 		if (postDto == null || postList.isEmpty()) {
 			return "";
@@ -300,8 +319,7 @@ public class HumanUtility {
 			firstDate = firstDto.getActivateDate();
 		}
 		// 経過月取得
-		int amountMonth = DateUtility.getMonthDifference(firstDate, targetDate);
-		return getDurationName(name, amountMonth, mospParams);
+		return getDurationName(name, targetDate, firstDate, retirementDto, mospParams);
 		
 	}
 	
@@ -314,7 +332,8 @@ public class HumanUtility {
 	 * @return 役職情報対象インデックス
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
-	public static int getTargetIndexPost(List<HumanHistoryDtoInterface> postList, Date activeDate) throws MospException {
+	public static int getTargetIndexPost(List<HumanHistoryDtoInterface> postList, Date activeDate)
+			throws MospException {
 		// 役職インデックス取得
 		int postIndex = -1;
 		// 役職情報リスト毎に処理
@@ -323,22 +342,54 @@ public class HumanUtility {
 			HumanHistoryDtoInterface dto = postList.get(i);
 			// 有効日が同じ場合
 			if (dto.getActivateDate().equals(activeDate)) {
-				return postIndex = i;
+				return i;
 			}
 		}
 		return postIndex;
 	}
 	
 	/**
+	 * 継続月数を取得する。<br>
+	 * 退職日を考慮し、表示日付が退職日より先の場合
+	 * 退職日までの継続月数を取得する。<br>
+	 * @param showDate 表示日付
+	 * @param targetDate 対象情報有効日
+	 * @param retirementDto 退職情報
+	 * @param mospParams MosP処理情報
+	 * @return ○年○ヶ月
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 */
+	public static String getContinuationMonthName(Date showDate, Date targetDate, RetirementDtoInterface retirementDto,
+			MospParams mospParams) throws MospException {
+		// 経過月終了日
+		Date lastDate = showDate;
+		// 退職情報がある場合
+		if (retirementDto != null) {
+			// システム日付が退職日より先の場合
+			if (lastDate.compareTo(retirementDto.getRetirementDate()) > 0) {
+				// 退職日設定
+				lastDate = retirementDto.getRetirementDate();
+			}
+		}
+		// 経過月取得
+		int amountMonth = DateUtility.getMonthDifference(targetDate, lastDate);
+		return getDuration(amountMonth, mospParams);
+	}
+	
+	/**
 	 * 名称・継続月数から名称(○年○ヶ月)を取得する。
 	 * @param name 名称
-	 * @param amountMonth 継続月数 
+	 * @param showDate 表示日付
+	 * @param targetDate 対象情報有効日
+	 * @param retirementDto 退職情報
 	 * @param mospParams MosP処理情報
 	 * @return 名称(○年○ヶ月)
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
-	public static String getDurationName(String name, int amountMonth, MospParams mospParams) throws MospException {
-		return name + mospParams.getName("FrontParentheses") + getDuration(amountMonth, mospParams)
+	public static String getDurationName(String name, Date showDate, Date targetDate,
+			RetirementDtoInterface retirementDto, MospParams mospParams) throws MospException {
+		return name + mospParams.getName("FrontParentheses")
+				+ getContinuationMonthName(showDate, targetDate, retirementDto, mospParams)
 				+ mospParams.getName("BackParentheses");
 	}
 	
@@ -363,6 +414,36 @@ public class HumanUtility {
 		}
 		// それ以外の場合
 		return PlatformHumanConst.CODE_HUMAN_BINARY_FILE_TYPE_FILE;
+	}
+	
+	/**
+	 * 対象日が休職中であるかを確認する。<br>
+	 * <br>
+	 * @param suspensionList 休職情報リスト
+	 * @param targetDate     対象日
+	 * @return 確認結果(true：休職中である、false：休職中でない)
+	 */
+	public static boolean isSuspension(List<SuspensionDtoInterface> suspensionList, Date targetDate) {
+		// 休職リストがない場合
+		if (suspensionList == null || suspensionList.isEmpty()) {
+			return false;
+		}
+		// 休職情報毎に処理
+		for (SuspensionDtoInterface suspensionDto : suspensionList) {
+			// 期間開始日終了日取得
+			Date startDate = suspensionDto.getStartDate();
+			Date endDate = suspensionDto.getEndDate();
+			// 期間終了日がない場合
+			if (endDate == null) {
+				// 休職予定終了日設定
+				endDate = suspensionDto.getScheduleEndDate();
+			}
+			// 休職期間に含まれている場合
+			if (DateUtility.isTermContain(targetDate, startDate, endDate)) {
+				return true;
+			}
+		}
+		return false;
 	}
 	
 }

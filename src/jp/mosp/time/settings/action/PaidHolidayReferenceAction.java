@@ -19,7 +19,6 @@ package jp.mosp.time.settings.action;
 
 import java.util.Collections;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 
 import jp.mosp.framework.base.BaseVo;
@@ -30,9 +29,7 @@ import jp.mosp.time.base.TimeAction;
 import jp.mosp.time.bean.CutoffUtilBeanInterface;
 import jp.mosp.time.bean.PaidHolidayInfoReferenceBeanInterface;
 import jp.mosp.time.constant.TimeConst;
-import jp.mosp.time.dto.settings.ApplicationDtoInterface;
 import jp.mosp.time.dto.settings.CutoffDtoInterface;
-import jp.mosp.time.dto.settings.PaidHolidayDataDtoInterface;
 import jp.mosp.time.settings.vo.PaidHolidayReferenceVo;
 
 /**
@@ -216,9 +213,7 @@ public class PaidHolidayReferenceAction extends TimeAction {
 		// 対象年月をVOに設定
 		vo.setPltSelectYear(String.valueOf(MonthUtility.getFiscalYear(systemDate, mospParams)));
 		vo.setAryPltSelectYear(getYearArray(MonthUtility.getFiscalYear(systemDate, mospParams)));
-		// TODO
-		vo.setLblSystemDate(getStringYear(systemDate) + mospParams.getName("Year") + getStringMonth(systemDate)
-				+ mospParams.getName("Month") + getStringDay(systemDate) + mospParams.getName("Day"));
+		vo.setLblSystemDate(DateUtility.getStringJapaneseDate(systemDate));
 		vo.setTxtActiveDate(getStringDate(systemDate));
 	}
 	
@@ -232,12 +227,7 @@ public class PaidHolidayReferenceAction extends TimeAction {
 		// 有給休暇情報データ準備
 		PaidHolidayInfoReferenceBeanInterface getInfo = timeReference().paidHolidayInfo();
 		// マップ準備
-		Map<String, Object> map = null;
-		if (getTransferredCode() != null) {
-			map = getInfo.getPaidHolidayInfo(vo.getPersonalId(), getSystemDate());
-		} else {
-			map = getInfo.getPaidHolidayInfo(vo.getPersonalId(), getSystemDate());
-		}
+		Map<String, Object> map = getInfo.getPaidHolidayInfo(vo.getPersonalId(), getSystemDate());
 		// 休暇情報設定
 		// 情報表示欄の設定
 		vo.setLblFormerDate(String.valueOf(map.get(TimeConst.CODE_FORMER_YEAR_DAY)));
@@ -250,53 +240,6 @@ public class PaidHolidayReferenceAction extends TimeAction {
 		vo.setLblCancelTime(String.valueOf(map.get(TimeConst.CODE_CANCEL_TIME)));
 		vo.setLblUseDate(String.valueOf(map.get(TimeConst.CODE_USE_DAY)));
 		vo.setLblUseTime(String.valueOf(map.get(TimeConst.CODE_USE_TIME)));
-	}
-	
-	/**
-	 * 設定された有効年から取得した年月別の有給休暇情報を設定する。<br>
-	 * @param firstDate 対象年月における初日
-	 * @param lastDate 対象年月における終日
-	 * @throws MospException 例外発生時
-	 */
-	private void setLblDate(Date firstDate, Date lastDate) throws MospException {
-		// VO準備
-		PaidHolidayReferenceVo vo = (PaidHolidayReferenceVo)mospParams.getVo();
-		// 有給休暇データリスト取得
-		List<PaidHolidayDataDtoInterface> list = timeReference().paidHolidayData().getPaidHolidayDataInfoList(
-				vo.getPersonalId(), firstDate, lastDate);
-		// 領域の初期化
-		formerDate = 0;
-		currentDate = 0;
-		givingDate = 0;
-		cancelDate = 0;
-		useDate = 0;
-		formerTime = 0;
-		currentTime = 0;
-		givingTime = 0;
-		cancelTime = 0;
-		useTime = 0;
-		int i = 0;
-		// 有給休暇データリスト毎に処理
-		for (PaidHolidayDataDtoInterface dto : list) {
-			if (i == 0) {
-				// 前年度残日数
-				formerDate = dto.getHoldDay();
-				// 前年度残時間
-				formerTime = dto.getHoldHour();
-			} else {
-				// 今年度残日数
-				currentDate = dto.getHoldDay();
-				// 今年度残時間
-				currentTime = dto.getHoldHour();
-			}
-			givingDate = givingDate + dto.getGivingDay();
-			givingTime = givingTime + dto.getGivingHour();
-			cancelDate = cancelDate + dto.getCancelDay();
-			cancelTime = cancelTime + dto.getCancelHour();
-			useDate = useDate + dto.getUseDay();
-			useTime = useTime + dto.getUseHour();
-			i++;
-		}
 	}
 	
 	/**
@@ -321,43 +264,9 @@ public class PaidHolidayReferenceAction extends TimeAction {
 			return Collections.emptyMap();
 		}
 		// 対象年月及び締日から締期間最終日を取得
-		Date lastDate = cutoffUtil.getCutoffLastDate(cutoffDto.getCutoffCode(), targetYear, targetMonth);
-		return paidHolidayInfo.getPaidHolidayInfo(vo.getPersonalId(), lastDate, false);
-	}
-	
-	/**
-	 * 年月から締期間の開始及び最終日を取得。
-	 * @param targetYearMonth 対象表示年月
-	 * @throws MospException 例外処理が発生した場合
-	 */
-	private void setLblDate(Date targetYearMonth) throws MospException {
-		// VO準備
-		PaidHolidayReferenceVo vo = (PaidHolidayReferenceVo)mospParams.getVo();
-		// 年月取得
-		int targetYear = DateUtility.getYear(targetYearMonth);
-		int targetMonth = DateUtility.getMonth(targetYearMonth);
-		// 年月指定時の基準日を取得
-		Date yearMonthTargetDate = MonthUtility.getYearMonthTargetDate(targetYear, targetMonth, mospParams);
-		// 設定適用情報取得
-		ApplicationDtoInterface applicationDto = timeReference().application().findForPerson(vo.getPersonalId(),
-				yearMonthTargetDate);
-		// 設定適用情報確認
-		if (applicationDto == null) {
-			return;
-		}
-		// 締日ユーティリティー取得
-		CutoffUtilBeanInterface cutoffUtil = timeReference().cutoffUtil();
-		// 締日情報取得
-		CutoffDtoInterface cutoffDto = cutoffUtil.getCutoffForPersonalId(vo.getPersonalId(), targetYear, targetMonth);
-		// 処理結果確認
-		if (mospParams.hasErrorMessage()) {
-			return;
-		}
-		// 締期間の開始及び最終日
 		Date firstDate = cutoffUtil.getCutoffFirstDate(cutoffDto.getCutoffCode(), targetYear, targetMonth);
-		// 対象年月及び締日から締期間最終日を取得
 		Date lastDate = cutoffUtil.getCutoffLastDate(cutoffDto.getCutoffCode(), targetYear, targetMonth);
-		setLblDate(firstDate, lastDate);
+		return paidHolidayInfo.getPaidHolidayReferenceInfo(vo.getPersonalId(), firstDate, lastDate);
 	}
 	
 	/**
@@ -420,26 +329,26 @@ public class PaidHolidayReferenceAction extends TimeAction {
 		for (int i = 0; i < viewPeriod; i++) {
 			Map<String, Object> map = getPaidHolidayMap(targetYearMonth);
 			aryLblViewYearMonth[i] = getViewYearMonth(targetYearMonth);
-			aryLblFormerDate[i] = map.get(TimeConst.CODE_FORMER_YEAR_DAY) == null ? "" : ((Double)map
-				.get(TimeConst.CODE_FORMER_YEAR_DAY)).toString();
-			aryLblFormerTime[i] = map.get(TimeConst.CODE_FORMER_YEAR_TIME) == null ? "" : ((Integer)map
-				.get(TimeConst.CODE_FORMER_YEAR_TIME)).toString();
-			aryLblCurrentDate[i] = map.get(TimeConst.CODE_CURRENT_YEAR_DAY) == null ? "" : ((Double)map
-				.get(TimeConst.CODE_CURRENT_YEAR_DAY)).toString();
-			aryLblCurrentTime[i] = map.get(TimeConst.CODE_CURRENT_TIME) == null ? "" : ((Integer)map
-				.get(TimeConst.CODE_CURRENT_TIME)).toString();
-			aryLblGivingDate[i] = map.get(TimeConst.CODE_GIVING_DAY) == null ? "" : ((Double)map
-				.get(TimeConst.CODE_GIVING_DAY)).toString();
-			aryLblGivingTime[i] = map.get(TimeConst.CODE_GIVING_TIME) == null ? "" : ((Integer)map
-				.get(TimeConst.CODE_GIVING_TIME)).toString();
-			aryLblCancelDate[i] = map.get(TimeConst.CODE_CANCEL_DAY) == null ? "" : ((Double)map
-				.get(TimeConst.CODE_CANCEL_DAY)).toString();
-			aryLblCancelTime[i] = map.get(TimeConst.CODE_CANCEL_TIME) == null ? "" : ((Integer)map
-				.get(TimeConst.CODE_CANCEL_TIME)).toString();
-			aryLblUseDate[i] = map.get(TimeConst.CODE_USE_DAY) == null ? "" : ((Double)map.get(TimeConst.CODE_USE_DAY))
-				.toString();
-			aryLblUseTime[i] = map.get(TimeConst.CODE_USE_TIME) == null ? "" : ((Integer)map
-				.get(TimeConst.CODE_USE_TIME)).toString();
+			aryLblFormerDate[i] = map.get(TimeConst.CODE_FORMER_YEAR_DAY) == null ? ""
+					: ((Double)map.get(TimeConst.CODE_FORMER_YEAR_DAY)).toString();
+			aryLblFormerTime[i] = map.get(TimeConst.CODE_FORMER_YEAR_TIME) == null ? ""
+					: ((Integer)map.get(TimeConst.CODE_FORMER_YEAR_TIME)).toString();
+			aryLblCurrentDate[i] = map.get(TimeConst.CODE_CURRENT_YEAR_DAY) == null ? ""
+					: ((Double)map.get(TimeConst.CODE_CURRENT_YEAR_DAY)).toString();
+			aryLblCurrentTime[i] = map.get(TimeConst.CODE_CURRENT_TIME) == null ? ""
+					: ((Integer)map.get(TimeConst.CODE_CURRENT_TIME)).toString();
+			aryLblGivingDate[i] = map.get(TimeConst.CODE_GIVING_DAY) == null ? ""
+					: ((Double)map.get(TimeConst.CODE_GIVING_DAY)).toString();
+			aryLblGivingTime[i] = map.get(TimeConst.CODE_GIVING_TIME) == null ? ""
+					: ((Integer)map.get(TimeConst.CODE_GIVING_TIME)).toString();
+			aryLblCancelDate[i] = map.get(TimeConst.CODE_CANCEL_DAY) == null ? ""
+					: ((Double)map.get(TimeConst.CODE_CANCEL_DAY)).toString();
+			aryLblCancelTime[i] = map.get(TimeConst.CODE_CANCEL_TIME) == null ? ""
+					: ((Integer)map.get(TimeConst.CODE_CANCEL_TIME)).toString();
+			aryLblUseDate[i] = map.get(TimeConst.CODE_USE_DAY) == null ? ""
+					: ((Double)map.get(TimeConst.CODE_USE_DAY)).toString();
+			aryLblUseTime[i] = map.get(TimeConst.CODE_USE_TIME) == null ? ""
+					: ((Integer)map.get(TimeConst.CODE_USE_TIME)).toString();
 			// 対象月追加
 			targetYearMonth = DateUtility.addMonth(targetYearMonth, 1);
 		}

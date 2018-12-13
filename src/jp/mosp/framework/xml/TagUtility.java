@@ -1,5 +1,19 @@
-/**
- *
+/*
+ * MosP - Mind Open Source Project    http://www.mosp.jp/
+ * Copyright (C) MIND Co., Ltd.       http://www.e-mind.co.jp/
+ * 
+ * This program is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU Affero General Public License
+ * as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package jp.mosp.framework.xml;
 
@@ -17,14 +31,13 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
- * @author yoshida
- *
+ * MosP設定情報作成ユーティリティ。<br>
  */
 public class TagUtility {
 	
 	private static class InstanceHolder {
 		
-		private static final XPath	X_PATH	= getXPathFactory().newXPath();
+		private static final XPath X_PATH = getXPathFactory().newXPath();
 	}
 	
 	
@@ -43,8 +56,9 @@ public class TagUtility {
 	}
 	
 	/**
-	 * @param node
-	 * @return
+	 * 下位テキストノード(前後空白除去)を取得する。<br>
+	 * @param node ノード
+	 * @return 下位テキストノード(前後空白除去)
 	 */
 	public static String trimText(Node node) {
 		// ノード確認
@@ -79,9 +93,10 @@ public class TagUtility {
 	}
 	
 	/**
-	 * @param node
-	 * @param tagName
-	 * @return
+	 * ノードがタグ名の要素であるかを確認する。<br>
+	 * @param node    ノード
+	 * @param tagName タグ名
+	 * @return 確認結果(true：ノードがタグ名の要素である、false：そうでない)
 	 */
 	public static boolean isTag(Node node, String tagName) {
 		if (tagName == null || tagName.isEmpty()) {
@@ -91,8 +106,9 @@ public class TagUtility {
 	}
 	
 	/**
-	 * @param node
-	 * @return
+	 * ノードからキーを取得する。<br>
+	 * @param node ノード
+	 * @return キー
 	 */
 	public static String getKey(Node node) {
 		if (node == null) {
@@ -159,8 +175,9 @@ public class TagUtility {
 	}
 	
 	/**
-	 * @param path
-	 * @param node
+	 * エラーメッセージを出力する。<br>
+	 * @param path ドキュメントファイルパス
+	 * @param node ノード
 	 */
 	public static void invalidMassage(String path, Node node) {
 		String format = "  MosP設定情報ファイルの要素値が不正です。file:{0},<{1} key=\"{2}\">";
@@ -169,10 +186,11 @@ public class TagUtility {
 	}
 	
 	/**
-	 * @param path
-	 * @param node
-	 * @param itemTagName
-	 * @param itemIndex
+	 * エラーメッセージを出力する。<br>
+	 * @param path        ドキュメントファイルパス
+	 * @param node        ノード
+	 * @param itemTagName 要素名
+	 * @param itemIndex   要素インデックス
 	 */
 	public static void invalidItemMassage(String path, Node node, String itemTagName, int itemIndex) {
 		String format = "  MosP設定情報ファイルの要素値が不正です。file:{0},<{1} key=\"{2}\">,<{3}>,	index:{4}";
@@ -181,9 +199,10 @@ public class TagUtility {
 	}
 	
 	/**
-	 * @param path
-	 * @param node
-	 * @param index
+	 * エラーメッセージを出力する。<br>
+	 * @param path  ドキュメントファイルパス
+	 * @param node  ノード
+	 * @param index 要素インデックス
 	 */
 	public static void invalidTagMassage(String path, Node node, int index) {
 		String format = "  MosP設定情報ファイルの要素名が不正です。file:{0},<{1}>,	index:{2}";
@@ -192,9 +211,10 @@ public class TagUtility {
 	}
 	
 	/**
-	 * @param path
-	 * @param node
-	 * @param index
+	 * エラーメッセージを出力する。<br>
+	 * @param path  ドキュメントファイルパス
+	 * @param node  ノード
+	 * @param index 要素インデックス
 	 */
 	public static void noElementKeyMessage(String path, Node node, int index) {
 		String format = "  MosP設定情報ファイルの要素キーがありません。file:{0},<{1}>,	index:{2}";

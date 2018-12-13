@@ -28,18 +28,20 @@ import java.util.Map;
 
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.constant.MospConst;
+import jp.mosp.framework.utils.CapsuleUtility;
 import jp.mosp.framework.utils.DateUtility;
 import jp.mosp.framework.utils.MospUtility;
-import jp.mosp.platform.base.PlatformBean;
 import jp.mosp.platform.bean.human.RetirementReferenceBeanInterface;
 import jp.mosp.platform.bean.human.SuspensionReferenceBeanInterface;
-import jp.mosp.platform.bean.portal.HolidayBeanInterface;
 import jp.mosp.platform.bean.system.SectionReferenceBeanInterface;
+import jp.mosp.platform.bean.system.WorkPlaceReferenceBeanInterface;
 import jp.mosp.platform.constant.PlatformConst;
 import jp.mosp.platform.dto.human.HumanDtoInterface;
 import jp.mosp.platform.dto.human.SuspensionDtoInterface;
 import jp.mosp.platform.dto.workflow.WorkflowDtoInterface;
 import jp.mosp.platform.utils.MonthUtility;
+import jp.mosp.platform.utils.PlatformNamingUtility;
+import jp.mosp.platform.utils.WorkflowUtility;
 import jp.mosp.time.base.TimeBean;
 import jp.mosp.time.bean.ApprovalInfoReferenceBeanInterface;
 import jp.mosp.time.bean.AttendanceBean;
@@ -49,11 +51,11 @@ import jp.mosp.time.bean.CutoffUtilBeanInterface;
 import jp.mosp.time.bean.DifferenceRequestReferenceBeanInterface;
 import jp.mosp.time.bean.HolidayReferenceBeanInterface;
 import jp.mosp.time.bean.HolidayRequestReferenceBeanInterface;
-import jp.mosp.time.bean.LimitStandardReferenceBeanInterface;
 import jp.mosp.time.bean.OvertimeRequestReferenceBeanInterface;
 import jp.mosp.time.bean.RequestUtilBeanInterface;
 import jp.mosp.time.bean.SubHolidayReferenceBeanInterface;
 import jp.mosp.time.bean.SubHolidayRequestReferenceBeanInterface;
+import jp.mosp.time.bean.TimeMasterBeanInterface;
 import jp.mosp.time.bean.TotalTimeEmployeeTransactionReferenceBeanInterface;
 import jp.mosp.time.bean.WorkOnHolidayRequestReferenceBeanInterface;
 import jp.mosp.time.bean.WorkTypeChangeRequestReferenceBeanInterface;
@@ -64,7 +66,6 @@ import jp.mosp.time.dto.settings.AttendanceDtoInterface;
 import jp.mosp.time.dto.settings.CutoffDtoInterface;
 import jp.mosp.time.dto.settings.DifferenceRequestDtoInterface;
 import jp.mosp.time.dto.settings.HolidayRequestDtoInterface;
-import jp.mosp.time.dto.settings.LimitStandardDtoInterface;
 import jp.mosp.time.dto.settings.OvertimeRequestDtoInterface;
 import jp.mosp.time.dto.settings.PaidHolidayDtoInterface;
 import jp.mosp.time.dto.settings.ScheduleDateDtoInterface;
@@ -76,7 +77,11 @@ import jp.mosp.time.dto.settings.WorkOnHolidayRequestDtoInterface;
 import jp.mosp.time.dto.settings.WorkTypeChangeRequestDtoInterface;
 import jp.mosp.time.dto.settings.impl.AttendanceListDto;
 import jp.mosp.time.entity.RequestEntity;
+import jp.mosp.time.entity.RequestEntityInterface;
+import jp.mosp.time.entity.TimeSettingEntityInterface;
 import jp.mosp.time.entity.WorkTypeEntity;
+import jp.mosp.time.utils.HolidayUtility;
+import jp.mosp.time.utils.TimeNamingUtility;
 import jp.mosp.time.utils.TimeUtility;
 
 /**
@@ -111,39 +116,19 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 	public static final String										SEPARATOR_HOURS				= ".";
 	
 	/**
-	 * スタイル文字列(赤)。
-	 */
-	public static final String										STYLE_RED					= "style=\"color: red\"";
-	
-	/**
-	 * スタイル文字列(青)。
-	 */
-	public static final String										STYLE_BLUE					= "style=\"color: blue\"";
-	
-	/**
-	 * スタイル文字列(黄)。
-	 */
-	public static final String										STYLE_YELLOW				= "style=\"color: darkorange\"";
-	
-	/**
-	 * 区切文字(勤怠備考)。
-	 */
-	public static final String										SEPARATOR_ATTENDANCE_REMARK	= " ";
-	
-	/**
 	 * 限度基準期間(1ヶ月)。
 	 */
 	public static final String										LIMIT_STANDARD_TERM_MONTH1	= "month1";
 	
 	/**
+	 * 半日勤務形態略称長(デフォルト)。<br>
+	 */
+	protected static final int										LEN_HALF_WORK_TYPE			= 1;
+	
+	/**
 	 * 有給休暇設定マスタ参照クラス。
 	 */
 	protected PaidHolidayReferenceBean								paidHoliday;
-	
-	/**
-	 * 勤怠設定限度基準情報参照クラス。
-	 */
-	protected LimitStandardReferenceBeanInterface					limitStandard;
 	
 	/**
 	 * 締日ユーティリティクラス。
@@ -191,6 +176,11 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 	protected SectionReferenceBeanInterface							section;
 	
 	/**
+	 * 勤務地マスタ参照クラス。
+	 */
+	protected WorkPlaceReferenceBeanInterface						workPlace;
+	
+	/**
 	 * 休暇マスタ参照クラス。
 	 */
 	protected HolidayReferenceBeanInterface							holiday;
@@ -204,11 +194,6 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 	 * 人事休職情報参照クラス。
 	 */
 	protected SuspensionReferenceBeanInterface						suspension;
-	
-	/**
-	 * 祝日クラス。
-	 */
-	protected HolidayBeanInterface									holidayBean;
 	
 	/**
 	 * 設定適用情報。
@@ -236,9 +221,19 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 	protected List<ScheduleDateDtoInterface>						scheduleDateList;
 	
 	/**
+	 * 締期間設定適用情報マップ。
+	 */
+	protected Map<Date, ApplicationDtoInterface>					applicationMap;
+	
+	/**
 	 * 社員勤怠集計管理参照クラス。
 	 */
 	protected TotalTimeEmployeeTransactionReferenceBeanInterface	totalTimeEmployee;
+	
+	/**
+	 * 勤怠関連マスタ参照クラス。
+	 */
+	protected TimeMasterBeanInterface								timeMasterBean;
 	
 	/**
 	 * 取得対象個人ID。<br>
@@ -273,6 +268,12 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 	 * true：仮締又は確定、false：未締。<br>
 	 */
 	protected boolean												isTightened;
+	
+	/**
+	 * 半日勤務形態略称長。<br>
+	 * 通常は1文字。<br>
+	 */
+	protected int													halfWorkTypeLength;
 	
 	/**
 	 * 勤怠情報リスト。<br>
@@ -323,17 +324,17 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 	/**
 	 * 申請ユーティリティ。
 	 */
-	private RequestUtilBeanInterface								requestUtil;
+	protected RequestUtilBeanInterface								requestUtil;
 	
 	/**
 	 * ワークフロー情報群。<br>
 	 */
-	private Map<Long, WorkflowDtoInterface>							workflowMap;
+	protected Map<Long, WorkflowDtoInterface>						workflowMap;
 	
 	/**
 	 * 勤務形態エンティティ群。<br>
 	 */
-	private Map<String, WorkTypeEntity>								workTypeEntityMap;
+	protected Map<String, WorkTypeEntity>							workTypeEntityMap;
 	
 	
 	@Override
@@ -342,24 +343,29 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 		super.initBean();
 		// 参照クラス準備
 		paidHoliday = (PaidHolidayReferenceBean)createBean(PaidHolidayReferenceBean.class);
-		limitStandard = (LimitStandardReferenceBeanInterface)createBean(LimitStandardReferenceBeanInterface.class);
 		cutoffUtil = (CutoffUtilBeanInterface)createBean(CutoffUtilBeanInterface.class);
-		correction = (AttendanceCorrectionReferenceBeanInterface)createBean(AttendanceCorrectionReferenceBeanInterface.class);
+		correction = (AttendanceCorrectionReferenceBeanInterface)createBean(
+				AttendanceCorrectionReferenceBeanInterface.class);
 		holidayRequest = (HolidayRequestReferenceBeanInterface)createBean(HolidayRequestReferenceBeanInterface.class);
 		overtime = (OvertimeRequestReferenceBean)createBean(OvertimeRequestReferenceBean.class);
-		workOnHoliday = (WorkOnHolidayRequestReferenceBeanInterface)createBean(WorkOnHolidayRequestReferenceBeanInterface.class);
+		workOnHoliday = (WorkOnHolidayRequestReferenceBeanInterface)createBean(
+				WorkOnHolidayRequestReferenceBeanInterface.class);
 		subHolidayRefer = (SubHolidayReferenceBeanInterface)createBean(SubHolidayReferenceBeanInterface.class);
 		subHoliday = (SubHolidayRequestReferenceBeanInterface)createBean(SubHolidayRequestReferenceBeanInterface.class);
-		workTypeChange = (WorkTypeChangeRequestReferenceBeanInterface)createBean(WorkTypeChangeRequestReferenceBeanInterface.class);
+		workTypeChange = (WorkTypeChangeRequestReferenceBeanInterface)createBean(
+				WorkTypeChangeRequestReferenceBeanInterface.class);
 		difference = (DifferenceRequestReferenceBeanInterface)createBean(DifferenceRequestReferenceBeanInterface.class);
 		section = (SectionReferenceBeanInterface)createBean(SectionReferenceBeanInterface.class);
+		workPlace = (WorkPlaceReferenceBeanInterface)createBean(WorkPlaceReferenceBeanInterface.class);
 		holiday = (HolidayReferenceBeanInterface)createBean(HolidayReferenceBeanInterface.class);
 		retirement = (RetirementReferenceBeanInterface)createBean(RetirementReferenceBeanInterface.class);
 		suspension = (SuspensionReferenceBeanInterface)createBean(SuspensionReferenceBeanInterface.class);
-		totalTimeEmployee = (TotalTimeEmployeeTransactionReferenceBeanInterface)createBean(TotalTimeEmployeeTransactionReferenceBeanInterface.class);
+		totalTimeEmployee = (TotalTimeEmployeeTransactionReferenceBeanInterface)createBean(
+				TotalTimeEmployeeTransactionReferenceBeanInterface.class);
 		requestUtil = (RequestUtilBeanInterface)createBean(RequestUtilBeanInterface.class);
-		// 祝日クラス準備
-		holidayBean = (HolidayBeanInterface)createBean(HolidayBeanInterface.class);
+		timeMasterBean = (TimeMasterBeanInterface)createBean(TimeMasterBeanInterface.class);
+		// 半日勤務形態略称長を設定(1文字)
+		halfWorkTypeLength = LEN_HALF_WORK_TYPE;
 	}
 	
 	@Override
@@ -378,6 +384,10 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 		setTargetYearMonth(targetDate);
 		// 締期間設定
 		setCutoffTerm();
+		// 処理結果確認
+		if (mospParams.hasErrorMessage()) {
+			return attendanceList;
+		}
 		// 勤怠一覧情報リストを初期化
 		initAttendanceList();
 		// 処理結果確認
@@ -415,6 +425,10 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 		}
 		// 締期間設定
 		setCutoffTerm();
+		// 処理結果確認
+		if (mospParams.hasErrorMessage()) {
+			return attendanceList;
+		}
 		// 勤怠一覧情報リストを初期化
 		initAttendanceList();
 		// 処理結果確認
@@ -454,6 +468,10 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 		setTargetYearMonth(targetDate);
 		// 締期間設定
 		setCutoffTerm();
+		// 処理結果確認
+		if (mospParams.hasErrorMessage()) {
+			return attendanceList;
+		}
 		// 締状態設定
 		setTightened();
 		// 勤怠一覧情報リストを初期化
@@ -493,6 +511,10 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 		}
 		// 締期間設定
 		setCutoffTerm();
+		// 処理結果確認
+		if (mospParams.hasErrorMessage()) {
+			return attendanceList;
+		}
 		// 締状態設定
 		setTightened();
 		// 勤怠一覧情報リストを初期化
@@ -534,6 +556,10 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 		setTargetYearMonth(targetDate);
 		// 締期間設定
 		setCutoffTerm();
+		// 処理結果確認
+		if (mospParams.hasErrorMessage()) {
+			return attendanceList;
+		}
 		// 締状態設定
 		setTightened();
 		// 勤怠一覧情報リストを初期化
@@ -579,6 +605,10 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 		}
 		// 締期間設定
 		setCutoffTerm();
+		// 処理結果確認
+		if (mospParams.hasErrorMessage()) {
+			return attendanceList;
+		}
 		// 締状態設定
 		setTightened();
 		// 勤怠一覧情報リストを初期化
@@ -642,6 +672,8 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 		totalAttendanceList();
 		// 勤怠一覧情報に表示用文字列を設定
 		setDtoStringFields();
+		// 勤怠一覧情報の特定の項目にハイフンを設定
+		setDtoHyphenFields(useScheduledTime());
 		// 勤怠一覧(週)追加処理
 		setWeeklyAttendanceExtraInfo();
 		return attendanceList;
@@ -662,6 +694,10 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 		}
 		// 締期間設定
 		setCutoffTerm();
+		// 処理結果確認
+		if (mospParams.hasErrorMessage()) {
+			return attendanceList;
+		}
 		// 締状態設定
 		setTightened();
 		// 勤怠一覧情報リストを初期化
@@ -704,8 +740,8 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 			return null;
 		}
 		// 対象日を設定
-		firstDate = targetDate;
-		lastDate = targetDate;
+		firstDate = CapsuleUtility.getDateClone(targetDate);
+		lastDate = CapsuleUtility.getDateClone(targetDate);
 		// 勤怠一覧情報リストを初期化
 		initAttendanceList();
 		// 処理結果確認
@@ -740,6 +776,11 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 	@Override
 	public Date getLastDate() {
 		return getDateClone(lastDate);
+	}
+	
+	@Override
+	public Date getFirstDate() {
+		return getDateClone(firstDate);
 	}
 	
 	@Override
@@ -818,6 +859,8 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 	 * @param personalId 対象個人ID
 	 */
 	protected void initFields(String personalId) {
+		// 設定適用情報マップ初期化
+		applicationMap = null;
 		// 設定適用情報初期化
 		applicationDto = null;
 		// 勤怠設定情報初期化
@@ -886,6 +929,8 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 			// 所属表示名称を設定
 			dto.setSectionName(section.getSectionDisplay(humanDto.getSectionCode(), lastDate));
 		}
+		// 勤務地名設定
+		dto.setWorkPlaceName(workPlace.getWorkPlaceName(humanDto.getWorkPlaceCode(), lastDate));
 		// 帳票承認印欄表示設定
 		dto.setSealBoxAvailable(true);
 		// 最後の勤怠一覧レコードを取得
@@ -958,6 +1003,11 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 		firstDate = TimeUtility.getCutoffFirstDate(cutoffDate, targetYear, targetMonth);
 		// 締期間最終日設定
 		lastDate = TimeUtility.getCutoffLastDate(cutoffDate, targetYear, targetMonth);
+		// 締期間最終日時点で入社していない又は締日最終日時点で設定適用がない場合
+		if (!isEntered(personalId, lastDate) || applicationReference.findForPerson(personalId, lastDate) == null) {
+			// 締期間最終日で再取得
+			setApplicationSettings();
+		}
 	}
 	
 	/**
@@ -1002,6 +1052,8 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 		workflowMap = new HashMap<Long, WorkflowDtoInterface>();
 		// ワークフロー情報群の初期化
 		workTypeEntityMap = new HashMap<String, WorkTypeEntity>();
+		// 設定適用情報マップ取得
+		applicationMap = timeMasterBean.getApplicationMap(personalId, firstDate, lastDate);
 		// カレンダ日情報取得及び確認
 		scheduleDateList = scheduleDateReference.findForList(scheduleDto.getScheduleCode(), firstDate, lastDate);
 		// 勤怠情報取得
@@ -1068,10 +1120,16 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 		float paidHolidayTime = 0F;
 		// 特別休暇回数
 		float specialHolidays = 0F;
+		// 特別休暇時間数
+		float specialHolidayTimes = 0F;
 		// その他休暇回数
 		float otherHolidays = 0F;
+		// その他休暇時間数
+		float otherHolidayTimes = 0F;
 		// 欠勤回数
 		float absenceDays = 0F;
+		// 欠勤時間数
+		float absenceTimes = 0F;
 		// 休暇申請情報取得
 		holidayRequestList = holidayRequest.getHolidayRequestList(personalId, firstDate, lastDate);
 		// 休暇申請毎に処理
@@ -1097,16 +1155,16 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 							return;
 						}
 						// カレンダ情報を取得
-						ScheduleDtoInterface scheduleDto = scheduleReference.getScheduleInfo(
-								applicationDto.getScheduleCode(), targetDate);
+						ScheduleDtoInterface scheduleDto = scheduleReference
+							.getScheduleInfo(applicationDto.getScheduleCode(), targetDate);
 						// カレンダ情報確認
 						scheduleReference.chkExistSchedule(scheduleDto, targetDate);
 						if (mospParams.hasErrorMessage()) {
 							return;
 						}
 						// カレンダ日情報取得及び確認
-						ScheduleDateDtoInterface scheduleDateDto = scheduleDateReference.getScheduleDateInfo(
-								scheduleDto.getScheduleCode(), scheduleDto.getActivateDate(), targetDate);
+						ScheduleDateDtoInterface scheduleDateDto = scheduleDateReference
+							.getScheduleDateInfo(scheduleDto.getScheduleCode(), targetDate);
 						scheduleDateReference.chkExistScheduleDate(scheduleDateDto, targetDate);
 						if (mospParams.hasErrorMessage()) {
 							return;
@@ -1116,24 +1174,10 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 						// 各種申請情報取得
 						requestUtil.setRequests(personalId, targetDate);
 						// 休日出勤申請がある場合
-						WorkOnHolidayRequestDtoInterface workOnHolidayRequestDto = requestUtil
-							.getWorkOnHolidayDto(true);
-						if (workOnHolidayRequestDto == null) {
-							for (SubstituteDtoInterface substituteDto : requestUtil.getSubstituteList(true)) {
-								if (isAll(substituteDto)) {
-									// 全休の場合
-									workTypeCode = substituteDto.getSubstituteType();
-									break;
-								}
-							}
-						} else {
-							workTypeCode = getWorkOnHolidayWorkType(workOnHolidayRequestDto);
-						}
+						workTypeCode = getWorkTypeWorkOnHolidayForHolidayRequest(workTypeCode);
 						// 法定休日・所定休日・法定休日出勤・所定休日出勤の場合
-						if (TimeConst.CODE_HOLIDAY_LEGAL_HOLIDAY.equals(workTypeCode)
-								|| TimeConst.CODE_HOLIDAY_PRESCRIBED_HOLIDAY.equals(workTypeCode)
-								|| TimeConst.CODE_WORK_ON_LEGAL_HOLIDAY.equals(workTypeCode)
-								|| TimeConst.CODE_WORK_ON_PRESCRIBED_HOLIDAY.equals(workTypeCode)) {
+						if (TimeUtility.isHoliday(workTypeCode) || TimeUtility.isWorkOnLegalHoliday(workTypeCode)
+								|| TimeUtility.isWorkOnPrescribedHoliday(workTypeCode)) {
 							// 対象日加算
 							targetDate = addDay(targetDate, 1);
 							continue;
@@ -1154,7 +1198,7 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 						// 時休を取得している場合
 						if (timeHoliday.get(getDraftAbbrNaming()) > 0) {
 							// 備考追加
-							remark = remark + PlatformBean.STR_SB_SAPCE + mospParams.getName("Hour")
+							remark = remark + MospConst.STR_SB_SPACE + mospParams.getName("Hour")
 									+ timeHoliday.get(getDraftAbbrNaming());
 						}
 						// 備考設定
@@ -1187,8 +1231,8 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 					return;
 				}
 				// カレンダ日情報取得及び確認
-				ScheduleDateDtoInterface scheduleDateDto = scheduleDateReference.getScheduleDateInfo(
-						scheduleDto.getScheduleCode(), scheduleDto.getActivateDate(), targetDate);
+				ScheduleDateDtoInterface scheduleDateDto = scheduleDateReference
+					.getScheduleDateInfo(scheduleDto.getScheduleCode(), targetDate);
 				scheduleDateReference.chkExistScheduleDate(scheduleDateDto, targetDate);
 				if (mospParams.hasErrorMessage()) {
 					return;
@@ -1196,23 +1240,11 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 				String workTypeCode = scheduleDateDto.getWorkTypeCode();
 				// 各種申請情報取得
 				requestUtil.setRequests(personalId, targetDate);
-				WorkOnHolidayRequestDtoInterface workOnHolidayRequestDto = requestUtil.getWorkOnHolidayDto(true);
-				if (workOnHolidayRequestDto == null) {
-					for (SubstituteDtoInterface substituteDto : requestUtil.getSubstituteList(true)) {
-						if (isAll(substituteDto)) {
-							// 全休の場合
-							workTypeCode = substituteDto.getSubstituteType();
-							break;
-						}
-					}
-				} else {
-					workTypeCode = getWorkOnHolidayWorkType(workOnHolidayRequestDto);
-				}
+				// 休日出勤申請がある場合
+				workTypeCode = getWorkTypeWorkOnHolidayForHolidayRequest(workTypeCode);
 				// 法定休日・所定休日・法定休日出勤・所定休日出勤の場合
-				if (TimeConst.CODE_HOLIDAY_LEGAL_HOLIDAY.equals(workTypeCode)
-						|| TimeConst.CODE_HOLIDAY_PRESCRIBED_HOLIDAY.equals(workTypeCode)
-						|| TimeConst.CODE_WORK_ON_LEGAL_HOLIDAY.equals(workTypeCode)
-						|| TimeConst.CODE_WORK_ON_PRESCRIBED_HOLIDAY.equals(workTypeCode)) {
+				if (TimeUtility.isHoliday(workTypeCode) || TimeUtility.isWorkOnLegalHoliday(workTypeCode)
+						|| TimeUtility.isWorkOnPrescribedHoliday(workTypeCode)) {
 					// 対象日加算
 					targetDate = addDay(targetDate, 1);
 					continue;
@@ -1226,7 +1258,7 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 					continue;
 				}
 				// 休暇申請情報を勤怠一覧情報に設定
-				setDtoFields(dto, holidayRequestDto, workflowDto);
+				setDtoFields(dto, holidayRequestDto, workflowDto, containNotApproved);
 				// 休暇区分確認
 				switch (holidayRequestDto.getHolidayType1()) {
 					case TimeConst.CODE_HOLIDAYTYPE_HOLIDAY:
@@ -1242,21 +1274,37 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 						break;
 					case TimeConst.CODE_HOLIDAYTYPE_SPECIAL:
 						// 特別休暇の場合
-						// 特別休暇回数加算
-						specialHolidays += times;
+						if (holidayRequestDto.getHolidayRange() == TimeConst.CODE_HOLIDAY_RANGE_TIME) {
+							// 特別休暇時間加算
+							specialHolidayTimes += times;
+						} else {
+							// 特別休暇回数加算
+							specialHolidays += times;
+						}
 						break;
 					case TimeConst.CODE_HOLIDAYTYPE_OTHER:
 						// その他休暇の場合
-						// その他休暇回数加算
-						otherHolidays += times;
+						if (holidayRequestDto.getHolidayRange() == TimeConst.CODE_HOLIDAY_RANGE_TIME) {
+							// その他休暇時間加算
+							otherHolidayTimes += times;
+						} else {
+							// その他休暇回数加算
+							otherHolidays += times;
+						}
 						break;
 					case TimeConst.CODE_HOLIDAYTYPE_ABSENCE:
 						// 欠勤の場合
-						// 欠勤回数加算
-						absenceDays += times;
+						if (holidayRequestDto.getHolidayRange() == TimeConst.CODE_HOLIDAY_RANGE_TIME) {
+							// 欠勤時間加算
+							absenceTimes += times;
+						} else {
+							// 欠勤回数加算
+							absenceDays += times;
+						}
 						break;
 					default:
 						// 処理無し
+						break;
 				}
 			}
 		}
@@ -1269,10 +1317,37 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 		dto.setPaidHolidayTime(paidHolidayTime);
 		// 特別休暇回数
 		dto.setSpecialHolidays(specialHolidays);
+		// 特別休暇時間数
+		dto.setSpecialHolidayHours(specialHolidayTimes);
 		// その他休暇回数
 		dto.setOtherHolidays(otherHolidays);
+		// その他休暇時間数
+		dto.setOtherHolidayHours(otherHolidayTimes);
 		// 欠勤回数
 		dto.setAbsenceDays(absenceDays);
+		// 欠勤時間数
+		dto.setAbsenceHours(absenceTimes);
+	}
+	
+	/**
+	 * 休暇申請情報を設定時の勤務形態取得(振替休日)
+	 * @param workTypeBefore メソッド実行前勤務形態
+	 * @return 勤務形態コード
+	 * @throws MospException インスタンスの生成或いはSQLの実行に失敗した場合
+	 */
+	protected String getWorkTypeWorkOnHolidayForHolidayRequest(String workTypeBefore) throws MospException {
+		WorkOnHolidayRequestDtoInterface workOnHolidayRequestDto = requestUtil.getWorkOnHolidayDto(true);
+		if (workOnHolidayRequestDto == null) {
+			for (SubstituteDtoInterface substituteDto : requestUtil.getSubstituteList(true)) {
+				if (isAll(substituteDto)) {
+					// 全休の場合
+					return substituteDto.getSubstituteType();
+				}
+			}
+			return workTypeBefore;
+		}
+		return getWorkOnHolidayWorkType(workOnHolidayRequestDto);
+		
 	}
 	
 	/**
@@ -1285,20 +1360,18 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 	 */
 	protected boolean isRequestNeeded(WorkflowDtoInterface workflowDto, boolean containNotApproved)
 			throws MospException {
-		// ワークフロー状況取得
-		String workflowStatus = workflowDto.getWorkflowStatus();
 		// ワークフロー状況確認(下書の場合)
-		if (workflow.isDraft(workflowDto)) {
+		if (WorkflowUtility.isDraft(workflowDto)) {
 			// 不要
 			return false;
 		}
 		// ワークフロー状況確認(取下の場合)
-		if (workflowStatus.equals(PlatformConst.CODE_STATUS_WITHDRAWN)) {
+		if (WorkflowUtility.isWithDrawn(workflowDto)) {
 			// 不要
 			return false;
 		}
 		// 未承認要否フラグ及びワークフロー状況確認(承認済でない場合)
-		if (containNotApproved == false && workflowStatus.equals(PlatformConst.CODE_STATUS_COMPLETE) == false) {
+		if (containNotApproved == false && WorkflowUtility.isCompleted(workflowDto) == false) {
 			// 不要
 			return false;
 		}
@@ -1367,25 +1440,31 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 	 * @param dto               設定対象勤怠一覧情報
 	 * @param holidayRequestDto 休暇申請情報
 	 * @param workflowDto       ワークフロー情報
+	 * @param containNotApproved 未承認要否フラグ(true：未承認申請も含める、false：承認済のみ) ※アドオンで利用
+	 * 
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
 	protected void setDtoFields(AttendanceListDto dto, HolidayRequestDtoInterface holidayRequestDto,
-			WorkflowDtoInterface workflowDto) throws MospException {
+			WorkflowDtoInterface workflowDto, boolean containNotApproved) throws MospException {
 		// 備考
 		String remark = getHolidayNaming() + getWorkflowStatusAbbr(workflowDto);
 		// 有給休暇時間承認状態別休数回数マップ取得
 		Map<String, Integer> timeHoliday = holidayRequest.getTimeHolidayStatusTimesMap(personalId,
 				holidayRequestDto.getRequestStartDate(), null);
-		// 時休を取得している場合
-		if (timeHoliday.get(getWorkflowStatusAbbr(workflowDto)) > 0) {
-			// 備考追加
-			remark = remark + PlatformBean.STR_SB_SAPCE + mospParams.getName("Hour")
-					+ timeHoliday.get(getWorkflowStatusAbbr(workflowDto));
+		
+		if (!timeHoliday.isEmpty()) {
+			// 時休を取得している場合
+			if (timeHoliday.get(getWorkflowStatusAbbr(workflowDto)) > 0) {
+				// 備考追加
+				remark = remark + MospConst.STR_SB_SPACE + mospParams.getName("Hour")
+						+ timeHoliday.get(getWorkflowStatusAbbr(workflowDto));
+			}
+			
 		}
 		// 備考設定
 		addRemark(dto, remark);
 		// 休暇範囲確認
-		if (holidayRequestDto.getHolidayRange() != TimeConst.CODE_HOLIDAY_RANGE_ALL) {
+		if (!isDtoFieldsSetHolidayRequestAll(dto, holidayRequestDto, containNotApproved)) {
 			// 全休以外の場合は設定不要
 			return;
 		}
@@ -1394,14 +1473,31 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 		// チェックボックス要否設定(不要)
 		dto.setNeedCheckbox(false);
 		// 状態設定
-		dto.setApplicationInfo(workflow.getWorkflowStatus(workflowDto.getWorkflowStatus(),
-				workflowDto.getWorkflowStage()));
+		dto.setApplicationInfo(
+				workflow.getWorkflowStatus(workflowDto.getWorkflowStatus(), workflowDto.getWorkflowStage()));
 		// 状態リンクコマンド設定
 		dto.setNeedStatusLink(false);
 		// 休暇申請のレコード識別IDを設定
 		dto.setAttendanceRecordId(holidayRequestDto.getTmdHolidayRequestId());
 		// 休暇区分毎に勤務形態略称設定
 		dto.setWorkTypeAbbr(getWorkTypeAbbr(holidayRequestDto));
+		// カット設定
+		setCut(dto);
+		// 無休時短時間設定
+		setShortUnpaid(dto);
+	}
+	
+	/**
+	 * DTO設定要否判定
+	 * @param dto 設定対象勤怠一覧情報
+	 * @param holidayRequestDto 休暇申請DTO
+	 * @param containNotApproved  未承認要否フラグ(true：未承認申請も含める、false：承認済のみ) ※アドオンで利用
+	 * @return DTO設定要否判定（true:設定要、false:設定不要）
+	 * @throws MospException インスタンスの生成或いはSQLの実行に失敗した場合
+	 */
+	protected boolean isDtoFieldsSetHolidayRequestAll(AttendanceListDto dto,
+			HolidayRequestDtoInterface holidayRequestDto, boolean containNotApproved) throws MospException {
+		return holidayRequestDto.getHolidayRange() == TimeConst.CODE_HOLIDAY_RANGE_ALL;
 	}
 	
 	/**
@@ -1443,6 +1539,7 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 		int substitute = dto.getSubstitute();
 		// 振替申請の場合
 		if (substitute == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_ON
+				|| substitute == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_ON_WORK_TYPE_CHANGE
 				|| substitute == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_AM
 				|| substitute == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_PM) {
 			// 振替出勤略称を設定
@@ -1482,7 +1579,7 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 			// 備考設定
 			addRemark(dto, requestAbbr + getWorkflowStatusAbbr(workflowDto));
 			// 勤務形態確認
-			if (dto.getWorkTypeCode() != null) {
+			if (!isWorkTypeSetWorkOnHoliday(dto, containNotApproved)) {
 				// 勤務形態が設定されている場合(実績が存在する場合)
 				continue;
 			}
@@ -1526,6 +1623,20 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 	}
 	
 	/**
+	 * 勤務形態設定判定(休出申請情報取得用)
+	 * @param dto 勤怠情報DTO
+	 * @param containNotApproved 未承認要否フラグ(true：未承認申請も含める、false：承認済のみ)
+	 * <br> containNotApprovedはアドオンで使用する.
+	 * @return 勤務形態設定判定(true:未設定、false:空も含めて設定)
+	 * @throws MospException インスタンスの生成或いはSQLの実行に失敗した場合
+	 */
+	protected boolean isWorkTypeSetWorkOnHoliday(AttendanceListDto dto, boolean containNotApproved)
+			throws MospException {
+		return dto.getWorkTypeCode() == null;
+		
+	}
+	
+	/**
 	 * 振替休日情報を取得し勤怠一覧情報リストに設定する。<br>
 	 * @param containNotApproved 未承認要否フラグ(true：未承認申請も含める、false：承認済のみ)
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
@@ -1536,8 +1647,8 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 		// 振替休日毎に処理
 		for (SubstituteDtoInterface substituteDto : substituteList) {
 			// 振替休日の元である休日出勤申請情報を取得
-			WorkOnHolidayRequestDtoInterface workOnHolidayRequestDto = workOnHoliday.findForWorkflow(substituteDto
-				.getWorkflow());
+			WorkOnHolidayRequestDtoInterface workOnHolidayRequestDto = workOnHoliday
+				.findForWorkflow(substituteDto.getWorkflow());
 			// 休日出勤申請情報確認
 			if (workOnHolidayRequestDto == null) {
 				continue;
@@ -1549,8 +1660,8 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 				continue;
 			}
 			// 振替休日と同日の休日出勤申請情報を取得
-			WorkOnHolidayRequestDtoInterface sameDayWorkOnHolidayRequestDto = workOnHoliday.findForKeyOnWorkflow(
-					personalId, substituteDto.getSubstituteDate());
+			WorkOnHolidayRequestDtoInterface sameDayWorkOnHolidayRequestDto = workOnHoliday
+				.findForKeyOnWorkflow(personalId, substituteDto.getSubstituteDate());
 			// 振替休日と同日の休日出勤申請情報確認
 			if (sameDayWorkOnHolidayRequestDto != null) {
 				// 振替休日と同日の休日出勤申請情報のワークフロー情報取得
@@ -1567,29 +1678,57 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 			// 振替休日回数加算
 			substituteHolidays += getHolidayTimes(substituteDto.getSubstituteRange());
 			// 休暇範囲確認
-			if (substituteDto.getSubstituteRange() != TimeConst.CODE_HOLIDAY_RANGE_ALL) {
+			if (!isSubstituteAllHoliday(substituteDto, containNotApproved)) {
 				// 全休以外の場合は設定不要
 				continue;
 			}
 			// 勤務形態コード設定
 			dto.setWorkTypeCode("");
-			// 振替休日種別確認
-			if (substituteDto.getSubstituteType().equals(TimeConst.CODE_HOLIDAY_LEGAL_HOLIDAY)) {
-				// 勤務形態略称設定
-				dto.setWorkTypeAbbr(getLegalSubstituteAbbrNaming());
-			} else {
-				// 勤務形態略称設定
-				dto.setWorkTypeAbbr(getPrescribedSubstituteAbbrNaming());
-			}
+			// 勤務形態略称設定
+			setWorkTypeAbbrSubstituteAllHoliday(substituteDto, dto);
 			// 状態設定
-			dto.setApplicationInfo(workflow.getWorkflowStatus(workflowDto.getWorkflowStatus(),
-					workflowDto.getWorkflowStage()));
+			dto.setApplicationInfo(
+					workflow.getWorkflowStatus(workflowDto.getWorkflowStatus(), workflowDto.getWorkflowStage()));
+			// カット設定
+			setCut(dto);
+			// 無休時短時間設定
+			setShortUnpaid(dto);
 		}
 		// 最終レコード取得
 		AttendanceListDto dto = attendanceList.get(attendanceList.size() - 1);
 		// 集計値設定
 		// 休日出勤回数
 		dto.setSubstituteHolidays(substituteHolidays);
+	}
+	
+	/**
+	 * 振替休日範囲判定
+	 * @param substituteDto 代休申請DTO
+	 * @param containNotApproved 未承認要否フラグ(true：未承認申請も含める、false：承認済のみ)
+	 * @return 振替休日範囲判定(true:全日振替休日、false:半日振替休日)
+	 * @throws MospException インスタンスの生成或いはSQLの実行に失敗した場合
+	 */
+	protected boolean isSubstituteAllHoliday(SubstituteDtoInterface substituteDto, boolean containNotApproved)
+			throws MospException {
+		return substituteDto.getSubstituteRange() == TimeConst.CODE_HOLIDAY_RANGE_ALL;
+	}
+	
+	/**
+	 * 全休時の勤務形態略称を取得
+	 * @param substituteDto 振替休日DTO
+	 * @param dto 対象日の勤怠DTO
+	 * @throws MospException インスタンスの生成或いはSQLの実行に失敗した場合
+	 */
+	protected void setWorkTypeAbbrSubstituteAllHoliday(SubstituteDtoInterface substituteDto, AttendanceListDto dto)
+			throws MospException {
+		if (substituteDto.getSubstituteType().equals(TimeConst.CODE_HOLIDAY_LEGAL_HOLIDAY)) {
+			// 勤務形態略称設定
+			dto.setWorkTypeAbbr(getLegalSubstituteAbbrNaming());
+		} else {
+			// 勤務形態略称設定
+			dto.setWorkTypeAbbr(getPrescribedSubstituteAbbrNaming());
+		}
+		
 	}
 	
 	/**
@@ -1619,7 +1758,7 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 			// 代休回数加算
 			subHolidays += getHolidayTimes(subHolidayRequestDto.getHolidayRange());
 			// 休暇範囲確認
-			if (subHolidayRequestDto.getHolidayRange() != TimeConst.CODE_HOLIDAY_RANGE_ALL) {
+			if (!isAllSubHoliday(subHolidayRequestDto)) {
 				// 全休以外の場合は設定不要
 				continue;
 			}
@@ -1628,14 +1767,29 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 			// 勤務形態略称設定
 			dto.setWorkTypeAbbr(getWorkTypeAbbr(subHolidayRequestDto));
 			// 状態設定
-			dto.setApplicationInfo(workflow.getWorkflowStatus(workflowDto.getWorkflowStatus(),
-					workflowDto.getWorkflowStage()));
+			dto.setApplicationInfo(
+					workflow.getWorkflowStatus(workflowDto.getWorkflowStatus(), workflowDto.getWorkflowStage()));
+			// カット設定
+			setCut(dto);
+			// 無休時短時間設定
+			setShortUnpaid(dto);
 		}
 		// 最終レコード取得
 		AttendanceListDto dto = attendanceList.get(attendanceList.size() - 1);
 		// 集計値設定
 		// 代休回数
 		dto.setSubHolidays(subHolidays);
+	}
+	
+	/**
+	 * 代休範囲判定
+	 * @param subHolidayRequestDto 代休申請DTO
+	 * @return 代休範囲判定(true:全日代休、false:半日代休)
+	 * @throws MospException インスタンスの生成或いはSQLの実行に失敗した場合
+	 */
+	protected boolean isAllSubHoliday(SubHolidayRequestDtoInterface subHolidayRequestDto) throws MospException {
+		return subHolidayRequestDto.getHolidayRange() == TimeConst.CODE_HOLIDAY_RANGE_ALL;
+		
 	}
 	
 	/**
@@ -1831,6 +1985,8 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 			WorkflowDtoInterface anteWorkflowDto = null;
 			// 午後休ワークフロー
 			WorkflowDtoInterface postWorkflowDto = null;
+			// 申請エンティティを取得
+			RequestEntity entity = getRequestEntity(personalId, dto.getWorkDate());
 			// 休暇申請情報確認
 			for (HolidayRequestDtoInterface holidayRequestDto : holidayRequestList) {
 				// 休暇日確認
@@ -1851,7 +2007,8 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 				}
 				// 休日日数加算
 				holidayTimes += getHolidayTimes(holidayRequestDto.getHolidayRange());
-				String workTypeAbbrInitial = getWorkTypeAbbr(holidayRequestDto).substring(0, 1);
+				// 半日勤務形態略称を取得
+				String workTypeAbbrInitial = substrForHalfWorkType(getWorkTypeAbbr(holidayRequestDto));
 				if (dto.getWorkTypeAnteAbbr() == null
 						&& holidayRequestDto.getHolidayRange() == TimeConst.CODE_HOLIDAY_RANGE_AM) {
 					// 午前休の場合
@@ -1877,9 +2034,10 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 				if (!isRequestNeeded(workflowDto, containNotApproved)) {
 					continue;
 				}
-				// 休暇範囲確認
+				// 休暇範囲が全休の場合
 				if (subHolidayRequestDto.getHolidayRange() == TimeConst.CODE_HOLIDAY_RANGE_ALL) {
-					// 全休の場合は処理不要
+					// チェックボックス設定
+					dto.setNeedCheckbox(false);
 					continue attendanceList;
 				}
 				// 休日日数加算
@@ -1910,25 +2068,39 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 				if (!isRequestNeeded(workflowDto, containNotApproved)) {
 					continue;
 				}
-				// 振替申請確認
-				if (workOnHolidayRequestDto.getSubstitute() == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_ON
-						|| workOnHolidayRequestDto.getSubstitute() == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_OFF) {
-					// 振替出勤(全日)又は休日出勤の場合は処理不要
+				// 全休の場合
+				if (holidayTimes == TimeConst.HOLIDAY_TIMES_ALL) {
+					break;
+				}
+				// 振替申請区分取得
+				int substitute = workOnHolidayRequestDto.getSubstitute();
+				// 振替出勤(全日)又は休日出勤又は勤務形態変更有の場合
+				if (substitute == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_ON
+						|| substitute == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_OFF
+						|| substitute == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_ON_WORK_TYPE_CHANGE) {
+					// 処理不要
 					continue attendanceList;
+				}
+				// 半日振替の振替である場合（1日勤務の場合）
+				if (entity.isHalfPostpone(!containNotApproved)) {
+					// 全日でない場合
+					if (!entity.isAmPmHalfSubstitute(!containNotApproved)) {
+						continue;
+					}
 				}
 				// 休日日数加算
 				holidayTimes += TimeConst.HOLIDAY_TIMES_HALF;
-				if (dto.getWorkTypePostAbbr() == null
-						&& workOnHolidayRequestDto.getSubstitute() == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_AM) {
-					// 振替出勤(午前)の場合
-					dto.setWorkTypePostAbbr(getHalfSubstituteWorkAbbrNaming());
-					postWorkflowDto = workflowDto;
-				}
-				if (dto.getWorkTypeAnteAbbr() == null
-						&& workOnHolidayRequestDto.getSubstitute() == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_PM) {
-					// 振替出勤(午後)の場合
+				// 振替出勤(午前)の場合
+				if (dto.getWorkTypeAnteAbbr() == null && substitute == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_AM) {
+					// 設定
 					dto.setWorkTypeAnteAbbr(getHalfSubstituteWorkAbbrNaming());
 					anteWorkflowDto = workflowDto;
+				}
+				// 振替出勤(午後)の場合
+				if (dto.getWorkTypePostAbbr() == null && substitute == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_PM) {
+					// 設定
+					dto.setWorkTypePostAbbr(getHalfSubstituteWorkAbbrNaming());
+					postWorkflowDto = workflowDto;
 				}
 			}
 			// 振替休日情報確認
@@ -1943,10 +2115,29 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 				if (!isRequestNeeded(workflowDto, containNotApproved)) {
 					continue;
 				}
+				// 全休の場合
+				if (holidayTimes == TimeConst.HOLIDAY_TIMES_ALL) {
+					break;
+				}
 				// 振替休日確認
-				if (substituteDto.getSubstituteRange() == TimeConst.CODE_HOLIDAY_RANGE_ALL) {
+				if (isPluralRequestSubstituteAllHoliday(substituteDto)) {
 					// 全休の場合は処理不要
 					continue attendanceList;
+				}
+				// 半日振替の振替である場合（1日勤務の場合）
+				if (entity.isHalfPostpone(!containNotApproved)) {
+					continue;
+				}
+				// 振替休日における振替出勤申請の取得
+				WorkOnHolidayRequestDtoInterface workOnHolidayDto = workOnHoliday.findForKeyOnWorkflow(personalId,
+						substituteDto.getSubstituteDate());
+				if (workOnHolidayDto != null) {
+					// 振替出勤申請がある場合
+					WorkflowDtoInterface workOnHolidayWorkflow = workflow
+						.getLatestWorkflowInfo(workOnHolidayDto.getWorkflow());
+					if (!WorkflowUtility.isDraft(workOnHolidayWorkflow)) {
+						continue;
+					}
 				}
 				// 休日日数加算
 				holidayTimes += getHolidayTimes(substituteDto.getSubstituteRange());
@@ -1965,34 +2156,78 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 			}
 			// 休日日数確認
 			if (holidayTimes >= TimeConst.HOLIDAY_TIMES_ALL) {
-				// 勤務形態コード設定
-				dto.setWorkTypeCode("");
-				// 勤務形態略称設定
-				dto.setWorkTypeAbbr(dto.getWorkTypeAnteAbbr() + getSlashNaming() + dto.getWorkTypePostAbbr());
-				if (getSubstituteHolidayAbbrNaming().equals(dto.getWorkTypeAnteAbbr())) {
-					// 午前振休である場合
-					if (getSubstituteHolidayAbbrNaming().equals(dto.getWorkTypePostAbbr())) {
-						// 午後振休である場合
-						dto.setWorkTypeAbbr(getSubstituteHolidayAbbrNaming());
-					} else {
-						// 午後振休でない場合
-						dto.setWorkTypeAbbr(getAnteMeridiemSubstituteHolidayAbbrNaming() + getSlashNaming()
-								+ dto.getWorkTypePostAbbr());
-					}
-				} else {
-					// 午前振休でない場合
-					if (getSubstituteHolidayAbbrNaming().equals(dto.getWorkTypePostAbbr())) {
-						// 午後振休である場合
-						dto.setWorkTypeAbbr(dto.getWorkTypeAnteAbbr() + getSlashNaming()
-								+ getPostMeridiemSubstituteHolidayAbbrNaming());
-					}
-				}
-				// チェックボックス設定
-				dto.setNeedCheckbox(false);
-				// 状態設定
-				setApplicationInfo(dto, anteWorkflowDto, postWorkflowDto);
+				setDtoPluralRequest(dto, anteWorkflowDto, postWorkflowDto);
 			}
 		}
+	}
+	
+	/**
+	 * 振替休日範囲判定(checkPluralRequest用)
+	 * @param substituteDto 代休申請DTO
+	 * @return 振替休日範囲判定(true:全日振替休日、false:半日振替休日)
+	 */
+	protected boolean isPluralRequestSubstituteAllHoliday(SubstituteDtoInterface substituteDto) {
+		return substituteDto.getSubstituteRange() == TimeConst.CODE_HOLIDAY_RANGE_ALL;
+	}
+	
+	/**
+	 * 同日複数申請勤怠DTO設定
+	 * @param dto 勤怠DTO
+	 * @param anteWorkflowDto 午前休ワークフローDTO
+	 * @param postWorkflowDto 午後休ワークフローDTO
+	 * @throws MospException インスタンスの生成或いはSQLの実行に失敗した場合
+	 */
+	protected void setDtoPluralRequest(AttendanceListDto dto, WorkflowDtoInterface anteWorkflowDto,
+			WorkflowDtoInterface postWorkflowDto) throws MospException {
+		// 勤務形態コード設定
+		dto.setWorkTypeCode("");
+		// 勤務形態略称設定
+		dto.setWorkTypeAbbr(dto.getWorkTypeAnteAbbr() + getSlashNaming() + dto.getWorkTypePostAbbr());
+		if (getSubstituteHolidayAbbrNaming().equals(dto.getWorkTypeAnteAbbr())) {
+			// 午前振休である場合
+			if (getSubstituteHolidayAbbrNaming().equals(dto.getWorkTypePostAbbr())) {
+				// 午後振休である場合
+				dto.setWorkTypeAbbr(getSubstituteHolidayAbbrNaming());
+			} else {
+				// 午後振休でない場合
+				dto.setWorkTypeAbbr(
+						getAnteMeridiemSubstituteHolidayAbbrNaming() + getSlashNaming() + dto.getWorkTypePostAbbr());
+			}
+		} else {
+			// 午前振休でない場合
+			if (getSubstituteHolidayAbbrNaming().equals(dto.getWorkTypePostAbbr())) {
+				// 午後振休である場合
+				dto.setWorkTypeAbbr(
+						dto.getWorkTypeAnteAbbr() + getSlashNaming() + getPostMeridiemSubstituteHolidayAbbrNaming());
+			}
+		}
+		// カット設定
+		setCut(dto);
+		// 無休時短時間設定
+		setShortUnpaid(dto);
+		// チェックボックス設定
+		dto.setNeedCheckbox(false);
+		// 状態設定
+		setApplicationInfo(dto, anteWorkflowDto, postWorkflowDto);
+		
+	}
+	
+	/**
+	 * カットを設定する。<br>
+	 * @param dto 対象DTO
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	protected void setCut(AttendanceListDto dto) throws MospException {
+		dto.setCat(null);
+	}
+	
+	/**
+	 * 無休時短時間を設定する。<br>
+	 * @param dto 対象DTO
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	protected void setShortUnpaid(AttendanceListDto dto) throws MospException {
+		dto.setShortUnpaid(null);
 	}
 	
 	/**
@@ -2055,24 +2290,23 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 	protected void addScheduleList(boolean needWorkDay, boolean needWorkTime) throws MospException {
 		// 人事退職情報から退職日を取得
 		Date retireDate = retirement.getRetireDate(personalId);
-		// 設定適用マスタ(対象期間)情報取得
-		Map<Date, ApplicationDtoInterface> mapApplication = applicationReference.findForTerm(personalId, firstDate,
-				lastDate);
 		// 勤怠一覧情報にカレンダ日情報を設定
 		for (AttendanceListDto dto : attendanceList) {
-			// カレンダ日情報要否確認
-			if (dto.getWorkTypeCode() != null) {
-				// 勤務形態が既に設定されている場合
-				continue;
-			}
 			// カレンダ日情報取得(勤怠一覧情報の勤務日で取得)及び確認
 			ScheduleDateDtoInterface scheduleDateDto = getScheduleDateDto(dto.getWorkDate());
 			if (scheduleDateDto == null || scheduleDateDto.getWorkTypeCode().isEmpty()) {
 				// カレンダ日情報が存在しない場合
 				continue;
 			}
+			// 休日フラグ設定(所定休日又は法定休日であるかを確認)
+			dto.setHolidayFlag(TimeUtility.isHoliday(scheduleDateDto.getWorkTypeCode()));
+			// カレンダ日情報要否確認
+			if (dto.getWorkTypeCode() != null) {
+				// 勤務形態が既に設定されている場合
+				continue;
+			}
 			// 設定適用マスタ状況確認
-			if (mapApplication.get(dto.getWorkDate()) == null) {
+			if (applicationMap.get(dto.getWorkDate()) == null) {
 				// 対象日に設定適用情報が存在しない場合
 				continue;
 			}
@@ -2207,14 +2441,27 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
 	protected ScheduleDateDtoInterface getScheduleDateDto(Date targetDate) throws MospException {
-		// カレンダ日情報リストから対象日のカレンダ日情報を取得
-		for (ScheduleDateDtoInterface dto : scheduleDateList) {
-			// 勤務日確認
-			if (targetDate.equals(dto.getScheduleDate())) {
-				return dto;
+		// 設定適用情報取得
+		if (applicationMap.get(targetDate) == null) {
+			return null;
+		}
+		// カレンダコード取得
+		String scheduleCode = applicationMap.get(targetDate).getScheduleCode();
+		if (scheduleCode.isEmpty()) {
+			return null;
+		}
+		// カレンダ情報のカレンダコードと同じ場合
+		if (scheduleCode.equals(scheduleDto.getScheduleCode())) {
+			// カレンダ日情報リストから対象日のカレンダ日情報を取得
+			for (ScheduleDateDtoInterface dto : scheduleDateList) {
+				// 勤務日確認
+				if (targetDate.equals(dto.getScheduleDate())) {
+					return dto;
+				}
 			}
 		}
-		return null;
+		
+		return scheduleDateReference.findForKey(scheduleCode, targetDate);
 	}
 	
 	/**
@@ -2258,34 +2505,20 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
 	protected void setLimitStandard() throws MospException {
-		// 限度基準取得
-		LimitStandardDtoInterface limitStandardDto = limitStandard.findForKey(timeSettingDto.getWorkSettingCode(),
-				timeSettingDto.getActivateDate(), LIMIT_STANDARD_TERM_MONTH1);
-		if (limitStandardDto == null) {
-			return;
-		}
-		// 注意時間取得
-		int attention = limitStandardDto.getAttentionTime();
-		// 警告時間取得
-		int warning = limitStandardDto.getWarningTime();
+		// 勤怠設定エンティティを取得
+		TimeSettingEntityInterface entity = timeSettingReference.getEntity(timeSettingDto);
 		// 法定外残業時間合計値準備
 		int overtimeTotal = 0;
 		// 勤怠一覧情報毎に残業時間を確認
 		for (AttendanceListDto dto : attendanceList) {
 			// 法定外残業時間確認
-			if (dto.getOvertimeOut() == null || dto.getOvertimeOut().intValue() == 0F) {
+			if (dto.getOvertimeOut() == null || dto.getOvertimeOut().intValue() == 0) {
 				continue;
 			}
 			// 法定外残業時間加算
 			overtimeTotal += dto.getOvertimeOut().intValue();
-			// 注意時間確認
-			if (overtimeTotal > attention) {
-				dto.setOvertimeStyle(STYLE_YELLOW);
-			}
-			// 警告時間確認
-			if (overtimeTotal > warning) {
-				dto.setOvertimeStyle(STYLE_RED);
-			}
+			// 外残のスタイル文字列を設定
+			dto.setOvertimeStyle(entity.getOneMonthStyle(overtimeTotal));
 		}
 	}
 	
@@ -2322,8 +2555,12 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 		int overtimeOutTotal = 0;
 		// 休出時間(分)
 		int holidayWorkTimeTotal = 0;
+		// 無休時短時間(分)
+		int shortUnpaidTotal = 0;
 		// 深夜時間(分)
 		int lateNightTimeTotal = 0;
+		// カット時間(分)
+		int catTotal = 0;
 		// 出勤回数
 		int workDays = 0;
 		// 遅刻回数
@@ -2340,6 +2577,8 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 		int prescribedHolidays = 0;
 		// 法定休日回数
 		int legalHolidays = 0;
+		// 休日回数
+		int holidays = 0;
 		// 勤怠一覧情報毎に集計
 		for (AttendanceListDto dto : attendanceList) {
 			// 勤務時間
@@ -2351,11 +2590,11 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 			// 公用外出時間
 			publicTimeTotal += dto.getPublicTime() == null ? 0 : dto.getPublicTime().intValue();
 			// 分単位休暇A時間
-			minutelyHolidayATimeTotal += dto.getMinutelyHolidayATime() == null ? 0 : dto.getMinutelyHolidayATime()
-				.intValue();
+			minutelyHolidayATimeTotal += dto.getMinutelyHolidayATime() == null ? 0
+					: dto.getMinutelyHolidayATime().intValue();
 			// 分単位休暇B時間
-			minutelyHolidayBTimeTotal += dto.getMinutelyHolidayBTime() == null ? 0 : dto.getMinutelyHolidayBTime()
-				.intValue();
+			minutelyHolidayBTimeTotal += dto.getMinutelyHolidayBTime() == null ? 0
+					: dto.getMinutelyHolidayBTime().intValue();
 			// 遅刻時間
 			lateTimeTotal += dto.getLateTime() == null ? 0 : dto.getLateTime().intValue();
 			// 早退時間
@@ -2370,8 +2609,12 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 			overtimeOutTotal += dto.getOvertimeOut() == null ? 0 : dto.getOvertimeOut().intValue();
 			// 休出時間
 			holidayWorkTimeTotal += dto.getHolidayWorkTime() == null ? 0 : dto.getHolidayWorkTime().intValue();
+			// 無休時短時間
+			shortUnpaidTotal += dto.getShortUnpaid() == null ? 0 : dto.getShortUnpaid().intValue();
 			// 深夜時間
 			lateNightTimeTotal += dto.getLateNightTime() == null ? 0 : dto.getLateNightTime().intValue();
+			// カット時間
+			catTotal += dto.getCat() == null ? 0 : dto.getCat().intValue();
 			// 出勤回数
 			workDays += dto.getGoingWork();
 			// 遅刻回数
@@ -2387,12 +2630,14 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 				continue;
 			}
 			// 休出回数
-			holidayWorkDays += TimeConst.CODE_WORK_ON_LEGAL_HOLIDAY.equals(dto.getWorkTypeCode())
-					|| TimeConst.CODE_WORK_ON_PRESCRIBED_HOLIDAY.equals(dto.getWorkTypeCode()) ? 1 : 0;
+			holidayWorkDays += TimeUtility.isWorkOnLegalHoliday(dto.getWorkTypeCode())
+					|| TimeUtility.isWorkOnPrescribedHoliday(dto.getWorkTypeCode()) ? 1 : 0;
 			// 所定休日回数
-			prescribedHolidays += dto.getWorkTypeCode().equals(TimeConst.CODE_HOLIDAY_PRESCRIBED_HOLIDAY) ? 1 : 0;
+			prescribedHolidays += TimeUtility.isPrescribedHoliday(dto.getWorkTypeCode()) ? 1 : 0;
 			// 法定休日回数
-			legalHolidays += dto.getWorkTypeCode().equals(TimeConst.CODE_HOLIDAY_LEGAL_HOLIDAY) ? 1 : 0;
+			legalHolidays += TimeUtility.isLegalHoliday(dto.getWorkTypeCode()) ? 1 : 0;
+			// 休日回数
+			holidays = prescribedHolidays + legalHolidays;
 		}
 		// 最終レコード取得
 		AttendanceListDto dto = attendanceList.get(attendanceList.size() - 1);
@@ -2410,7 +2655,9 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 		dto.setOvertimeInTotal(overtimeInTotal);
 		dto.setOvertimeOutTotal(overtimeOutTotal);
 		dto.setHolidayWorkTimeTotal(holidayWorkTimeTotal);
+		dto.setShortUnpaidTotal(shortUnpaidTotal);
 		dto.setLateNightTimeTotal(lateNightTimeTotal);
+		dto.setCatTotal(catTotal);
 		dto.setWorkDays(workDays);
 		dto.setLateDays(lateDays);
 		dto.setLeaveEarlyDays(leaveEarlyDays);
@@ -2419,9 +2666,10 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 		dto.setLateNightDays(lateNightDays);
 		dto.setPrescribedHolidays(prescribedHolidays);
 		dto.setLegalHolidays(legalHolidays);
+		dto.setHolidays(holidays);
 		// 代休発生日数取得
-		Float[] subHolidayDays = subHolidayRefer.getBirthSubHolidayTimes(personalId, attendanceList.get(0)
-			.getWorkDate(), attendanceList.get(attendanceList.size() - 1).getWorkDate());
+		Float[] subHolidayDays = subHolidayRefer.getBirthSubHolidayTimes(personalId,
+				attendanceList.get(0).getWorkDate(), attendanceList.get(attendanceList.size() - 1).getWorkDate());
 		dto.setBirthPrescribedSubHoliday(subHolidayDays[0]);
 		dto.setBirthLegalSubHoliday(subHolidayDays[1]);
 		dto.setBirthMidnightSubHolidaydays(subHolidayDays[2]);
@@ -2478,13 +2726,15 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 		dto.setHolidayWorkTime(attendanceDto.getLegalWorkTime());
 		// 深夜時間
 		dto.setLateNightTime(attendanceDto.getLateNightTime());
+		// 無休時短時間
+		dto.setShortUnpaid(attendanceDto.getShortUnpaid());
 		// 勤怠コメント
-		dto.setTimeComment(attendanceDto.getTimeComment());
+		dto.setTimeComment(MospUtility.concat(attendanceDto.getTimeComment(), attendanceDto.getRemarks()));
 		// 備考
 		addAttendanceRemark(dto, attendanceDto);
 		// 申請情報(ワークフロー情報から取得)
-		dto.setApplicationInfo(workflow.getWorkflowStatus(workflowDto.getWorkflowStatus(),
-				workflowDto.getWorkflowStage()));
+		dto.setApplicationInfo(
+				workflow.getWorkflowStatus(workflowDto.getWorkflowStatus(), workflowDto.getWorkflowStage()));
 		// チェックボックス要否(勤怠一覧用)
 		dto.setNeedCheckbox(isNeedCheckBox(workflowDto));
 		// 状態リンク要否(勤怠一覧用)
@@ -2511,8 +2761,8 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 	 */
 	protected String getCorrectionInfo(AttendanceDtoInterface attendanceDto) throws MospException {
 		// 勤怠修正情報取得
-		AttendanceCorrectionDtoInterface attendanceCorrectionDto = correction.getLatestAttendanceCorrectionInfo(
-				personalId, attendanceDto.getWorkDate(), TIMES_WORK_DEFAULT);
+		AttendanceCorrectionDtoInterface attendanceCorrectionDto = correction
+			.getLatestAttendanceCorrectionInfo(personalId, attendanceDto.getWorkDate(), TIMES_WORK_DEFAULT);
 		// 勤怠修正情報確認
 		if (attendanceCorrectionDto == null) {
 			return "";
@@ -2530,6 +2780,17 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 	 * @param attendanceDto 勤怠情報
 	 */
 	protected void addAttendanceRemark(AttendanceListDto dto, AttendanceDtoInterface attendanceDto) {
+		
+		// 遅刻の場合
+		if (!attendanceDto.getLateReason().isEmpty()) {
+			addRemark(dto, (TimeNamingUtility.getLateAbbrNaming(mospParams) + " " + (MospUtility.getCodeName(mospParams,
+					attendanceDto.getLateReason(), TimeConst.CODE_REASON_OF_LATE))));
+		}
+		// 早退の場合
+		if (!attendanceDto.getLeaveEarlyReason().isEmpty()) {
+			addRemark(dto, (TimeNamingUtility.getEarlyAbbrNaming(mospParams) + " " + (MospUtility
+				.getCodeName(mospParams, attendanceDto.getLeaveEarlyReason(), TimeConst.CODE_REASON_OF_LEAVE_EARLY))));
+		}
 		// 直行確認
 		if (attendanceDto.getDirectStart() == Integer.parseInt(MospConst.CHECKBOX_ON)) {
 			addRemark(dto, getDirectStartNaming());
@@ -2760,7 +3021,8 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 		// ログインユーザ個人ID取得
 		String personalId = mospParams.getUser().getPersonalId();
 		// 承認情報参照クラス取得
-		ApprovalInfoReferenceBeanInterface approvalReference = (ApprovalInfoReferenceBeanInterface)createBean(ApprovalInfoReferenceBeanInterface.class);
+		ApprovalInfoReferenceBeanInterface approvalReference = (ApprovalInfoReferenceBeanInterface)createBean(
+				ApprovalInfoReferenceBeanInterface.class);
 		// 承認可能ワークフローリスト(勤怠)取得
 		return approvalReference.getApprovableMap(personalId).get(TimeConst.CODE_FUNCTION_WORK_MANGE);
 	}
@@ -2780,15 +3042,23 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 		// 勤務曜日
 		dto.setWorkDayOfWeek(getStringDayOfWeek(targetDate));
 		// 曜日配色設定
-		dto.setWorkDayOfWeekStyle(getWorkDayOfWeekStyle(targetDate));
+		dto.setWorkDayOfWeekStyle(HolidayUtility.getWorkDayOfWeekStyle(targetDate, mospParams));
 		// カレンダ備考設定
 		addRemark(dto, getScheduleDateRemark(dto.getWorkDate()));
 		// 勤務形態略称
 		setWorkTypeAbbr(dto);
 		// 始業時間
 		dto.setStartTimeString(getStringTime(dto.getStartTime(), standardDate));
+		// 勤務時間配色設定
+		dto.setStartTimeStyle(getAttendanceTimeStyle(dto.getApplicationInfo()));
 		// 終業時間
 		dto.setEndTimeString(getStringTime(dto.getEndTime(), standardDate));
+		// 勤務時間配色設定
+		dto.setEndTimeStyle(getAttendanceTimeStyle(dto.getApplicationInfo()));
+		// 始業打刻
+		dto.setStartRecordTimeString(getStringTime(dto.getStartRecordTime(), standardDate));
+		// 終業打刻
+		dto.setEndRecordTimeString(getStringTime(dto.getEndRecordTime(), standardDate));
 		// 勤務時間
 		dto.setWorkTimeString(getStringHours(dto.getWorkTime(), true));
 		// 休憩時間
@@ -2813,6 +3083,8 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 		dto.setHolidayWorkTimeString(getStringHours(dto.getHolidayWorkTime(), true));
 		// 深夜時間
 		dto.setLateNightTimeString(getStringHours(dto.getLateNightTime(), true));
+		// 無休時短時間
+		dto.setShortUnpaidString(getStringHours(dto.getShortUnpaid(), true));
 		// 勤務時間合計
 		dto.setWorkTimeTotalString(getStringHours(dto.getWorkTimeTotal(), false));
 		// 休憩時間合計
@@ -2837,6 +3109,10 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 		dto.setHolidayWorkTimeTotalString(getStringHours(dto.getHolidayWorkTimeTotal(), false));
 		// 深夜時間
 		dto.setLateNightTimeTotalString(getStringHours(dto.getLateNightTimeTotal(), false));
+		// 無休時短時間
+		dto.setShortUnpaidTotalString(getStringHours(dto.getShortUnpaidTotal(), false));
+		// カット
+		dto.setCatTotalString(getStringHours(dto.getCatTotal(), false));
 		// 出勤回数
 		dto.setWorkDaysString(getStringTimes(dto.getWorkDays()));
 		// 遅刻回数
@@ -2860,6 +3136,8 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 		dto.setPrescribedHolidaysString(getStringTimes(dto.getPrescribedHolidays()));
 		// 法定休日回数
 		dto.setLegalHolidaysString(getStringTimes(dto.getLegalHolidays()));
+		// 休日回数
+		dto.setHolidayString(getStringTimes(dto.getHolidays()));
 		// 振替休日回数
 		dto.setSubstituteHolidaysString(getStringTimes(dto.getSubstituteHolidays()));
 		// 有給休暇回数
@@ -2867,17 +3145,22 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 		// 有給時間
 		dto.setPaidHolidayTimeString(getStringTimes(dto.getPaidHolidayTime()));
 		// 特別休暇回数
-		dto.setSpecialHolidaysString(getStringTimes(dto.getSpecialHolidays()));
+		dto.setSpecialHolidaysString(getStringTimes(dto.getSpecialHolidays()) + mospParams.getName("Slash")
+				+ getStringTimes(dto.getSpecialHolidayHours()));
 		// その他休暇回数
-		dto.setOtherHolidaysString(getStringTimes(dto.getOtherHolidays()));
+		dto.setOtherHolidaysString(getStringTimes(dto.getOtherHolidays()) + mospParams.getName("Slash")
+				+ getStringTimes(dto.getOtherHolidayHours()));
 		// 代休回数
 		dto.setSubHolidaysString(getStringTimes(dto.getSubHolidays()));
 		// 欠勤回数
-		dto.setAbsenceDaysString(getStringTimes(dto.getAbsenceDays()));
+		dto.setAbsenceDaysString(getStringTimes(dto.getAbsenceDays()) + mospParams.getName("Slash")
+				+ getStringTimes(dto.getAbsenceHours()));
 		// 分単位休暇A時間
 		dto.setMinutelyHolidayATimeString(getStringHours(dto.getMinutelyHolidayATimeTotal(), false));
 		// 分単位休暇B時間
 		dto.setMinutelyHolidayBTimeString(getStringHours(dto.getMinutelyHolidayBTimeTotal(), false));
+		// 社員コード項目タイトル設定
+		dto.setEmployeeCodeTitle(PlatformNamingUtility.employeeCode(mospParams));
 		// 帳票残業項目タイトル設定
 		dto.setOvertimeTitle(mospParams.getName("LeftOut"));
 		// 分単位休暇を利用する場合
@@ -2925,22 +3208,13 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 	}
 	
 	/**
-	 * 対象日勤務曜日のスタイル文字列を取得する。<br>
-	 * @param targetDate 対象日
-	 * @return 対象日勤務曜日のスタイル文字列
+	 * 勤怠の申請状態から始業時刻・終業時刻の色を取得する。<br>
+	 * @param state 勤怠申請状態
+	 * @return 色
 	 */
-	protected String getWorkDayOfWeekStyle(Date targetDate) {
-		// 祝日判定
-		if (holidayBean.isHoliday(targetDate)) {
-			return STYLE_RED;
-		}
-		// 土曜日判定
-		if (DateUtility.isSaturday(targetDate)) {
-			return STYLE_BLUE;
-		}
-		// 日曜日判定
-		if (DateUtility.isSunday(targetDate)) {
-			return STYLE_RED;
+	protected String getAttendanceTimeStyle(String state) {
+		if (mospParams.getName("Schedule").equals(state)) {
+			return PlatformConst.STYLE_GRAY;
 		}
 		return "";
 	}
@@ -2956,14 +3230,18 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 			// 何もしない
 			return;
 		}
-		// 略称取得
+		// 時差出勤勤務形態略称を取得
 		String workTypeAbbr = difference.getDifferenceAbbr(dto.getWorkTypeCode());
+		// 時差出勤半日勤務形態略称を取得
 		String workTypeAbbrInitial = workTypeAbbr.substring(workTypeAbbr.length() - 1);
+		// 時差出勤でない場合
 		if (dto.getWorkTypeCode().equals(workTypeAbbr)) {
-			// 時差出勤でない場合
+			// 勤務形態略称を取得
 			workTypeAbbr = getWorkTypeEntity(dto.getWorkTypeCode()).getWorkTypeAbbr();
+			// 勤務形態略称が取得できた場合
 			if (workTypeAbbr.isEmpty() == false) {
-				workTypeAbbrInitial = workTypeAbbr.substring(0, 1);
+				// 半日勤務形態略称を取得
+				workTypeAbbrInitial = substrForHalfWorkType(workTypeAbbr);
 			}
 		}
 		if (dto.getWorkTypeAnteAbbr() != null && !dto.getWorkTypeAnteAbbr().isEmpty()) {
@@ -2976,8 +3254,9 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 				dto.setWorkTypeAbbr(getHalfSubstituteHolidayAbbrNaming());
 				return;
 			}
+			// 勤務形態略称(半日勤務形態略称/半日勤務形態略称)を設定
 			StringBuffer sb = new StringBuffer();
-			sb.append(dto.getWorkTypeAnteAbbr().substring(0, 1));
+			sb.append(substrForHalfWorkType(dto.getWorkTypeAnteAbbr()));
 			sb.append(getSlashNaming());
 			sb.append(workTypeAbbrInitial);
 			dto.setWorkTypeAbbr(sb.toString());
@@ -2993,10 +3272,11 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 				dto.setWorkTypeAbbr(getHalfSubstituteHolidayAbbrNaming());
 				return;
 			}
+			// 勤務形態略称(半日勤務形態略称/半日勤務形態略称)を設定
 			StringBuffer sb = new StringBuffer();
 			sb.append(workTypeAbbrInitial);
 			sb.append(getSlashNaming());
-			sb.append(dto.getWorkTypePostAbbr().substring(0, 1));
+			sb.append(substrForHalfWorkType(dto.getWorkTypePostAbbr()));
 			dto.setWorkTypeAbbr(sb.toString());
 			return;
 		}
@@ -3106,7 +3386,9 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 	 */
 	protected RequestEntity getRequestEntity(String personalId, Date targetDate) throws MospException {
 		// 申請エンティティ準備
-		RequestEntity requestEntity = new RequestEntity(personalId, targetDate);
+		RequestEntity requestEntity = (RequestEntity)createObject(RequestEntityInterface.class);
+		requestEntity.setPersonalId(personalId);
+		requestEntity.setTargetDate(targetDate);
 		// 対象申請情報リスト準備
 		AttendanceDtoInterface targetAttendanceDto = null;
 		List<HolidayRequestDtoInterface> targetHolidayRequestList = new ArrayList<HolidayRequestDtoInterface>();
@@ -3143,7 +3425,7 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 			}
 		}
 		// 残業申請情報選別
-		for (OvertimeRequestDtoInterface dto : targetOvertimeRequestList) {
+		for (OvertimeRequestDtoInterface dto : overtimeRequestList) {
 			// 対象日が残業年月日である場合
 			if (targetDate.compareTo(dto.getRequestDate()) == 0) {
 				// 対象残業申請情報リストに追加
@@ -3387,6 +3669,34 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 			workflowMap.put(workflowNo, dto);
 		}
 		return dto;
+	}
+	
+	/**
+	 * 半日勤務形態略称を取得する。<br>
+	 * <br>
+	 * 半休など、午前と午後で異なる勤務形態となる場合に表示する
+	 * 半日勤務形態略称を作成する。<br>
+	 * <br>
+	 * 勤務形態略称を頭から半日勤務形態略称長(フィールド)分だけ抜き出す。<br>
+	 * <br>
+	 * @param workTypeAbbr 勤務形態略称
+	 * @return 半日勤務形態略称
+	 */
+	protected String substrForHalfWorkType(String workTypeAbbr) {
+		// 勤務形態略称が無い場合
+		if (workTypeAbbr == null || workTypeAbbr.isEmpty()) {
+			// 空白を取得
+			return "";
+		}
+		// 勤務形態略称文字列長を取得
+		int length = workTypeAbbr.length();
+		// 勤務形態文字列長が半日勤務形態略称長以下である場合
+		if (length <= halfWorkTypeLength) {
+			// 勤務形態略称を取得
+			return workTypeAbbr;
+		}
+		// 部分文字列を取得
+		return workTypeAbbr.substring(0, halfWorkTypeLength);
 	}
 	
 	/**
@@ -3843,7 +4153,8 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 	 * @param anteDto 前半休ワークフロー情報
 	 * @param postDto 後半休ワークフロー情報
 	 */
-	protected void setApplicationInfo(AttendanceListDto dto, WorkflowDtoInterface anteDto, WorkflowDtoInterface postDto) {
+	protected void setApplicationInfo(AttendanceListDto dto, WorkflowDtoInterface anteDto,
+			WorkflowDtoInterface postDto) {
 		if (anteDto == null || postDto == null) {
 			return;
 		}
@@ -3856,21 +4167,25 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 			dto.setApplicationInfo(workflow.getWorkflowStatus(anteDto.getWorkflowStatus(), anteDto.getWorkflowStage()));
 			return;
 		}
-		if (PlatformConst.CODE_STATUS_DRAFT.equals(anteDto.getWorkflowStatus())
-				|| PlatformConst.CODE_STATUS_APPLY.equals(anteDto.getWorkflowStatus())
-				|| PlatformConst.CODE_STATUS_CANCEL.equals(anteDto.getWorkflowStatus())
-				|| PlatformConst.CODE_STATUS_COMPLETE.equals(anteDto.getWorkflowStatus())) {
-			// 下書・未承認・承解除・承認済の場合
+		// 下書・未承認・承解除・承認済の場合
+		if (WorkflowUtility.isDraft(anteDto) || WorkflowUtility.isApply(anteDto) || WorkflowUtility.isCancel(anteDto)
+				|| WorkflowUtility.isCompleted(anteDto)) {
+			
 			dto.setApplicationInfo(workflow.getWorkflowStatus(anteDto.getWorkflowStatus(), anteDto.getWorkflowStage()));
 		} else if (PlatformConst.CODE_STATUS_APPROVED.equals(anteDto.getWorkflowStatus())
 				|| PlatformConst.CODE_STATUS_REVERT.equals(anteDto.getWorkflowStatus())) {
 			// 承認・差戻の場合
 			if (anteDto.getWorkflowStage() <= postDto.getWorkflowStage()) {
-				dto.setApplicationInfo(workflow.getWorkflowStatus(anteDto.getWorkflowStatus(),
-						anteDto.getWorkflowStage()));
+				dto.setApplicationInfo(
+						workflow.getWorkflowStatus(anteDto.getWorkflowStatus(), anteDto.getWorkflowStage()));
 				return;
 			}
 			dto.setApplicationInfo(workflow.getWorkflowStatus(postDto.getWorkflowStatus(), postDto.getWorkflowStage()));
+		} else if (PlatformConst.CODE_STATUS_CANCEL_APPLY.equals(anteDto.getWorkflowStatus())
+				|| PlatformConst.CODE_STATUS_CANCEL_WITHDRAWN_APPLY.equals(anteDto.getWorkflowStatus())) {
+			// 承認解除申請の場合
+			dto.setApplicationInfo(workflow.getWorkflowStatus(anteDto.getWorkflowStatus(), anteDto.getWorkflowStage()));
+			return;
 		}
 	}
 	
@@ -3946,4 +4261,8 @@ public class AttendanceListReferenceBean extends AttendanceBean implements Atten
 		// 処理無し
 	}
 	
+	@Override
+	public void setHalfWorkTypeLength(int halfWorkTypeLength) {
+		this.halfWorkTypeLength = halfWorkTypeLength;
+	}
 }

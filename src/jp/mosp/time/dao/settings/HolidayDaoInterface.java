@@ -20,6 +20,7 @@ package jp.mosp.time.dao.settings;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import jp.mosp.framework.base.BaseDaoInterface;
 import jp.mosp.framework.base.MospException;
@@ -78,6 +79,18 @@ public interface HolidayDaoInterface extends BaseDaoInterface {
 	List<HolidayDtoInterface> findForActivateDate(Date activateDate, int holidayType) throws MospException;
 	
 	/**
+	 * 対象日における最新の休暇種別情報群を取得する。<br>
+	 * <br>
+	 * 休暇コード及び休暇区分をキーとして、対象日における最新の休暇種別情報群を取得する。<br>
+	 * 但し、対象日における最新の休暇種別情報が無効となっているものは、取得しない。<br>
+	 * <br>
+	 * @param targetDate 対象日
+	 * @return 休暇種別情報群
+	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
+	 */
+	Set<HolidayDtoInterface> findForActivateDate(Date targetDate) throws MospException;
+	
+	/**
 	 * 有効日マスタ一覧。
 	 * <p>
 	 * 有効日から休暇種別マスタリストを取得する。
@@ -106,11 +119,4 @@ public interface HolidayDaoInterface extends BaseDaoInterface {
 	 */
 	Map<String, Object> getParamsMap();
 	
-	/**
-	 * 条件による検索のための文字列。
-	 * <p>
-	 * 最大有効日レコードのクエリを取得する。
-	 * @return 休暇種別コードに紐づく有効日が最大であるレコード取得クエリ
-	 */
-	StringBuffer getQueryForMaxActivateDate();
 }

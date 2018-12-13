@@ -31,6 +31,20 @@ import jp.mosp.platform.dto.human.ConcurrentDtoInterface;
 public interface ConcurrentDaoInterface extends BaseDaoInterface {
 	
 	/**
+	 * 人事兼務情報一覧を取得する。<br>
+	 * <br>
+	 * 削除フラグが立っていないものを対象とする。<br>
+	 * 兼務期間に対象期間がかかっているものを検索する。但し、対象期間終了日は検索対象に含めない。<br>
+	 * マスタ類無効時の確認等に用いる。<br>
+	 * <br>
+	 * @param fromDate 対象期間開始日
+	 * @param toDate   対象期間終了日
+	 * @return 人事兼務情報リスト
+	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
+	 */
+	List<ConcurrentDtoInterface> findForTerm(Date fromDate, Date toDate) throws MospException;
+	
+	/**
 	 * 人事兼務情報一覧取得。
 	 * <p>
 	 * 個人IDと有効日から人事兼務情報リストを取得する。
@@ -96,6 +110,28 @@ public interface ConcurrentDaoInterface extends BaseDaoInterface {
 	 * @throws MospException SQL例外が発生した場合
 	 */
 	int setParamsForPosition(int index, String positionCode, Date targetDate, PreparedStatement ps)
+			throws MospException;
+	
+	/**
+	 * 兼務職位等級及び対象日で個人IDを抽出するSQLを取得する。<br>
+	 * 社員一覧を検索する際等に用いる。<br>
+	 * @param greaterEqual 以上の場合true、以下の場合false
+	 * @param targetColumn 検索対象個人ID列名
+	 * @return 兼務職位等級及び対象日で個人IDを抽出するSQL
+	 */
+	String getQueryForPositionGrade(boolean greaterEqual, String targetColumn);
+	
+	/**
+	 * 兼務職位等級及び対象日で個人IDを抽出する条件のパラメータを設定する。<br>
+	 * 設定したパラメータの数だけ、パラメータインデックスが加算される。<br>
+	 * @param index        パラメータインデックス
+	 * @param positionCode 職位コード
+	 * @param targetDate   対象日
+	 * @param ps           ステートメント
+	 * @return 加算されたパラメータインデックス
+	 * @throws MospException SQL例外が発生した場合
+	 */
+	int setParamsForPositionGrade(int index, String positionCode, Date targetDate, PreparedStatement ps)
 			throws MospException;
 	
 }

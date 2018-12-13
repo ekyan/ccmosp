@@ -17,9 +17,7 @@
  */
 package jp.mosp.platform.dto.human;
 
-import java.util.Date;
-
-import jp.mosp.framework.base.BaseDtoInterface;
+import jp.mosp.platform.base.ActivateDtoInterface;
 import jp.mosp.platform.dto.base.EmployeeCodeDtoInterface;
 import jp.mosp.platform.dto.base.EmployeeNameDtoInterface;
 import jp.mosp.platform.dto.base.EmploymentContractCodeDtoInterface;
@@ -31,7 +29,7 @@ import jp.mosp.platform.dto.base.WorkPlaceCodeDtoInterface;
 /**
  * 人事マスタDTOインターフェース。
  */
-public interface HumanDtoInterface extends BaseDtoInterface, PersonalIdDtoInterface, EmployeeCodeDtoInterface,
+public interface HumanDtoInterface extends PersonalIdDtoInterface, ActivateDtoInterface, EmployeeCodeDtoInterface,
 		EmployeeNameDtoInterface, SectionCodeDtoInterface, WorkPlaceCodeDtoInterface, PositionCodeDtoInterface,
 		EmploymentContractCodeDtoInterface {
 	
@@ -39,11 +37,6 @@ public interface HumanDtoInterface extends BaseDtoInterface, PersonalIdDtoInterf
 	 * @return レコード識別ID。
 	 */
 	long getPfmHumanId();
-	
-	/**
-	 * @return 有効日。
-	 */
-	Date getActivateDate();
 	
 	/**
 	 * @return カナ姓。
@@ -64,11 +57,6 @@ public interface HumanDtoInterface extends BaseDtoInterface, PersonalIdDtoInterf
 	 * @param pfmHumanId セットする レコード識別ID。
 	 */
 	void setPfmHumanId(long pfmHumanId);
-	
-	/**
-	 * @param activateDate セットする 有効日。
-	 */
-	void setActivateDate(Date activateDate);
 	
 	/**
 	 * @param lastKana セットする カナ姓。

@@ -112,7 +112,8 @@ public class PfaApprovalRouteUnitDao extends PlatformDao implements ApprovalRout
 	}
 	
 	@Override
-	public List<ApprovalRouteUnitDtoInterface> findForHistory(String routeCode, int approvalStage) throws MospException {
+	public List<ApprovalRouteUnitDtoInterface> findForHistory(String routeCode, int approvalStage)
+			throws MospException {
 		try {
 			index = 1;
 			StringBuffer sb = getSelectQuery(getClass());
@@ -202,7 +203,8 @@ public class PfaApprovalRouteUnitDao extends PlatformDao implements ApprovalRout
 	}
 	
 	@Override
-	public List<ApprovalRouteUnitDtoInterface> findForRouteList(String routeCode, Date targetDate) throws MospException {
+	public List<ApprovalRouteUnitDtoInterface> findForRouteList(String routeCode, Date targetDate)
+			throws MospException {
 		try {
 			index = 1;
 			StringBuffer sb = getSelectQuery(getClass());
@@ -232,6 +234,7 @@ public class PfaApprovalRouteUnitDao extends PlatformDao implements ApprovalRout
 		try {
 			index = 1;
 			StringBuffer sb = getSelectQuery(getClass());
+			sb.append(getQueryForMaxActivateDate(TABLE, COL_ROUTE_CODE, COL_ACTIVATE_DATE));
 			sb.append(where());
 			sb.append(deleteFlagOff());
 			sb.append(and());
@@ -243,6 +246,7 @@ public class PfaApprovalRouteUnitDao extends PlatformDao implements ApprovalRout
 			sb.append(getQueryForUnitCode());
 			sb.append(rightParenthesis());
 			prepareStatement(sb.toString());
+			setParam(index++, activateDate);
 			setParam(index++, unitCode);
 			setParam(index++, activateDate);
 			executeQuery();

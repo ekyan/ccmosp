@@ -19,16 +19,20 @@ package jp.mosp.platform.human.action;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import jp.mosp.framework.base.BaseVo;
 import jp.mosp.framework.base.MospException;
+import jp.mosp.framework.constant.MospConst;
 import jp.mosp.framework.property.ViewConfigProperty;
 import jp.mosp.framework.utils.DateUtility;
 import jp.mosp.framework.utils.MospUtility;
+import jp.mosp.framework.utils.RoleUtility;
 import jp.mosp.platform.bean.human.HumanHistoryReferenceBeanInterface;
+import jp.mosp.platform.bean.human.HumanInfoExtraBeanInterface;
 import jp.mosp.platform.bean.system.NamingReferenceBeanInterface;
 import jp.mosp.platform.bean.system.PositionReferenceBeanInterface;
 import jp.mosp.platform.bean.system.SectionReferenceBeanInterface;
@@ -112,26 +116,6 @@ public class HumanInfoAction extends PlatformHumanAction {
 	 * 人事汎用管理表示区分(人事一覧画面)。<br>
 	 */
 	public static final String	KEY_VIEW_HUMAN_INFO	= "HumanInfo";
-	
-	/**
-	 * コード：所属
-	 */
-	public static final String	CODE_SECTION		= "section";
-	
-	/**
-	 * コード：職位
-	 */
-	public static final String	CODE_POSITION		= "position";
-	
-	/**
-	 * コード：雇用
-	 */
-	public static final String	CODE_EMPLOYEMENT	= "employment";
-	
-	/**
-	 * コード：勤務地
-	 */
-	public static final String	CODE_WORKPLACE		= "workPlace";
 	
 	
 	/**
@@ -280,20 +264,23 @@ public class HumanInfoAction extends PlatformHumanAction {
 		} else if (actionName.equals(HumanBinaryArrayCardAction.class.getName())) {
 			// 人事汎用管理形式：人事汎用バイナリ一覧情報追加画面表示
 			mospParams.setNextCommand(HumanBinaryArrayCardAction.CMD_ADD_SELECT);
+		} else {
+			// 追加機能等(transferredActionにコマンドを直接指定)
+			mospParams.setNextCommand(actionName);
 		}
-		
 	}
 	
 	/**
 	 * VOに初期値を設定する。<br>
+	 * @throws MospException インスタンスの取得に失敗した場合
 	 */
-	public void setDefaultValues() {
+	public void setDefaultValues() throws MospException {
 		// VO取得
 		HumanInfoVo vo = (HumanInfoVo)mospParams.getVo();
 		// 役職要否設定
 		vo.setNeedPost(mospParams.getApplicationPropertyBool(PlatformConst.APP_ADD_USE_POST));
 		// 人事汎用管理利用区分設定
-		vo.setAryDivision(mospParams.getApplicationProperties(PlatformConst.APP_HUMAN_GENERAL_DIVISIONS));
+		vo.setAryDivision(getRemoveHiddenDivisions());
 		// 初期値設定
 		vo.setLblEntranceDate("");
 		vo.setLblEmployment("");
@@ -314,6 +301,9 @@ public class HumanInfoAction extends PlatformHumanAction {
 		vo.setAryConcurrentSectionAbbr(new String[0]);
 		vo.setAryConcurrentPositionAbbr(new String[0]);
 		vo.setAryConcurrentRemark(new String[0]);
+		// 人事情報一覧画面追加情報を初期化
+		vo.setExtraParameters(new HashMap<String, String[]>());
+		vo.setExtraViewList(new ArrayList<String>());
 	}
 	
 	/**
@@ -332,17 +322,24 @@ public class HumanInfoAction extends PlatformHumanAction {
 		// 入社日情報取得
 		EntranceDtoInterface entranceDto = reference().entrance().getEntranceInfo(humanDto.getPersonalId());
 		// 兼務情報取得
-		List<ConcurrentDtoInterface> concurrentDtoList = reference().concurrent().getContinuedConcurrentList(
-				humanDto.getPersonalId(), targetDate);
+		List<ConcurrentDtoInterface> concurrentDtoList = reference().concurrent()
+			.getContinuedConcurrentList(humanDto.getPersonalId(), targetDate);
 		// 休職情報取得
-		List<SuspensionDtoInterface> suspensionDtoList = reference().suspension().getContinuedSuspentionList(
-				humanDto.getPersonalId(), targetDate);
+		List<SuspensionDtoInterface> suspensionDtoList = reference().suspension()
+			.getContinuedSuspentionList(humanDto.getPersonalId(), targetDate);
 		// 退職情報取得
 		RetirementDtoInterface retirementDto = reference().retirement().getRetireInfo(humanDto.getPersonalId());
 		// VOに情報を設定
 		setHumanInfo(humanDto, entranceDto, retirementDto, suspensionDtoList, concurrentDtoList);
 		// 人事汎用項目設定
 		setHumanGeneralValues(personalId, targetDate);
+		// 人事情報一覧画面追加情報用Beanクラス毎に処理
+		for (String className : getHumanInfoExtraBeansClassNames()) {
+			// 人事情報一覧画面追加情報用Beanクラス取得
+			HumanInfoExtraBeanInterface bean = reference().humanInfoExtra(className);
+			// 人事情報一覧画面追加情報を設定
+			bean.setHumanInfo();
+		}
 	}
 	
 	/**
@@ -354,20 +351,19 @@ public class HumanInfoAction extends PlatformHumanAction {
 	private void setHumanGeneralValues(String personalId, Date targetDate) throws MospException {
 		// VO取得
 		HumanInfoVo vo = (HumanInfoVo)mospParams.getVo();
-		// TODO VO初期化
 		
 		// 人事画面区分毎に処理
 		for (String division : vo.getAryDivision()) {
+			
 			// 人事汎用管理区分設定取得
 			ViewConfigProperty viewConfig = mospParams.getProperties().getViewConfigProperties().get(division);
+			
 			String type = viewConfig.getType();
 			// 通常の場合
 			if (type.equals(PlatformHumanConst.PRM_HUMAN_DIVISION_TYPE_NORMAL)) {
 				// 人事汎用通常情報設定
-				vo.putNormalItem(
-						division,
-						reference().humanNormal().getShowHumanNormalMapInfo(division, KEY_VIEW_HUMAN_INFO, personalId,
-								targetDate, targetDate));
+				vo.putNormalItem(division, reference().humanNormal().getShowHumanNormalMapInfo(division,
+						KEY_VIEW_HUMAN_INFO, personalId, targetDate, targetDate));
 				continue;
 			}
 			// バイナリ通常の場合
@@ -440,16 +436,16 @@ public class HumanInfoAction extends PlatformHumanAction {
 			}
 			// 一覧の場合
 			if (type.equals(PlatformHumanConst.PRM_HUMAN_DIVISION_TYPE_ARRAY)) {
-				LinkedHashMap<String, Map<String, String>> arrayMap = reference().humanArray().getRowIdArrayMapInfo(
-						division, KEY_VIEW_HUMAN_INFO, personalId, targetDate);
+				LinkedHashMap<String, Map<String, String>> arrayMap = reference().humanArray()
+					.getRowIdArrayMapInfo(division, KEY_VIEW_HUMAN_INFO, personalId, targetDate);
 				// 人事汎用一覧情報設定
 				vo.putArrayItem(division, arrayMap);
 			}
 			// バイナリ一覧登録の場合
 			if (type.equals(PlatformHumanConst.PRM_HUMAN_DIVISION_TYPE_BINARY_ARRAY)) {
 				// 人事汎用一覧情報リストを取得
-				List<HumanBinaryArrayDtoInterface> binaryArrayList = reference().humanBinaryArray().findForItemType(
-						personalId, division);
+				List<HumanBinaryArrayDtoInterface> binaryArrayList = reference().humanBinaryArray()
+					.findForItemType(personalId, division);
 				String[] aryRowId = new String[binaryArrayList.size()];
 				String[] aryActiveDate = new String[binaryArrayList.size()];
 				String[] aryFileType = new String[binaryArrayList.size()];
@@ -508,13 +504,14 @@ public class HumanInfoAction extends PlatformHumanAction {
 		
 		// 現勤務地の名・継続年数を設定
 		vo.setLblWorkPlace(HumanUtility.getWorkPlaceStayMonths(humanDto, humanList, targetDate, workPlaceDto,
-				mospParams));
+				retirementDto, mospParams));
 		
 		// 所属情報設定
 		SectionDtoInterface sectionDto = sectionReference.getSectionInfo(humanDto.getSectionCode(), targetDate);
 		if (sectionDto != null) {
 			// 現所属の名・継続年数を設定
-			vo.setLblSection(HumanUtility.getSectionStayMonths(humanDto, humanList, targetDate, sectionDto, mospParams));
+			vo.setLblSection(HumanUtility.getSectionStayMonths(humanDto, humanList, targetDate, sectionDto,
+					retirementDto, mospParams));
 		}
 		
 		// 職位情報設定
@@ -522,16 +519,16 @@ public class HumanInfoAction extends PlatformHumanAction {
 		if (positionDto != null) {
 			// 現職位の名・継続年数を設定
 			vo.setLblPosition(HumanUtility.getPositionStayMonths(humanDto, humanList, targetDate, positionDto,
-					mospParams));
+					retirementDto, mospParams));
 		}
 		
 		// 雇用契約情報設定
-		EmploymentContractDtoInterface employmentContractDto = reference().employmentContract().getContractInfo(
-				humanDto.getEmploymentContractCode(), targetDate);
+		EmploymentContractDtoInterface employmentContractDto = reference().employmentContract()
+			.getContractInfo(humanDto.getEmploymentContractCode(), targetDate);
 		if (employmentContractDto != null) {
 			// 現雇用契約の名・継続年数を設定
 			vo.setLblEmployment(HumanUtility.getEmploymentStayMonths(humanDto, humanList, targetDate,
-					employmentContractDto, mospParams));
+					employmentContractDto, retirementDto, mospParams));
 		}
 		
 		// 役職が有効の場合
@@ -549,7 +546,7 @@ public class HumanInfoAction extends PlatformHumanAction {
 						postDto.getHumanItemValue(), targetDate);
 				// 画面に設定
 				vo.setLblPost(HumanUtility.getPostStayMonths(humanDto, humanList, targetDate, postList, postDto,
-						mospParams, namingItemName));
+						retirementDto, mospParams, namingItemName));
 			}
 		}
 		
@@ -557,10 +554,9 @@ public class HumanInfoAction extends PlatformHumanAction {
 		if (entranceDto != null) {
 			// 入社日設定
 			vo.setLblEntranceDate(getStringDate(entranceDto.getEntranceDate()));
-			// 経過月取得
-			int amountMonth = DateUtility.getMonthDifference(entranceDto.getEntranceDate(), targetDate);
 			// 勤続日数設定
-			vo.setLblYearsOfService(HumanUtility.getDuration(amountMonth, mospParams));
+			vo.setLblYearsOfService(HumanUtility.getContinuationMonthName(targetDate, entranceDto.getEntranceDate(),
+					retirementDto, mospParams));
 		}
 		
 		// 退社情報設定
@@ -623,4 +619,38 @@ public class HumanInfoAction extends PlatformHumanAction {
 		vo.setAryConcurrentRemark(aryConcurrentRemark);
 	}
 	
+	/**
+	 * MosP設定情報から人事情報一覧画面追加情報用Beanクラス群(クラス名)を取得する。<br>
+	 * @return 人事情報一覧画面追加情報用Beanクラス群(クラス名)
+	 */
+	protected String[] getHumanInfoExtraBeansClassNames() {
+		// 人事情報一覧画面追加情報用Beanクラス群(クラス名)取得
+		String extraBeans = mospParams.getApplicationProperty(PlatformConst.APP_HUMAN_INFO_EXTRA_BEANS);
+		// 取得できない場合
+		if (extraBeans == null) {
+			return new String[0];
+		}
+		// 分割
+		return MospUtility.split(extraBeans, MospConst.APP_PROPERTY_SEPARATOR);
+	}
+	
+	/**
+	 * ロールから人事汎用管理区分を再設定
+	 * @return 人事汎用管理区分配列
+	 */
+	protected String[] getRemoveHiddenDivisions() {
+		// 再設定用リスト
+		List<String> divisionsList = new ArrayList<String>();
+		// 定義された人事汎用管理区分を取得
+		for (String division : mospParams.getApplicationProperties(PlatformConst.APP_HUMAN_GENERAL_DIVISIONS)) {
+			// ロールで非表示設定された人事汎用管理区分が存在した場合は表示対象としない
+			if (RoleUtility.getHiddenDivisionsList(mospParams).contains(division)) {
+				continue;
+			}
+			divisionsList.add(division);
+			
+		}
+		return MospUtility.toArray(divisionsList);
+		
+	}
 }

@@ -17,7 +17,8 @@
  */
 package jp.mosp.platform.bean.system;
 
-import java.util.List;
+import java.util.Date;
+import java.util.Set;
 
 import jp.mosp.framework.base.MospException;
 import jp.mosp.platform.dto.system.UserPasswordDtoInterface;
@@ -34,36 +35,52 @@ public interface UserPasswordRegistBeanInterface {
 	UserPasswordDtoInterface getInitDto();
 	
 	/**
-	 * 論理削除。
-	 * <p>
-	 * ユーザパスワード情報論理削除
-	 * </p>
-	 * @param dto 対象DTO
-	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 * ユーザパスワード情報を論理削除する。<br>
+	 * @param userId ユーザID
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
-	void delete(UserPasswordDtoInterface dto) throws MospException;
+	void delete(String userId) throws MospException;
 	
 	/**
 	 * ユーザパスワード登録処理を行う。<br>
 	 * 同一ユーザID、変更日のレコードがあった場合は、論理削除の上、登録する。<br>
 	 * @param dto 対象DTO
-	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
 	void regist(UserPasswordDtoInterface dto) throws MospException;
 	
 	/**
-	 * パスワードの初期化を行う。<br>
-	 * @param userIdList ユーザIDリスト
-	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 * ユーザパスワード登録処理を行う。<br>
+	 * 同一ユーザID、変更日のレコードがあった場合は、論理削除の上、登録する。<br>
+	 * @param userId     ユーザID
+	 * @param changeDate 変更日
+	 * @param password   パスワード(暗号化済)
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
-	void initPassword(List<String> userIdList) throws MospException;
+	void regist(String userId, Date changeDate, String password) throws MospException;
+	
+	/**
+	 * パスワードの初期化を行う。<br>
+	 * @param userId     ユーザID
+	 * @param changeDate 変更日
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	void initPassword(String userId, Date changeDate) throws MospException;
+	
+	/**
+	 * パスワードの初期化を行う。<br>
+	 * 変更日には、システム日付を設定する。<br>
+	 * @param userIdList ユーザIDリスト
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	void initPassword(Set<String> userIdList) throws MospException;
 	
 	/**
 	 * 登録情報の妥当性を確認確認する。<br>
 	 * 行インデックスがnullでない場合、エラーメッセージに行番号が加えられる。<br>
 	 * @param dto 対象DTO
 	 * @param row 行インデックス
-	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
 	void validate(UserPasswordDtoInterface dto, Integer row) throws MospException;
 	

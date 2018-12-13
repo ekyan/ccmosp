@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE MosP>
+<!--
+MosP - Mind Open Source Project    http://www.mosp.jp/
+Copyright (C) MIND Co., Ltd.       http://www.e-mind.co.jp/
+
+This program is free software: you can redistribute it and/or
+modify it under the terms of the GNU Affero General Public License
+as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<MosP>
+
+<!--jp.mosp.addon.workinterval.bean-->
+	
+<!--Reference-->
+	<Model key="IntervalLimitReference">
+		jp.mosp.addon.workinterval.bean.impl.IntervalLimitReferenceBean
+	</Model>
+	<Model key="IntervalReference">
+		jp.mosp.addon.workinterval.bean.impl.IntervalReferenceBean
+	</Model>
+	<Model key="WorkIntervalAttendanceListReference">
+		jp.mosp.addon.workinterval.bean.impl.WorkIntervalAttendanceListReferenceBean
+	</Model>
+	
+
+<!--Regist-->
+	<Model key="IntervalLimitRegist">
+		jp.mosp.addon.workinterval.bean.impl.IntervalLimitRegistBean
+	</Model>
+	<Model key="IntervalRegist">
+		jp.mosp.addon.workinterval.bean.impl.IntervalRegistBean
+	</Model>
+
+	<Model key="IntervalCalculate">
+		jp.mosp.addon.workinterval.bean.impl.IntervalCalculateBean
+	</Model>
+
+	<Model key="WorkIntervalMail">
+		jp.mosp.addon.workinterval.bean.impl.WorkIntervalMailBean
+	</Model>
+
+	<Model key="AttendanceListRegist">
+		jp.mosp.addon.workinterval.bean.impl.WorkIntervalAttendanceListRegistBean
+	</Model>
+	<Model key="AttendanceListReference">
+		jp.mosp.addon.workinterval.bean.impl.WorkIntervalAttendanceListReferenceBean
+	</Model>
+	<Model key="TimeRecord">
+		jp.mosp.addon.workinterval.bean.impl.WorkIntervalTimeRecordBean
+	</Model>
+</MosP>

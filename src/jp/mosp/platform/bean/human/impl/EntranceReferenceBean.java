@@ -35,7 +35,7 @@ public class EntranceReferenceBean extends PlatformBean implements EntranceRefer
 	/**
 	 * 人事入社情報DAO。
 	 */
-	private EntranceDaoInterface	entranceDao;
+	private EntranceDaoInterface entranceDao;
 	
 	
 	/**

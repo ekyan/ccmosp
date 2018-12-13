@@ -51,7 +51,7 @@ public class TimeExportAction extends TimeAction {
 	 * 実行時にエクスポートマスタが決定していない、対象ファイルが選択されていない場合は
 	 * エラーメッセージにて通知し、処理は実行されない。<br>
 	 */
-	public static final String	CMD_EXECUTION	= "TM3315";
+	public static final String CMD_EXECUTION = "TM3315";
 	
 	
 	/**
@@ -92,18 +92,38 @@ public class TimeExportAction extends TimeAction {
 		int startMonth = getInt(vo.getTxtStartMonth());
 		int endYear = getInt(vo.getTxtEndYear());
 		int endMonth = getInt(vo.getTxtEndMonth());
+		// 下位所属含むチェックボックス読込
+		int ckbNeedLowerSection = getInt(vo.getCkbNeedLowerSection());
 		if (TimeFileConst.CODE_EXPORT_TYPE_TMD_SUB_HOLIDAY.equals(dto.getExportTable())) {
 			// 代休データ
 			timeReference().subHolidayExport().export(vo.getRadSelect(), startYear, startMonth, endYear, endMonth,
 					vo.getPltCutoff(), vo.getPltWorkPlace(), vo.getPltEmployment(), vo.getPltSection(),
-					vo.getPltPosition());
+					ckbNeedLowerSection, vo.getPltPosition());
 			return;
 		} else if (TimeFileConst.CODE_EXPORT_TYPE_HOLIDAY_REQUEST_DATA.equals(dto.getExportTable())) {
 			// 休暇取得データ
 			timeReference().holidayRequestDataExport().export(vo.getRadSelect(), getInt(vo.getTxtStartYear()),
 					getInt(vo.getTxtStartMonth()), getInt(vo.getTxtEndYear()), getInt(vo.getTxtEndMonth()),
 					vo.getPltCutoff(), vo.getPltWorkPlace(), vo.getPltEmployment(), vo.getPltSection(),
-					vo.getPltPosition());
+					getInt(vo.getCkbNeedLowerSection()), vo.getPltPosition());
+			return;
+		} else if (TimeFileConst.CODE_EXPORT_TYPE_ATTENDANCE_REAPPLICATION.equals(dto.getExportTable())) {
+			// 勤怠再申請対象者
+			timeReference().attendanceReapplicationExport().export(vo.getRadSelect(), getInt(vo.getTxtStartYear()),
+					getInt(vo.getTxtStartMonth()), getInt(vo.getTxtEndYear()), getInt(vo.getTxtEndMonth()),
+					vo.getPltCutoff(), vo.getPltWorkPlace(), vo.getPltEmployment(), vo.getPltSection(),
+					getInt(vo.getCkbNeedLowerSection()), vo.getPltPosition());
+			return;
+		} else if (TimeFileConst.CODE_EXPORT_TYPE_APPLI_REASON_DATA.equals(dto.getExportTable())) {
+			// 各種申請理由データ
+			timeReference().appliResonDataExport().export(vo.getRadSelect(), getInt(vo.getTxtStartYear()),
+					getInt(vo.getTxtStartMonth()), getInt(vo.getTxtEndYear()), getInt(vo.getTxtEndMonth()),
+					vo.getPltCutoff(), vo.getPltWorkPlace(), vo.getPltEmployment(), vo.getPltSection(),
+					getInt(vo.getCkbNeedLowerSection()), vo.getPltPosition());
+			return;
+		}
+		// 汎用区分追加
+		if (addGeneralExportTimeType(dto.getExportTable(), startYear, startMonth, endYear, endMonth)) {
 			return;
 		}
 		// 検索クラス取得
@@ -117,6 +137,8 @@ public class TimeExportAction extends TimeAction {
 		exportTable.setWorkPlaceCode(vo.getPltWorkPlace());
 		exportTable.setEmploymentCode(vo.getPltEmployment());
 		exportTable.setSectionCode(vo.getPltSection());
+		// 下位所属含むチェックボックス設定
+		exportTable.setCkbNeedLowerSection(ckbNeedLowerSection);
 		exportTable.setPositionCode(vo.getPltPosition());
 		// CSVデータリスト取得
 		List<String[]> csvDataList = exportTable.export();
@@ -199,4 +221,17 @@ public class TimeExportAction extends TimeAction {
 		mospParams.setFileName(sb.toString());
 	}
 	
+	/**
+	 * 追加区分を設定する。
+	 * @param exportTable データ区分
+	 * @param startYear 開始年
+	 * @param startMonth 開始月
+	 * @param endYear 終了年
+	 * @param endMonth 終了月
+	 * @return 結果(true：エクスポートする、false：エクスポートしない)
+	 */
+	public boolean addGeneralExportTimeType(String exportTable, int startYear, int startMonth, int endYear,
+			int endMonth) {
+		return false;
+	}
 }

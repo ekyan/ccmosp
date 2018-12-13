@@ -23,6 +23,6 @@ function onLoadExtra() {
 	// 削除ボタン利用可否設定
 	if (getFormValue("hdnRecordId") == 0) {
 		// 退職データが存在しない場合レコードIDは0
-		setDisabled("btnDelete", true);
+		setReadOnly("btnDelete", true);
 	}
 }

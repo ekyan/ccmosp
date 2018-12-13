@@ -37,7 +37,7 @@ MospParams params = (MospParams)request.getAttribute(MospConst.ATT_MOSP_PARAMS);
 HumanBinaryNormalCardVo vo = (HumanBinaryNormalCardVo)params.getVo();
 String fileType = vo.getPltFileType();
 %>
-<jsp:include page="<%= PlatformHumanConst.PATH_HUMAN_COMMON_INFO_JSP %>" flush="false" />
+<jsp:include page="<%= params.getApplicationProperty(PlatformHumanConst.APP_HUMAN_COMMON_INFO_JSP) %>" flush="false" />
 <%
 //履歴編集の場合
 if (vo.getModeCardEdit().equals(PlatformConst.MODE_CARD_EDIT_EDIT)) {

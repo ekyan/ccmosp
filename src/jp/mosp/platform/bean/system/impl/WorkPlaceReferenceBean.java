@@ -37,7 +37,7 @@ public class WorkPlaceReferenceBean extends PlatformBean implements WorkPlaceRef
 	/**
 	 * 勤務地マスタDAO。
 	 */
-	private WorkPlaceDaoInterface	dao;
+	private WorkPlaceDaoInterface dao;
 	
 	
 	/**
@@ -102,7 +102,8 @@ public class WorkPlaceReferenceBean extends PlatformBean implements WorkPlaceRef
 	}
 	
 	@Override
-	public String[][] getNameSelectArray(Date targetDate, boolean needBlank, String operationType) throws MospException {
+	public String[][] getNameSelectArray(Date targetDate, boolean needBlank, String operationType)
+			throws MospException {
 		// プルダウン用配列取得(名称)
 		return getSelectArray(targetDate, needBlank, operationType, true, false);
 	}

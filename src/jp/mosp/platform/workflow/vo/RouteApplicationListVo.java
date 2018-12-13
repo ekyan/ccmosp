@@ -77,6 +77,11 @@ public class RouteApplicationListVo extends PlatformSystemVo {
 	private String[]			aryLblRouteName;
 	
 	/**
+	 * ルート有効日。
+	 */
+	private String[]			aryLblRouteActivateDate;
+	
+	/**
 	 * ルートコード。
 	 */
 	private String[]			aryLblRouteCode;
@@ -259,6 +264,28 @@ public class RouteApplicationListVo extends PlatformSystemVo {
 	 */
 	public void setAryLblRouteName(String[] aryLblRouteName) {
 		this.aryLblRouteName = getStringArrayClone(aryLblRouteName);
+	}
+	
+	/**
+	 * @return aryLblRouteActivateDate
+	 */
+	public String[] getAryLblRouteActivateDate() {
+		return getStringArrayClone(aryLblRouteActivateDate);
+	}
+	
+	/**
+	 * @param idx インデックス
+	 * @return aryLblRouteActivateDate
+	 */
+	public String getAryLblRouteActivateDate(int idx) {
+		return aryLblRouteActivateDate[idx];
+	}
+	
+	/**
+	 * @param aryLblRouteActivateDate セットする aryLblRouteActivateDate
+	 */
+	public void setAryLblRouteActivateDate(String[] aryLblRouteActivateDate) {
+		this.aryLblRouteActivateDate = getStringArrayClone(aryLblRouteActivateDate);
 	}
 	
 	/**

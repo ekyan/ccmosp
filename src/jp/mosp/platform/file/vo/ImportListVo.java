@@ -51,6 +51,12 @@ public class ImportListVo extends PlatformSystemVo {
 	private String				executeCommand;
 	
 	/**
+	 * テンプレート出力コマンド。<br>
+	 * インポート一覧JSP内で用いられる。<br>
+	 */
+	private String				templateOutputCommand;
+	
+	/**
 	 * データ区分コードキー。<br>
 	 */
 	private String				tableTypeCodeKey;
@@ -180,6 +186,20 @@ public class ImportListVo extends PlatformSystemVo {
 	 */
 	public void setExecuteCommand(String executeCommand) {
 		this.executeCommand = executeCommand;
+	}
+	
+	/**
+	 * @return templateOutputCommand
+	 */
+	public String getTemplateOutputCommand() {
+		return templateOutputCommand;
+	}
+	
+	/**
+	 * @param templateOutputCommand セットする templateOutputCommand
+	 */
+	public void setTemplateOutputCommand(String templateOutputCommand) {
+		this.templateOutputCommand = templateOutputCommand;
 	}
 	
 	/**

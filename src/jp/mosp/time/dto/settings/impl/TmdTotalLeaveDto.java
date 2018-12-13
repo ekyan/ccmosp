@@ -28,9 +28,6 @@ import jp.mosp.time.dto.settings.TotalLeaveDtoInterface;
  */
 public class TmdTotalLeaveDto extends BaseDto implements TotalLeaveDtoInterface {
 	
-	/**
-	 * 
-	 */
 	private static final long	serialVersionUID	= -5733445653598336200L;
 	
 	/**
@@ -57,6 +54,10 @@ public class TmdTotalLeaveDto extends BaseDto implements TotalLeaveDtoInterface 
 	 * 特別休暇日数。
 	 */
 	private double				times;
+	/**
+	 * 特別休暇時間数。
+	 */
+	private int					hours;
 	
 	
 	@Override
@@ -117,6 +118,16 @@ public class TmdTotalLeaveDto extends BaseDto implements TotalLeaveDtoInterface 
 	@Override
 	public void setTmdTotalLeaveId(long tmdTotalLeaveId) {
 		this.tmdTotalLeaveId = tmdTotalLeaveId;
+	}
+	
+	@Override
+	public int getHours() {
+		return hours;
+	}
+	
+	@Override
+	public void setHours(int hours) {
+		this.hours = hours;
 	}
 	
 }

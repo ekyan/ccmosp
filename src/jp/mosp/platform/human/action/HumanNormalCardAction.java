@@ -23,6 +23,7 @@ import jp.mosp.framework.utils.TopicPathUtility;
 import jp.mosp.platform.base.PlatformAction;
 import jp.mosp.platform.bean.human.HumanNormalReferenceBeanInterface;
 import jp.mosp.platform.bean.human.HumanNormalRegistBeanInterface;
+import jp.mosp.platform.constant.PlatformConst;
 import jp.mosp.platform.human.base.PlatformHumanAction;
 import jp.mosp.platform.human.constant.PlatformHumanConst;
 import jp.mosp.platform.human.vo.HumanNormalCardVo;
@@ -145,8 +146,8 @@ public class HumanNormalCardAction extends PlatformHumanAction {
 		// 人事汎用管理区分設定
 		vo.setDivision(getTransferredType());
 		// パンくず名設定
-		TopicPathUtility.setTopicPathName(mospParams, vo.getClassName(), mospParams.getName(vo.getDivision())
-				+ mospParams.getName("Information"));
+		TopicPathUtility.setTopicPathName(mospParams, vo.getClassName(),
+				mospParams.getName(vo.getDivision()) + mospParams.getName("Information"));
 		// 人事管理共通情報利用設定
 		setPlatformHumanSettings(CMD_SEARCH, PlatformHumanConst.MODE_HUMAN_NO_ACTIVATE_DATE);
 		// 人事管理共通情報設定
@@ -167,7 +168,7 @@ public class HumanNormalCardAction extends PlatformHumanAction {
 		// 項目初期化
 		setDefaultValues();
 		// 人事汎用通常情報設定
-		setNormalInfo(true);
+		setNormalInfo(false);
 	}
 	
 	/**
@@ -180,7 +181,7 @@ public class HumanNormalCardAction extends PlatformHumanAction {
 		// 登録クラス取得
 		HumanNormalRegistBeanInterface regist = platform().humanNormalRegist();
 		// 更新処理
-		regist.regist(vo.getDivision(), KEY_VIEW_NORMAL_CARD, vo.getPersonalId());
+		regist.regist(vo.getDivision(), KEY_VIEW_NORMAL_CARD, vo.getPersonalId(), vo.getAryRecordIdMap());
 		// 更新結果確認
 		if (mospParams.hasErrorMessage()) {
 			// 更新失敗メッセージ設定
@@ -205,7 +206,7 @@ public class HumanNormalCardAction extends PlatformHumanAction {
 		// 登録クラス取得
 		HumanNormalRegistBeanInterface regist = platform().humanNormalRegist();
 		// 削除処理
-		regist.delete(vo.getDivision(), KEY_VIEW_NORMAL_CARD, vo.getPersonalId());
+		regist.delete(vo.getDivision(), KEY_VIEW_NORMAL_CARD, vo.getPersonalId(), vo.getAryRecordIdMap());
 		// 削除結果確認
 		if (mospParams.hasErrorMessage()) {
 			// 削除失敗メッセージ設定
@@ -248,6 +249,8 @@ public class HumanNormalCardAction extends PlatformHumanAction {
 		HumanNormalCardVo vo = (HumanNormalCardVo)mospParams.getVo();
 		// 初期値設定
 		vo.getHumanNormalMap().clear();
+		// レコード識別ID初期化
+		vo.getAryRecordIdMap().clear();
 	}
 	
 	/**
@@ -264,8 +267,20 @@ public class HumanNormalCardAction extends PlatformHumanAction {
 		HumanNormalReferenceBeanInterface normalReference = reference().humanNormal();
 		// プルダウンを取得
 		vo.putPltItem(normalReference.getHumanGeneralPulldown(division, KEY_VIEW_NORMAL_CARD, getSystemDate()));
+		
+		// 表示情報のMaPを取得
+		normalReference.getHumanNormalRecordMapInfo(division, KEY_VIEW_NORMAL_CARD, vo.getPersonalId(), getSystemDate(),
+				isPulldownName);
+		
+		vo.setModeCardEdit(PlatformConst.MODE_CARD_EDIT_INSERT);
+		if (!normalReference.getRecordsMap().isEmpty()) {
+			// 編集モード確認
+			vo.setModeCardEdit(PlatformConst.MODE_CARD_EDIT_EDIT);
+		}
+		
+		// レコード識別IDマップ取得
+		vo.setAryRecordIdMap(normalReference.getRecordsMap());
 		// 登録情報を取得しVOに設定
-		vo.putNormalItem(division, normalReference.getHumanNormalMapInfo(division, KEY_VIEW_NORMAL_CARD,
-				vo.getPersonalId(), getSystemDate(), isPulldownName));
+		vo.putNormalItem(division, normalReference.getNormalMap());
 	}
 }

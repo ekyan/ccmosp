@@ -20,13 +20,12 @@ package jp.mosp.time.bean;
 import java.util.List;
 
 import jp.mosp.framework.base.MospException;
-import jp.mosp.platform.bean.human.HumanSearchBeanInterface;
 import jp.mosp.time.dto.settings.SubordinateListDtoInterface;
 
 /**
  * 勤怠集計結果検索インターフェース。
  */
-public interface TotalTimeSearchBeanInterface extends HumanSearchBeanInterface {
+public interface TotalTimeSearchBeanInterface extends SubordinateSearchBeanInterface {
 	
 	/**
 	 * 検索条件から雇用契約マスタリストを取得する。<br><br>
@@ -37,28 +36,8 @@ public interface TotalTimeSearchBeanInterface extends HumanSearchBeanInterface {
 	List<SubordinateListDtoInterface> getSearchList() throws MospException;
 	
 	/**
-	 * @param approval セットする 未承認。
-	 */
-	void setApproval(String approval);
-	
-	/**
-	 * @param calc セットする 未集計。
-	 */
-	void setCalc(String calc);
-	
-	/**
 	 * @param cutoffCode セットする 締日コード。
 	 */
 	void setCutoffCode(String cutoffCode);
-	
-	/**
-	 * @param targetYear セットする targetYear
-	 */
-	void setTargetYear(int targetYear);
-	
-	/**
-	 * @param targetMonth セットする targetMonth
-	 */
-	void setTargetMonth(int targetMonth);
 	
 }

@@ -1,17 +1,17 @@
 /*
  * MosP - Mind Open Source Project    http://www.mosp.jp/
  * Copyright (C) MIND Co., Ltd.       http://www.e-mind.co.jp/
- *
+ * 
  * This program is free software: you can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License
  * as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -19,6 +19,7 @@ package jp.mosp.framework.base;
 
 import jp.mosp.framework.constant.MospConst;
 import jp.mosp.framework.property.MospProperties;
+import jp.mosp.framework.utils.DateUtility;
 import jp.mosp.framework.xml.MospPropertiesBuilder;
 import jp.mosp.framework.xml.MospPropertiesBuilderInterface;
 
@@ -56,6 +57,10 @@ public final class MospPropertiesParser {
 		MospProperties mospProperties = builder.build(docBase);
 		// ドキュメントベース設定
 		mospProperties.setApplicationProperty(MospConst.APP_DOCBASE, docBase);
+		// 設定ファイル読込時間取得
+		String propertyTime = String.valueOf(DateUtility.getSystemTimeAndSecond().getTime());
+		// 設定ファイル読込時間設定
+		mospProperties.setApplicationProperty(MospConst.APP_PROPERTY_TIME, propertyTime);
 		return mospProperties;
 	}
 	

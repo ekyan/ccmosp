@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE MosP>
+<!-- MosP - Mind Open Source Project http://www.mosp.jp/ Copyright (C) MIND 
+	Co., Ltd. http://www.e-mind.co.jp/ This program is free software: you can 
+	redistribute it and/or modify it under the terms of the GNU Affero General 
+	Public License as published by the Free Software Foundation, either version 
+	3 of the License, or (at your option) any later version. This program is 
+	distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; 
+	without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR 
+	PURPOSE. See the GNU Affero General Public License for more details. You 
+	should have received a copy of the GNU Affero General Public License along 
+	with this program. If not, see <http://www.gnu.org/licenses/>. -->
+<MosP>
+	
+	<Role key="ME10">
+		<RoleType>manage</RoleType>
+		<RoleName>営業</RoleName>
+		<ViewIndex>10</ViewIndex>
+		<Menu key="MeProposeList">
+			<Index>1010</Index>
+			<Range key="1">
+				<Position>RangeMyself</Position>
+				<Section>RangeMyself</Section>
+			</Range>
+		</Menu>
+		<Menu key="MeProposeCard">
+			<Index>1020</Index>
+			<Range key="1">
+				<Position>RangeMyself</Position>
+				<Section>RangeMyself</Section>
+			</Range>
+		</Menu>
+		<Menu key="MeCompanyMaster">
+			<Index>1040</Index>
+		</Menu>
+		<Menu key="MeSalesTotalCalc">
+			<Index>1050</Index>
+		</Menu>
+	</Role>
+	
+	<Role key="ME30">
+		<RoleType>manage</RoleType>
+		<RoleName>経営管理者</RoleName>
+		<ViewIndex>30</ViewIndex>
+		<Menu key="MeProposeList">
+			<Index>1110</Index>
+		</Menu>
+		<Menu key="MeProposeCard">
+			<Index>1120</Index>
+		</Menu>
+		<Menu key="MeCompanyMaster">
+			<Index>1140</Index>
+		</Menu>
+		<Menu key="MeSalesTotalCalc">
+			<Index>1150</Index>
+		</Menu>
+		<Menu key="MeSalesCostBudgetCard">
+			<Index>1210</Index>
+		</Menu>
+		<Menu key="MeSgaBudgetCard">
+			<Index>1310</Index>
+		</Menu>
+		<Menu key="MeSgaResultCard">
+			<Index>1320</Index>
+		</Menu>
+		<Menu key="MeAnalysisSales">
+			<Index>1410</Index>
+		</Menu>
+		<Menu key="MeConfig">
+			<Index>1510</Index>
+		</Menu>
+		<Menu key="MeSalesTotalType">
+			<Index>1520</Index>
+		</Menu>
+		<Menu key="MeImportMaster">
+			<Index>1530</Index>
+		</Menu>
+	</Role>
+	
+</MosP>

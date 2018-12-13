@@ -40,6 +40,14 @@ public interface SubHolidayRequestDaoInterface extends BaseDaoInterface {
 	SubHolidayRequestDtoInterface findForWorkflow(long workflow) throws MospException;
 	
 	/**
+	 * 個人IDで代休申請リストを取得する。<br>
+	 * @param personalId 個人ID
+	 * @return 代休申請リスト
+	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
+	 */
+	List<SubHolidayRequestDtoInterface> findForList(String personalId) throws MospException;
+	
+	/**
 	 * 個人IDと代休日から代休申請リストを取得する。<br>
 	 * @param personalId 個人ID
 	 * @param requestDate 代休日
@@ -120,6 +128,15 @@ public interface SubHolidayRequestDaoInterface extends BaseDaoInterface {
 	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
 	 */
 	List<SubHolidayRequestDtoInterface> findForSearch(Map<String, Object> param) throws MospException;
+	
+	/**
+	 * 個人IDと休日出勤日から代休申請情報を取得する。
+	 * @param personalId 個人ID
+	 * @param workDate 休日出勤日
+	 * @return 代休申請リスト
+	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
+	 */
+	List<SubHolidayRequestDtoInterface> findForWorkDate(String personalId, Date workDate) throws MospException;
 	
 	/**
 	 * 検索条件取得。

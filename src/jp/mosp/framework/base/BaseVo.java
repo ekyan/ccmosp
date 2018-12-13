@@ -41,7 +41,7 @@ import jp.mosp.framework.utils.CapsuleUtility;
  */
 public class BaseVo implements Serializable {
 	
-	private static final long	serialVersionUID	= -5856596970807014781L;
+	private static final long serialVersionUID = -5856596970807014781L;
 	
 	
 	/**
@@ -71,6 +71,15 @@ public class BaseVo implements Serializable {
 	}
 	
 	/**
+	 * Integer配列の複製を取得する。
+	 * @param array 対象Integer配列
+	 * @return 複製Integer配列
+	 */
+	protected Integer[] getIntegerArrayClone(Integer[] array) {
+		return CapsuleUtility.getIntegerArrayClone(array);
+	}
+	
+	/**
 	 * long配列の複製を取得する。
 	 * @param array 対象long配列
 	 * @return 複製long配列
@@ -89,6 +98,33 @@ public class BaseVo implements Serializable {
 	}
 	
 	/**
+	 * boolean配列の複製を取得する。
+	 * @param array 対象boolean配列
+	 * @return 複製boolean配列
+	 */
+	protected boolean[] getBooleanArrayClone(boolean[] array) {
+		return CapsuleUtility.getBooleanArrayClone(array);
+	}
+	
+	/**
+	 * BaseDtoInterface配列の複製を取得する。
+	 * @param array 対象BaseDtoInterface配列
+	 * @return 複製BaseDtoInterface配列
+	 */
+	protected BaseDtoInterface[] getDtoArrayClone(BaseDtoInterface[] array) {
+		return CapsuleUtility.getDtoArrayClone(array);
+	}
+	
+	/**
+	 * 日付列配列の複製を取得する。
+	 * @param array 対象日付列配列
+	 * @return 複製日付列配列
+	 */
+	protected Date[] getDateArrayClone(Date[] array) {
+		return CapsuleUtility.getDateArrayClone(array);
+	}
+	
+	/**
 	 * 文字列配列の複製を取得する。
 	 * @param array 対象文字列配列
 	 * @return 複製文字列配列
@@ -103,6 +139,15 @@ public class BaseVo implements Serializable {
 	 * @return 複製文字列配列
 	 */
 	protected String[][] getStringArrayClone(String[][] array) {
+		return CapsuleUtility.getStringArrayClone(array);
+	}
+	
+	/**
+	 * 文字列配列の複製を取得する。
+	 * @param array 対象文字列配列
+	 * @return 複製文字列配列
+	 */
+	protected String[][][] getStringArrayClone(String[][][] array) {
 		return CapsuleUtility.getStringArrayClone(array);
 	}
 	

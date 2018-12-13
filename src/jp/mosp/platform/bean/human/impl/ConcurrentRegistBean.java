@@ -29,6 +29,7 @@ import jp.mosp.platform.bean.human.base.PlatformHumanBean;
 import jp.mosp.platform.dao.human.ConcurrentDaoInterface;
 import jp.mosp.platform.dto.human.ConcurrentDtoInterface;
 import jp.mosp.platform.dto.human.impl.PfaHumanConcurrentDto;
+import jp.mosp.platform.utils.PlatformMessageUtility;
 
 /**
  * 人事兼務情報登録クラス。
@@ -38,7 +39,7 @@ public class ConcurrentRegistBean extends PlatformHumanBean implements Concurren
 	/**
 	 * 人事兼務情報DAOクラス。<br>
 	 */
-	ConcurrentDaoInterface	dao;
+	ConcurrentDaoInterface dao;
 	
 	
 	/**
@@ -139,7 +140,8 @@ public class ConcurrentRegistBean extends PlatformHumanBean implements Concurren
 	 */
 	protected void update(ConcurrentDtoInterface dto) throws MospException {
 		// 更新対象DTO取得
-		ConcurrentDtoInterface currentDto = (ConcurrentDtoInterface)findForKey(dao, dto.getPfaHumanConcurrentId(), true);
+		ConcurrentDtoInterface currentDto = (ConcurrentDtoInterface)findForKey(dao, dto.getPfaHumanConcurrentId(),
+				true);
 		// 排他確認
 		checkExclusive(currentDto);
 		if (mospParams.hasErrorMessage()) {
@@ -172,7 +174,7 @@ public class ConcurrentRegistBean extends PlatformHumanBean implements Concurren
 		// 人事入社情報確認
 		if (entranceDate == null) {
 			// 社員が入社していない場合のメッセージを追加
-			addEmployeeNotEnteredMessage();
+			PlatformMessageUtility.addErrorEmployeeNotJoin(mospParams);
 			return;
 		}
 		// 人事退職情報取得
@@ -213,7 +215,8 @@ public class ConcurrentRegistBean extends PlatformHumanBean implements Concurren
 					continue;
 				}
 				// 重複確認
-				if (checkTermDuplicate(dto1.getStartDate(), dto1.getEndDate(), dto2.getStartDate(), dto2.getEndDate())) {
+				if (checkTermDuplicate(dto1.getStartDate(), dto1.getEndDate(), dto2.getStartDate(),
+						dto2.getEndDate())) {
 					continue;
 				}
 				// 期間が重複する場合のメッセージを追加

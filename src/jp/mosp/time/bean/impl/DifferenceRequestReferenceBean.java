@@ -41,7 +41,7 @@ public class DifferenceRequestReferenceBean extends TimeBean implements Differen
 	/**
 	 * 時差出勤DAOクラス。<br>
 	 */
-	DifferenceRequestDaoInterface	dao;
+	DifferenceRequestDaoInterface dao;
 	
 	
 	/**
@@ -65,13 +65,17 @@ public class DifferenceRequestReferenceBean extends TimeBean implements Differen
 		dao = (DifferenceRequestDaoInterface)createDao(DifferenceRequestDaoInterface.class);
 	}
 	
+	/**
+	 * @throws MospException アドオンで例外が発生した場合
+	 */
 	@Override
 	public String[][] getSelectArray() throws MospException {
 		return mospParams.getProperties().getCodeArray(TimeConst.CODE_DIFFERENCE_TYPE, false);
 	}
 	
 	@Override
-	public DifferenceRequestDtoInterface findForKeyOnWorkflow(String personalId, Date requestDate) throws MospException {
+	public DifferenceRequestDtoInterface findForKeyOnWorkflow(String personalId, Date requestDate)
+			throws MospException {
 		return dao.findForKeyOnWorkflow(personalId, requestDate);
 	}
 	
@@ -96,8 +100,8 @@ public class DifferenceRequestReferenceBean extends TimeBean implements Differen
 	}
 	
 	@Override
-	public List<DifferenceRequestDtoInterface> getDifferenceRequestList(String personalId, Date firstDate, Date lastDate)
-			throws MospException {
+	public List<DifferenceRequestDtoInterface> getDifferenceRequestList(String personalId, Date firstDate,
+			Date lastDate) throws MospException {
 		return dao.findForTerm(personalId, firstDate, lastDate);
 	}
 	
@@ -111,6 +115,9 @@ public class DifferenceRequestReferenceBean extends TimeBean implements Differen
 		return sb.toString();
 	}
 	
+	/**
+	 * @throws MospException アドオンで例外が発生した場合
+	 */
 	@Override
 	public String[][] getDifferenceSelectArray(String type) throws MospException {
 		String[][] aryDifference = new String[1][2];
@@ -523,7 +530,8 @@ public class DifferenceRequestReferenceBean extends TimeBean implements Differen
 	
 	@Override
 	public void chkBasicInfo(String personalId, Date targetDate) throws MospException {
-		initial(personalId, targetDate);
+		// 勤怠基本情報確認
+		initial(personalId, targetDate, TimeConst.CODE_FUNCTION_DIFFERENCE);
 	}
 	
 }

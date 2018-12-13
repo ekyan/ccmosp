@@ -73,7 +73,8 @@ public class CutoffRegistBean extends PlatformBean implements CutoffRegistBeanIn
 	public void initBean() throws MospException {
 		// DAO準備
 		dao = (CutoffDaoInterface)createDao(CutoffDaoInterface.class);
-		totalTimeEmployeetransactionReference = (TotalTimeEmployeeTransactionReferenceBeanInterface)createBean(TotalTimeEmployeeTransactionReferenceBeanInterface.class);
+		totalTimeEmployeetransactionReference = (TotalTimeEmployeeTransactionReferenceBeanInterface)createBean(
+				TotalTimeEmployeeTransactionReferenceBeanInterface.class);
 	}
 	
 	@Override
@@ -363,8 +364,8 @@ public class CutoffRegistBean extends PlatformBean implements CutoffRegistBeanIn
 			}
 		}
 		// 仮締コードから期間内の社員勤怠集計管理情報リストを取得
-		List<TotalTimeEmployeeDtoInterface> totalList = totalTimeEmployeetransactionReference.isCutoffTermState(
-				dto.getCutoffCode(), targetCutoffDto.getActivateDate(), endDate);
+		List<TotalTimeEmployeeDtoInterface> totalList = totalTimeEmployeetransactionReference
+			.isCutoffTermState(dto.getCutoffCode(), targetCutoffDto.getActivateDate(), endDate);
 		// リスト確認
 		if (totalList.isEmpty()) {
 			return;
@@ -437,8 +438,8 @@ public class CutoffRegistBean extends PlatformBean implements CutoffRegistBeanIn
 		// 削除対象の有効日以前で最新の勤怠設定マスタ情報を取得
 		List<TimeSettingDtoInterface> timeSettingList = timeSettingDao.findForActivateDate(dto.getActivateDate());
 		// 無効期間で勤怠設定マスタ履歴情報を取得(対象DTOの有効日～次の履歴の有効日)
-		timeSettingList.addAll(timeSettingDao.findForTerm(dto.getActivateDate(),
-				getNextActivateDate(dto.getActivateDate(), list)));
+		timeSettingList.addAll(
+				timeSettingDao.findForTerm(dto.getActivateDate(), getNextActivateDate(dto.getActivateDate(), list)));
 		return timeSettingList;
 	}
 	

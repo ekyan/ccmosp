@@ -27,8 +27,8 @@ import jp.mosp.platform.dto.base.PersonalIdDtoInterface;
 /**
  * 有給休暇データ一覧DTOインターフェース
  */
-public interface PaidHolidayDataGrantListDtoInterface extends PlatformDtoInterface, PersonalIdDtoInterface,
-		EmployeeCodeDtoInterface, EmployeeNameDtoInterface {
+public interface PaidHolidayDataGrantListDtoInterface
+		extends PlatformDtoInterface, PersonalIdDtoInterface, EmployeeCodeDtoInterface, EmployeeNameDtoInterface {
 	
 	/**
 	 * @return 付与日
@@ -63,22 +63,22 @@ public interface PaidHolidayDataGrantListDtoInterface extends PlatformDtoInterfa
 	/**
 	 * @return 労働日数
 	 */
-	int getWorkDays();
+	Integer getWorkDays();
 	
 	/**
 	 * @param workDays セットする 労働日数
 	 */
-	void setWorkDays(int workDays);
+	void setWorkDays(Integer workDays);
 	
 	/**
 	 * @return 全労働日数
 	 */
-	int getTotalWorkDays();
+	Integer getTotalWorkDays();
 	
 	/**
 	 * @param totalWorkDays セットする 全労働日数
 	 */
-	void setTotalWorkDays(int totalWorkDays);
+	void setTotalWorkDays(Integer totalWorkDays);
 	
 	/**
 	 * @return 出勤率
@@ -119,5 +119,25 @@ public interface PaidHolidayDataGrantListDtoInterface extends PlatformDtoInterfa
 	 * @param grantDays セットする 付与日数
 	 */
 	void setGrantDays(Double grantDays);
+	
+	/**
+	 * @return 警告
+	 */
+	boolean isWarning();
+	
+	/**
+	 * @param warning セットする 警告
+	 */
+	void setWarning(boolean warning);
+	
+	/**
+	 * @return エラー
+	 */
+	String getError();
+	
+	/**
+	 * @param error セットする エラー
+	 */
+	void setError(String error);
 	
 }

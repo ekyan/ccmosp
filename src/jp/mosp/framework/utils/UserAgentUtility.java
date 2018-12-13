@@ -65,6 +65,29 @@ public class UserAgentUtility {
 	}
 	
 	/**
+	 * UserAgentがIE11であるかを確認する。<br>
+	 * @param userAgent UserAgent
+	 * @return 確認結果(true：IE11である、false：IE11でない)
+	 */
+	public static boolean isIE11(String userAgent) {
+		Pattern pattern = Pattern.compile(".*((Trident/)+[0-9]+\\.[0-9]+\\.?[0-9]*).*");
+		Matcher matcher = pattern.matcher(userAgent);
+		// 「MSIE」が含まれる場合はIE(10以下)と判断
+		return isIE(userAgent) == false && matcher.matches();
+	}
+	
+	/**
+	 * UserAgentがEdgeであるかを確認する。<br>
+	 * @param userAgent UserAgent
+	 * @return 確認結果(true：Edgeである、false：Edgeでない)
+	 */
+	public static boolean isEdge(String userAgent) {
+		Pattern pattern = Pattern.compile(".*((Edge/)+[0-9]+\\.[0-9]+\\.?[0-9]*).*");
+		Matcher matcher = pattern.matcher(userAgent);
+		return matcher.matches();
+	}
+	
+	/**
 	 * UserAgentがFirefoxであるかを確認する。<br>
 	 * @param userAgent UserAgent
 	 * @return 確認結果(true：Firefoxである、false：Firefoxでない)
@@ -83,7 +106,8 @@ public class UserAgentUtility {
 	public static boolean isChrome(String userAgent) {
 		Pattern pattern = Pattern.compile(".*((Chrome)+/?[0-9]+\\.?[0-9]*).*");
 		Matcher matcher = pattern.matcher(userAgent);
-		return matcher.matches();
+		// 「Edge」が含まれる場合はEdgeと判断
+		return isEdge(userAgent) == false && matcher.matches();
 	}
 	
 	/**
@@ -127,13 +151,13 @@ public class UserAgentUtility {
 		}
 		// ブラウザ毎に処理
 		try {
-			// IEの場合
-			if (isIE(userAgent)) {
-				return URLEncoder.encode(fileName, "UTF-8");
+			// IEかIE11の場合
+			if (isIE(userAgent) || isIE11(userAgent) || isEdge(userAgent)) {
+				return URLEncoder.encode(fileName, MospUtility.CHARACTER_ENCODING);
 			}
-			// Firefox或いはChrome或いはSafari或いはOperaの場合
+			// FirefoxかChromeかSafariかOperaの場合
 			if (isFirefox(userAgent) || isChrome(userAgent) || isSafari(userAgent) || isOpera(userAgent)) {
-				return new String(fileName.getBytes(), "ISO-8859-1");
+				return new String(MospUtility.getBytes(fileName), "ISO-8859-1");
 			}
 		} catch (UnsupportedEncodingException e) {
 			throw new MospException(e);

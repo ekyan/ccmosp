@@ -19,6 +19,29 @@
  * 画面読込時追加処理。
  */
 function onLoadExtra(){
+	// 編集モード確認
+	if (modeCardEdit == MODE_CARD_EDIT_INSERT){
+		setReadOnly("btnDelete", true);
+	}
+	
+	
+	// 人事汎用機能参照権限の場合
+	if (jsIsReferenceDivision) {
+		// 可視設定
+		setVisibility("btnRegist", false);
+		setVisibility("btnDelete", false);
+		
+		// 確認対象要素群取得（INPUT）
+		setReadOnlyForTag(TAG_INPUT,true);
+		// 確認対象要素群取得（SELECT）
+		setReadOnlyForTag(TAG_SELECT,true);
+		// 確認対象要素群取得（TAG_TEXTAREA）
+		setReadOnlyForTag(TAG_TEXTAREA,true);
+		// 検索社員コード
+		setReadOnly("txtSearchEmployeeCode",false);
+		
+		return;
+	}	
 	// 項目長設定 
 	setMaxLength("Name250TextBox", 250);
 }

@@ -1,5 +1,19 @@
-/**
+/*
+ * MosP - Mind Open Source Project    http://www.mosp.jp/
+ * Copyright (C) MIND Co., Ltd.       http://www.e-mind.co.jp/
  * 
+ * This program is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU Affero General Public License
+ * as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package jp.mosp.setup.bean.impl;
 
@@ -41,6 +55,7 @@ import jp.mosp.framework.utils.ValidateUtility;
 import jp.mosp.platform.bean.system.UserMasterSearchBeanInterface;
 import jp.mosp.platform.constant.PlatformMessageConst;
 import jp.mosp.platform.utils.InputCheckUtility;
+import jp.mosp.platform.utils.PlatformNamingUtility;
 import jp.mosp.setup.base.ConnectionXmlManager;
 import jp.mosp.setup.base.DbSetUpException;
 import jp.mosp.setup.bean.InitialAccountCreateBeanInterface;
@@ -112,13 +127,13 @@ public class DbSetUpManagement {
 		// ポート
 		parameter.setPort(mospParams.getApplicationProperty(SetUpConst.APP_DEFAULT_PORT, 5432));
 		// postgres
-		parameter.setPostgresDb(mospParams.getApplicationProperty("PostgresDataBase"));
+		parameter.setPostgresDb(mospParams.getApplicationProperty(SetUpConst.APP_POSTGRES_DATA_BASE));
 		// スーパユーザ
-		parameter.setSuperUser(mospParams.getApplicationProperty("SuperUserName"));
+		parameter.setSuperUser(mospParams.getApplicationProperty(SetUpConst.APP_SUPER_USER_NAME));
 		// パスワード
-		parameter.setSuperPassword(mospParams.getApplicationProperty("SuperUserPassword"));
+		parameter.setSuperPassword(mospParams.getApplicationProperty(SetUpConst.APP_SUPER_USER_PASS));
 		// デフォルトユーザ名
-		parameter.setDefaultDbUser(mospParams.getApplicationProperty("DefaultDbUser"));
+		parameter.setDefaultDbUser(mospParams.getApplicationProperty(SetUpConst.APP_DEFAULT_DB_USER));
 		// 対象SQLディレクトリ
 		parameter.setDirs(mospParams.getApplicationProperties("SetUpDatabase"));
 		// デフォルトロールコード
@@ -154,10 +169,8 @@ public class DbSetUpManagement {
 			}
 			return SetUpStatus.NULL;
 		} catch (MospException e) {
-			if (manager != null) {
-				// リリース
-				manager.release();
-			}
+			// リリース
+			manager.release();
 			// 有効なユーザが存在しない場合
 			return SetUpStatus.EMPTY;
 		} finally {
@@ -263,6 +276,48 @@ public class DbSetUpManagement {
 	}
 	
 	/**
+	 * データベース及びロールを作成する。<br>
+	 * XMLの作成及び初期ユーザの登録は行わない。<br>
+	 * <br>
+	 * @throws MospException 例外処理発生
+	 */
+	public void createDataBaseAndRole() throws MospException {
+		// 必須条件
+		checkRequired();
+		// DDLリストの作成
+		SqlHolder holder = loadFiles();
+		if (mospParams.hasErrorMessage()) {
+			return;
+		}
+		SuperUserManager manager = null;
+		try {
+			// 重複確認
+			checkDuplicate();
+			if (mospParams.hasErrorMessage()) {
+				return;
+			}
+			manager = createManager(parameter);
+			// DBの生成
+			manager.create(parameter);
+			// テーブルの設定
+			prepareTable(holder);
+		} catch (MospException e) {
+			if (manager != null) {
+				// 例外発生時DBの削除をする。
+				manager.destory(parameter);
+				// リリース
+				manager.release();
+			}
+			throw e;
+		} finally {
+			if (manager != null) {
+				// リリース
+				manager.release();
+			}
+		}
+	}
+	
+	/**
 	 * XMLファイルの生成
 	 * @throws MospException XMLファイルを読み込めなかった場合
 	 */
@@ -292,10 +347,8 @@ public class DbSetUpManagement {
 			// DBの削除。
 			manager.destory(parameter);
 		} catch (MospException e) {
-			if (manager != null) {
-				// リリース
-				manager.release();
-			}
+			// リリース
+			manager.release();
 			throw e;
 		} finally {
 			if (manager != null) {
@@ -345,10 +398,8 @@ public class DbSetUpManagement {
 			// コミット
 			manager.commit();
 		} catch (MospException e) {
-			if (manager != null) {
-				// リリース
-				manager.release();
-			}
+			// リリース
+			manager.release();
 			throw e;
 		} finally {
 			if (manager != null) {
@@ -467,10 +518,8 @@ public class DbSetUpManagement {
 			}
 			throw new MospException(e.getCause());
 		} catch (MospException e) {
-			if (manager != null) {
-				// リリース
-				manager.release();
-			}
+			// リリース
+			manager.release();
 			throw new MospException(e.getCause());
 		} finally {
 			if (manager != null) {
@@ -498,24 +547,24 @@ public class DbSetUpManagement {
 	protected void checkRequired() {
 		// サーバー名
 		String[] repServerName = { mospParams.getName("Server") };
-		InputCheckUtility.checkRequired(parameter.getServerName(), repServerName, mospParams);
+		InputCheckUtility.checkRequired(mospParams, parameter.getServerName(), repServerName);
 		// スーパユーザパスワード
 		String[] repSuperUserPassword = { mospParams.getName("PosgrePass") };
-		InputCheckUtility.checkRequired(parameter.getSuperPassword(), repSuperUserPassword, mospParams);
+		InputCheckUtility.checkRequired(mospParams, parameter.getSuperPassword(), repSuperUserPassword);
 		// DB名
 		String[] repDbName = { mospParams.getName("DbName") };
-		InputCheckUtility.checkRequired(parameter.getDbName(), repDbName, mospParams);
+		InputCheckUtility.checkRequired(mospParams, parameter.getDbName(), repDbName);
 		// ユーザ名(ロール名)
 		String[] repUserName = { mospParams.getName("RoleName") };
 		String userName = parameter.getUserName();
-		InputCheckUtility.checkRequired(userName, repUserName, mospParams);
+		InputCheckUtility.checkRequired(mospParams, userName, repUserName);
 		if ("user".equals(userName) || "role".equals(userName)) {
 			// userやroleは使えない為。
 			mospParams.addErrorMessage(SetUpConst.MSG_INPUT_ROLE);
 		}
 		// パスワード
 		String[] repUserPassword = { mospParams.getName("RolePass") };
-		InputCheckUtility.checkRequired(parameter.getUserPassword(), repUserPassword, mospParams);
+		InputCheckUtility.checkRequired(mospParams, parameter.getUserPassword(), repUserPassword);
 		
 		// SQLインジェクション対策
 		checkSQLInjection();
@@ -557,22 +606,22 @@ public class DbSetUpManagement {
 	protected void checkLength() {
 		// ユーザID
 		String userId = mospParams.getName("MospLoginUser");
-		InputCheckUtility.checkLength(parameter.getUserId(), 50, userId, mospParams);
+		InputCheckUtility.checkLength(mospParams, parameter.getUserId(), 50, userId);
 		// 社員コード
-		String employeeCode = mospParams.getName("Employee", "Code");
-		InputCheckUtility.checkLength(parameter.getEmployeeCode(), 10, employeeCode, mospParams);
+		String employeeCode = PlatformNamingUtility.employeeCode(mospParams);
+		InputCheckUtility.checkLength(mospParams, parameter.getEmployeeCode(), 10, employeeCode);
 		// 姓
 		String lastName = mospParams.getName("LastName");
-		InputCheckUtility.checkLength(parameter.getLastName(), 50, lastName, mospParams);
+		InputCheckUtility.checkLength(mospParams, parameter.getLastName(), 50, lastName);
 		// 名
 		String firstName = mospParams.getName("FirstName");
-		InputCheckUtility.checkLength(parameter.getFirstName(), 50, firstName, mospParams);
+		InputCheckUtility.checkLength(mospParams, parameter.getFirstName(), 50, firstName);
 		// カナ姓
 		String lastKana = mospParams.getName("LastName", "FrontParentheses", "Kana", "BackParentheses");
-		InputCheckUtility.checkLength(parameter.getLastKana(), 50, lastKana, mospParams);
+		InputCheckUtility.checkLength(mospParams, parameter.getLastKana(), 50, lastKana);
 		// カナ名
 		String firstKana = mospParams.getName("FirstName", "FrontParentheses", "Kana", "BackParentheses");
-		InputCheckUtility.checkLength(parameter.getFirstKana(), 50, firstKana, mospParams);
+		InputCheckUtility.checkLength(mospParams, parameter.getFirstKana(), 50, firstKana);
 	}
 	
 	/**
@@ -587,8 +636,8 @@ public class DbSetUpManagement {
 			mospParams.addErrorMessage(PlatformMessageConst.MSG_ALP_SIGN_NUM_CHECK_AMP, repUserId);
 		}
 		// 社員コード
-		String[] repEmployeeCode = { mospParams.getName("Employee", "Code") };
-		InputCheckUtility.checkCode(parameter.getEmployeeCode(), repEmployeeCode, mospParams);
+		String[] repEmployeeCode = { PlatformNamingUtility.employeeCode(mospParams) };
+		InputCheckUtility.checkCode(mospParams, parameter.getEmployeeCode(), repEmployeeCode);
 	}
 	
 	/**
@@ -606,7 +655,9 @@ public class DbSetUpManagement {
 				dirList.add(child);
 			}
 		}
+		// SQLファイルリストを準備
 		List<String> queryList = new LinkedList<String>();
+		// GRANTファイルリストを準備
 		List<String> grantList = new LinkedList<String>();
 		for (File dir : dirList) {
 			// SQLファイル
@@ -626,8 +677,11 @@ public class DbSetUpManagement {
 					return Pattern.matches(".*" + "\\" + SetUpConst.SUFFIX_SQL_FILE + "$", name);
 				}
 			});
-			
-			queryList.addAll(parse(sqlFiles));
+			// SQLファイル配列が取得できた場合
+			if (sqlFiles != null) {
+				// SQLファイルリストに追加
+				queryList.addAll(parse(sqlFiles));
+			}
 			// GRANTファイル
 			File[] grantFiles = dir.listFiles(new FilenameFilter() {
 				
@@ -645,7 +699,11 @@ public class DbSetUpManagement {
 					return false;
 				}
 			});
-			grantList.addAll(parse(grantFiles));
+			// GRANTファイル配列が取得できた場合
+			if (grantFiles != null) {
+				// GRANTファイルリストに追加
+				grantList.addAll(parse(grantFiles));
+			}
 		}
 		return new SqlHolder(queryList, grantList);
 	}
@@ -706,8 +764,8 @@ public class DbSetUpManagement {
 	 * @throws MospException XMLファイルを読み込めなかった場合
 	 */
 	protected void loadConnectionXml() throws MospException {
-		Map<String, String> map = ConnectionXmlManager.load(new File(mospParams
-			.getApplicationProperty(MospConst.APP_DOCBASE), SetUpConst.PATH_XML_FILE));
+		Map<String, String> map = ConnectionXmlManager
+			.load(new File(mospParams.getApplicationProperty(MospConst.APP_DOCBASE), SetUpConst.PATH_XML_FILE));
 		mospParams.getProperties().setApplicationProperty(DBConnBean.APP_DB_URL, map.get(DBConnBean.APP_DB_URL));
 		mospParams.getProperties().setApplicationProperty(DBConnBean.APP_DB_USER, map.get(DBConnBean.APP_DB_USER));
 		mospParams.getProperties().setApplicationProperty(DBConnBean.APP_DB_PASS, map.get(DBConnBean.APP_DB_PASS));
@@ -738,7 +796,7 @@ public class DbSetUpManagement {
 	 * @throws MospException Beanインスタンスの生成及び初期化に失敗した場合
 	 */
 	@SuppressWarnings("unchecked")
-	protected <T>T loadBean(Class<T> cls, Connection connection) throws MospException {
+	protected <T> T loadBean(Class<T> cls, Connection connection) throws MospException {
 		return (T)InstanceFactory.loadBean(cls, mospParams, connection);
 	}
 	
@@ -808,7 +866,9 @@ public class DbSetUpManagement {
 			e.printStackTrace();
 		} finally {
 			try {
-				reader.close();
+				if (reader != null) {
+					reader.close();
+				}
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -897,7 +957,7 @@ public class DbSetUpManagement {
 		
 		/**
 		 * {@link Connection#setAutoCommit(boolean)}
-		 * @param autoCommit 自動コミットモードを有効にする場合は true、無効にする場合は false 
+		 * @param autoCommit 自動コミットモードを有効にする場合は true、無効にする場合は false
 		 */
 		public void setAutoCommit(boolean autoCommit) {
 			if (connection == null) {

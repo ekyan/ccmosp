@@ -239,6 +239,14 @@ public class MospProperties {
 	}
 	
 	/**
+	 * コード設定情報群を取得する。
+	 * @return コード設定情報群
+	 */
+	public Map<String, CodeProperty> getCodeProperty() {
+		return codeProperties;
+	}
+	
+	/**
 	 * 文言を取得する。
 	 * @param key 対象キー
 	 * @return 文言

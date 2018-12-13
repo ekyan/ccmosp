@@ -149,7 +149,8 @@ public class PortalMessageBean extends PortalBean implements PortalBeanInterface
 	 */
 	protected List<MessageDtoInterface> getMessageList() throws MospException {
 		// メッセージ参照クラス準備
-		MessageReferenceBeanInterface message = (MessageReferenceBeanInterface)createBean(MessageReferenceBeanInterface.class);
+		MessageReferenceBeanInterface message = (MessageReferenceBeanInterface)createBean(
+				MessageReferenceBeanInterface.class);
 		// メッセージ取得(ログインユーザの個人ID及びシステム日付)
 		List<MessageDtoInterface> list = message.getMessageList(mospParams.getUser().getPersonalId(), getSystemDate());
 		// ポータルメッセージ比較クラス毎にソート

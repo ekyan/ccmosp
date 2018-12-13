@@ -183,9 +183,9 @@ public class UserExportBean extends PlatformBean implements UserExportBeanInterf
 	 * @param positionCode           職位コード
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
-	protected void searchHumanData(List<String[]> csvDataList, List<ExportFieldDtoInterface> fieldList,
-			Date targetDate, String workPlaceCode, String employmentContractCode, String sectionCode,
-			String positionCode) throws MospException {
+	protected void searchHumanData(List<String[]> csvDataList, List<ExportFieldDtoInterface> fieldList, Date targetDate,
+			String workPlaceCode, String employmentContractCode, String sectionCode, String positionCode)
+			throws MospException {
 		// 人事情報検索条件設定
 		humanSearch.setTargetDate(targetDate);
 		humanSearch.setWorkPlaceCode(workPlaceCode);
@@ -277,8 +277,8 @@ public class UserExportBean extends PlatformBean implements UserExportBeanInterf
 							targetDate);
 				}
 				if (sectionDisplayIndex != null) {
-					csvData[sectionDisplayIndex.intValue()] = sectionReference.getSectionDisplay(
-							human.getSectionCode(), targetDate);
+					csvData[sectionDisplayIndex.intValue()] = sectionReference.getSectionDisplay(human.getSectionCode(),
+							targetDate);
 				}
 				// CSVデータをCSVデータリストに追加
 				csvDataList.add(csvData);

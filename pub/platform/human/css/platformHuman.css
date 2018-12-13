@@ -88,6 +88,16 @@
 	border: 1px solid #003366;
 	vertical-align: middle;
 }
+/**
+ * 名称_20(必須)
+ */
+.Name20RequiredTextBox {
+	width: 300px;
+	height: 16px;
+	ime-mode: active;
+	border: 1px solid #003366;
+	vertical-align: middle;
+}
 
 /**
  * 名称25-50桁テキストボックス
@@ -96,17 +106,6 @@
 	width: 355px;
 	height: 16px;
 	ime-mode: active;
-	border: 1px solid #003366;
-	vertical-align: middle;
-}
-
-/**
- * メールアドレス用テキストボックス
- */
-.MailAddressTextBox {
-	width: 300px;
-	height: 16px;
-	ime-mode: disabled;
 	border: 1px solid #003366;
 	vertical-align: middle;
 }

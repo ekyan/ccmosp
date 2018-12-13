@@ -37,6 +37,11 @@ var MSG_EDIT_ANNULMENT = "PFQ1003";
 var MSG_REPLICATION_CONFIRMATION = "PFQ1004";
 
 /**
+ * 編集確認時のメッセージコード。<br>
+ */
+var MSG_EDIT_CONFIRMATION = "PFQ1007";
+
+/**
  * MosP内容領域要素ID。
  */
 var DIV_BODY = "divBody";
@@ -61,6 +66,15 @@ var MSG_ALP_SIGN_NUM_CHECK_ERROR = "PFW0124";
  */
 var MSG_ALP_SIGN_NUM_CHECK_ERROR_AMP = "PFW0125";
 
+/**
+ * メールアドレスの形式不正チェックエラーメッセージ。
+ */
+var MSG_MAIL_ADDRESS_CHECK_ERROR = "PFW0131";
+
+/**
+ * パスワード文字種の妥当性が確認できなかった場合のメッセージコード。
+ */
+var MSG_CHAR_PASSWORD_ERR = "PFW9116";
 
 /**
  * メニュー配列。
@@ -99,6 +113,30 @@ var ARY_FORM_VALUE_DEFAULT = new Array();
  */
 var COLOR_MAINMENU_REVERS = "lightgrey";
 
+/**
+ * イベント種別(keydown)。
+ */
+var EVENT_TYPE_KEYDOWN = "keydown";
+
+/**
+ * キーコード(Backspace)。
+ */
+var KEY_CODE_BACK_SPACE = 8;
+
+/**
+ * キーコード(←)。
+ */
+var KEY_CODE_LEFT = 37;
+
+/**
+ * キーコード(F5)。
+ */
+var KEY_CODE_F5 = 116;
+
+/**
+ * 画面読込時追加処理配列。
+ */
+var aryOnLoad = new Array();
 
 /**
  * 画面読込イベントハンドラ。
@@ -106,19 +144,28 @@ var COLOR_MAINMENU_REVERS = "lightgrey";
  */
 function onLoad(e) {
 	try {
+		// キーダウンイベントを追加
+		if (window.document.addEventListener) {
+			window.document.addEventListener(EVENT_TYPE_KEYDOWN, keyDown);
+		} else if (window.document.attachEvent) {
+			window.document.attachEvent("onkeydown", keyDown);
+		}
 		// 一覧背景色設定
-		// TODO 検討
 		setTableColor("list");
-		// 項目長設定 
+		// 項目長設定
 		setMaxLength("CompanyCodeRequiredTextBox", 50);
 		setMaxLength("LoginIdTextBox", 50);
 		setMaxLength("LoginPassTextBox", 50);
+		setMaxLength("PassChangeUserIdTextBox", 50);
+		setMaxLength("PassChangeMailAddressTextBox", 50);
 		setMaxLength("UserId50RequiredTextBox", 50);
 		setMaxLength("UserId50TextBox", 50);
 		setMaxLength("Code2RequiredTextBox", 2);
 		setMaxLength("Code2TextBox", 2);
 		setMaxLength("Code10RequiredTextBox", 10);
 		setMaxLength("Code10TextBox", 10);
+		setMaxLength("Code11RequiredTextBox", 11);
+		setMaxLength("Code11TextBox", 11);
 		setMaxLength("Code50RequiredTextBox", 50);
 		setMaxLength("Code50TextBox", 50);
 		setMaxLength("Name3RequiredTextBox", 3);
@@ -127,12 +174,18 @@ function onLoad(e) {
 		setMaxLength("Name5TextBox", 5);
 		setMaxLength("Name6RequiredTextBox", 6);
 		setMaxLength("Name6TextBox", 6);
+		setMaxLength("Name7TextBox", 7);
+		setMaxLength("Name8TextBox", 8);
+		setMaxLength("Name11RequiredTextBox", 11);
+		setMaxLength("Name11TextBox", 11);
+
 		setMaxLength("Name10RequiredTextBox", 10);
 		setMaxLength("Name10TextBox", 10);
-		setMaxLength("Name10-30TextBox", 30);
 		setMaxLength("Name10-30RequiredTextBox", 30);
+		setMaxLength("Name10-30TextBox", 30);
 		setMaxLength("Name12RequiredTextBox", 12);
 		setMaxLength("Name12TextBox", 12);
+		setMaxLength("Name14TextBox", 14);
 		setMaxLength("Name15RequiredTextBox", 15);
 		setMaxLength("Name15TextBox", 15);
 		setMaxLength("Name16RequiredTextBox", 16);
@@ -142,10 +195,12 @@ function onLoad(e) {
 		setMaxLength("Name15-40RequiredTextBox", 40);
 		setMaxLength("Name15-40TextBox", 40);
 		setMaxLength("Name10-50TextBox", 50);
-		setMaxLength("Name21-50TextBox", 50);
+		setMaxLength("Name20RequiredTextBox", 20);
+		setMaxLength("Name20TextBox", 20);
 		setMaxLength("Name21-50RequiredTextBox", 50);
-		setMaxLength("Name25-50TextBox", 50);
+		setMaxLength("Name21-50TextBox", 50);
 		setMaxLength("Name25-50RequiredTextBox", 50);
+		setMaxLength("Name25-50TextBox", 50);
 		setMaxLength("Name25RequiredTextBox", 25);
 		setMaxLength("Name25TextBox", 25);
 		setMaxLength("Name30RequiredTextBox", 30);
@@ -154,7 +209,10 @@ function onLoad(e) {
 		setMaxLength("Name33RequiredTextBox", 33);
 		setMaxLength("Name40RequiredTextBox", 40);
 		setMaxLength("Name40TextBox", 40);
+		setMaxLength("Name50RequiredTextBox", 50);
 		setMaxLength("Name50TextBox", 50);
+		setMaxLength("Name60RequiredTextBox", 60);
+		setMaxLength("Name60TextBox", 60);
 		setMaxLength("Name64TextBox", 64);
 		setMaxLength("CodeCsvTextBox", 2000);
 		setMaxLength("Kana10RequiredTextBox", 10);
@@ -163,16 +221,34 @@ function onLoad(e) {
 		setMaxLength("Kana15TextBox", 15);
 		setMaxLength("Byte6RequiredTextBox", 6);
 		setMaxLength("Byte6TextBox", 6);
+		setMaxLength("Number1RequiredTextBox", 1);
+		setMaxLength("Number1TextBox", 1);
 		setMaxLength("Number2RequiredTextBox", 2);
 		setMaxLength("Number2TextBox", 2);
 		setMaxLength("Number3RequiredTextBox", 3);
 		setMaxLength("Number3TextBox", 3);
 		setMaxLength("Number4RequiredTextBox", 4);
 		setMaxLength("Number4TextBox", 4);
+		setMaxLength("Number5RequiredTextBox", 5);
 		setMaxLength("Number5TextBox", 5);
+		setMaxLength("Number6RequiredTextBox", 6);
+		setMaxLength("Number6TextBox", 6);
+		setMaxLength("Number7RequiredTextBox", 7);
+		setMaxLength("Number8RequiredTextBox", 8);
+		setMaxLength("Number8TextBox", 8);
+		setMaxLength("Number9TextBox", 9);
+		setMaxLength("Number10TextBox", 10);
 		setMaxLength("Numeric4RequiredTextBox", 4);
+		setMaxLength("Numeric5TextBox", 5);
 		setMaxLength("ImeOff6TextBox", 6);
 		setMaxLength("Name120TextArea", 120);
+		setMaxLength("MailAddressTextBox", 60);
+		setMaxLength("Calendar4RequiredTextBox", 4);
+		setMaxLength("Calendar7RequiredTextBox", 7);
+		setMaxLength("Calendar10RequiredTextBox", 10);
+		setMaxLength("Calendar4TextBox", 4);
+		setMaxLength("Calendar7TextBox", 7);
+		setMaxLength("Calendar10TextBox", 10);
 		// フィールドにイベントを設定
 		setFieldsEvent(DIV_BODY);
 		// メニュー設定
@@ -183,8 +259,12 @@ function onLoad(e) {
 		}
 		// 画面読込時モジュール追加処理
 		onLoadModuleExtra();
-		// 画面読込時追加処理
+		// 画面読込時処理
 		onLoadExtra();
+		// 画面読込時追加処理
+		onLoadAddonExtra();
+		// 画面読込時追加処理(配列)
+		onLoadArray();
 		// 問合フラグ戻し
 		inquiring = false;
 	} catch (e) {
@@ -198,9 +278,89 @@ function onLoad(e) {
 function onLoadModuleExtra(){}
 
 /**
- * 画面読込時追加処理。
+ * 画面読込時処理。
  */
 function onLoadExtra(){}
+
+/**
+ * 画面読込時追加処理。
+ */
+function onLoadAddonExtra(){}
+
+/**
+ * 画面読込時追加処理(配列)。
+ */
+function onLoadArray() {
+	// 画面読込時追加処理(配列)長を取得
+	var aryLength = aryOnLoad.length;
+	// 画面読込時追加処理(配列)毎に処理
+	for (var i = 0; i < aryLength; i++) {
+		// 画面読込時追加処理を取得
+		var onLoadFunction = aryOnLoad[i];
+		// 画面読込時追加処理を実施
+		onLoadFunction();
+	}
+}
+
+/**
+ * キー押下イベントハンドラ。
+ * @param e キー押下イベント
+ */
+function keyDown(e) {
+	// Backspaceが押された場合
+	if (e.keyCode == KEY_CODE_BACK_SPACE) {
+		// 押された際にフォーカスのあったオブジェクトを取得
+		var objTarget = getSrcElement(e);
+		// オブジェクトのタグ名を取得
+		var nodeName = objTarget.nodeName;
+		// タグ名がINPUTの場合
+		if (nodeName == TAG_INPUT) {
+			// タイプを取得
+			var type = objTarget.type;
+			// テキストボックスかパスワードの場合
+			if (type == INPUT_TYPE_TEXT || type == INPUT_TYPE_PASSWORD) {
+				// 処理無し(Backspaceは有効)
+				return;
+			}
+		}
+		// タグ名がTEXTAREAの場合
+		if (nodeName == TAG_TEXTAREA) {
+			// 処理無し(Backspaceは有効)
+			return;
+		}
+		// イベントのデフォルトアクションをキャンセル
+		priventEventDefault(e);
+	}
+	// ←が押された場合
+	if (e.keyCode == KEY_CODE_LEFT) {
+		// ALTキーが押されている場合
+		if (e.altKey) {
+			// イベントのデフォルトアクションをキャンセル
+			priventEventDefault(e);
+		}
+	}
+	// F5が押された場合
+	if (e.keyCode == KEY_CODE_F5) {
+		// イベントのデフォルトアクションをキャンセル
+		priventEventDefault(e);
+		e.keyCode = null;
+	}
+}
+
+/**
+ * イベントのデフォルトアクションをキャンセルする。<br>
+ * @param e イベント
+ */
+function priventEventDefault(e) {
+	// preventDefaultが使える場合
+	if (e.preventDefault) {
+		// preventDefaultでイベントのデフォルトアクションをキャンセル
+		e.preventDefault();
+		return;
+	}
+	// イベントのデフォルトアクションをキャンセル
+	e.returnValue = false;
+}
 
 /**
  * 変更箇所チェックを行った後、パラメータを付加して、リクエストを送信する。<br>
@@ -272,6 +432,35 @@ function submitRegist(event, validateTarget, objExtraCheck, cmd) {
 			// リクエスト送信
 			doSubmit(document.form, cmd);
 		}
+	}
+}
+
+/**
+ * 入力チェックを行った後、更新系確認メッセージを出し、リクエストを送信する。<br>
+ * データ登録、更新時等に用いる。<br>
+ * @param event          イベントオブジェクト
+ * @param validateTarget 入力チェック対象(null：チェックを行わない、""：全体をチェック)
+ * @param objExtraCheck  追加チェック関数オブジェクト(null：追加チェック無し)
+ * @param objExtraFunc   追加処理関数オブジェクト(null：追加処理無し)
+ * @param cmd            コマンド
+ * @return 無し
+ */
+function submitRegistExtra(event, validateTarget, objExtraCheck, objExtraFunc, cmd) {
+	// 入力チェック
+	if (!validate(validateTarget, objExtraCheck, event)) {
+		return;
+	}
+	// 追加処理確認
+	if (objExtraFunc != null) {
+		// 追加処理実施
+		if (objExtraFunc(event) == false) {
+			return;
+		}
+	}
+	// 更新系確認メッセージ
+	if (confirm(getMessage(MSG_REGIST_CONFIRMATION, trimAll(getInnerHtml(getSrcElement(event)))))) {
+		// リクエスト送信
+		doSubmit(document.form, cmd);
 	}
 }
 
@@ -393,7 +582,7 @@ function inputCheck(target, aryMessage) {
 	var objTarget = getObject(target);
 	// 対象範囲確認
 	if (objTarget == null) {
-		return 
+		return
 	}
 	// テキストボックス前後空白除去
 	trimTextValue(objTarget);
@@ -420,13 +609,19 @@ function inputCheckForClass(target, aryMessage) {
 	// クラスによる入力チェック
 	for (var i = 0; i < elementsLength; i++) {
 		switch (elements.item(i).className) {
-		case "LoginIdTextBox":
 		case "CompanyCodeRequiredTextBox":
+		case "LoginIdTextBox":
 			checkRequired(elements.item(i), aryMessage);
 			checkUserId(elements.item(i), aryMessage);
 			break;
 		case "LoginPassTextBox":
 			checkRequired(elements.item(i), aryMessage);
+			break;
+		case "PassChangeUserIdTextBox":
+			checkUserId(elements.item(i), aryMessage);
+			break;
+		case "PassChangeMailAddressTextBox":
+			checkMailAddress(elements.item(i), aryMessage);
 			break;
 		case "UserId50RequiredTextBox":
 			checkRequired(elements.item(i), aryMessage);
@@ -435,10 +630,12 @@ function inputCheckForClass(target, aryMessage) {
 			break;
 		case "Code2RequiredTextBox":
 		case "Code10RequiredTextBox":
+		case "Code11RequiredTextBox":
 		case "Code50RequiredTextBox":
 			checkRequired(elements.item(i), aryMessage);
 		case "Code2TextBox":
 		case "Code10TextBox":
+		case "Code11TextBox":
 		case "Code50TextBox":
 			checkCode(elements.item(i), aryMessage);
 			break;
@@ -446,8 +643,10 @@ function inputCheckForClass(target, aryMessage) {
 		case "Name5RequiredTextBox":
 		case "Name6RequiredTextBox":
 		case "Name10RequiredTextBox":
+		case "Name11RequiredTextBox":
 		case "Name12RequiredTextBox":
 		case "Name15RequiredTextBox":
+		case "Name20RequiredTextBox":
 		case "Name25RequiredTextBox":
 		case "Name10-30RequiredTextBox":
 		case "Name15-30RequiredTextBox":
@@ -458,6 +657,8 @@ function inputCheckForClass(target, aryMessage) {
 		case "Name32RequiredTextBox":
 		case "Name33RequiredTextBox":
 		case "Name40RequiredTextBox":
+		case "Name50RequiredTextBox":
+		case "Name60RequiredTextBox":
 		case "InactiveteRequiredPullDown":
 		case "StateRequiredPullDown":
 		case "ConditionPullDown":
@@ -473,18 +674,31 @@ function inputCheckForClass(target, aryMessage) {
 			convSbKana(elements.item(i));
 			checkKana(elements.item(i), aryMessage);
 			break;
+		case "Number1RequiredTextBox":
 		case "Number2RequiredTextBox":
 		case "Number3RequiredTextBox":
 		case "Number4RequiredTextBox":
+		case "Number5RequiredTextBox":
+		case "Number6RequiredTextBox":
+		case "Number7RequiredTextBox":
+		case "Number8RequiredTextBox":
 			checkRequired(elements.item(i), aryMessage);
+		case "Number1TextBox":
 		case "Number2TextBox":
 		case "Number3TextBox":
 		case "Number4TextBox":
 		case "Number5TextBox":
+		case "Number6TextBox":
+		case "Number8TextBox":
+		case "Number9TextBox":
+		case "Number10TextBox":
 			checkNumber(elements.item(i), aryMessage);
 			break;
 		case "Numeric4RequiredTextBox":
 			checkRequired(elements.item(i), aryMessage);
+			checkNumeric(elements.item(i), aryMessage);
+			break;
+		case "Numeric5TextBox":
 			checkNumeric(elements.item(i), aryMessage);
 			break;
 		case "Byte6RequiredTextBox":
@@ -493,7 +707,26 @@ function inputCheckForClass(target, aryMessage) {
 			checkByteLength(elements.item(i), 6, aryMessage);
 			break;
 		case "Name120TextArea":
-			checkMaxLength(elements.item(i),120,aryMessage);
+			checkMaxLength(elements.item(i), 120, aryMessage);
+			break;
+		case "MailAddressTextBox":
+			checkMaxLength(elements.item(i), 60, aryMessage);
+			checkMailAddress(elements.item(i), aryMessage);
+			break;
+		case "Calendar4RequiredTextBox":
+			checkRequired(elements.item(i), aryMessage);
+		case "Calendar4TextBox":
+			checkDateYear(elements.item(i), aryMessage);
+			break;
+		case "Calendar7RequiredTextBox":
+			checkRequired(elements.item(i), aryMessage);
+		case "Calendar7TextBox":
+			checkCalendar(elements.item(i), true, aryMessage)
+			break;
+		case "Calendar10RequiredTextBox":
+			checkRequired(elements.item(i), aryMessage);
+		case "Calendar10TextBox":
+			checkCalendar(elements.item(i), false, aryMessage)
 			break;
 		default:
 			break;
@@ -502,8 +735,8 @@ function inputCheckForClass(target, aryMessage) {
 }
 
 /**
- * 文字列タイプ確認(半角英数字 + "_"、"."、"-"、"@")し、<br>
- * メッセージを出力する。
+ * 文字列タイプ確認(半角英数字 + "_"、"."、"-"、"@")し、
+ * メッセージを出力する。<br>
  * @param target     確認対象(StringあるいはObject)
  * @param aryMessage エラーメッセージ格納配列
  * @return 無し
@@ -517,9 +750,9 @@ function checkUserId(target, aryMessage) {
 		}
 		setBgColor(target, COLOR_FIELD_ERROR);
 		if (rep == "") {
-			aryMessage.push(getMessage(MSG_ALP_SIGN_NUM_CHECK_ERROR , null));
+			aryMessage.push(getMessage(MSG_ALP_SIGN_NUM_CHECK_ERROR, null));
 		} else {
-			aryMessage.push(getMessage(MSG_ALP_SIGN_NUM_CHECK_ERROR_AMP , rep));
+			aryMessage.push(getMessage(MSG_ALP_SIGN_NUM_CHECK_ERROR_AMP, rep));
 		}
 	}
 }
@@ -538,6 +771,78 @@ function checkUserIdNoMsg(target) {
 	}
 }
 
+/**
+ * 文字列タイプ確認(半角英数字 + "_"、"."、"-"、@は必須)
+ * メッセージを出力する。
+ * @param target     確認対象(StringあるいはObject)
+ * @param aryMessage エラーメッセージ格納配列
+ * @return 無し
+ * @throws 実行時例外
+ */
+function checkMailAddress(target, aryMessage) {
+	var rep = getLabel(target);
+	if (!checkMailAddressNoMsg(target)) {
+		if (aryMessage.length == 0) {
+			setFocus(target);
+		}
+		setBgColor(target, COLOR_FIELD_ERROR);
+		if (rep == "") {
+			// エラーメッセージ追加
+			aryMessage.push(getMessage(MSG_MAIL_ADDRESS_CHECK_ERROR, null));
+		} else {
+			aryMessage.push(getMessage(MSG_MAIL_ADDRESS_CHECK_ERROR, null));
+		}
+	}
+}
+
+/**
+ * 文字列タイプ確認(半角英数字+ "_"、"."、"-"、@は必須)(メッセージ無し)
+ * @param target 確認対象(StringあるいはObject)
+ * @return 確認結果(true：OK、false：NG)
+ * @throws 実行時例外
+ */
+function checkMailAddressNoMsg(target) {
+	if (getFormValue(target) == "") {
+		return true;
+	}
+	if (getFormValue(target).match(/[!#-9A-~]+@+[a-z0-9]+.+[^.]$/i)) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+/**
+ * パスワードの確認を行う。
+ * @param target     確認対象(StringあるいはObject)
+ * @param aryMessage エラーメッセージ格納配列
+ */
+function checkPassword(target, aryMessage) {
+	// 最低文字数確認
+	if (typeof(minPassword) != "undefined" && minPassword != "") {
+		checkMinLength(target, minPassword, aryMessage);
+	}
+	// 文字種確認
+	if (typeof(charPassword) != "undefined" && charPassword != "") {
+		checkCharPassword(target, charPassword, aryMessage);
+	}
+}
+
+/**
+ * 文字形式の確認(パスワード用)を行う。
+ * @param target 確認対象(StringあるいはObject)
+ * @param reg    正規表現
+ * @param aryMessage メッセージ配列
+ */
+function checkCharPassword(target, reg, aryMessage) {
+	if (!checkRegexNoMsg(target, reg)) {
+		if (aryMessage.length == 0) {
+			setFocus(target);
+		}
+		setBgColor(target, COLOR_FIELD_ERROR);
+		aryMessage.push(getMessage(MSG_CHAR_PASSWORD_ERR , ""));
+	}
+}
 
 /**
  * 追加クラスによる入力チェックを行う。<br>
@@ -638,7 +943,16 @@ function resetFieldsBgColor(target) {
 	var inputElementsLength = inputElements.length;
 	// 背景色リセット
 	for (var i = 0; i < inputElementsLength; i++) {
+		// type="text"でない場合
 		if (inputElements.item(i).type != INPUT_TYPE_TEXT) {
+			continue;
+		}
+		// idが設定されていない場合
+		if (inputElements.item(i).id == "") {
+			continue;
+		}
+		// disabledである場合
+		if (inputElements.item(i).disabled) {
 			continue;
 		}
 		// 背景色変更
@@ -653,6 +967,14 @@ function resetFieldsBgColor(target) {
 	var textareaElementsLength = textareaElements.length;
 	// 背景色リセット
 	for (var i = 0; i < textareaElementsLength; i++) {
+		// idが設定されていない場合
+		if (textareaElements.item(i).id == "") {
+			continue;
+		}
+		// disabledである場合
+		if (textareaElements.item(i).disabled) {
+			continue;
+		}
 		// 背景色変更
 		if (ARY_FORM_VALUE_DEFAULT[textareaElements.item(i).id] != getFormValue(textareaElements.item(i))) {
 			setBgColor(textareaElements.item(i), COLOR_FIELD_CHANGE);
@@ -665,6 +987,10 @@ function resetFieldsBgColor(target) {
 	var selectElementsLength = selectElements.length;
 	// 背景色リセット
 	for (var i = 0; i < selectElementsLength; i++) {
+		// idが設定されていない場合
+		if (selectElements.item(i).id == "") {
+			continue;
+		}
 		// 背景色変更
 		if (ARY_FORM_VALUE_DEFAULT[selectElements.item(i).id] != getFormValue(selectElements.item(i))) {
 			setBgColor(selectElements.item(i), COLOR_FIELD_CHANGE);
@@ -768,6 +1094,16 @@ function setFieldsEvent(target) {
  */
 function confirmReplicationMode(event) {
 	return confirm(getMessage(MSG_REPLICATION_CONFIRMATION, null));
+}
+
+/**
+ * 編集モード遷移時の確認を行う。
+ * @param event イベントオブジェクト
+ * @param rep   変換文字列
+ * @return 編集モード遷移可否
+ */
+function confirmEditMode(event, rep) {
+	return confirm(getMessage(MSG_EDIT_CONFIRMATION, rep));
 }
 
 /**
@@ -895,7 +1231,8 @@ function getMainMenuArray() {
 	}
 	// 配列に変換(最終列は含めない)
 	var aryMainMenu = new Array(objNodeList.length - 1);
-	for (var i = 0; i < objNodeList.length - 1; i++) {
+	var objNodeListLength = objNodeList.length - 1;
+	for (var i = 0; i < objNodeListLength; i++) {
 		aryMainMenu[i] = objNodeList.item(i);
 	}
 	return aryMainMenu;
@@ -1141,7 +1478,7 @@ function scrollToTarget(target) {
 		return;
 	}
 	// スクロール
-	window.scrollTo(0, objTarget.offsetTop);
+	objTarget.scrollIntoView();
 }
 
 /**
@@ -1159,6 +1496,22 @@ function doAllBoxChecked(obj) {
 }
 
 /**
+ * チェックボックス(ラジオボタン)の一括解除を行う。<br>
+ * @param name 対象チェックボックス(ラジオボタン)名
+ */
+function removeAllChecks(name) {
+	// チェックボックス(ラジオボタン)要素を取得
+	var elements = document.getElementsByName(name);
+	// 要素長を取得
+	var elementsLength = elements.length;
+	// 要素毎に処理
+	for (i = 0; i < elementsLength; i++) {
+		// チェックを解除
+		checkableCheck(elements[i], false);
+	}
+}
+
+/**
  * クラスに対してフィールド長を設定する。
  * @param className 設定対象クラス名
  * @param numLength フィールド長
@@ -1168,5 +1521,83 @@ function setMaxLength(className, numLength) {
 	var elementsLength = elements.length;
 	for (var i = 0; i < elementsLength; i++) {
 		setMaxLengthNumber(elements[i], numLength);
+	}
+}
+
+/**
+ * ノード内の日付チェックを行う。<br>
+ * 日付は、idで判断する。<br>
+ * 〇〇Yearが存在した場合、〇〇Monthを検索する。<br>
+ * 全て存在しており、一つでも入力されていたら日付の妥当性確認を行う。<br>
+ * @param aryMessage メッセージ配列
+ * @param target     確認対象(StringあるいはObject)
+ */
+function checkDatesYearMonth(aryMessage, event) {
+	// 検索対象文字列宣言
+	var YEAR_NAME  = "Year";
+	var MONTH_NAME = "Month";
+	// INPUT要素群取得
+	objTarget = document.form;
+	var inputNodeList = objTarget.getElementsByTagName("input");
+	var inputNodeListLength = inputNodeList.length;
+	for (var i = 0; i < inputNodeListLength; i++) {
+		// 要素取得
+		var element = inputNodeList.item(i);
+		var elementName = new String(element.name);
+		// 要素name確認
+		if (elementName.lastIndexOf(YEAR_NAME) != elementName.length - YEAR_NAME.length) {
+			continue;
+		}
+		// 月name作成
+		var monthName = elementName.replace(YEAR_NAME, MONTH_NAME);
+		// 月要素準備
+		var monthElement = document.getElementById(monthName);
+		// 月要素確認
+		if (monthElement == null) {
+			continue;
+		}
+		// 入力確認
+		if (getFormValue(element) == "" && getFormValue(monthElement) == "" ) {
+			continue;
+		}
+		// 日付チェック
+		return checkDateYearMonth(element, monthElement, aryMessage);
+	}
+}
+
+
+/**
+ * 年月のチェックを行う。<br>
+ * 必須確認及び数値確認は、共通チェックで行うため、ここでは行わない。<br>
+ * @param targetYear  確認対象年(StringあるいはObject)
+ * @param targetMonth 確認対象月(StringあるいはObject)
+ * @param aryMessage  エラーメッセージ格納配列
+ * @return 無し
+ */
+function checkDateYearMonth(targetYear, targetMonth, aryMessage) {
+	// 範囲宣言
+	var MIN_YEAR  = 1000;
+	var MIN_MONTH = 1;
+	var MAX_MONTH = 12;
+	// 年月を取得
+	var year  = getFormValue(targetYear );
+	var month = getFormValue(targetMonth);
+	// 年確認
+	if (year < MIN_YEAR) {
+		if (aryMessage.length == 0) {
+			setFocus(targetYear);
+		}
+		setBgColor(targetYear, COLOR_FIELD_ERROR);
+		aryMessage.push(getMessage(MSG_YEAR_CHECK_ERROR, MIN_YEAR));
+		return false;
+	}
+	// 月確認
+	if (month < MIN_MONTH || month > MAX_MONTH) {
+		if (aryMessage.length == 0) {
+			setFocus(targetMonth);
+		}
+		setBgColor(targetMonth, COLOR_FIELD_ERROR);
+		aryMessage.push(getMessage(MSG_MONTH_CHECK_ERROR, null));
+		return false;
 	}
 }

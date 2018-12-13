@@ -27,6 +27,7 @@ import jp.mosp.platform.bean.portal.PortalBeanInterface;
 import jp.mosp.platform.bean.portal.impl.PortalBean;
 import jp.mosp.time.bean.AttendanceListReferenceBeanInterface;
 import jp.mosp.time.dto.settings.impl.AttendanceListDto;
+import jp.mosp.time.utils.TimeUtility;
 
 /**
  * ポータル用勤怠一覧クラス。<br>
@@ -36,107 +37,117 @@ public class PortalAttendanceListBean extends PortalBean implements PortalBeanIn
 	/**
 	 * パス(ポータル用メッセージJSP)。
 	 */
-	protected static final String			PATH_PORTAL_VIEW						= "/jsp/time/portal/portalAttendanceList.jsp";
+	protected static final String					PATH_PORTAL_VIEW						= "/jsp/time/portal/portalAttendanceList.jsp";
 	
 	/**
 	 * ポータルパラメータキー(勤怠一覧)(画面遷移用日付)。
 	 */
-	public static final String				PRM_ATTENDANCE_LIST_DATE				= "attendanceListDate";
+	public static final String						PRM_ATTENDANCE_LIST_DATE				= "attendanceListDate";
 	
 	/**
 	 * ポータルパラメータキー(勤怠一覧)(日)。
 	 */
-	public static final String				PRM_ATTENDANCE_LIST_WORK_DATE			= "attendanceListWorkDate";
+	public static final String						PRM_ATTENDANCE_LIST_WORK_DATE			= "attendanceListWorkDate";
 	
 	/**
 	 * ポータルパラメータキー(勤怠一覧)(曜日)。
 	 */
-	public static final String				PRM_ATTENDANCE_LIST_WEEK				= "attendanceListWeek";
+	public static final String						PRM_ATTENDANCE_LIST_WEEK				= "attendanceListWeek";
 	
 	/**
 	 * ポータルパラメータキー(勤怠一覧)(曜日スタイル)。
 	 */
-	public static final String				PRM_ATTENDANCE_LIST_WEEK_STYLE			= "attendanceListWeekStyle";
+	public static final String						PRM_ATTENDANCE_LIST_WEEK_STYLE			= "attendanceListWeekStyle";
 	
 	/**
 	 * ポータルパラメータキー(勤怠一覧)(形態)。
 	 */
-	public static final String				PRM_ATTENDANCE_LIST_WORK_TYPE			= "attendanceListWorkType";
+	public static final String						PRM_ATTENDANCE_LIST_WORK_TYPE			= "attendanceListWorkType";
 	
 	/**
 	 * ポータルパラメータキー(勤怠一覧)(始業)。
 	 */
-	public static final String				PRM_ATTENDANCE_LIST_START_TIME			= "attendanceListStartTime";
+	public static final String						PRM_ATTENDANCE_LIST_START_TIME			= "attendanceListStartTime";
+	
+	/**
+	 * ポータルパラメータキー(勤怠一覧)(始業配色)。
+	 */
+	public static final String						PRM_ATTENDANCE_LIST_START_TIME_STYLE	= "attendanceListStartTimeStyle";
 	
 	/**
 	 * ポータルパラメータキー(勤怠一覧)(終業)。
 	 */
-	public static final String				PRM_ATTENDANCE_LIST_END_TIME			= "attendanceListEndTime";
+	public static final String						PRM_ATTENDANCE_LIST_END_TIME			= "attendanceListEndTime";
+	
+	/**
+	 * ポータルパラメータキー(勤怠一覧)(終業配色)。
+	 */
+	public static final String						PRM_ATTENDANCE_LIST_END_TIME_STYLE		= "attendanceListEndTimeStyle";
 	
 	/**
 	 * ポータルパラメータキー(勤怠一覧)(勤時)。
 	 */
-	public static final String				PRM_ATTENDANCE_LIST_WORK_TIME			= "attendanceListWorkTime";
+	public static final String						PRM_ATTENDANCE_LIST_WORK_TIME			= "attendanceListWorkTime";
 	
 	/**
 	 * ポータルパラメータキー(勤怠一覧)(休憩)。
 	 */
-	public static final String				PRM_ATTENDANCE_LIST_REST_TIME			= "attendanceListRestTime";
+	public static final String						PRM_ATTENDANCE_LIST_REST_TIME			= "attendanceListRestTime";
 	
 	/**
 	 * ポータルパラメータキー(勤怠一覧)(私用)。
 	 */
-	public static final String				PRM_ATTENDANCE_LIST_PRIVATE_TIME		= "attendanceListPrivateTime";
+	public static final String						PRM_ATTENDANCE_LIST_PRIVATE_TIME		= "attendanceListPrivateTime";
 	
 	/**
 	 * ポータルパラメータキー(勤怠一覧)(遅刻)。
 	 */
-	public static final String				PRM_ATTENDANCE_LIST_LATE_TIME			= "attendanceListLateTime";
+	public static final String						PRM_ATTENDANCE_LIST_LATE_TIME			= "attendanceListLateTime";
 	
 	/**
 	 * ポータルパラメータキー(勤怠一覧)(早退)。
 	 */
-	public static final String				PRM_ATTENDANCE_LIST_LEAVE_EARLY			= "attendanceListLeaveEarly";
+	public static final String						PRM_ATTENDANCE_LIST_LEAVE_EARLY			= "attendanceListLeaveEarly";
 	
 	/**
 	 * ポータルパラメータキー(勤怠一覧)(遅早)。
 	 */
-	public static final String				PRM_ATTENDANCE_LIST_LATE_LEAVE_EARLY	= "attendanceListLateLeaveEarly";
+	public static final String						PRM_ATTENDANCE_LIST_LATE_LEAVE_EARLY	= "attendanceListLateLeaveEarly";
 	
 	/**
 	 * ポータルパラメータキー(勤怠一覧)(内残)。
 	 */
-	public static final String				PRM_ATTENDANCE_LIST_OVER_IN				= "attendanceListOverIn";
+	public static final String						PRM_ATTENDANCE_LIST_OVER_IN				= "attendanceListOverIn";
 	
 	/**
 	 * ポータルパラメータキー(勤怠一覧)(外残)。
 	 */
-	public static final String				PRM_ATTENDANCE_LIST_OVER_OUT			= "attendanceListOverOut";
+	public static final String						PRM_ATTENDANCE_LIST_OVER_OUT			= "attendanceListOverOut";
 	
 	/**
 	 * ポータルパラメータキー(勤怠一覧)(休出)。
 	 */
-	public static final String				PRM_ATTENDANCE_LIST_HOLIDAY				= "attendanceHoliday";
+	public static final String						PRM_ATTENDANCE_LIST_HOLIDAY				= "attendanceHoliday";
 	
 	/**
 	 * ポータルパラメータキー(勤怠一覧)(深夜)。
 	 */
-	public static final String				PRM_ATTENDANCE_LIST_LATE_NIGHT			= "attendanceListLateNight";
+	public static final String						PRM_ATTENDANCE_LIST_LATE_NIGHT			= "attendanceListLateNight";
 	
 	/**
 	 * ポータルパラメータキー(勤怠一覧)(状態)。
 	 */
-	public static final String				PRM_ATTENDANCE_LIST_STATUS				= "attendanceListStatus";
+	public static final String						PRM_ATTENDANCE_LIST_STATUS				= "attendanceListStatus";
 	
 	/**
 	 * ポータルパラメータキー(勤怠一覧)(備考)。
 	 */
-	public static final String				PRM_ATTENDANCE_LIST_REMARK				= "attendanceListRemark";
+	public static final String						PRM_ATTENDANCE_LIST_REMARK				= "attendanceListRemark";
 	
 	/**
 	 * 勤怠一覧参照クラス。
 	 */
-	AttendanceListReferenceBeanInterface	attendanceListReference;
+	protected AttendanceListReferenceBeanInterface	attendanceListReference;
 	
 	
 	/**
@@ -158,11 +169,17 @@ public class PortalAttendanceListBean extends PortalBean implements PortalBeanIn
 	@Override
 	public void initBean() throws MospException {
 		// 参照クラス準備
-		attendanceListReference = (AttendanceListReferenceBeanInterface)createBean(AttendanceListReferenceBeanInterface.class);
+		attendanceListReference = (AttendanceListReferenceBeanInterface)createBean(
+				AttendanceListReferenceBeanInterface.class);
 	}
 	
 	@Override
 	public void show() throws MospException {
+		// 勤怠一覧が利用できない場合
+		if (TimeUtility.isAttendanceListAvailable(mospParams) == false) {
+			// 処理無し
+			return;
+		}
 		// ポータル用JSPパス追加
 		addPortalViewList(PATH_PORTAL_VIEW);
 		// エラーメッセージ長取得
@@ -196,7 +213,9 @@ public class PortalAttendanceListBean extends PortalBean implements PortalBeanIn
 		String[] attendanceListWeekStyle = new String[count];
 		String[] attendanceListWorkType = new String[count];
 		String[] attendanceListStartTime = new String[count];
+		String[] attendanceListStartTimeStyle = new String[count];
 		String[] attendanceListEndTime = new String[count];
+		String[] attendanceListEndTimeStyle = new String[count];
 		String[] attendanceListWorkTime = new String[count];
 		String[] attendanceListRestTime = new String[count];
 		String[] attendanceListPrivateTime = new String[count];
@@ -220,7 +239,9 @@ public class PortalAttendanceListBean extends PortalBean implements PortalBeanIn
 			attendanceListWeekStyle[i] = dto.getWorkDayOfWeekStyle();
 			attendanceListWorkType[i] = dto.getWorkTypeAbbr();
 			attendanceListStartTime[i] = dto.getStartTimeString();
+			attendanceListStartTimeStyle[i] = dto.getStartTimeStyle();
 			attendanceListEndTime[i] = dto.getEndTimeString();
+			attendanceListEndTimeStyle[i] = dto.getEndTimeStyle();
 			attendanceListWorkTime[i] = dto.getWorkTimeString();
 			attendanceListRestTime[i] = dto.getRestTimeString();
 			attendanceListPrivateTime[i] = dto.getPrivateTimeString();
@@ -241,7 +262,9 @@ public class PortalAttendanceListBean extends PortalBean implements PortalBeanIn
 		putPortalParameters(PRM_ATTENDANCE_LIST_WEEK_STYLE, attendanceListWeekStyle);
 		putPortalParameters(PRM_ATTENDANCE_LIST_WORK_TYPE, attendanceListWorkType);
 		putPortalParameters(PRM_ATTENDANCE_LIST_START_TIME, attendanceListStartTime);
+		putPortalParameters(PRM_ATTENDANCE_LIST_START_TIME_STYLE, attendanceListStartTimeStyle);
 		putPortalParameters(PRM_ATTENDANCE_LIST_END_TIME, attendanceListEndTime);
+		putPortalParameters(PRM_ATTENDANCE_LIST_END_TIME_STYLE, attendanceListEndTimeStyle);
 		putPortalParameters(PRM_ATTENDANCE_LIST_WORK_TIME, attendanceListWorkTime);
 		putPortalParameters(PRM_ATTENDANCE_LIST_REST_TIME, attendanceListRestTime);
 		putPortalParameters(PRM_ATTENDANCE_LIST_PRIVATE_TIME, attendanceListPrivateTime);

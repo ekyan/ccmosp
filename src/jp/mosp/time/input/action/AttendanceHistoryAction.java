@@ -229,8 +229,8 @@ public class AttendanceHistoryAction extends TimeAction {
 		vo.setLblAttendanceOverTimeOut(dto.getOvertimeOutString());
 		vo.setLblAttendanceWorkOnHoliday(dto.getHolidayWorkTimeString());
 		vo.setLblAttendanceLateNight(dto.getLateNightTimeString());
-		vo.setLblAttendanceState(getStatusStageValueView(workflowDto.getWorkflowStatus(),
-				workflowDto.getWorkflowStage()));
+		vo.setLblAttendanceState(
+				getStatusStageValueView(workflowDto.getWorkflowStatus(), workflowDto.getWorkflowStage()));
 		vo.setLblAttendanceCorrection(dto.getCorrectionInfo());
 		vo.setWorkflow(dto.getWorkflow());
 		vo.setLblAttendanceRemark(MospUtility.concat(dto.getRemark(), dto.getTimeComment()));
@@ -341,11 +341,11 @@ public class AttendanceHistoryAction extends TimeAction {
 	 */
 	protected String getWorkTypeAbbr(AttendanceDtoInterface dto) throws MospException {
 		DifferenceRequestReferenceBeanInterface differenceRequestReference = timeReference().differenceRequest();
-		DifferenceRequestDtoInterface differenceRequestDto = differenceRequestReference.findForKeyOnWorkflow(
-				dto.getPersonalId(), dto.getWorkDate());
+		DifferenceRequestDtoInterface differenceRequestDto = differenceRequestReference
+			.findForKeyOnWorkflow(dto.getPersonalId(), dto.getWorkDate());
 		if (differenceRequestDto != null) {
-			WorkflowDtoInterface workflowDto = reference().workflow().getLatestWorkflowInfo(
-					differenceRequestDto.getWorkflow());
+			WorkflowDtoInterface workflowDto = reference().workflow()
+				.getLatestWorkflowInfo(differenceRequestDto.getWorkflow());
 			if (workflowDto != null && PlatformConst.CODE_STATUS_COMPLETE.equals(workflowDto.getWorkflowStatus())) {
 				return differenceRequestReference.getDifferenceAbbr(differenceRequestDto.getDifferenceType());
 			}

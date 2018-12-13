@@ -25,9 +25,10 @@ import java.util.List;
 
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.base.MospParams;
-import jp.mosp.framework.utils.SeUtility;
+import jp.mosp.framework.utils.MospUtility;
 import jp.mosp.platform.bean.file.PlatformFileBean;
 import jp.mosp.platform.bean.file.UserPasswordImportBeanInterface;
+import jp.mosp.platform.bean.portal.PasswordCheckBeanInterface;
 import jp.mosp.platform.bean.system.UserPasswordRegistBeanInterface;
 import jp.mosp.platform.constant.PlatformFileConst;
 import jp.mosp.platform.dto.file.ImportDtoInterface;
@@ -43,6 +44,11 @@ public class UserPasswordImportBean extends PlatformFileBean implements UserPass
 	 * ユーザパスワード情報登録クラス。<br>
 	 */
 	protected UserPasswordRegistBeanInterface	passwordRegist;
+	
+	/**
+	 * パスワード確認処理。<br>
+	 */
+	protected PasswordCheckBeanInterface		passwordCheck;
 	
 	
 	/**
@@ -65,6 +71,7 @@ public class UserPasswordImportBean extends PlatformFileBean implements UserPass
 	public void initBean() throws MospException {
 		// Bean準備
 		passwordRegist = (UserPasswordRegistBeanInterface)createBean(UserPasswordRegistBeanInterface.class);
+		passwordCheck = (PasswordCheckBeanInterface)createBean(PasswordCheckBeanInterface.class);
 	}
 	
 	@Override
@@ -147,7 +154,7 @@ public class UserPasswordImportBean extends PlatformFileBean implements UserPass
 		// ユーザID確認
 		userId = userId == null ? "" : userId;
 		// パスワード作成
-		password = password == null || password.isEmpty() ? "" : SeUtility.encrypt(SeUtility.encrypt(password));
+		password = MospUtility.isEmpty(password) ? "" : passwordCheck.encryptPlain(password);
 		// ユーザパスワード情報(DTO)に登録情報の内容を設定
 		dto.setUserId(userId);
 		dto.setChangeDate(changeDate);

@@ -29,6 +29,7 @@ import jp.mosp.platform.bean.human.base.PlatformHumanBean;
 import jp.mosp.platform.dao.human.SuspensionDaoInterface;
 import jp.mosp.platform.dto.human.SuspensionDtoInterface;
 import jp.mosp.platform.dto.human.impl.PfaHumanSuspensionDto;
+import jp.mosp.platform.utils.PlatformMessageUtility;
 
 /**
  * 人事休職情報登録クラス。
@@ -38,7 +39,7 @@ public class SuspensionRegistBean extends PlatformHumanBean implements Suspensio
 	/**
 	 * 人事休職情報DAOクラス。<br>
 	 */
-	SuspensionDaoInterface	dao;
+	SuspensionDaoInterface dao;
 	
 	
 	/**
@@ -139,7 +140,8 @@ public class SuspensionRegistBean extends PlatformHumanBean implements Suspensio
 	 */
 	protected void update(SuspensionDtoInterface dto) throws MospException {
 		// 更新対象DTO取得
-		SuspensionDtoInterface currentDto = (SuspensionDtoInterface)findForKey(dao, dto.getPfaHumanSuspensionId(), true);
+		SuspensionDtoInterface currentDto = (SuspensionDtoInterface)findForKey(dao, dto.getPfaHumanSuspensionId(),
+				true);
 		// 排他確認
 		checkExclusive(currentDto);
 		if (mospParams.hasErrorMessage()) {
@@ -172,7 +174,7 @@ public class SuspensionRegistBean extends PlatformHumanBean implements Suspensio
 		// 人事入社情報確認
 		if (entranceDate == null) {
 			// 社員が入社していない場合のメッセージを追加
-			addEmployeeNotEnteredMessage();
+			PlatformMessageUtility.addErrorEmployeeNotJoin(mospParams);
 			return;
 		}
 		// 人事退職情報取得
@@ -211,7 +213,8 @@ public class SuspensionRegistBean extends PlatformHumanBean implements Suspensio
 			for (int j = i + 1; j < list.size(); j++) {
 				SuspensionDtoInterface dto2 = list.get(j);
 				// 重複確認
-				if (checkTermDuplicate(dto1.getStartDate(), dto1.getEndDate(), dto2.getStartDate(), dto2.getEndDate())) {
+				if (checkTermDuplicate(dto1.getStartDate(), dto1.getEndDate(), dto2.getStartDate(),
+						dto2.getEndDate())) {
 					continue;
 				}
 				// 期間が重複する場合のメッセージを追加

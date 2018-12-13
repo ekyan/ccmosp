@@ -136,17 +136,6 @@ public interface SubHolidayRequestRegistBeanInterface {
 	void checkCancel(SubHolidayRequestDtoInterface dto);
 	
 	/**
-	 * 申請時の入力チェック。代休申請の重複チェック。<br>
-	 * <p>
-	 * 同日に同じ範囲の代休申請がされている場合、エラーメッセージを設定する。
-	 * </p>
-	 * @param dto 対象DTO
-	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
-	 */
-	@Deprecated
-	void checkSubHolidayOverlap(SubHolidayRequestDtoInterface dto) throws MospException;
-	
-	/**
 	 * 申請時の入力チェック。他の申請チェック。<br>
 	 * <p>
 	 * 申請日に他の申請を行っている場合、エラーメッセージを設定する。

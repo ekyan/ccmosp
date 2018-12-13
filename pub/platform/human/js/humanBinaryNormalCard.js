@@ -22,7 +22,19 @@
  * @throws 実行時例外
  */
 function onLoadExtra() {
-	// 処理無し
+	// 人事汎用機能参照権限の場合
+	if (jsIsReferenceDivision) {
+		// 可視設定
+		setVisibility("btnRegist", false);
+		setVisibility("btnDelete", false);
+		// 確認対象要素群取得（INPUT）
+		setReadOnlyForTag(TAG_INPUT,true);
+		// 確認対象要素群取得（SELECT）
+		setReadOnlyForTag(TAG_SELECT,true);
+		// 確認対象要素群取得（TAG_TEXTAREA）
+		setReadOnlyForTag(TAG_TEXTAREA,true);
+		return;
+	}
 }
 
 /**

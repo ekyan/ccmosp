@@ -77,62 +77,62 @@ public class HumanGeneralBean extends PlatformHumanBean implements HumanGeneralB
 	/**
 	 * フォーマット確認定数：日付の場合(誕生日の場合)。
 	 */
-	public String							KEY_FORMAT_AGE			= "Age";
+	public static final String				KEY_FORMAT_AGE			= "Age";
 	
 	/**
 	 * フォーマット確認定数：日付の場合。
 	 */
-	public String							KEY_FORMAT_DATE			= "Date";
+	public static final String				KEY_FORMAT_DATE			= "Date";
 	
 	/**
 	 * フォーマット確認定数：日付の年を探す場合。
 	 */
-	public String							KEY_FORMAT_YEAR			= "Year";
+	public static final String				KEY_FORMAT_YEAR			= "Year";
 	
 	/**
 	 * フォーマット確認定数：日付の月を探す場合。
 	 */
-	public String							KEY_FORMAT_MONTH		= "Month";
+	public static final String				KEY_FORMAT_MONTH		= "Month";
 	
 	/**
 	 * フォーマット確認定数：日付の日を探す場合。
 	 */
-	public String							KEY_FORMAT_DAY			= "Day";
+	public static final String				KEY_FORMAT_DAY			= "Day";
 	
 	/**
 	 * フォーマット確認定数：電話番号の場合。
 	 */
-	public String							KEY_FORMAT_PHONE		= "Phone";
+	public static final String				KEY_FORMAT_PHONE		= "Phone";
 	
 	/**
 	 * フォーマット確認定数：電話番号1。
 	 */
-	public String							KEY_FORMAT_PHONE_1		= "Area";
+	public static final String				KEY_FORMAT_PHONE_1		= "Area";
 	
 	/**
 	 * フォーマット確認定数：電話番号2。
 	 */
-	public String							KEY_FORMAT_PHONE_2		= "Local";
+	public static final String				KEY_FORMAT_PHONE_2		= "Local";
 	
 	/**
 	 * フォーマット確認定数：電話番号3。
 	 */
-	public String							KEY_FORMAT_PHONE_3		= "Subscriber";
+	public static final String				KEY_FORMAT_PHONE_3		= "Subscriber";
 	
 	/**
 	 * フォーマット確認定数：バイナリファイル。
 	 */
-	public String							KEY_FORMAT_BINARY		= "Binary";
+	public static final String				KEY_FORMAT_BINARY		= "Binary";
 	
 	/**
 	 * フォーマット確認定数：値をくっつける場合。
 	 */
-	public String							KEY_CONCATENATED_LABEL	= "Concatenate";
+	public static final String				KEY_CONCATENATED_LABEL	= "Concatenate";
 	
 	/**
 	 * フォーマット確認定数：置換する場合。
 	 */
-	public String							KEY_FORMAT				= "Format";
+	public static final String				KEY_FORMAT				= "Format";
 	
 	/**
 	 * 人事汎用項目区分設定情報。
@@ -190,14 +190,15 @@ public class HumanGeneralBean extends PlatformHumanBean implements HumanGeneralB
 		}
 		// MosPプルダウンコードキー取得
 		String codeKey = itemProperty.getCodeKey();
+		boolean isNeedSpace = itemProperty.isNeedSpace();
 		if (codeKey != null && codeKey.isEmpty() == false) {
-			return mospParams.getProperties().getCodeArray(codeKey, true);
+			return mospParams.getProperties().getCodeArray(codeKey, isNeedSpace);
 		}
 		// 名称区分プルダウンキー取得
 		String namingKey = itemProperty.getNamingKey();
 		// 名称区分がある場合
 		if (namingKey != null) {
-			return namingReference.getCodedSelectArray(namingKey, activeDate, true);
+			return namingReference.getCodedSelectArray(namingKey, activeDate, isNeedSpace);
 		}
 		return null;
 	}
@@ -326,14 +327,7 @@ public class HumanGeneralBean extends PlatformHumanBean implements HumanGeneralB
 		return pulldownMap;
 	}
 	
-	/**
-	 * 項目名、個人IDから項目名の日付を取得する。
-	 * @param itemName 項目名
-	 * @param personalId 個人ID
-	 * @return 日付
-	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
-	 * 
-	 */
+	@Override
 	public Date humanNormalDate(String itemName, String personalId) throws MospException {
 		// 年取得
 		HumanNormalDtoInterface normalYearDto = normalDao.findForInfo(itemName + KEY_FORMAT_YEAR, personalId);
@@ -450,7 +444,7 @@ public class HumanGeneralBean extends PlatformHumanBean implements HumanGeneralB
 		// 項目をくっつけて表示する場合
 		if (dataType.equals(KEY_CONCATENATED_LABEL)) {
 			// 値準備
-			String value = "";
+			StringBuilder value = new StringBuilder();
 			// 項目毎に処理
 			for (int i = 0; i < itemNames.length; i++) {
 				// 共通情報設定
@@ -461,14 +455,14 @@ public class HumanGeneralBean extends PlatformHumanBean implements HumanGeneralB
 					String formatDate = getNormalFormatDateAge(personalId, itemNames[i], labelItemProperty, targetDate);
 					if (formatDate.equals("") == false) {
 						// 値作成
-						value = value + formatDate;
+						value.append(formatDate);
 						continue;
 					}
 					// 電話変換を出力した値がある場合
 					String formatPhone = getNormalFormatPhone(personalId, itemNames[i], labelFormat);
 					if (formatPhone.equals("") == false) {
 						// 値作成
-						value = value + formatPhone;
+						value.append(formatPhone);
 						continue;
 					}
 				}
@@ -481,14 +475,14 @@ public class HumanGeneralBean extends PlatformHumanBean implements HumanGeneralB
 					// プルダウン値がある場合
 					if (pulldownValue.isEmpty() == false) {
 						// 値作成
-						value = value + pulldownValue;
+						value.append(pulldownValue);
 						continue;
 					}
 					// 値作成 
-					value = value + itemDto.getHumanItemValue();
+					value.append(itemDto.getHumanItemValue());
 				}
 			}
-			return value;
+			return value.toString();
 		}
 		// フォーマット(置換)の場合
 		if (dataType.equals(KEY_FORMAT)) {
@@ -574,7 +568,7 @@ public class HumanGeneralBean extends PlatformHumanBean implements HumanGeneralB
 		// 項目をくっつけて表示する場合
 		if (dataType.equals(KEY_CONCATENATED_LABEL)) {
 			// 値準備
-			String value = "";
+			StringBuilder value = new StringBuilder();
 			// 項目毎に処理
 			for (int i = 0; i < itemNames.length; i++) {
 				// 共通情報設定
@@ -582,18 +576,18 @@ public class HumanGeneralBean extends PlatformHumanBean implements HumanGeneralB
 				// 個別項目にデータ型が存在する場合
 				if (labelDateType != null) {
 					// 日付変換または年齢を出力した値がある場合
-					String formatDate = getHistoryFormatDateAge(personalId, itemNames[i], labelItemProperty,
-							activeDate, targetDate);
+					String formatDate = getHistoryFormatDateAge(personalId, itemNames[i], labelItemProperty, activeDate,
+							targetDate);
 					if (formatDate.equals("") == false) {
 						// 値作成
-						value = value + formatDate;
+						value.append(formatDate);
 						continue;
 					}
 					// 電話変換を出力した値がある場合
 					String formatPhone = getHistoryFormatPhone(personalId, itemNames[i], activeDate, labelFormat);
 					if (formatPhone.equals("") == false) {
 						// 値作成
-						value = value + formatPhone;
+						value.append(formatPhone);
 						continue;
 					}
 				}
@@ -606,14 +600,14 @@ public class HumanGeneralBean extends PlatformHumanBean implements HumanGeneralB
 					// プルダウン値がある場合
 					if (pulldownValue.isEmpty() == false) {
 						// 値作成
-						value = value + pulldownValue;
+						value.append(pulldownValue);
 						continue;
 					}
 					// 値作成 
-					value = value + itemDto.getHumanItemValue();
+					value.append(itemDto.getHumanItemValue());
 				}
 			}
-			return value;
+			return value.toString();
 		}
 		// フォーマット(置換)の場合
 		if (dataType.equals(KEY_FORMAT)) {
@@ -626,8 +620,8 @@ public class HumanGeneralBean extends PlatformHumanBean implements HumanGeneralB
 				// 個別項目にデータ型が存在する場合
 				if (labelDateType != null) {
 					// 日付変換または年齢を出力した値がある場合
-					String formatDate = getHistoryFormatDateAge(personalId, itemNames[i], labelItemProperty,
-							activeDate, targetDate);
+					String formatDate = getHistoryFormatDateAge(personalId, itemNames[i], labelItemProperty, activeDate,
+							targetDate);
 					if (formatDate.equals("") == false) {
 						// 値作成
 						rep[i] = formatDate;
@@ -700,7 +694,7 @@ public class HumanGeneralBean extends PlatformHumanBean implements HumanGeneralB
 		// 項目をくっつけて表示する場合
 		if (dataType.equals(KEY_CONCATENATED_LABEL)) {
 			// 値準備
-			String value = "";
+			StringBuilder value = new StringBuilder();
 			// 項目毎に処理
 			for (int i = 0; i < itemNames.length; i++) {
 				// 共通情報設定
@@ -712,14 +706,14 @@ public class HumanGeneralBean extends PlatformHumanBean implements HumanGeneralB
 							targetDate);
 					if (formatDate.equals("") == false) {
 						// 値作成
-						value = value + formatDate;
+						value.append(formatDate);
 						continue;
 					}
 					// 電話変換を出力した値がある場合
 					String formatPhone = getArrayFormatPhone(personalId, itemNames[i], rowId, labelFormat);
 					if (formatPhone.equals("") == false) {
 						// 値作成
-						value = value + formatPhone;
+						value.append(formatPhone);
 						continue;
 					}
 				}
@@ -732,14 +726,14 @@ public class HumanGeneralBean extends PlatformHumanBean implements HumanGeneralB
 					// プルダウン値がある場合
 					if (pulldownValue.isEmpty() == false) {
 						// 値作成
-						value = value + pulldownValue;
+						value.append(pulldownValue);
 						continue;
 					}
 					// 値作成 
-					value = value + itemDto.getHumanItemValue();
+					value.append(itemDto.getHumanItemValue());
 				}
 			}
-			return value;
+			return value.toString();
 		}
 		// フォーマット(置換)の場合
 		if (dataType.equals(KEY_FORMAT)) {
@@ -845,21 +839,8 @@ public class HumanGeneralBean extends PlatformHumanBean implements HumanGeneralB
 			throws MospException {
 		// 日付取得
 		Date date = humanNormalDate(itemName, personalId);
-		if (date == null) {
-			return "";
-		}
-		// 人事汎用項目データ型取得
-		String dateType = itemProperty.getDataType();
-		// 人事汎用項目データ型が日付の場合
-		if (dateType.equals(KEY_FORMAT_DATE)) {
-			return DateUtility.getStringDate(date, itemProperty.getFormat());
-		}
-		// 人事汎用項目データ型が年齢の場合
-		if (dateType.equals(KEY_FORMAT_AGE)) {
-			return DateUtility.getStringDate(date, itemProperty.getFormat())
-					+ HumanUtility.getHumanOlder(date, targetDate, mospParams);
-		}
-		return "";
+		// フォーマット設定（日付又は年齢）
+		return getFormatDateAge(date, itemProperty, targetDate);
 	}
 	
 	/**
@@ -876,21 +857,8 @@ public class HumanGeneralBean extends PlatformHumanBean implements HumanGeneralB
 			Date activeDate, Date targetDate) throws MospException {
 		// 日付取得
 		Date date = humanHistoryDate(itemName, personalId, activeDate);
-		if (date == null) {
-			return "";
-		}
-		// 人事汎用項目データ型取得
-		String dateType = itemProperty.getDataType();
-		String format = itemProperty.getFormat();
-		// 人事汎用項目データ型が日付の場合
-		if (dateType.equals(KEY_FORMAT_DATE)) {
-			return DateUtility.getStringDate(date, format);
-		}
-		// 人事汎用項目データ型が年齢の場合
-		if (dateType.equals(KEY_FORMAT_AGE)) {
-			return DateUtility.getStringDate(date, format) + HumanUtility.getHumanOlder(date, targetDate, mospParams);
-		}
-		return "";
+		// フォーマット設定（日付又は年齢）
+		return getFormatDateAge(date, itemProperty, targetDate);
 	}
 	
 	/**
@@ -907,7 +875,19 @@ public class HumanGeneralBean extends PlatformHumanBean implements HumanGeneralB
 			Date targetDate) throws MospException {
 		// 日付取得
 		Date date = humanArrayDate(itemName, personalId, rowId);
-		if (date == null) {
+		// フォーマット設定（日付又は年齢）
+		return getFormatDateAge(date, itemProperty, targetDate);
+	}
+	
+	/**
+	 * 人事汎用情報（全体）：日付または年齢のフォーマットに合わせて表示文字を作成する。
+	 * @param formatDate フォーマット対象日
+	 * @param itemProperty 対象人事汎用項目設定情報
+	 * @param targetDate 対象表示日
+	 * @return フォーマット変換された表示文字
+	 */
+	public String getFormatDateAge(Date formatDate, ItemProperty itemProperty, Date targetDate) {
+		if (formatDate == null) {
 			return "";
 		}
 		// 人事汎用項目データ型取得
@@ -915,11 +895,12 @@ public class HumanGeneralBean extends PlatformHumanBean implements HumanGeneralB
 		String format = itemProperty.getFormat();
 		// 人事汎用項目データ型が日付の場合
 		if (dateType.equals(KEY_FORMAT_DATE)) {
-			return DateUtility.getStringDate(date, format);
+			return DateUtility.getStringDate(formatDate, format);
 		}
 		// 人事汎用項目データ型が年齢の場合
 		if (dateType.equals(KEY_FORMAT_AGE)) {
-			return DateUtility.getStringDate(date, format) + HumanUtility.getHumanOlder(date, targetDate, mospParams);
+			return DateUtility.getStringDate(formatDate, format)
+					+ HumanUtility.getHumanOlder(formatDate, targetDate, mospParams);
 		}
 		return "";
 	}
@@ -933,31 +914,22 @@ public class HumanGeneralBean extends PlatformHumanBean implements HumanGeneralB
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
 	public String getNormalFormatPhone(String personalId, String itemName, String format) throws MospException {
-		// 年月日準備
-		String area = "";
-		String local = "";
-		String subscriber = "";
 		// 電話番号1取得
 		HumanNormalDtoInterface normalAreaDto = normalDao.findForInfo(itemName + KEY_FORMAT_PHONE_1, personalId);
-		if (normalAreaDto != null) {
-			area = getFormatHyphenValue(normalAreaDto.getHumanItemValue());
-		}
 		// 電話番号2取得
 		HumanNormalDtoInterface normalLocalDto = normalDao.findForInfo(itemName + KEY_FORMAT_PHONE_2, personalId);
-		if (normalLocalDto != null) {
-			local = getFormatHyphenValue(normalLocalDto.getHumanItemValue());
-		}
 		// 電話番号3取得
 		HumanNormalDtoInterface normalSubscriberDto = normalDao.findForInfo(itemName + KEY_FORMAT_PHONE_3, personalId);
-		if (normalSubscriberDto != null) {
-			subscriber = normalSubscriberDto.getHumanItemValue();
-		}
-		// フォーマット確認
-		if (format.equals(PlatformHumanConst.FORMAT_HUMAN_PHONE)) {
-			// 人事汎用通常情報マップに詰める
-			return area + local + subscriber;
-		}
-		return "";
+		
+		// 人事汎用項目値取得（電話番号1）
+		String area = normalAreaDto == null ? "" : normalAreaDto.getHumanItemValue();
+		// 人事汎用項目値取得（電話番号2）
+		String local = normalLocalDto == null ? "" : normalLocalDto.getHumanItemValue();
+		// 人事汎用項目値取得（電話番号3）
+		String subscriber = normalSubscriberDto == null ? "" : normalSubscriberDto.getHumanItemValue();
+		
+		// 文字列整形
+		return getFormatPhone(area, local, subscriber, format);
 	}
 	
 	/**
@@ -971,34 +943,27 @@ public class HumanGeneralBean extends PlatformHumanBean implements HumanGeneralB
 	 */
 	public String getHistoryFormatPhone(String personalId, String itemName, Date activeDate, String format)
 			throws MospException {
-		// 年月日準備
-		String area = "";
-		String local = "";
-		String subscriber = "";
-		// 電話番号1取得
+		
+		// 電話番号1情報取得
 		HumanHistoryDtoInterface historyAreaDto = historyDao.findForInfo(personalId, itemName + KEY_FORMAT_PHONE_1,
 				activeDate);
-		if (historyAreaDto != null) {
-			area = getFormatHyphenValue(historyAreaDto.getHumanItemValue());
-		}
-		// 電話番号2取得
+		// 電話番号2情報取得
 		HumanHistoryDtoInterface historyLocalDto = historyDao.findForInfo(personalId, itemName + KEY_FORMAT_PHONE_2,
 				activeDate);
-		if (historyLocalDto != null) {
-			local = getFormatHyphenValue(historyLocalDto.getHumanItemValue());
-		}
-		// 電話番号3取得
-		HumanHistoryDtoInterface historySubscriberDto = historyDao.findForInfo(personalId, itemName
-				+ KEY_FORMAT_PHONE_3, activeDate);
-		if (historySubscriberDto != null) {
-			subscriber = historySubscriberDto.getHumanItemValue();
-		}
-		// フォーマット確認
-		if (format.equals(PlatformHumanConst.FORMAT_HUMAN_PHONE)) {
-			// 人事汎用通常情報マップに詰める
-			return area + local + subscriber;
-		}
-		return "";
+		// 電話番号3情報取得
+		HumanHistoryDtoInterface historySubscriberDto = historyDao.findForInfo(personalId,
+				itemName + KEY_FORMAT_PHONE_3, activeDate);
+		
+		// 人事汎用項目値取得（電話番号1）
+		String area = historyAreaDto == null ? "" : historyAreaDto.getHumanItemValue();
+		// 人事汎用項目値取得（電話番号2）
+		String local = historyLocalDto == null ? "" : historyLocalDto.getHumanItemValue();
+		// 人事汎用項目値取得（電話番号3）
+		String subscriber = historySubscriberDto == null ? "" : historySubscriberDto.getHumanItemValue();
+		
+		// 文字列整形
+		return getFormatPhone(area, local, subscriber, format);
+		
 	}
 	
 	/**
@@ -1012,33 +977,52 @@ public class HumanGeneralBean extends PlatformHumanBean implements HumanGeneralB
 	 */
 	public String getArrayFormatPhone(String personalId, String itemName, String rowId, String format)
 			throws MospException {
-		// 年月日準備
-		String area = "";
-		String local = "";
-		String subscriber = "";
 		// 電話番号1取得
 		HumanArrayDtoInterface arrayAreaDto = arrayDao.findForKey(personalId, itemName + KEY_FORMAT_PHONE_1,
 				getInteger(rowId));
-		if (arrayAreaDto != null) {
-			area = getFormatHyphenValue(arrayAreaDto.getHumanItemValue());
-		}
 		// 電話番号2取得
 		HumanArrayDtoInterface arrayLocalDto = arrayDao.findForKey(personalId, itemName + KEY_FORMAT_PHONE_2,
 				getInteger(rowId));
-		if (arrayLocalDto != null) {
-			local = getFormatHyphenValue(arrayLocalDto.getHumanItemValue());
-		}
 		// 電話番号3取得
 		HumanArrayDtoInterface arraySubscriberDto = arrayDao.findForKey(personalId, itemName + KEY_FORMAT_PHONE_3,
 				getInteger(rowId));
-		if (arraySubscriberDto != null) {
-			subscriber = arraySubscriberDto.getHumanItemValue();
-		}
+		
+		// 人事汎用項目値取得（電話番号1）
+		String area = arrayAreaDto == null ? "" : arrayAreaDto.getHumanItemValue();
+		// 人事汎用項目値取得（電話番号2）
+		String local = arrayLocalDto == null ? "" : arrayLocalDto.getHumanItemValue();
+		// 人事汎用項目値取得（電話番号3）
+		String subscriber = arraySubscriberDto == null ? "" : arraySubscriberDto.getHumanItemValue();
+		
+		// 文字列整形
+		return getFormatPhone(area, local, subscriber, format);
+	}
+	
+	/**
+	 * 人事汎用情報（全体）：電話のフォーマットに合わせて表示文字を作成する。
+	 * @param parmArea 電話番号１
+	 * @param parmLocal 電話番号２
+	 * @param parmSubscriber 電話番号3
+	 * @param format 対象人事汎用項目データ型フォーマット
+	 * @return フォーマット変換された表示文字
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 */
+	public String getFormatPhone(String parmArea, String parmLocal, String parmSubscriber, String format)
+			throws MospException {
+		
+		// 電話番号1整形
+		String area = getFormatHyphenValue(parmArea);
+		// 電話番号2整形
+		String local = getFormatHyphenValue(parmLocal);
+		// 電話番号3取得
+		String subscriber = parmSubscriber;
+		
 		// フォーマット確認
 		if (format.equals(PlatformHumanConst.FORMAT_HUMAN_PHONE)) {
 			// 人事汎用通常情報マップに詰める
 			return area + local + subscriber;
 		}
+		
 		return "";
 	}
 	

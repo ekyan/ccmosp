@@ -22,12 +22,15 @@ import java.util.List;
 
 import jp.mosp.framework.base.BaseVo;
 import jp.mosp.framework.base.MospException;
+import jp.mosp.framework.constant.MospConst;
 import jp.mosp.platform.constant.PlatformConst;
 import jp.mosp.time.base.TimeAction;
 import jp.mosp.time.base.TimeBeanHandlerInterface;
 import jp.mosp.time.bean.PaidHolidayEntranceDateRegistBeanInterface;
 import jp.mosp.time.bean.PaidHolidayFirstYearRegistBeanInterface;
 import jp.mosp.time.bean.PaidHolidayPointDateRegistBeanInterface;
+import jp.mosp.time.bean.PaidHolidayProportionallyReferenceBeanInterface;
+import jp.mosp.time.bean.PaidHolidayProportionallyRegistBeanInterface;
 import jp.mosp.time.bean.PaidHolidayRegistBeanInterface;
 import jp.mosp.time.bean.StockHolidayRegistBeanInterface;
 import jp.mosp.time.constant.TimeConst;
@@ -35,6 +38,7 @@ import jp.mosp.time.dto.settings.PaidHolidayDtoInterface;
 import jp.mosp.time.dto.settings.PaidHolidayEntranceDateDtoInterface;
 import jp.mosp.time.dto.settings.PaidHolidayFirstYearDtoInterface;
 import jp.mosp.time.dto.settings.PaidHolidayPointDateDtoInterface;
+import jp.mosp.time.dto.settings.PaidHolidayProportionallyDtoInterface;
 import jp.mosp.time.dto.settings.StockHolidayDtoInterface;
 import jp.mosp.time.settings.base.TimeSettingAction;
 import jp.mosp.time.settings.vo.PaidHolidayCardVo;
@@ -245,6 +249,9 @@ public class PaidHolidayCardAction extends TimeSettingAction {
 		} else if (vo.getPltPaidHolidayType().equals("1") || vo.getPltPaidHolidayType().equals("2")) {
 			// 自動付与【入社日】
 			registEntranceDto();
+		} else if (isProportionally()) {
+			// 比例
+			insertProportionally();
 		}
 		// 新規追加結果確認
 		if (mospParams.hasErrorMessage()) {
@@ -312,6 +319,9 @@ public class PaidHolidayCardAction extends TimeSettingAction {
 		} else if (vo.getPltPaidHolidayType().equals("1") || vo.getPltPaidHolidayType().equals("2")) {
 			// 自動付与【入社日】
 			registEntranceDto();
+		} else if (isProportionally()) {
+			// 比例
+			addProportionally();
 		}
 		// 更新結果確認
 		if (mospParams.hasErrorMessage()) {
@@ -338,13 +348,23 @@ public class PaidHolidayCardAction extends TimeSettingAction {
 		PaidHolidayCardVo vo = (PaidHolidayCardVo)mospParams.getVo();
 		// 同コネクションを使用するため最初にtime()を定義する。
 		TimeBeanHandlerInterface time = time();
+		// 登録クラス取得(基準日)
+		PaidHolidayPointDateRegistBeanInterface registPoint = time.paidHolidayPointDateRegist();
+		// 登録クラス取得(比例)
+		PaidHolidayProportionallyRegistBeanInterface paidHolidayProportionallyRegist = time
+			.paidHolidayProportionallyRegist();
 		// 基本情報
 		PaidHolidayRegistBeanInterface regist = time.paidHolidayRegist();
+		Date activateDate = getEditActivateDate();
 		PaidHolidayDtoInterface dto = regist.getInitDto();
 		// DTOに値を設定
 		setDtoFields(dto);
 		// 更新処理
 		regist.update(dto);
+		// 基準日
+		registPoint.delete(vo.getTxtPaidHolidayCode(), activateDate);
+		// 比例
+		paidHolidayProportionallyRegist.delete(vo.getTxtPaidHolidayCode(), activateDate);
 		// 初年度付与
 		PaidHolidayFirstYearRegistBeanInterface registFirst = time.paidHolidayFirstYearRegist();
 		for (int i = 1; i <= 12; i++) {
@@ -362,9 +382,6 @@ public class PaidHolidayCardAction extends TimeSettingAction {
 		// DTOに値を設定、履歴更新処理
 		if (vo.getPltPaidHolidayType().equals(String.valueOf(TimeConst.CODE_PAID_HOLIDAY_TYPE_STANDARDSDAY))) {
 			// 自動付与【基準日】
-			// 最初に基準日のデータを全て削除する
-			PaidHolidayPointDateRegistBeanInterface registPoint = time.paidHolidayPointDateRegist();
-			registPoint.delete(dtoStock.getPaidHolidayCode(), dtoStock.getActivateDate());
 			String[] aryPointDateAmount = { vo.getTxtPointDateAmount1(), vo.getTxtPointDateAmount2(),
 				vo.getTxtPointDateAmount3(), vo.getTxtPointDateAmount4(), vo.getTxtPointDateAmount5(),
 				vo.getTxtPointDateAmount6(), vo.getTxtPointDateAmount7(), vo.getTxtPointDateAmount8(),
@@ -378,10 +395,14 @@ public class PaidHolidayCardAction extends TimeSettingAction {
 					registPoint.update(pointDto);
 				}
 			}
-		} else if (vo.getPltPaidHolidayType().equals("1") || vo.getPltPaidHolidayType().equals("2")) {
+		} else if (vo.getPltPaidHolidayType().equals(String.valueOf(TimeConst.CODE_PAID_HOLIDAY_TYPE_ENTRANCEMONTH))
+				|| vo.getPltPaidHolidayType().equals(String.valueOf(TimeConst.CODE_PAID_HOLIDAY_TYPE_ENTRANCEDAY))) {
 			// 自動付与【入社日】
 			time().paidHolidayEntranceDateRegist().delete(vo.getTxtPaidHolidayCode(), getEditActivateDate());
 			registEntranceDto();
+		} else if (isProportionally()) {
+			// 比例
+			addProportionally();
 		}
 		// 更新結果確認
 		if (mospParams.hasErrorMessage()) {
@@ -408,6 +429,12 @@ public class PaidHolidayCardAction extends TimeSettingAction {
 		PaidHolidayCardVo vo = (PaidHolidayCardVo)mospParams.getVo();
 		// 同コネクションを使用するため最初にtime()を定義する。
 		TimeBeanHandlerInterface time = time();
+		Date activateDate = getEditActivateDate();
+		// 登録クラス取得(基準日)
+		PaidHolidayPointDateRegistBeanInterface registPoint = time.paidHolidayPointDateRegist();
+		// 登録クラス取得(比例)
+		PaidHolidayProportionallyRegistBeanInterface paidHolidayProportionallyRegist = time
+			.paidHolidayProportionallyRegist();
 		// DTOの準備
 		// 基本情報
 		PaidHolidayDtoInterface dto = timeReference().paidHoliday().findForKey(vo.getTxtPaidHolidayCode(),
@@ -416,6 +443,10 @@ public class PaidHolidayCardAction extends TimeSettingAction {
 		setDtoFields(dto);
 		// 削除処理
 		time.paidHolidayRegist().delete(dto);
+		// 削除処理（基準日）
+		registPoint.delete(vo.getTxtPaidHolidayCode(), activateDate);
+		// 削除処理（比例）
+		paidHolidayProportionallyRegist.delete(vo.getTxtPaidHolidayCode(), activateDate);
 		// 初年度付与
 		// 削除処理
 		time.paidHolidayFirstYearRegist().delete(dto.getPaidHolidayCode(), dto.getActivateDate());
@@ -426,16 +457,6 @@ public class PaidHolidayCardAction extends TimeSettingAction {
 		setDtoFields(dtoStock);
 		// 削除処理
 		time.stockHolidayRegist().delete(dtoStock);
-		// DTOに値を設定、履歴追加処理
-		if (vo.getPltPaidHolidayType().equals(String.valueOf(TimeConst.CODE_PAID_HOLIDAY_TYPE_STANDARDSDAY))) {
-			// 自動付与【基準日】
-			// 削除処理
-			time.paidHolidayPointDateRegist().delete(dto.getPaidHolidayCode(), dto.getActivateDate());
-		} else if (vo.getPltPaidHolidayType().equals("1") || vo.getPltPaidHolidayType().equals("2")) {
-			// 自動付与【入社日】
-			// 削除処理
-			time.paidHolidayEntranceDateRegist().delete(dto.getPaidHolidayCode(), dto.getActivateDate());
-		}
 		// 削除結果確認
 		if (mospParams.hasErrorMessage()) {
 			// 削除失敗メッセージ設定
@@ -500,21 +521,29 @@ public class PaidHolidayCardAction extends TimeSettingAction {
 	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
 	 */
 	protected void setEditUpdateMode(String paidHolidayCode, Date activateDate) throws MospException {
+		PaidHolidayProportionallyReferenceBeanInterface paidHolidayProportionally = timeReference()
+			.paidHolidayProportionally();
 		// 有給休暇マスタから情報を取得
 		PaidHolidayDtoInterface dto = timeReference().paidHoliday().findForKey(paidHolidayCode, activateDate);
+		// 有給休暇比例付与マスタからリストを取得
+		List<PaidHolidayProportionallyDtoInterface> PaidHolidayProportionallyList = paidHolidayProportionally
+			.findForList(paidHolidayCode, activateDate);
 		// 有給休暇初年度マスタから情報を取得
 		PaidHolidayFirstYearDtoInterface firstDto = timeReference().paidHolidayFirstYear().findForKey(paidHolidayCode,
 				activateDate, 1);
 		// 有給休暇基準日マスタから情報を取得
-		List<PaidHolidayPointDateDtoInterface> pointList = timeReference().paidHolidayPointDate().findForList(
-				paidHolidayCode, activateDate);
+		List<PaidHolidayPointDateDtoInterface> pointList = timeReference().paidHolidayPointDate()
+			.findForList(paidHolidayCode, activateDate);
 		// 有給休暇入社日マスタから情報を取得
-		List<PaidHolidayEntranceDateDtoInterface> entranceList = timeReference().paidHolidayEntranceDate().findForList(
-				paidHolidayCode, activateDate);
+		List<PaidHolidayEntranceDateDtoInterface> entranceList = timeReference().paidHolidayEntranceDate()
+			.findForList(paidHolidayCode, activateDate);
 		// ストック休暇マスタから情報を取得
 		StockHolidayDtoInterface stockDto = timeReference().stockHoliday().findForKey(paidHolidayCode, activateDate);
 		// 存在確認
 		checkSelectedDataExist(dto);
+		for (PaidHolidayProportionallyDtoInterface paidHolidayProportionallyDto : PaidHolidayProportionallyList) {
+			checkSelectedDataExist(paidHolidayProportionallyDto);
+		}
 		checkSelectedDataExist(firstDto);
 		for (PaidHolidayPointDateDtoInterface paidHolidayPointDateDto : pointList) {
 			checkSelectedDataExist(paidHolidayPointDateDto);
@@ -525,6 +554,7 @@ public class PaidHolidayCardAction extends TimeSettingAction {
 		checkSelectedDataExist(stockDto);
 		// VOにセット
 		setVoFields(dto);
+		setVoFieldsProportionally(PaidHolidayProportionallyList);
 		setVoFieldsFirst(firstDto.getPaidHolidayCode());
 		setVoFields(pointList);
 		setVoFieldsEntrance(entranceList);
@@ -545,16 +575,53 @@ public class PaidHolidayCardAction extends TimeSettingAction {
 		vo.setTxtPaidHolidayAbbr("");
 		vo.setTxtWorkRatio("0");
 		vo.setPltPaidHolidayType("0");
-		vo.setPltTimelyPaidHoliday("0");
+		vo.setPltTimelyPaidHoliday(String.valueOf(MospConst.INACTIVATE_FLAG_OFF));
 		//vo.setPltTimelyPaidHolidayTime("0");
 		vo.setPltTimeAcquisitionLimitDays("0");
 		vo.setPltTimeAcquisitionLimitTimes("0");
 		vo.setPltAppliTimeInterval("0");
 		vo.setTxtMaxCarryOverAmount("");
 		vo.setTxtTotalMaxAmount("");
-		vo.setPltMaxCarryOverYear("0");
+		vo.setPltMaxCarryOverYear(String.valueOf(MospConst.INACTIVATE_FLAG_OFF));
 		vo.setPltMaxCarryOverTimes("0");
-		vo.setPltHalfDayUnit("0");
+		vo.setPltHalfDayUnit(String.valueOf(MospConst.INACTIVATE_FLAG_OFF));
+		vo.setPltWorkOnHolidayCalc("3");
+		
+		vo.setTxtProportionallyOneDayAndSixMonths(Integer.toString(1));
+		vo.setTxtProportionallyOneDayAndOneYearAndSixMonths(Integer.toString(2));
+		vo.setTxtProportionallyOneDayAndTwoYearsAndSixMonths(Integer.toString(2));
+		vo.setTxtProportionallyOneDayAndThreeYearsAndSixMonths(Integer.toString(2));
+		vo.setTxtProportionallyOneDayAndFourYearsAndSixMonths(Integer.toString(3));
+		vo.setTxtProportionallyOneDayAndFiveYearsAndSixMonths(Integer.toString(3));
+		vo.setTxtProportionallyOneDayAndSixYearsAndSixMonthsOrMore(Integer.toString(3));
+		vo.setTxtProportionallyTwoDaysAndSixMonths(Integer.toString(3));
+		vo.setTxtProportionallyTwoDaysAndOneYearAndSixMonths(Integer.toString(4));
+		vo.setTxtProportionallyTwoDaysAndTwoYearsAndSixMonths(Integer.toString(4));
+		vo.setTxtProportionallyTwoDaysAndThreeYearsAndSixMonths(Integer.toString(5));
+		vo.setTxtProportionallyTwoDaysAndFourYearsAndSixMonths(Integer.toString(6));
+		vo.setTxtProportionallyTwoDaysAndFiveYearsAndSixMonths(Integer.toString(6));
+		vo.setTxtProportionallyTwoDaysAndSixYearsAndSixMonthsOrMore(Integer.toString(7));
+		vo.setTxtProportionallyThreeDaysAndSixMonths(Integer.toString(5));
+		vo.setTxtProportionallyThreeDaysAndOneYearAndSixMonths(Integer.toString(6));
+		vo.setTxtProportionallyThreeDaysAndTwoYearsAndSixMonths(Integer.toString(6));
+		vo.setTxtProportionallyThreeDaysAndThreeYearsAndSixMonths(Integer.toString(8));
+		vo.setTxtProportionallyThreeDaysAndFourYearsAndSixMonths(Integer.toString(9));
+		vo.setTxtProportionallyThreeDaysAndFiveYearsAndSixMonths(Integer.toString(10));
+		vo.setTxtProportionallyThreeDaysAndSixYearsAndSixMonthsOrMore(Integer.toString(11));
+		vo.setTxtProportionallyFourDaysAndSixMonths(Integer.toString(7));
+		vo.setTxtProportionallyFourDaysAndOneYearAndSixMonths(Integer.toString(8));
+		vo.setTxtProportionallyFourDaysAndTwoYearsAndSixMonths(Integer.toString(9));
+		vo.setTxtProportionallyFourDaysAndThreeYearsAndSixMonths(Integer.toString(10));
+		vo.setTxtProportionallyFourDaysAndFourYearsAndSixMonths(Integer.toString(12));
+		vo.setTxtProportionallyFourDaysAndFiveYearsAndSixMonths(Integer.toString(13));
+		vo.setTxtProportionallyFourDaysAndSixYearsAndSixMonthsOrMore(Integer.toString(15));
+		vo.setTxtProportionallyFiveDaysOrMoreAndSixMonths(Integer.toString(10));
+		vo.setTxtProportionallyFiveDaysOrMoreAndOneYearAndSixMonths(Integer.toString(11));
+		vo.setTxtProportionallyFiveDaysOrMoreAndTwoYearsAndSixMonths(Integer.toString(12));
+		vo.setTxtProportionallyFiveDaysOrMoreAndThreeYearsAndSixMonths(Integer.toString(14));
+		vo.setTxtProportionallyFiveDaysOrMoreAndFourYearsAndSixMonths(Integer.toString(16));
+		vo.setTxtProportionallyFiveDaysOrMoreAndFiveYearsAndSixMonths(Integer.toString(18));
+		vo.setTxtProportionallyFiveDaysOrMoreAndSixYearsAndSixMonthsOrMore(Integer.toString(20));
 		
 		vo.setTxtGivingTimingJanuary("0");
 		vo.setTxtGivingTimingFebruary("0");
@@ -680,6 +747,42 @@ public class PaidHolidayCardAction extends TimeSettingAction {
 	}
 	
 	/**
+	 * 有給休暇比例付与新規追加処理を行う。<br>
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	protected void insertProportionally() throws MospException {
+		PaidHolidayProportionallyRegistBeanInterface regist = time().paidHolidayProportionallyRegist();
+		for (int i = 0; i < 5; i++) {
+			int prescribedWeeklyWorkingDays = i + 1;
+			for (int j = 0; j < 7; j++) {
+				PaidHolidayProportionallyDtoInterface dto = regist.getInitDto();
+				int continuousServiceTermsCountingFromTheEmploymentDay = 12 * j + 6;
+				setDtoFields(dto, prescribedWeeklyWorkingDays, continuousServiceTermsCountingFromTheEmploymentDay);
+				// 新規登録
+				regist.insert(dto);
+			}
+		}
+	}
+	
+	/**
+	 * 有給休暇比例付与履歴追加処理を行う。<br>
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	protected void addProportionally() throws MospException {
+		PaidHolidayProportionallyRegistBeanInterface regist = time().paidHolidayProportionallyRegist();
+		for (int i = 0; i < 5; i++) {
+			int prescribedWeeklyWorkingDays = i + 1;
+			for (int j = 0; j < 7; j++) {
+				PaidHolidayProportionallyDtoInterface dto = regist.getInitDto();
+				int continuousServiceTermsCountingFromTheEmploymentDay = 12 * j + 6;
+				setDtoFields(dto, prescribedWeeklyWorkingDays, continuousServiceTermsCountingFromTheEmploymentDay);
+				// 履歴追加
+				regist.add(dto);
+			}
+		}
+	}
+	
+	/**
 	 * VO(編集項目)の値をDTOに設定する。<br>
 	 * @param dto 対象DTO
 	 */
@@ -705,6 +808,7 @@ public class PaidHolidayCardAction extends TimeSettingAction {
 		dto.setMaxCarryOverYear(getInt(vo.getPltMaxCarryOverYear()));
 		dto.setMaxCarryOverTimes(getInt(vo.getPltMaxCarryOverTimes()));
 		dto.setHalfDayUnit(getInt(vo.getPltHalfDayUnit()));
+		dto.setWorkOnHolidayCalc(getInt(vo.getPltWorkOnHolidayCalc()));
 		dto.setInactivateFlag(getInt(vo.getPltEditInactivate()));
 		dto.setPointDateMonth(getInt(vo.getTxtPointDateMonth()));
 		dto.setPointDateDay(getInt(vo.getTxtPointDateDay()));
@@ -716,6 +820,185 @@ public class PaidHolidayCardAction extends TimeSettingAction {
 		}
 		if (vo.getTxtGeneralJoiningAmount().length() != 0) {
 			dto.setGeneralJoiningAmount(getInt(vo.getTxtGeneralJoiningAmount()));
+		}
+	}
+	
+	/**
+	 * VO(編集項目)の値をDTOに設定する。<br>
+	 * @param dto 対象DTO
+	 * @param prescribedWeeklyWorkingDays 週所定労働日数
+	 * @param continuousServiceTermsCountingFromTheEmploymentDay 雇入れの日から起算した継続勤務期間
+	 */
+	protected void setDtoFields(PaidHolidayProportionallyDtoInterface dto, int prescribedWeeklyWorkingDays,
+			int continuousServiceTermsCountingFromTheEmploymentDay) {
+		// VO取得
+		PaidHolidayCardVo vo = (PaidHolidayCardVo)mospParams.getVo();
+		// VOの値をDTOに設定
+		dto.setPaidHolidayCode(vo.getTxtPaidHolidayCode());
+		dto.setActivateDate(getEditActivateDate());
+		dto.setPrescribedWeeklyWorkingDays(prescribedWeeklyWorkingDays);
+		dto.setContinuousServiceTermsCountingFromTheEmploymentDay(continuousServiceTermsCountingFromTheEmploymentDay);
+		dto.setDays(0);
+		dto.setInactivateFlag(Integer.parseInt(vo.getPltEditInactivate()));
+		if (!Integer.toString(TimeConst.CODE_PAID_HOLIDAY_TYPE_PROPORTIONALLY).equals(vo.getPltPaidHolidayType())) {
+			// 比例でない場合
+			return;
+		}
+		// 比例である場合
+		if (isFiveDays(prescribedWeeklyWorkingDays)) {
+			// 5日以上の場合
+			if (isSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+				// 6ヶ月の場合
+				dto.setDays(Integer.parseInt(vo.getTxtProportionallyFiveDaysOrMoreAndSixMonths()));
+				return;
+			} else if (isOneYearAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+				// 1年6ヶ月の場合
+				dto.setDays(Integer.parseInt(vo.getTxtProportionallyFiveDaysOrMoreAndOneYearAndSixMonths()));
+				return;
+			} else if (isTwoYearsAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+				// 2年6ヶ月の場合
+				dto.setDays(Integer.parseInt(vo.getTxtProportionallyFiveDaysOrMoreAndTwoYearsAndSixMonths()));
+				return;
+			} else if (isThreeYearsAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+				// 3年6ヶ月の場合
+				dto.setDays(Integer.parseInt(vo.getTxtProportionallyFiveDaysOrMoreAndThreeYearsAndSixMonths()));
+				return;
+			} else if (isFourYearsAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+				// 4年6ヶ月の場合
+				dto.setDays(Integer.parseInt(vo.getTxtProportionallyFiveDaysOrMoreAndFourYearsAndSixMonths()));
+				return;
+			} else if (isFiveYearsAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+				// 5年6ヶ月の場合
+				dto.setDays(Integer.parseInt(vo.getTxtProportionallyFiveDaysOrMoreAndFiveYearsAndSixMonths()));
+				return;
+			} else if (isSixYearsAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+				// 6年6ヶ月以上の場合
+				dto.setDays(Integer.parseInt(vo.getTxtProportionallyFiveDaysOrMoreAndSixYearsAndSixMonthsOrMore()));
+				return;
+			}
+		} else if (isFourDays(prescribedWeeklyWorkingDays)) {
+			// 4日の場合
+			if (isSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+				// 6ヶ月の場合
+				dto.setDays(Integer.parseInt(vo.getTxtProportionallyFourDaysAndSixMonths()));
+				return;
+			} else if (isOneYearAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+				// 1年6ヶ月の場合
+				dto.setDays(Integer.parseInt(vo.getTxtProportionallyFourDaysAndOneYearAndSixMonths()));
+				return;
+			} else if (isTwoYearsAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+				// 2年6ヶ月の場合
+				dto.setDays(Integer.parseInt(vo.getTxtProportionallyFourDaysAndTwoYearsAndSixMonths()));
+				return;
+			} else if (isThreeYearsAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+				// 3年6ヶ月の場合
+				dto.setDays(Integer.parseInt(vo.getTxtProportionallyFourDaysAndThreeYearsAndSixMonths()));
+				return;
+			} else if (isFourYearsAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+				// 4年6ヶ月の場合
+				dto.setDays(Integer.parseInt(vo.getTxtProportionallyFourDaysAndFourYearsAndSixMonths()));
+				return;
+			} else if (isFiveYearsAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+				// 5年6ヶ月の場合
+				dto.setDays(Integer.parseInt(vo.getTxtProportionallyFourDaysAndFiveYearsAndSixMonths()));
+				return;
+			} else if (isSixYearsAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+				// 6年6ヶ月以上の場合
+				dto.setDays(Integer.parseInt(vo.getTxtProportionallyFourDaysAndSixYearsAndSixMonthsOrMore()));
+				return;
+			}
+		} else if (isThreeDays(prescribedWeeklyWorkingDays)) {
+			// 3日の場合
+			if (isSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+				// 6ヶ月の場合
+				dto.setDays(Integer.parseInt(vo.getTxtProportionallyThreeDaysAndSixMonths()));
+				return;
+			} else if (isOneYearAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+				// 1年6ヶ月の場合
+				dto.setDays(Integer.parseInt(vo.getTxtProportionallyThreeDaysAndOneYearAndSixMonths()));
+				return;
+			} else if (isTwoYearsAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+				// 2年6ヶ月の場合
+				dto.setDays(Integer.parseInt(vo.getTxtProportionallyThreeDaysAndTwoYearsAndSixMonths()));
+				return;
+			} else if (isThreeYearsAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+				// 3年6ヶ月の場合
+				dto.setDays(Integer.parseInt(vo.getTxtProportionallyThreeDaysAndThreeYearsAndSixMonths()));
+				return;
+			} else if (isFourYearsAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+				// 4年6ヶ月の場合
+				dto.setDays(Integer.parseInt(vo.getTxtProportionallyThreeDaysAndFourYearsAndSixMonths()));
+				return;
+			} else if (isFiveYearsAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+				// 5年6ヶ月の場合
+				dto.setDays(Integer.parseInt(vo.getTxtProportionallyThreeDaysAndFiveYearsAndSixMonths()));
+				return;
+			} else if (isSixYearsAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+				// 6年6ヶ月以上の場合
+				dto.setDays(Integer.parseInt(vo.getTxtProportionallyThreeDaysAndSixYearsAndSixMonthsOrMore()));
+				return;
+			}
+		} else if (isTwoDays(prescribedWeeklyWorkingDays)) {
+			// 2日の場合
+			if (isSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+				// 6ヶ月の場合
+				dto.setDays(Integer.parseInt(vo.getTxtProportionallyTwoDaysAndSixMonths()));
+				return;
+			} else if (isOneYearAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+				// 1年6ヶ月の場合
+				dto.setDays(Integer.parseInt(vo.getTxtProportionallyTwoDaysAndOneYearAndSixMonths()));
+				return;
+			} else if (isTwoYearsAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+				// 2年6ヶ月の場合
+				dto.setDays(Integer.parseInt(vo.getTxtProportionallyTwoDaysAndTwoYearsAndSixMonths()));
+				return;
+			} else if (isThreeYearsAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+				// 3年6ヶ月の場合
+				dto.setDays(Integer.parseInt(vo.getTxtProportionallyTwoDaysAndThreeYearsAndSixMonths()));
+				return;
+			} else if (isFourYearsAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+				// 4年6ヶ月の場合
+				dto.setDays(Integer.parseInt(vo.getTxtProportionallyTwoDaysAndFourYearsAndSixMonths()));
+				return;
+			} else if (isFiveYearsAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+				// 5年6ヶ月の場合
+				dto.setDays(Integer.parseInt(vo.getTxtProportionallyTwoDaysAndFiveYearsAndSixMonths()));
+				return;
+			} else if (isSixYearsAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+				// 6年6ヶ月以上の場合
+				dto.setDays(Integer.parseInt(vo.getTxtProportionallyTwoDaysAndSixYearsAndSixMonthsOrMore()));
+				return;
+			}
+		} else if (isOneDay(prescribedWeeklyWorkingDays)) {
+			// 1日の場合
+			if (isSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+				// 6ヶ月の場合
+				dto.setDays(Integer.parseInt(vo.getTxtProportionallyOneDayAndSixMonths()));
+				return;
+			} else if (isOneYearAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+				// 1年6ヶ月の場合
+				dto.setDays(Integer.parseInt(vo.getTxtProportionallyOneDayAndOneYearAndSixMonths()));
+				return;
+			} else if (isTwoYearsAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+				// 2年6ヶ月の場合
+				dto.setDays(Integer.parseInt(vo.getTxtProportionallyOneDayAndTwoYearsAndSixMonths()));
+				return;
+			} else if (isThreeYearsAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+				// 3年6ヶ月の場合
+				dto.setDays(Integer.parseInt(vo.getTxtProportionallyOneDayAndThreeYearsAndSixMonths()));
+				return;
+			} else if (isFourYearsAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+				// 4年6ヶ月の場合
+				dto.setDays(Integer.parseInt(vo.getTxtProportionallyOneDayAndFourYearsAndSixMonths()));
+				return;
+			} else if (isFiveYearsAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+				// 5年6ヶ月の場合
+				dto.setDays(Integer.parseInt(vo.getTxtProportionallyOneDayAndFiveYearsAndSixMonths()));
+				return;
+			} else if (isSixYearsAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+				// 6年6ヶ月以上の場合
+				dto.setDays(Integer.parseInt(vo.getTxtProportionallyOneDayAndSixYearsAndSixMonthsOrMore()));
+			}
 		}
 	}
 	
@@ -747,6 +1030,7 @@ public class PaidHolidayCardAction extends TimeSettingAction {
 		vo.setPltMaxCarryOverYear(String.valueOf(dto.getMaxCarryOverYear()));
 		vo.setPltMaxCarryOverTimes(String.valueOf(dto.getMaxCarryOverTimes()));
 		vo.setPltHalfDayUnit(String.valueOf(dto.getHalfDayUnit()));
+		vo.setPltWorkOnHolidayCalc(String.valueOf(dto.getWorkOnHolidayCalc()));
 		vo.setPltEditInactivate(String.valueOf(dto.getInactivateFlag()));
 		vo.setPltEditInactivate(String.valueOf(dto.getInactivateFlag()));
 		vo.setTxtGeneralPointAmount(String.valueOf(dto.getGeneralPointAmount()));
@@ -754,6 +1038,175 @@ public class PaidHolidayCardAction extends TimeSettingAction {
 		vo.setTxtGeneralJoiningAmount(String.valueOf(dto.getGeneralJoiningAmount()));
 		vo.setTxtPointDateMonth(String.valueOf(dto.getPointDateMonth()));
 		vo.setTxtPointDateDay(String.valueOf(dto.getPointDateDay()));
+	}
+	
+	/**
+	 * DTOの値をVO(編集項目)に設定する。<br>
+	 * @param list リスト
+	 */
+	protected void setVoFieldsProportionally(List<PaidHolidayProportionallyDtoInterface> list) {
+		// VO取得
+		PaidHolidayCardVo vo = (PaidHolidayCardVo)mospParams.getVo();
+		for (PaidHolidayProportionallyDtoInterface dto : list) {
+			int prescribedWeeklyWorkingDays = dto.getPrescribedWeeklyWorkingDays();
+			int continuousServiceTermsCountingFromTheEmploymentDay = dto
+				.getContinuousServiceTermsCountingFromTheEmploymentDay();
+			if (isFiveDays(prescribedWeeklyWorkingDays)) {
+				// 5日以上の場合
+				if (isSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+					// 6ヶ月の場合
+					vo.setTxtProportionallyFiveDaysOrMoreAndSixMonths(Integer.toString(dto.getDays()));
+					continue;
+				} else if (isOneYearAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+					// 1年6ヶ月の場合
+					vo.setTxtProportionallyFiveDaysOrMoreAndOneYearAndSixMonths(Integer.toString(dto.getDays()));
+					continue;
+				} else if (isTwoYearsAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+					// 2年6ヶ月の場合
+					vo.setTxtProportionallyFiveDaysOrMoreAndTwoYearsAndSixMonths(Integer.toString(dto.getDays()));
+					continue;
+				} else if (isThreeYearsAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+					// 3年6ヶ月の場合
+					vo.setTxtProportionallyFiveDaysOrMoreAndThreeYearsAndSixMonths(Integer.toString(dto.getDays()));
+					continue;
+				} else if (isFourYearsAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+					// 4年6ヶ月の場合
+					vo.setTxtProportionallyFiveDaysOrMoreAndFourYearsAndSixMonths(Integer.toString(dto.getDays()));
+					continue;
+				} else if (isFiveYearsAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+					// 5年6ヶ月の場合
+					vo.setTxtProportionallyFiveDaysOrMoreAndFiveYearsAndSixMonths(Integer.toString(dto.getDays()));
+					continue;
+				} else if (isSixYearsAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+					// 6年6ヶ月以上の場合
+					vo.setTxtProportionallyFiveDaysOrMoreAndSixYearsAndSixMonthsOrMore(Integer.toString(dto.getDays()));
+					continue;
+				}
+			} else if (isFourDays(prescribedWeeklyWorkingDays)) {
+				// 4日の場合
+				if (isSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+					// 6ヶ月の場合
+					vo.setTxtProportionallyFourDaysAndSixMonths(Integer.toString(dto.getDays()));
+					continue;
+				} else if (isOneYearAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+					// 1年6ヶ月の場合
+					vo.setTxtProportionallyFourDaysAndOneYearAndSixMonths(Integer.toString(dto.getDays()));
+					continue;
+				} else if (isTwoYearsAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+					// 2年6ヶ月の場合
+					vo.setTxtProportionallyFourDaysAndTwoYearsAndSixMonths(Integer.toString(dto.getDays()));
+					continue;
+				} else if (isThreeYearsAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+					// 3年6ヶ月の場合
+					vo.setTxtProportionallyFourDaysAndThreeYearsAndSixMonths(Integer.toString(dto.getDays()));
+					continue;
+				} else if (isFourYearsAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+					// 4年6ヶ月の場合
+					vo.setTxtProportionallyFourDaysAndFourYearsAndSixMonths(Integer.toString(dto.getDays()));
+					continue;
+				} else if (isFiveYearsAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+					// 5年6ヶ月の場合
+					vo.setTxtProportionallyFourDaysAndFiveYearsAndSixMonths(Integer.toString(dto.getDays()));
+					continue;
+				} else if (isSixYearsAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+					// 6年6ヶ月以上の場合
+					vo.setTxtProportionallyFourDaysAndSixYearsAndSixMonthsOrMore(Integer.toString(dto.getDays()));
+					continue;
+				}
+			} else if (isThreeDays(prescribedWeeklyWorkingDays)) {
+				// 3日の場合
+				if (isSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+					// 6ヶ月の場合
+					vo.setTxtProportionallyThreeDaysAndSixMonths(Integer.toString(dto.getDays()));
+					continue;
+				} else if (isOneYearAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+					// 1年6ヶ月の場合
+					vo.setTxtProportionallyThreeDaysAndOneYearAndSixMonths(Integer.toString(dto.getDays()));
+					continue;
+				} else if (isTwoYearsAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+					// 2年6ヶ月の場合
+					vo.setTxtProportionallyThreeDaysAndTwoYearsAndSixMonths(Integer.toString(dto.getDays()));
+					continue;
+				} else if (isThreeYearsAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+					// 3年6ヶ月の場合
+					vo.setTxtProportionallyThreeDaysAndThreeYearsAndSixMonths(Integer.toString(dto.getDays()));
+					continue;
+				} else if (isFourYearsAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+					// 4年6ヶ月の場合
+					vo.setTxtProportionallyThreeDaysAndFourYearsAndSixMonths(Integer.toString(dto.getDays()));
+					continue;
+				} else if (isFiveYearsAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+					// 5年6ヶ月の場合
+					vo.setTxtProportionallyThreeDaysAndFiveYearsAndSixMonths(Integer.toString(dto.getDays()));
+					continue;
+				} else if (isSixYearsAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+					// 6年6ヶ月以上の場合
+					vo.setTxtProportionallyThreeDaysAndSixYearsAndSixMonthsOrMore(Integer.toString(dto.getDays()));
+					continue;
+				}
+			} else if (isTwoDays(prescribedWeeklyWorkingDays)) {
+				// 2日の場合
+				if (isSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+					// 6ヶ月の場合
+					vo.setTxtProportionallyTwoDaysAndSixMonths(Integer.toString(dto.getDays()));
+					continue;
+				} else if (isOneYearAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+					// 1年6ヶ月の場合
+					vo.setTxtProportionallyTwoDaysAndOneYearAndSixMonths(Integer.toString(dto.getDays()));
+					continue;
+				} else if (isTwoYearsAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+					// 2年6ヶ月の場合
+					vo.setTxtProportionallyTwoDaysAndTwoYearsAndSixMonths(Integer.toString(dto.getDays()));
+					continue;
+				} else if (isThreeYearsAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+					// 3年6ヶ月の場合
+					vo.setTxtProportionallyTwoDaysAndThreeYearsAndSixMonths(Integer.toString(dto.getDays()));
+					continue;
+				} else if (isFourYearsAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+					// 4年6ヶ月の場合
+					vo.setTxtProportionallyTwoDaysAndFourYearsAndSixMonths(Integer.toString(dto.getDays()));
+					continue;
+				} else if (isFiveYearsAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+					// 5年6ヶ月の場合
+					vo.setTxtProportionallyTwoDaysAndFiveYearsAndSixMonths(Integer.toString(dto.getDays()));
+					continue;
+				} else if (isSixYearsAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+					// 6年6ヶ月以上の場合
+					vo.setTxtProportionallyTwoDaysAndSixYearsAndSixMonthsOrMore(Integer.toString(dto.getDays()));
+					continue;
+				}
+			} else if (prescribedWeeklyWorkingDays == 1) {
+				// 1日の場合
+				if (isSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+					// 6ヶ月の場合
+					vo.setTxtProportionallyOneDayAndSixMonths(Integer.toString(dto.getDays()));
+					continue;
+				} else if (isOneYearAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+					// 1年6ヶ月の場合
+					vo.setTxtProportionallyOneDayAndOneYearAndSixMonths(Integer.toString(dto.getDays()));
+					continue;
+				} else if (isTwoYearsAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+					// 2年6ヶ月の場合
+					vo.setTxtProportionallyOneDayAndTwoYearsAndSixMonths(Integer.toString(dto.getDays()));
+					continue;
+				} else if (isThreeYearsAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+					// 3年6ヶ月の場合
+					vo.setTxtProportionallyOneDayAndThreeYearsAndSixMonths(Integer.toString(dto.getDays()));
+					continue;
+				} else if (isFourYearsAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+					// 4年6ヶ月の場合
+					vo.setTxtProportionallyOneDayAndFourYearsAndSixMonths(Integer.toString(dto.getDays()));
+					continue;
+				} else if (isFiveYearsAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+					// 5年6ヶ月の場合
+					vo.setTxtProportionallyOneDayAndFiveYearsAndSixMonths(Integer.toString(dto.getDays()));
+					continue;
+				} else if (isSixYearsAndSixMonths(continuousServiceTermsCountingFromTheEmploymentDay)) {
+					// 6年6ヶ月以上の場合
+					vo.setTxtProportionallyOneDayAndSixYearsAndSixMonthsOrMore(Integer.toString(dto.getDays()));
+				}
+			}
+		}
 	}
 	
 	/**
@@ -1365,8 +1818,8 @@ public class PaidHolidayCardAction extends TimeSettingAction {
 			PaidHolidayEntranceDateDtoInterface dto = regist.getInitDto();
 			dto.setPaidHolidayCode(vo.getTxtPaidHolidayCode());
 			dto.setActivateDate(activateDate);
-			dto.setWorkMonth(getInt(vo.getTxtWorkYear1()) * TimeConst.CODE_DEFINITION_YEAR
-					+ getInt(vo.getTxtWorkMonth1()));
+			dto.setWorkMonth(
+					getInt(vo.getTxtWorkYear1()) * TimeConst.CODE_DEFINITION_YEAR + getInt(vo.getTxtWorkMonth1()));
 			dto.setJoiningDateAmount(getInt(vo.getTxtJoiningDateAmount1()));
 			dto.setInactivateFlag(inactivateFlag);
 			regist.insert(dto);
@@ -1376,8 +1829,8 @@ public class PaidHolidayCardAction extends TimeSettingAction {
 			PaidHolidayEntranceDateDtoInterface dto = regist.getInitDto();
 			dto.setPaidHolidayCode(vo.getTxtPaidHolidayCode());
 			dto.setActivateDate(activateDate);
-			dto.setWorkMonth(getInt(vo.getTxtWorkYear2()) * TimeConst.CODE_DEFINITION_YEAR
-					+ getInt(vo.getTxtWorkMonth2()));
+			dto.setWorkMonth(
+					getInt(vo.getTxtWorkYear2()) * TimeConst.CODE_DEFINITION_YEAR + getInt(vo.getTxtWorkMonth2()));
 			dto.setJoiningDateAmount(getInt(vo.getTxtJoiningDateAmount2()));
 			dto.setInactivateFlag(inactivateFlag);
 			regist.insert(dto);
@@ -1387,8 +1840,8 @@ public class PaidHolidayCardAction extends TimeSettingAction {
 			PaidHolidayEntranceDateDtoInterface dto = regist.getInitDto();
 			dto.setPaidHolidayCode(vo.getTxtPaidHolidayCode());
 			dto.setActivateDate(activateDate);
-			dto.setWorkMonth(getInt(vo.getTxtWorkYear3()) * TimeConst.CODE_DEFINITION_YEAR
-					+ getInt(vo.getTxtWorkMonth3()));
+			dto.setWorkMonth(
+					getInt(vo.getTxtWorkYear3()) * TimeConst.CODE_DEFINITION_YEAR + getInt(vo.getTxtWorkMonth3()));
 			dto.setJoiningDateAmount(getInt(vo.getTxtJoiningDateAmount3()));
 			dto.setInactivateFlag(inactivateFlag);
 			regist.insert(dto);
@@ -1398,8 +1851,8 @@ public class PaidHolidayCardAction extends TimeSettingAction {
 			PaidHolidayEntranceDateDtoInterface dto = regist.getInitDto();
 			dto.setPaidHolidayCode(vo.getTxtPaidHolidayCode());
 			dto.setActivateDate(activateDate);
-			dto.setWorkMonth(getInt(vo.getTxtWorkYear4()) * TimeConst.CODE_DEFINITION_YEAR
-					+ getInt(vo.getTxtWorkMonth4()));
+			dto.setWorkMonth(
+					getInt(vo.getTxtWorkYear4()) * TimeConst.CODE_DEFINITION_YEAR + getInt(vo.getTxtWorkMonth4()));
 			dto.setJoiningDateAmount(getInt(vo.getTxtJoiningDateAmount4()));
 			dto.setInactivateFlag(inactivateFlag);
 			regist.insert(dto);
@@ -1409,8 +1862,8 @@ public class PaidHolidayCardAction extends TimeSettingAction {
 			PaidHolidayEntranceDateDtoInterface dto = regist.getInitDto();
 			dto.setPaidHolidayCode(vo.getTxtPaidHolidayCode());
 			dto.setActivateDate(activateDate);
-			dto.setWorkMonth(getInt(vo.getTxtWorkYear5()) * TimeConst.CODE_DEFINITION_YEAR
-					+ getInt(vo.getTxtWorkMonth5()));
+			dto.setWorkMonth(
+					getInt(vo.getTxtWorkYear5()) * TimeConst.CODE_DEFINITION_YEAR + getInt(vo.getTxtWorkMonth5()));
 			dto.setJoiningDateAmount(getInt(vo.getTxtJoiningDateAmount5()));
 			dto.setInactivateFlag(inactivateFlag);
 			regist.insert(dto);
@@ -1420,8 +1873,8 @@ public class PaidHolidayCardAction extends TimeSettingAction {
 			PaidHolidayEntranceDateDtoInterface dto = regist.getInitDto();
 			dto.setPaidHolidayCode(vo.getTxtPaidHolidayCode());
 			dto.setActivateDate(activateDate);
-			dto.setWorkMonth(getInt(vo.getTxtWorkYear6()) * TimeConst.CODE_DEFINITION_YEAR
-					+ getInt(vo.getTxtWorkMonth6()));
+			dto.setWorkMonth(
+					getInt(vo.getTxtWorkYear6()) * TimeConst.CODE_DEFINITION_YEAR + getInt(vo.getTxtWorkMonth6()));
 			dto.setJoiningDateAmount(getInt(vo.getTxtJoiningDateAmount6()));
 			dto.setInactivateFlag(inactivateFlag);
 			regist.insert(dto);
@@ -1431,8 +1884,8 @@ public class PaidHolidayCardAction extends TimeSettingAction {
 			PaidHolidayEntranceDateDtoInterface dto = regist.getInitDto();
 			dto.setPaidHolidayCode(vo.getTxtPaidHolidayCode());
 			dto.setActivateDate(activateDate);
-			dto.setWorkMonth(getInt(vo.getTxtWorkYear7()) * TimeConst.CODE_DEFINITION_YEAR
-					+ getInt(vo.getTxtWorkMonth7()));
+			dto.setWorkMonth(
+					getInt(vo.getTxtWorkYear7()) * TimeConst.CODE_DEFINITION_YEAR + getInt(vo.getTxtWorkMonth7()));
 			dto.setJoiningDateAmount(getInt(vo.getTxtJoiningDateAmount7()));
 			dto.setInactivateFlag(inactivateFlag);
 			regist.insert(dto);
@@ -1442,8 +1895,8 @@ public class PaidHolidayCardAction extends TimeSettingAction {
 			PaidHolidayEntranceDateDtoInterface dto = regist.getInitDto();
 			dto.setPaidHolidayCode(vo.getTxtPaidHolidayCode());
 			dto.setActivateDate(activateDate);
-			dto.setWorkMonth(getInt(vo.getTxtWorkYear8()) * TimeConst.CODE_DEFINITION_YEAR
-					+ getInt(vo.getTxtWorkMonth8()));
+			dto.setWorkMonth(
+					getInt(vo.getTxtWorkYear8()) * TimeConst.CODE_DEFINITION_YEAR + getInt(vo.getTxtWorkMonth8()));
 			dto.setJoiningDateAmount(getInt(vo.getTxtJoiningDateAmount8()));
 			dto.setInactivateFlag(inactivateFlag);
 			regist.insert(dto);
@@ -1453,8 +1906,8 @@ public class PaidHolidayCardAction extends TimeSettingAction {
 			PaidHolidayEntranceDateDtoInterface dto = regist.getInitDto();
 			dto.setPaidHolidayCode(vo.getTxtPaidHolidayCode());
 			dto.setActivateDate(activateDate);
-			dto.setWorkMonth(getInt(vo.getTxtWorkYear9()) * TimeConst.CODE_DEFINITION_YEAR
-					+ getInt(vo.getTxtWorkMonth9()));
+			dto.setWorkMonth(
+					getInt(vo.getTxtWorkYear9()) * TimeConst.CODE_DEFINITION_YEAR + getInt(vo.getTxtWorkMonth9()));
 			dto.setJoiningDateAmount(getInt(vo.getTxtJoiningDateAmount9()));
 			dto.setInactivateFlag(inactivateFlag);
 			regist.insert(dto);
@@ -1464,8 +1917,8 @@ public class PaidHolidayCardAction extends TimeSettingAction {
 			PaidHolidayEntranceDateDtoInterface dto = regist.getInitDto();
 			dto.setPaidHolidayCode(vo.getTxtPaidHolidayCode());
 			dto.setActivateDate(activateDate);
-			dto.setWorkMonth(getInt(vo.getTxtWorkYear10()) * TimeConst.CODE_DEFINITION_YEAR
-					+ getInt(vo.getTxtWorkMonth10()));
+			dto.setWorkMonth(
+					getInt(vo.getTxtWorkYear10()) * TimeConst.CODE_DEFINITION_YEAR + getInt(vo.getTxtWorkMonth10()));
 			dto.setJoiningDateAmount(getInt(vo.getTxtJoiningDateAmount10()));
 			dto.setInactivateFlag(inactivateFlag);
 			regist.insert(dto);
@@ -1475,8 +1928,8 @@ public class PaidHolidayCardAction extends TimeSettingAction {
 			PaidHolidayEntranceDateDtoInterface dto = regist.getInitDto();
 			dto.setPaidHolidayCode(vo.getTxtPaidHolidayCode());
 			dto.setActivateDate(activateDate);
-			dto.setWorkMonth(getInt(vo.getTxtWorkYear11()) * TimeConst.CODE_DEFINITION_YEAR
-					+ getInt(vo.getTxtWorkMonth11()));
+			dto.setWorkMonth(
+					getInt(vo.getTxtWorkYear11()) * TimeConst.CODE_DEFINITION_YEAR + getInt(vo.getTxtWorkMonth11()));
 			dto.setJoiningDateAmount(getInt(vo.getTxtJoiningDateAmount11()));
 			dto.setInactivateFlag(inactivateFlag);
 			regist.insert(dto);
@@ -1486,8 +1939,8 @@ public class PaidHolidayCardAction extends TimeSettingAction {
 			PaidHolidayEntranceDateDtoInterface dto = regist.getInitDto();
 			dto.setPaidHolidayCode(vo.getTxtPaidHolidayCode());
 			dto.setActivateDate(activateDate);
-			dto.setWorkMonth(getInt(vo.getTxtWorkYear12()) * TimeConst.CODE_DEFINITION_YEAR
-					+ getInt(vo.getTxtWorkMonth12()));
+			dto.setWorkMonth(
+					getInt(vo.getTxtWorkYear12()) * TimeConst.CODE_DEFINITION_YEAR + getInt(vo.getTxtWorkMonth12()));
 			dto.setJoiningDateAmount(getInt(vo.getTxtJoiningDateAmount12()));
 			dto.setInactivateFlag(inactivateFlag);
 			regist.insert(dto);
@@ -1588,6 +2041,132 @@ public class PaidHolidayCardAction extends TimeSettingAction {
 		vo.setTxtStockYearAmount(String.valueOf(dto.getStockYearAmount()));
 		vo.setTxtStockTotalAmount(String.valueOf(dto.getStockTotalAmount()));
 		vo.setTxtStockLimitDate(String.valueOf(dto.getStockLimitDate()));
+	}
+	
+	/**
+	 * 比例かどうか確認する。<br>
+	 * @return 確認結果(true：比例である、false：比例でない)
+	 */
+	protected boolean isProportionally() {
+		// VO取得
+		PaidHolidayCardVo vo = (PaidHolidayCardVo)mospParams.getVo();
+		return Integer.toString(TimeConst.CODE_PAID_HOLIDAY_TYPE_PROPORTIONALLY).equals(vo.getPltPaidHolidayType());
+	}
+	
+	/**
+	 * 一日かどうか確認する。<br>
+	 * @param prescribedWeeklyWorkingDays 週所定労働日数
+	 * @return 確認結果(true：一日である、false：一日でない)
+	 */
+	protected boolean isOneDay(int prescribedWeeklyWorkingDays) {
+		return prescribedWeeklyWorkingDays == 1;
+	}
+	
+	/**
+	 * 二日かどうか確認する。<br>
+	 * @param prescribedWeeklyWorkingDays 週所定労働日数
+	 * @return 確認結果(true：二日である、false：二日でない)
+	 */
+	protected boolean isTwoDays(int prescribedWeeklyWorkingDays) {
+		return prescribedWeeklyWorkingDays == 2;
+	}
+	
+	/**
+	 * 三日かどうか確認する。<br>
+	 * @param prescribedWeeklyWorkingDays 週所定労働日数
+	 * @return 確認結果(true：三日である、false：三日でない)
+	 */
+	protected boolean isThreeDays(int prescribedWeeklyWorkingDays) {
+		return prescribedWeeklyWorkingDays == 3;
+	}
+	
+	/**
+	 * 四日かどうか確認する。<br>
+	 * @param prescribedWeeklyWorkingDays 週所定労働日数
+	 * @return 確認結果(true：四日である、false：四日でない)
+	 */
+	protected boolean isFourDays(int prescribedWeeklyWorkingDays) {
+		return prescribedWeeklyWorkingDays == 4;
+	}
+	
+	/**
+	 * 五日かどうか確認する。<br>
+	 * @param prescribedWeeklyWorkingDays 週所定労働日数
+	 * @return 確認結果(true：五日である、false：五日でない)
+	 */
+	protected boolean isFiveDays(int prescribedWeeklyWorkingDays) {
+//		return prescribedWeeklyWorkingDays >= 5;
+		return prescribedWeeklyWorkingDays == 5;
+	}
+	
+	/**
+	 * 六箇月かどうか確認する。<br>
+	 * @param continuousServiceTermsCountingFromTheEmploymentDay 雇入れの日から起算した継続勤務期間
+	 * @return 確認結果(true：六箇月である、false：六箇月でない)
+	 */
+	protected boolean isSixMonths(int continuousServiceTermsCountingFromTheEmploymentDay) {
+		return continuousServiceTermsCountingFromTheEmploymentDay == 6;
+	}
+	
+	/**
+	 * 一年六箇月かどうか確認する。<br>
+	 * @param continuousServiceTermsCountingFromTheEmploymentDay 雇入れの日から起算した継続勤務期間
+	 * @return 確認結果(true：一年六箇月である、false：一年六箇月でない)
+	 */
+	protected boolean isOneYearAndSixMonths(int continuousServiceTermsCountingFromTheEmploymentDay) {
+		return continuousServiceTermsCountingFromTheEmploymentDay == 18;
+	}
+	
+	/**
+	 * 二年六箇月かどうか確認する。<br>
+	 * @param continuousServiceTermsCountingFromTheEmploymentDay 雇入れの日から起算した継続勤務期間
+	 * @return 確認結果(true：二年六箇月である、false：二年六箇月でない)
+	 */
+	protected boolean isTwoYearsAndSixMonths(int continuousServiceTermsCountingFromTheEmploymentDay) {
+		return continuousServiceTermsCountingFromTheEmploymentDay == 30;
+	}
+	
+	/**
+	 * 三年六箇月かどうか確認する。<br>
+	 * @param continuousServiceTermsCountingFromTheEmploymentDay 雇入れの日から起算した継続勤務期間
+	 * @return 確認結果(true：三年六箇月である、false：三年六箇月でない)
+	 */
+	protected boolean isThreeYearsAndSixMonths(int continuousServiceTermsCountingFromTheEmploymentDay) {
+		return continuousServiceTermsCountingFromTheEmploymentDay == 42;
+	}
+	
+	/**
+	 * 四年六箇月かどうか確認する。<br>
+	 * @param continuousServiceTermsCountingFromTheEmploymentDay 雇入れの日から起算した継続勤務期間
+	 * @return 確認結果(true：四年六箇月である、false：四年六箇月でない)
+	 */
+	protected boolean isFourYearsAndSixMonths(int continuousServiceTermsCountingFromTheEmploymentDay) {
+		return continuousServiceTermsCountingFromTheEmploymentDay == 54;
+	}
+	
+	/**
+	 * 五年六箇月かどうか確認する。<br>
+	 * @param continuousServiceTermsCountingFromTheEmploymentDay 雇入れの日から起算した継続勤務期間
+	 * @return 確認結果(true：五年六箇月である、false：五年六箇月でない)
+	 */
+	protected boolean isFiveYearsAndSixMonths(int continuousServiceTermsCountingFromTheEmploymentDay) {
+		return continuousServiceTermsCountingFromTheEmploymentDay == 66;
+	}
+	
+	/**
+	 * 六年六箇月かどうか確認する。<br>
+	 * @param continuousServiceTermsCountingFromTheEmploymentDay 雇入れの日から起算した継続勤務期間
+	 * @return 確認結果(true：六年六箇月である、false：六年六箇月でない)
+	 */
+	protected boolean isSixYearsAndSixMonths(int continuousServiceTermsCountingFromTheEmploymentDay) {
+		// 78箇月 (12箇月 * 6年 + 6箇月)
+		int day = 78;
+//		while (day < continuousServiceTermsCountingFromTheEmploymentDay) {
+//			// 雇入れの日から起算した継続勤務期間より小さい場合は12箇月を加算
+//			day += 12;
+//		}
+//		// 雇入れの日から起算した継続勤務期間以上の場合
+		return continuousServiceTermsCountingFromTheEmploymentDay == day;
 	}
 	
 }

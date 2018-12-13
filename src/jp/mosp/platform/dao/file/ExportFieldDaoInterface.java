@@ -53,4 +53,13 @@ public interface ExportFieldDaoInterface extends BaseDaoInterface {
 	 */
 	public List<String> getFieldNameList(String exportCode) throws MospException;
 	
+	/**
+	 * エクスポートコードとフィールド名称（前方一致）でエクスポートマスタリストを取得する
+	 * @param exportCode エクスポートコード
+	 * @param aryFieldName フィールド名称
+	 * @return エクスポートマスタリスト
+	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
+	 */
+	List<ExportFieldDtoInterface> findLikeStartNameList(String exportCode, String[] aryFieldName) throws MospException;
+	
 }

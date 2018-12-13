@@ -18,6 +18,8 @@
 package jp.mosp.time.base;
 
 import java.text.DecimalFormat;
+import java.text.Format;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -26,7 +28,9 @@ import jp.mosp.framework.base.BaseDtoInterface;
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.constant.MospConst;
 import jp.mosp.framework.utils.DateUtility;
+import jp.mosp.framework.utils.HtmlUtility;
 import jp.mosp.framework.utils.MospUtility;
+import jp.mosp.framework.utils.RoleUtility;
 import jp.mosp.platform.base.PlatformAction;
 import jp.mosp.platform.constant.PlatformConst;
 import jp.mosp.platform.constant.PlatformMessageConst;
@@ -34,16 +38,21 @@ import jp.mosp.platform.dto.human.HumanDtoInterface;
 import jp.mosp.platform.dto.workflow.WorkflowCommentDtoInterface;
 import jp.mosp.platform.dto.workflow.WorkflowDtoInterface;
 import jp.mosp.platform.utils.PlatformMessageUtility;
+import jp.mosp.platform.utils.PlatformNamingUtility;
+import jp.mosp.platform.utils.WorkflowUtility;
 import jp.mosp.time.bean.ApplicationReferenceBeanInterface;
+import jp.mosp.time.bean.AttendanceReferenceBeanInterface;
 import jp.mosp.time.bean.DifferenceRequestReferenceBeanInterface;
 import jp.mosp.time.bean.RequestUtilBeanInterface;
 import jp.mosp.time.bean.ScheduleDateReferenceBeanInterface;
 import jp.mosp.time.bean.ScheduleReferenceBeanInterface;
+import jp.mosp.time.bean.SubstituteReferenceBeanInterface;
 import jp.mosp.time.bean.WorkTypePatternItemReferenceBeanInterface;
 import jp.mosp.time.bean.WorkTypeReferenceBeanInterface;
 import jp.mosp.time.constant.TimeConst;
 import jp.mosp.time.constant.TimeMessageConst;
 import jp.mosp.time.dto.settings.ApplicationDtoInterface;
+import jp.mosp.time.dto.settings.AttendanceDtoInterface;
 import jp.mosp.time.dto.settings.DifferenceRequestDtoInterface;
 import jp.mosp.time.dto.settings.HolidayDtoInterface;
 import jp.mosp.time.dto.settings.ManagementRequestListDtoInterface;
@@ -51,8 +60,11 @@ import jp.mosp.time.dto.settings.ScheduleDateDtoInterface;
 import jp.mosp.time.dto.settings.ScheduleDtoInterface;
 import jp.mosp.time.dto.settings.SubstituteDtoInterface;
 import jp.mosp.time.dto.settings.WorkOnHolidayRequestDtoInterface;
+import jp.mosp.time.dto.settings.WorkTypeDtoInterface;
 import jp.mosp.time.dto.settings.WorkTypePatternDtoInterface;
 import jp.mosp.time.input.action.ApprovalHistoryAction;
+import jp.mosp.time.utils.TimeMessageUtility;
+import jp.mosp.time.utils.TimeUtility;
 
 /**
  * MosP勤怠管理におけるActionの基本機能を提供する。<br>
@@ -173,23 +185,34 @@ public abstract class TimeAction extends PlatformAction {
 	}
 	
 	/**
-	 * VOから有効日を取得する。<br>
-	 * @return 有効日
-	 */
-	protected Date getActivateDate() {
-		// VO取得
-		TimeVo vo = (TimeVo)mospParams.getVo();
-		// 有効日取得
-		return getDate(vo.getTxtActivateYear(), vo.getTxtActivateMonth(), vo.getTxtActivateDay());
-	}
-	
-	/**
 	 * 年プルダウン取得
 	 * @param year 年
 	 * @return 年プルダウン用文字列配列
 	 */
 	protected String[][] getYearArray(int year) {
 		return getYearArray(year, 3, 1);
+	}
+	
+	/**
+	 * 年プルダウンを取得する。<br>
+	 * 勤怠集計情報が存在する最小の年からシステム年の翌年までを含める。<br>
+	 * @return 年プルダウン
+	 * @throws MospException インスタンスの取得或いはSQL実行に失敗した場合
+	 */
+	protected String[][] getYearArray() throws MospException {
+		// システム年を取得
+		int year = DateUtility.getYear(getSystemDate());
+		// 勤怠集計情報が存在する年を取得
+		int minYear = timeReference().totalTime().getMinYear();
+		// 過去年数を準備
+		int former = year - minYear;
+		// 勤怠集計情報が存在する最小の年が0であるかシステム年以降である場合
+		if (minYear == 0 || former < 1) {
+			// 過去年数は1
+			former = 1;
+		}
+		// 年プルダウンを取得
+		return getYearArray(year, former, 1);
 	}
 	
 	/**
@@ -366,7 +389,7 @@ public abstract class TimeAction extends PlatformAction {
 	 * @return 時間(時)
 	 */
 	protected int convIntegerTimeToIntegerHour(int time) {
-		return time / TimeConst.CODE_DEFINITION_HOUR;
+		return TimeUtility.getHours(time);
 	}
 	
 	/**
@@ -384,7 +407,7 @@ public abstract class TimeAction extends PlatformAction {
 	 * @return 時間(分)
 	 */
 	protected int convIntegerTimeToIntegerMinute(int time) {
-		return Math.abs(time) % TimeConst.CODE_DEFINITION_HOUR;
+		return TimeUtility.getMinutes(time);
 	}
 	
 	/**
@@ -416,10 +439,10 @@ public abstract class TimeAction extends PlatformAction {
 		// 対象日を設定
 		vo.setTargetDate(targetDate);
 		// 人事情報取得及び確認
-		HumanDtoInterface humanDto = reference().human().getHumanInfo(personalId, targetDate);
+		HumanDtoInterface humanDto = getHumanInfo(personalId, targetDate);
 		if (humanDto == null) {
-			// エラーメッセージ設定
-			addHumanHistoryNotExistErrorMessage(targetDate);
+			// エラーメッセージ追加
+			PlatformMessageUtility.addErrorEmployeeHistoryNotExist(mospParams, targetDate, null);
 			return;
 		}
 		// 社員コードを設定
@@ -541,12 +564,15 @@ public abstract class TimeAction extends PlatformAction {
 	 * @param fraction 小数点以下最大桁数
 	 * @return 時間(文字列)
 	 */
-	public String getNumberString(double number, int fraction) {
-		String intFcn = "0";
+	protected String getNumberString(double number, int fraction) {
+		// 小数点以下のフォーマット文字列を作成
+		StringBuilder intFcn = new StringBuilder("0");
 		for (int i = 1; i < fraction; i++) {
-			intFcn = intFcn + "0";
+			intFcn.append("0");
 		}
-		DecimalFormat numFormat = new DecimalFormat("0" + mospParams.getName("Dot") + intFcn);
+		// フォーマット準備
+		DecimalFormat numFormat = new DecimalFormat("0" + mospParams.getName("Dot") + intFcn.toString());
+		// フォーマット
 		return numFormat.format(number);
 	}
 	
@@ -606,8 +632,8 @@ public abstract class TimeAction extends PlatformAction {
 		if (date1 == null || date2 == null) {
 			return "";
 		}
-		return getTimeWaveFormat(date1, date2,
-				DateUtility.getDate(DateUtility.getYear(date1), DateUtility.getMonth(date1), DateUtility.getDay(date1)));
+		return getTimeWaveFormat(date1, date2, DateUtility.getDate(DateUtility.getYear(date1),
+				DateUtility.getMonth(date1), DateUtility.getDay(date1)));
 	}
 	
 	/**
@@ -656,6 +682,22 @@ public abstract class TimeAction extends PlatformAction {
 	}
 	
 	/**
+	 * 取下失敗メッセージの設定。
+	 */
+	protected void addTakeDownFailedMessage() {
+		String rep = mospParams.getName("TakeDown");
+		mospParams.addMessage(PlatformMessageConst.MSG_PROCESS_FAILED, rep);
+	}
+	
+	/**
+	 * 試算成功メッセージの設定。
+	 */
+	protected void addCalcMessage() {
+		String rep = mospParams.getName("TrialCalc");
+		mospParams.addMessage(PlatformMessageConst.MSG_PROCESS_SUCCEED, rep);
+	}
+	
+	/**
 	 * 下書成功メッセージの設定。
 	 */
 	protected void addDraftMessage() {
@@ -668,6 +710,14 @@ public abstract class TimeAction extends PlatformAction {
 	 */
 	protected void addAppliMessage() {
 		String rep = mospParams.getName("Application");
+		mospParams.addMessage(PlatformMessageConst.MSG_PROCESS_SUCCEED, rep);
+	}
+	
+	/**
+	 * 承認解除申請成功メッセージの設定。
+	 */
+	protected void addCancellAppliMessage() {
+		String rep = mospParams.getName("Approval", "Release", "Application");
 		mospParams.addMessage(PlatformMessageConst.MSG_PROCESS_SUCCEED, rep);
 	}
 	
@@ -705,9 +755,9 @@ public abstract class TimeAction extends PlatformAction {
 	 */
 	protected String getOvertimeTypeName(int time) {
 		if (1 == time) {
-			return mospParams.getName("Work") + mospParams.getName("Ahead");
+			return mospParams.getName("Work", "Ahead");
 		} else {
-			return mospParams.getName("Work") + mospParams.getName("Later");
+			return mospParams.getName("Work", "Later");
 		}
 	}
 	
@@ -779,16 +829,6 @@ public abstract class TimeAction extends PlatformAction {
 	}
 	
 	/**
-	 * 苗字と名前を受け取りスペースを挿入した名前を返す。<br>
-	 * @param lastName 姓
-	 * @param firstName 名
-	 * @return スペースを挿入したフルネーム
-	 */
-	public String getLastFirstName(String lastName, String firstName) {
-		return MospUtility.getHumansName(firstName, lastName);
-	}
-	
-	/**
 	 * classで使用する文字列の設定。<br>
 	 * @param dateTimeNum 一覧表示する日 or 時間
 	 * @return dateTimeNum判定後の文字色設定タグ
@@ -820,10 +860,41 @@ public abstract class TimeAction extends PlatformAction {
 	
 	/**
 	 * @param number 日にち
-	 * @return 時間(文字列) + 日
+	 * @return 日数(文字列) + 日
 	 */
 	protected String getFormatRestDay(double number) {
-		return getNumberString(number, 1) + mospParams.getName("Day");
+		// 文字列を作成
+		StringBuilder sb = new StringBuilder(getNumberString(number, 1));
+		sb.append(PlatformNamingUtility.day(mospParams));
+		// 文字列を取得
+		return sb.toString();
+	}
+	
+	/**
+	 * 日数及び時間数の文字列を取得する。<br>
+	 * @param days         日数
+	 * @param hours        時間数
+	 * @param isZeroHyphen ハイフン変換フラグ(true：0日0時間を-に変換、false：変換しない)
+	 * @return 日数(文字列) + 日 + 時間数 + 時間
+	 */
+	protected String getFormatDaysAndHours(double days, int hours, boolean isZeroHyphen) {
+		// 0日0時間で-に変換する場合
+		if (isZeroHyphen && days == 0D && hours == 0) {
+			// -を取得
+			return PlatformNamingUtility.hyphen(mospParams);
+		}
+		// 文字列を作成
+		StringBuilder sb = new StringBuilder(getFormatRestDay(days));
+		// 時間数が0である場合
+		if (hours == 0) {
+			// 文字列を取得
+			return sb.toString();
+		}
+		// 時間数を追加
+		sb.append(hours);
+		sb.append(PlatformNamingUtility.time(mospParams));
+		// 文字列を取得
+		return sb.toString();
 	}
 	
 	/**
@@ -847,8 +918,8 @@ public abstract class TimeAction extends PlatformAction {
 			return mospParams.getName("Vacation");
 		} else if (TimeConst.CODE_FUNCTION_WORK_HOLIDAY.equals(dto.getRequestType())) {
 			// 振出・休出
-			BaseDtoInterface baseDto = timeReference().approvalInfo()
-				.getRequestDtoForWorkflow(dto.getWorkflow(), false);
+			BaseDtoInterface baseDto = timeReference().approvalInfo().getRequestDtoForWorkflow(dto.getWorkflow(),
+					false);
 			WorkOnHolidayRequestDtoInterface workOnHolidayRequestDto = null;
 			if (baseDto instanceof WorkOnHolidayRequestDtoInterface) {
 				workOnHolidayRequestDto = (WorkOnHolidayRequestDtoInterface)baseDto;
@@ -858,13 +929,11 @@ public abstract class TimeAction extends PlatformAction {
 			}
 			int substitute = workOnHolidayRequestDto.getSubstitute();
 			if (substitute == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_ON
+					|| substitute == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_ON_WORK_TYPE_CHANGE
 					|| substitute == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_AM
 					|| substitute == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_PM) {
 				// 振出
-				StringBuffer sb = new StringBuffer();
-				sb.append(mospParams.getName("SubstituteAbbr"));
-				sb.append(mospParams.getName("GoingWorkAbbr"));
-				return sb.toString();
+				return mospParams.getName("SubstituteAbbr", "GoingWorkAbbr");
 			} else if (substitute == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_OFF) {
 				// 休出
 				return mospParams.getName("WorkingHoliday");
@@ -1013,25 +1082,10 @@ public abstract class TimeAction extends PlatformAction {
 	}
 	
 	/**
-	 * 申請承認状態から表示する文字列を返す。<br>
-	 * @param state 申請承認の状態
-	 * @return 一覧表示用文字列
-	 */
-	public String getStateValueView(int state) {
-		String displayState = null;
-		if (state == 0) {
-			displayState = mospParams.getName("Ram") + mospParams.getName("Application");
-		} else {
-			displayState = mospParams.getName("Ram") + mospParams.getName("Approval");
-		}
-		return displayState;
-	}
-	
-	/**
-	* 数値で渡ってきた休日範囲を文字列に変換する。
+	 * 数値で渡ってきた休日範囲を文字列に変換する。
 	 * @param holidayRange 休日範囲
-	* @return "全休/前休/後休/時休"
-	*/
+	 * @return "全休/前休/後休/時休"
+	 */
 	protected String getHolidayRange(int holidayRange) {
 		if (holidayRange == TimeConst.CODE_HOLIDAY_RANGE_ALL) {
 			return mospParams.getName("AllTime");
@@ -1063,8 +1117,7 @@ public abstract class TimeAction extends PlatformAction {
 	protected String getWorkflowCommentDtoComment(WorkflowDtoInterface workflowDto,
 			WorkflowCommentDtoInterface commentDto) throws MospException {
 		String status = getStatusStageValueView(workflowDto.getWorkflowStatus(), workflowDto.getWorkflowStage());
-		if (status.equals(mospParams.getName("WorkPaper"))
-				|| status.equals(mospParams.getName("Ram") + mospParams.getName("Approval"))) {
+		if (status.equals(mospParams.getName("WorkPaper")) || status.equals(mospParams.getName("Ram", "Approval"))) {
 			return "";
 		} else {
 			return commentDto.getWorkflowComment();
@@ -1082,7 +1135,7 @@ public abstract class TimeAction extends PlatformAction {
 		// ワークフロー状態取得
 		String status = workflowDto.getWorkflowStatus();
 		// 下書の場合
-		if (status.equals(PlatformConst.CODE_STATUS_DRAFT)) {
+		if (WorkflowUtility.isDraft(workflowDto)) {
 			// 申請者名前
 			return reference().human().getHumanName(workflowDto.getPersonalId(), workflowDto.getWorkflowDate());
 		}
@@ -1096,55 +1149,13 @@ public abstract class TimeAction extends PlatformAction {
 	}
 	
 	/**
-	 * 引数で渡された時間（時、分）から分を設定する。<br>
-	 * @param hour 時
-	 * @param minute 分
+	 * 時(文字列)及び分(文字列)から分を取得する。<br>
+	 * @param hours   時(文字列)
+	 * @param minutes 分(文字列)
 	 * @return 時分から取得した分
 	 */
-	public int getTimeValue(int hour, int minute) {
-		return hour * TimeConst.CODE_DEFINITION_HOUR + minute;
-	}
-	
-	/**
-	 * 引数で渡された時間（時、分）から分を設定する。<br>
-	 * @param hour 時
-	 * @param minute 分
-	 * @return 時分から取得した分
-	 */
-	public int getTimeValue(String hour, String minute) {
-		if (hour == null || hour.isEmpty() || minute == null || minute.isEmpty()) {
-			return 0;
-		}
-		return getTimeValue(Integer.valueOf(hour), Integer.valueOf(minute));
-	}
-	
-	/**
-	 * @param personalId 個人ID
-	 * @return 社員コード
-	 * @throws MospException 例外発生時
-	 */
-	protected String getEmployeeCode(String personalId) throws MospException {
-		// 取得したユーザIDとシステム日付から個人IDを取得する
-		HumanDtoInterface humanDto = reference().human().getHumanInfo(personalId, getSystemDate());
-		if (humanDto == null) {
-			// 取得したユーザIDに該当する人事マスタのデータがNULLなら処理終了
-			PlatformMessageUtility.addErrorEmployeeNotExist(mospParams);
-			return null;
-		}
-		// 社員コードを返す
-		return humanDto.getEmployeeCode();
-	}
-	
-	/**
-	 * 対象時間を分単位で返す<br>
-	 * @param date 対象時間
-	 * @return 分
-	 */
-	protected int setHourMinute(Date date) {
-		if (date == null) {
-			return 0;
-		}
-		return (DateUtility.getHour(date) * TimeConst.CODE_DEFINITION_HOUR) + DateUtility.getMinute(date);
+	public int getTimeValue(String hours, String minutes) {
+		return TimeUtility.getTime(hours, minutes);
 	}
 	
 	/**
@@ -1219,23 +1230,6 @@ public abstract class TimeAction extends PlatformAction {
 	}
 	
 	/**
-	 * 配列で渡された日付の配列からシステム日付に近い該当勤務形態日を求める。
-	 * @param aryPullDownDay 該当する日付の配列
-	 * @param systemDay システム日付
-	 * @return 表示するデフォルトの日付
-	 */
-	protected String getDefaultDay(String[][] aryPullDownDay, int systemDay) {
-		String defaultDay = "";
-		for (String[] element : aryPullDownDay) {
-			if (systemDay <= Integer.valueOf(element[0])) {
-				defaultDay = element[0];
-				break;
-			}
-		}
-		return defaultDay;
-	}
-	
-	/**
 	 * 承認者の配列を取得。<br>
 	 * @return 承認者一覧（配列）
 	 * @throws MospException 例外処理発生時
@@ -1259,23 +1253,6 @@ public abstract class TimeAction extends PlatformAction {
 	}
 	
 	/**
-	 * @param personalId 個人ID
-	 * @return 社員名
-	 * @throws MospException 例外発生時
-	 */
-	protected String getEmployeeName(String personalId) throws MospException {
-		// 取得したユーザIDとシステム日付から個人IDを取得する
-		HumanDtoInterface humanDto = reference().human().getHumanInfo(personalId, getSystemDate());
-		if (humanDto == null) {
-			// 取得したユーザIDに該当する人事マスタのデータがNULLなら処理終了
-			PlatformMessageUtility.addErrorEmployeeNotExist(mospParams);
-			return null;
-		}
-		// 社員名を返す
-		return MospUtility.getHumansName(humanDto.getFirstName(), humanDto.getLastName());
-	}
-	
-	/**
 	 * @param status 承認状況
 	 * @param stage 承認段階
 	 * @return 文字列変換後の区分
@@ -1292,40 +1269,6 @@ public abstract class TimeAction extends PlatformAction {
 			return on;
 		}
 		return "";
-	}
-	
-	/**
-	 * @param personalId 個人ID
-	 * @return 社員名
-	 * @throws MospException 例外発生時
-	 */
-	protected String getEmployeeFirstName(String personalId) throws MospException {
-		// 取得したユーザIDとシステム日付から個人IDを取得する
-		HumanDtoInterface humanDto = reference().human().getHumanInfo(personalId, getSystemDate());
-		if (humanDto == null) {
-			// 取得したユーザIDに該当する人事マスタのデータがNULLなら処理終了
-			PlatformMessageUtility.addErrorEmployeeNotExist(mospParams);
-			return null;
-		}
-		// 社員名を返す
-		return humanDto.getFirstName();
-	}
-	
-	/**
-	 * @param personalId 個人ID
-	 * @return 社員名
-	 * @throws MospException 例外発生時
-	 */
-	protected String getEmployeeLastName(String personalId) throws MospException {
-		// 取得したユーザIDとシステム日付から個人IDを取得する
-		HumanDtoInterface humanDto = reference().human().getHumanInfo(personalId, getSystemDate());
-		if (humanDto == null) {
-			// 取得したユーザIDに該当する人事マスタのデータがNULLなら処理終了
-			PlatformMessageUtility.addErrorEmployeeNotExist(mospParams);
-			return null;
-		}
-		// 社員名を返す
-		return humanDto.getLastName();
 	}
 	
 	/**
@@ -1426,8 +1369,7 @@ public abstract class TimeAction extends PlatformAction {
 			WorkflowDtoInterface workflowDto = reference().workflow().getLatestWorkflowInfo(diffDto.getWorkflow());
 			if (workflowDto != null) {
 				// ワークフローの状態が下書/取下以外の場合にtrueを返す
-				if (PlatformConst.CODE_STATUS_DRAFT.equals(workflowDto.getWorkflowStatus())
-						|| PlatformConst.CODE_STATUS_WITHDRAWN.equals(workflowDto.getWorkflowStatus())) {
+				if (WorkflowUtility.isDraft(workflowDto) || WorkflowUtility.isWithDrawn(workflowDto)) {
 					return;
 				} else {
 					vo.setJsModeDifferenceRequest1("on");
@@ -1482,9 +1424,10 @@ public abstract class TimeAction extends PlatformAction {
 		if (PlatformConst.CODE_STATUS_DRAFT.equals(status) || PlatformConst.CODE_STATUS_APPLY.equals(status)
 				|| PlatformConst.CODE_STATUS_APPROVED.equals(status) || PlatformConst.CODE_STATUS_REVERT.equals(status)
 				|| PlatformConst.CODE_STATUS_CANCEL.equals(status)
-				|| PlatformConst.CODE_STATUS_CANCEL_APPLY.equals(status)) {
-			// 下書・未承認・承認・差戻・承認解除・承認解除申請
-			return TimeConst.STYLE_RED;
+				|| PlatformConst.CODE_STATUS_CANCEL_APPLY.equals(status)
+				|| PlatformConst.CODE_STATUS_CANCEL_WITHDRAWN_APPLY.equals(status)) {
+			// 下書・未承認・承認・差戻・承認解除・承認解除申請・承認解除申請(取下げ希望)
+			return PlatformConst.STYLE_RED;
 		} else if (PlatformConst.CODE_STATUS_WITHDRAWN.equals(status)
 				|| PlatformConst.CODE_STATUS_COMPLETE.equals(status)) {
 			// 取下・承認済
@@ -1506,7 +1449,7 @@ public abstract class TimeAction extends PlatformAction {
 				|| approved.toString().equals(state)) {
 			return "";
 		}
-		return TimeConst.STYLE_RED;
+		return PlatformConst.STYLE_RED;
 	}
 	
 	/**
@@ -1517,9 +1460,12 @@ public abstract class TimeAction extends PlatformAction {
 	 * @throws MospException 例外発生時
 	 */
 	protected String setBackColor(String personalId, Date requestDate, String type) throws MospException {
+		// クラス準備
 		DifferenceRequestReferenceBeanInterface differenceRequest = timeReference().differenceRequest(requestDate);
 		RequestUtilBeanInterface requestUtil = timeReference().requestUtil();
+		// 申請ユーティリティを設定
 		requestUtil.setRequests(personalId, requestDate);
+		// 休暇範囲確認
 		int holidayRequestRange = requestUtil.checkHolidayRangeHoliday(requestUtil.getHolidayList(false));
 		boolean isHalfHoliday = holidayRequestRange == TimeConst.CODE_HOLIDAY_RANGE_AM
 				|| holidayRequestRange == TimeConst.CODE_HOLIDAY_RANGE_PM;
@@ -1530,17 +1476,17 @@ public abstract class TimeAction extends PlatformAction {
 		if (TimeConst.CODE_FUNCTION_VACATION.equals(type)) {
 			// 休暇
 			if (isHalfHoliday && differenceRequestDto != null) {
-				return TimeConst.STYLE_BACKGROUND_YELLOW;
+				return PlatformConst.STYLE_BACKGROUND_YELLOW;
 			}
 		} else if (TimeConst.CODE_FUNCTION_COMPENSATORY_HOLIDAY.equals(type)) {
 			// 代休
 			if (isHalfSubHoliday && differenceRequestDto != null) {
-				return TimeConst.STYLE_BACKGROUND_YELLOW;
+				return PlatformConst.STYLE_BACKGROUND_YELLOW;
 			}
 		} else if (TimeConst.CODE_FUNCTION_DIFFERENCE.equals(type)) {
 			// 時差出勤
 			if (isHalfHoliday || isHalfSubHoliday) {
-				return TimeConst.STYLE_BACKGROUND_YELLOW;
+				return PlatformConst.STYLE_BACKGROUND_YELLOW;
 			}
 			if (differenceRequestDto == null || !differenceRequest.isDifferenceTypeS(differenceRequestDto)) {
 				// 時差出勤区分Sでない場合
@@ -1557,7 +1503,7 @@ public abstract class TimeAction extends PlatformAction {
 					&& !differenceRequestDto.getRequestEnd().before(fiveHour)
 					&& !differenceRequestDto.getRequestEnd().after(twentyTwoHour)) {
 				// 時差出勤時刻が深夜時間帯でない場合
-				return TimeConst.STYLE_BACKGROUND_YELLOW;
+				return PlatformConst.STYLE_BACKGROUND_YELLOW;
 			}
 		}
 		return "";
@@ -1568,15 +1514,6 @@ public abstract class TimeAction extends PlatformAction {
 	 */
 	protected void addNotExistEmployeesErrorMessage() {
 		mospParams.addErrorMessage(TimeMessageConst.MSG_NOT_EXIST_EMPLOYEES);
-	}
-	
-	/**
-	 * 対象日における人事履歴情報が存在しない場合のエラーメッセージを追加する。<br>
-	 * @param targetDate 対象日
-	 */
-	protected void addHumanHistoryNotExistErrorMessage(Date targetDate) {
-		String targetName = mospParams.getName("Target") + mospParams.getName("Employee");
-		mospParams.addErrorMessage(PlatformMessageConst.MSG_HISTORY_NOT_EXIST, getStringDate(targetDate), targetName);
 	}
 	
 	/**
@@ -1594,72 +1531,80 @@ public abstract class TimeAction extends PlatformAction {
 	}
 	
 	/**
-	 * 勤務形態コードを取得する。<br>
-	 * @return 勤務形態コード
-	 * @throws MospException 例外発生時
+	 * 振出・休出申請の予定を取得する。
+	 * @param dto 対象DTO
+	 * @return 予定
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
-	@Deprecated
-	protected String getBeforeDifferenceRequestWorkTypeCode() throws MospException {
-		// VO準備
-		TimeVo vo = (TimeVo)mospParams.getVo();
-		ApplicationReferenceBeanInterface applicationReference = timeReference().application();
-		ScheduleReferenceBeanInterface scheduleReference = timeReference().schedule();
-		ScheduleDateReferenceBeanInterface scheduleDateReference = timeReference().scheduleDate();
-		RequestUtilBeanInterface requestUtil = timeReference().requestUtil();
-		// 各種申請情報取得
-		requestUtil.setRequests(vo.getPersonalId(), vo.getTargetDate());
-		String personalId = vo.getPersonalId();
-		Date targetDate = vo.getTargetDate();
-		WorkOnHolidayRequestDtoInterface workOnHolidayRequestDto = requestUtil.getWorkOnHolidayDto(true);
-		if (workOnHolidayRequestDto != null) {
-			// 振替申請取得
-			int substitute = workOnHolidayRequestDto.getSubstitute();
-			if (substitute == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_ON) {
-				// 振替出勤の場合
-				List<SubstituteDtoInterface> list = timeReference().substitute().getSubstituteList(
-						workOnHolidayRequestDto.getWorkflow());
-				if (list.isEmpty()) {
-					return "";
-				}
-				SubstituteDtoInterface substituteDto = list.get(0);
-				if (substituteDto == null) {
-					return "";
-				}
-				personalId = substituteDto.getPersonalId();
-				targetDate = substituteDto.getSubstituteDate();
-			} else if (substitute == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_OFF) {
-				// 休日出勤の場合
-				if (TimeConst.CODE_HOLIDAY_LEGAL_HOLIDAY.equals(workOnHolidayRequestDto.getWorkOnHolidayType())) {
-					// 法定休日出勤の場合
-					return TimeConst.CODE_WORK_ON_LEGAL_HOLIDAY;
-				} else if (TimeConst.CODE_HOLIDAY_PRESCRIBED_HOLIDAY.equals(workOnHolidayRequestDto
-					.getWorkOnHolidayType())) {
-					// 所定休日出勤の場合
-					return TimeConst.CODE_WORK_ON_PRESCRIBED_HOLIDAY;
-				}
-				return "";
-			} else {
+	protected String getWorkOnHolidaySchedule(WorkOnHolidayRequestDtoInterface dto) throws MospException {
+		// クラス準備
+		ApplicationReferenceBeanInterface application = timeReference().application();
+		ScheduleReferenceBeanInterface schedule = timeReference().schedule();
+		ScheduleDateReferenceBeanInterface scheduleDate = timeReference().scheduleDate();
+		WorkTypeReferenceBeanInterface workType = timeReference().workType();
+		SubstituteReferenceBeanInterface substitute = timeReference().substitute();
+		// 休日出勤の場合
+		if (dto.getRequestDate() != null && dto.getStartTime() != null && dto.getEndTime() != null) {
+			return getTimeWaveFormat(dto.getStartTime(), dto.getEndTime(), dto.getRequestDate());
+		}
+		// 振替出勤(勤務形態変更なし)・振替出勤(勤務形態変更あり)の場合
+		String workTypeCode = dto.getWorkTypeCode();
+		Date targetDate = dto.getRequestDate();
+		// 振替出勤(勤務形態変更なし)の場合
+		if (workTypeCode.isEmpty()) {
+			// 振替申請情報を取得
+			List<SubstituteDtoInterface> list = substitute.getSubstituteList(dto.getWorkflow());
+			if (list.isEmpty()) {
 				return "";
 			}
+			// 振替休日取得
+			targetDate = list.get(0).getSubstituteDate();
+			// 設定適用情報取得
+			ApplicationDtoInterface applicationDto = application.findForPerson(dto.getPersonalId(), targetDate);
+			if (applicationDto == null) {
+				return "";
+			}
+			// カレンダ情報取得
+			ScheduleDtoInterface scheduleDto = schedule.getScheduleInfo(applicationDto.getScheduleCode(), targetDate);
+			if (scheduleDto == null) {
+				return "";
+			}
+			// カレンダ日情報取得
+			ScheduleDateDtoInterface scheduleDateDto = scheduleDate.getScheduleDateInfo(scheduleDto.getScheduleCode(),
+					targetDate);
+			if (scheduleDateDto == null) {
+				return "";
+			}
+			// 勤務形態コード取得
+			workTypeCode = scheduleDateDto.getWorkTypeCode();
 		}
-		ApplicationDtoInterface applicationDto = applicationReference.findForPerson(personalId, targetDate);
-		applicationReference.chkExistApplication(applicationDto, targetDate);
-		if (mospParams.hasErrorMessage()) {
+		// 勤務形態情報取得
+		WorkTypeDtoInterface workTypeDto = workType.findForInfo(workTypeCode, targetDate);
+		if (workTypeDto == null) {
 			return "";
 		}
-		ScheduleDtoInterface scheduleDto = scheduleReference.getScheduleInfo(applicationDto.getScheduleCode(),
-				targetDate);
-		scheduleReference.chkExistSchedule(scheduleDto, targetDate);
-		if (mospParams.hasErrorMessage()) {
-			return "";
+		// 勤務形態略称取得
+		String base = workTypeDto.getWorkTypeAbbr();
+		// 振替区分
+		int substituteType = dto.getSubstitute();
+		// 半日振替有効の場合
+		if (timeReference().workOnHolidayRequest().useHalfSubstitute()) {
+			// 全休の場合
+			// 振替・午前・午後の場合
+			if (substituteType == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_ON
+					|| substituteType == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_AM
+					|| substituteType == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_PM) {
+				return base + MospConst.STR_SB_SPACE
+						+ getCodeName(substituteType, TimeConst.CODE_SUBSTITUTE_WORK_RANGE);
+			}
+			// 勤務形態変更の場合
+			if (substituteType == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_ON_WORK_TYPE_CHANGE) {
+				return base + MospConst.STR_SB_SPACE + getCodeName(1, TimeConst.CODE_SUBSTITUTE_WORK_RANGE);
+			}
+			
 		}
-		ScheduleDateDtoInterface scheduleDateDto = scheduleDateReference.getScheduleDateInfo(
-				scheduleDto.getScheduleCode(), scheduleDto.getActivateDate(), targetDate);
-		scheduleDateReference.chkExistScheduleDate(scheduleDateDto, targetDate);
-		if (mospParams.hasErrorMessage()) {
-			return "";
-		}
-		return scheduleDateDto.getWorkTypeCode();
+		// 勤務形態略称
+		return base;
 	}
 	
 	/**
@@ -1685,8 +1630,8 @@ public abstract class TimeAction extends PlatformAction {
 			int substitute = workOnHolidayRequestDto.getSubstitute();
 			if (substitute == TimeConst.CODE_WORK_ON_HOLIDAY_SUBSTITUTE_ON) {
 				// 振替出勤の場合
-				List<SubstituteDtoInterface> list = timeReference().substitute().getSubstituteList(
-						workOnHolidayRequestDto.getWorkflow());
+				List<SubstituteDtoInterface> list = timeReference().substitute()
+					.getSubstituteList(workOnHolidayRequestDto.getWorkflow());
 				if (list.isEmpty()) {
 					return "";
 				}
@@ -1702,8 +1647,8 @@ public abstract class TimeAction extends PlatformAction {
 					// 法定休日出勤の場合
 					return workTypeReference.getWorkTypeAbbr(TimeConst.CODE_WORK_ON_LEGAL_HOLIDAY,
 							workOnHolidayRequestDto.getRequestDate());
-				} else if (TimeConst.CODE_HOLIDAY_PRESCRIBED_HOLIDAY.equals(workOnHolidayRequestDto
-					.getWorkOnHolidayType())) {
+				} else if (TimeConst.CODE_HOLIDAY_PRESCRIBED_HOLIDAY
+					.equals(workOnHolidayRequestDto.getWorkOnHolidayType())) {
 					// 所定休日出勤の場合
 					return workTypeReference.getWorkTypeAbbr(TimeConst.CODE_WORK_ON_PRESCRIBED_HOLIDAY,
 							workOnHolidayRequestDto.getRequestDate());
@@ -1724,8 +1669,8 @@ public abstract class TimeAction extends PlatformAction {
 		if (mospParams.hasErrorMessage()) {
 			return "";
 		}
-		ScheduleDateDtoInterface scheduleDateDto = scheduleDateReference.getScheduleDateInfo(
-				scheduleDto.getScheduleCode(), scheduleDto.getActivateDate(), targetDate);
+		ScheduleDateDtoInterface scheduleDateDto = scheduleDateReference
+			.getScheduleDateInfo(scheduleDto.getScheduleCode(), targetDate);
 		scheduleDateReference.chkExistScheduleDate(scheduleDateDto, targetDate);
 		if (mospParams.hasErrorMessage()) {
 			return "";
@@ -1747,7 +1692,7 @@ public abstract class TimeAction extends PlatformAction {
 			return null;
 		}
 		// ワークフロー状況確認(下書)
-		if (dto.getWorkflowStatus().equals(PlatformConst.CODE_STATUS_DRAFT)) {
+		if (WorkflowUtility.isDraft(dto)) {
 			return TimeConst.MODE_APPLICATION_DRAFT;
 		}
 		// ワークフロー状況確認(差戻)
@@ -1770,16 +1715,20 @@ public abstract class TimeAction extends PlatformAction {
 	 */
 	protected String[][] getWorkTypeArray(String patternCode, Date targetDate, boolean isName, boolean viewTime,
 			boolean amHoliday, boolean pmHoliday) throws MospException {
+		// クラス取得
 		WorkTypeReferenceBeanInterface workTypeReference = timeReference().workType();
 		WorkTypePatternItemReferenceBeanInterface workTypePatternItemReference = timeReference().workTypePatternItem();
+		// 勤務形態パターン情報を取得
 		WorkTypePatternDtoInterface workTypePatternDto = timeReference().workTypePattern().findForInfo(patternCode,
 				targetDate);
+		// パターン使用可否準備
 		boolean useWorkTypePattern = false;
+		// 勤務形態パターン情報があり、無効でない場合
 		if (workTypePatternDto != null && workTypePatternDto.getInactivateFlag() == MospConst.INACTIVATE_FLAG_OFF) {
 			useWorkTypePattern = true;
 		}
+		// 勤務形態パターンを使う場合
 		if (useWorkTypePattern) {
-			// 勤務形態パターンを使う場合
 			if (isName && viewTime) {
 				// 勤務形態名称 + 時刻
 				return workTypePatternItemReference.getNameTimeSelectArray(workTypePatternDto.getPatternCode(),
@@ -1808,6 +1757,204 @@ public abstract class TimeAction extends PlatformAction {
 		}
 		// 勤務形態略称
 		return workTypeReference.getSelectAbbrArray(targetDate);
+	}
+	
+	/**
+	 * 申請情報詳細を取得する。<br>
+	 * @param dto 対象DTO
+	 * @return 申請情報詳細
+	 * @throws MospException インスタンスの取得及びSQL実行に失敗した場合
+	 */
+	protected String getRequestInfo(ManagementRequestListDtoInterface dto) throws MospException {
+		AttendanceReferenceBeanInterface attendance = timeReference().attendance();
+		if (!TimeConst.CODE_FUNCTION_WORK_MANGE.equals(dto.getRequestType())) {
+			// 勤怠でない場合
+			return HtmlUtility.escapeHTML(dto.getRequestInfo());
+		}
+		// 勤怠である場合
+		AttendanceDtoInterface attendanceDto = attendance.findForKey(dto.getPersonalId(), dto.getRequestDate(),
+				TimeBean.TIMES_WORK_DEFAULT);
+		if (attendanceDto == null) {
+			return HtmlUtility.escapeHTML(dto.getRequestInfo());
+		}
+		// 半角スペースで分割
+		String[] requestInfoArray = dto.getRequestInfo().split(String.valueOf(MospUtility.CHR_SEPARATOR_SPACE));
+		String regex = "\\d{2}:\\d{2}～\\d{2}:\\d{2}";
+		if (MospConst.CHECKBOX_ON.equals(Integer.toString(attendanceDto.getForgotRecordWorkStart()))
+				|| MospConst.CHECKBOX_ON.equals(Integer.toString(attendanceDto.getNotRecordWorkStart()))) {
+			// 始業忘れ・その他である場合
+			List<String> list = new ArrayList<String>();
+			for (String requestInfo : requestInfoArray) {
+				if (requestInfo.matches(regex)) {
+					// HH:MM～HH:MMの場合
+					StringBuffer sb = new StringBuffer();
+					sb.append("<span ");
+					sb.append(PlatformConst.STYLE_RED);
+					sb.append(">");
+					sb.append(HtmlUtility.escapeHTML(requestInfo));
+					sb.append("</span>");
+					list.add(sb.toString());
+					continue;
+				}
+				list.add(HtmlUtility.escapeHTML(requestInfo));
+			}
+			return concat(list);
+		}
+		// 始業忘れ・その他でない場合
+		boolean isLate = !attendanceDto.getLateReason().isEmpty();
+		boolean isLeaveEarly = !attendanceDto.getLeaveEarlyReason().isEmpty();
+		if (!isLate && !isLeaveEarly) {
+			// 遅刻・早退でない場合
+			return HtmlUtility.escapeHTML(dto.getRequestInfo());
+		}
+		// 遅刻・早退である場合
+		List<String> list = new ArrayList<String>();
+		for (String requestInfo : requestInfoArray) {
+			if (!requestInfo.matches(regex)) {
+				// HH:MM～HH:MMでない場合
+				list.add(HtmlUtility.escapeHTML(requestInfo));
+				continue;
+			}
+			// HH:MM～HH:MMである場合
+			String startWork = requestInfo.substring(0, 5);
+			String endWork = requestInfo.substring(6);
+			if (isLate && isLeaveEarly) {
+				// 遅刻且つ早退の場合
+				StringBuffer sb = new StringBuffer();
+				sb.append("<span ");
+				sb.append(PlatformConst.STYLE_RED);
+				sb.append(">");
+				sb.append(HtmlUtility.escapeHTML(startWork));
+				sb.append("</span>");
+				sb.append(HtmlUtility.escapeHTML(requestInfo.substring(5, 6)));
+				sb.append("<span ");
+				sb.append(PlatformConst.STYLE_RED);
+				sb.append(">");
+				sb.append(HtmlUtility.escapeHTML(endWork));
+				sb.append("</span>");
+				list.add(sb.toString());
+				continue;
+			} else if (isLate) {
+				// 遅刻の場合
+				StringBuffer sb = new StringBuffer();
+				sb.append("<span ");
+				sb.append(PlatformConst.STYLE_RED);
+				sb.append(">");
+				sb.append(HtmlUtility.escapeHTML(startWork));
+				sb.append("</span>");
+				sb.append(HtmlUtility.escapeHTML(requestInfo.substring(5)));
+				list.add(sb.toString());
+				continue;
+			} else if (isLeaveEarly) {
+				// 早退の場合
+				StringBuffer sb = new StringBuffer();
+				sb.append(HtmlUtility.escapeHTML(requestInfo.substring(0, 6)));
+				sb.append("<span ");
+				sb.append(PlatformConst.STYLE_RED);
+				sb.append(">");
+				sb.append(HtmlUtility.escapeHTML(endWork));
+				sb.append("</span>");
+				list.add(sb.toString());
+				continue;
+			}
+			list.add(HtmlUtility.escapeHTML(requestInfo));
+		}
+		return concat(list);
+	}
+	
+	/**
+	 * 部下一覧を利用できるかを確認する。<br>
+	 * 所属、職位が設定されていなければ、エラーメッセージを設定する。<br>
+	 * 但し、特権ユーザは無条件で利用可能。<br>
+	 * @param targetDate 対象日
+	 * 
+	 * @throws MospException 人事情報の取得に失敗した場合
+	 */
+	protected void checkSubordinateAvailable(Date targetDate) throws MospException {
+		// ログインユーザのロールを確認
+		if (RoleUtility.isSuper(mospParams)) {
+			return;
+		}
+		// ログインユーザの個人IDを取得
+		String personalId = MospUtility.getLoginPersonalId(mospParams);
+		// ログインユーザの人事情報を取得
+		HumanDtoInterface dto = getHumanInfo(personalId, targetDate);
+		// 人事情報が取得できなかった場合
+		if (dto == null) {
+			// エラーメッセージを追加
+			TimeMessageUtility.addErrorUnsetHumanInfo(mospParams, PlatformNamingUtility.humanInfo(mospParams));
+			// 処理終了
+			return;
+		}
+		// 所属が設定されていない場合
+		if (MospUtility.isEmpty(dto.getSectionCode())) {
+			// エラーメッセージを追加
+			TimeMessageUtility.addErrorUnsetHumanInfo(mospParams, PlatformNamingUtility.sectionInfo(mospParams));
+		}
+		// 職位が設定されていない場合
+		if (MospUtility.isEmpty(dto.getPositionCode())) {
+			// エラーメッセージを追加
+			TimeMessageUtility.addErrorUnsetHumanInfo(mospParams, PlatformNamingUtility.positionInfo(mospParams));
+		}
+	}
+	
+	/**
+	 * 連結文字リストを半角スペースで連結する。
+	 * @param list 対象リスト
+	 * @return 連結された文字列
+	 */
+	protected String concat(List<String> list) {
+		return MospUtility.concat(list.toArray(new String[0]));
+	}
+	
+	/**
+	 * 分数を取得する。<br>
+	 * @param numerator 分子
+	 * @param denominator 分母
+	 * @return 分数
+	 */
+	protected String getFraction(Integer numerator, Integer denominator) {
+		if (numerator == null || denominator == null) {
+			return "";
+		}
+		StringBuffer sb = new StringBuffer();
+		sb.append(numerator.intValue());
+		sb.append(mospParams.getName("Slash"));
+		sb.append(denominator.intValue());
+		return sb.toString();
+	}
+	
+	/**
+	 * 括弧を追加する。<br>
+	 * @param content 中身文字列
+	 * @return 括弧を追加した文字列
+	 */
+	protected String addParenthesis(String content) {
+		StringBuffer sb = new StringBuffer();
+		sb.append(mospParams.getName("FrontParentheses"));
+		sb.append(content);
+		sb.append(mospParams.getName("BackParentheses"));
+		return sb.toString();
+	}
+	
+	/**
+	 * 数値フォーマットを取得する。<br>
+	 * @return 数値フォーマット
+	 */
+	protected Format getNumberFormat() {
+		return NumberFormat.getInstance();
+	}
+	
+	/**
+	 * パーセントフォーマットを取得する。<br>
+	 * @param minimumFractionDigits 小数部分の最小表示桁数
+	 * @return パーセントフォーマット
+	 */
+	protected Format getPercentFormat(int minimumFractionDigits) {
+		NumberFormat nf = NumberFormat.getPercentInstance();
+		// 小数部分の最小表示桁数を設定
+		nf.setMinimumFractionDigits(minimumFractionDigits);
+		return nf;
 	}
 	
 }

@@ -51,4 +51,13 @@ public interface HumanNormalDaoInterface extends BaseDaoInterface {
 	 */
 	List<HumanNormalDtoInterface> findForInfoNotIn(List<String> itemNames) throws MospException;
 	
+	/**
+	 * 項目値から人事汎用通常情報を取得する。<br>
+	 * @param itemName 項目名
+	 * @param itemValue 項目値
+	 * @return 人事汎用通常情報
+	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
+	 */
+	List<HumanNormalDtoInterface> findForInfoForValue(String itemName, String itemValue) throws MospException;
+	
 }

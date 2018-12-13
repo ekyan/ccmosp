@@ -21,9 +21,11 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import jp.mosp.framework.base.BaseDtoInterface;
 import jp.mosp.framework.base.BaseVo;
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.utils.DateUtility;
+import jp.mosp.framework.utils.RoleUtility;
 import jp.mosp.framework.utils.TopicPathUtility;
 import jp.mosp.platform.bean.workflow.WorkflowIntegrateBeanInterface;
 import jp.mosp.platform.constant.PlatformConst;
@@ -31,6 +33,7 @@ import jp.mosp.platform.constant.PlatformMessageConst;
 import jp.mosp.platform.dto.workflow.SubApproverDtoInterface;
 import jp.mosp.platform.dto.workflow.WorkflowCommentDtoInterface;
 import jp.mosp.platform.dto.workflow.WorkflowDtoInterface;
+import jp.mosp.platform.utils.WorkflowUtility;
 import jp.mosp.time.base.TimeAction;
 import jp.mosp.time.base.TimeBean;
 import jp.mosp.time.bean.RequestUtilBeanInterface;
@@ -42,6 +45,7 @@ import jp.mosp.time.dto.settings.AttendanceDtoInterface;
 import jp.mosp.time.dto.settings.DifferenceRequestDtoInterface;
 import jp.mosp.time.dto.settings.GoOutDtoInterface;
 import jp.mosp.time.dto.settings.HolidayRequestDtoInterface;
+import jp.mosp.time.dto.settings.ManagementRequestListDtoInterface;
 import jp.mosp.time.dto.settings.OvertimeRequestDtoInterface;
 import jp.mosp.time.dto.settings.RestDtoInterface;
 import jp.mosp.time.dto.settings.SubHolidayRequestDtoInterface;
@@ -49,6 +53,7 @@ import jp.mosp.time.dto.settings.SubstituteDtoInterface;
 import jp.mosp.time.dto.settings.TimeRecordDtoInterface;
 import jp.mosp.time.dto.settings.WorkOnHolidayRequestDtoInterface;
 import jp.mosp.time.dto.settings.WorkTypeChangeRequestDtoInterface;
+import jp.mosp.time.entity.RequestEntity;
 import jp.mosp.time.management.vo.ApprovalCardVo;
 import jp.mosp.time.portal.bean.impl.PortalTimeCardBean;
 
@@ -84,6 +89,8 @@ import jp.mosp.time.portal.bean.impl.PortalTimeCardBean;
  * {@link #CMD_APPROVAL_DIFFERENCE}
  * </li><li>
  * {@link #CMD_APPROVAL_WORKTYPECHANGE}
+ * </li><li>
+ * {@link #CMD_ROLL}
  * </li><li>
  * {@link #CMD_APPROVAL}
  * </li><li>
@@ -214,6 +221,11 @@ public class ApprovalCardAction extends TimeAction {
 	public static final String	CMD_APPROVAL_WORKTYPECHANGE					= "TM2381";
 	
 	/**
+	 * 前次遷移コマンド。<br>
+	 */
+	public static final String	CMD_ROLL									= "TM2322";
+	
+	/**
 	 * 承認コマンド。<br>
 	 * <br>
 	 * 各種コメント欄にコメントが入力されているかを確認後、現在表示している申請情報の承認を行う。<br>
@@ -230,9 +242,9 @@ public class ApprovalCardAction extends TimeAction {
 	public static final String	CMD_REVERTING								= "TM2326";
 	
 	/**
-	 * 取消コマンド。<br>
+	 * 承認解除コマンド。<br>
 	 * <br>
-	 * 現在表示している承認完了済の申請情報の承認取消を行う。該当レコードの状態を「取消」に切り替える。<br>
+	 * 現在表示している承認完了済の申請情報の承認解除を行う。該当レコードの状態を「○次戻し」または「取下」に切り替える。<br>
 	 */
 	public static final String	CMD_DELETE									= "TM2327";
 	
@@ -329,9 +341,13 @@ public class ApprovalCardAction extends TimeAction {
 			prepareVo();
 			reverting();
 		} else if (mospParams.getCommand().equals(CMD_DELETE)) {
-			// 削除
+			// 承認解除
 			prepareVo();
 			cancel();
+		} else if (mospParams.getCommand().equals(CMD_ROLL)) {
+			// 遷移
+			prepareVo();
+			roll();
 		}
 	}
 	
@@ -500,9 +516,12 @@ public class ApprovalCardAction extends TimeAction {
 		ApprovalCardVo vo = (ApprovalCardVo)mospParams.getVo();
 		// 勤怠関連申請承認クラス取得
 		TimeApprovalBeanInterface timeApproval = time().timeApproval();
-		boolean isCancelApprovable = reference().workflowIntegrate().isCancelApprovable(
-				reference().workflow().getLatestWorkflowInfo(vo.getWorkflow()));
-		if (isCancelApprovable) {
+		// 対象ワークフローが解除承認可能であるかを確認
+		WorkflowDtoInterface workflowdto = reference().workflow().getLatestWorkflowInfo(vo.getWorkflow());
+		boolean isCancelApprovable = WorkflowUtility.isCancelApply(workflowdto);
+		boolean isCancelWithDrawn = WorkflowUtility.isCancelWithDrawnApply(workflowdto);
+		// 解除承認可能の場合
+		if (isCancelApprovable || isCancelWithDrawn) {
 			// 解除取下処理
 			timeApproval.cancelRevert(vo.getWorkflow(), vo.getTxtCancelComment());
 		} else {
@@ -545,7 +564,7 @@ public class ApprovalCardAction extends TimeAction {
 			// 承認済の場合
 			// 承認解除
 			timeApproval.cancel(vo.getWorkflow(), null);
-		} else if (workflowIntegrate.isCancelApprovable(dto)) {
+		} else if (workflowIntegrate.isCancelApprovable(dto) || workflowIntegrate.isCancelWithDrawnApprovable(dto)) {
 			// 解除承認可能の場合
 			// 解除承認
 			timeApproval.cancelApprove(vo.getWorkflow(), vo.getTxtCancelComment());
@@ -560,8 +579,47 @@ public class ApprovalCardAction extends TimeAction {
 		commit();
 		// 承認解除成功メッセージ設定
 		mospParams.addMessage(PlatformMessageConst.MSG_PROCESS_SUCCEED, mospParams.getName("Approval", "Release"));
+		// 承認解除後ワークフロー情報取得
+		WorkflowDtoInterface workflowDto = reference().workflow().getLatestWorkflowInfo(vo.getWorkflow());
+		if (workflowDto == null) {
+			// ワークフロー情報がないなら
+			if (vo.isConfirmation()) {
+				// 申請確認詳細の場合申請一覧画面へ戻る
+				mospParams.setNextCommand(RequestListAction.CMD_RE_SHOW);
+				return;
+			} else {
+				// 未承認管理詳細の場合、未承認管理一覧画面へ戻る
+				mospParams.setNextCommand(ApprovalListAction.CMD_RE_SHOW);
+				return;
+			}
+		}
 		// 申請情報設定
 		setRequestValues();
+	}
+	
+	/**
+	 * 前次遷移を行う。<br>
+	 */
+	protected void roll() {
+		// VO取得
+		ApprovalCardVo vo = (ApprovalCardVo)mospParams.getVo();
+		long workflow = 0;
+		String command = "";
+		String searchMode = mospParams.getRequestParam(TimeConst.PRM_TRANSFER_SEARCH_MODE);
+		if (TimeConst.SEARCH_BACK.equals(searchMode)) {
+			// 前の場合
+			workflow = vo.getPrevWorkflow();
+			command = vo.getPrevCommand();
+		} else if (TimeConst.SEARCH_NEXT.equals(searchMode)) {
+			// 次の場合
+			workflow = vo.getNextWorkflow();
+			command = vo.getNextCommand();
+		}
+		mospParams.addGeneralParam(TimeConst.PRM_ROLL_ARRAY, vo.getRollArray());
+		// MosP処理情報に対象ワークフローを設定
+		setTargetWorkflow(workflow);
+		// 連続実行コマンド設定
+		mospParams.setNextCommand(command);
 	}
 	
 	/**
@@ -625,6 +683,8 @@ public class ApprovalCardAction extends TimeAction {
 		vo.setWorkflow(workflow);
 		// 対象ワークフロー番号からワークフロー情報を取得
 		WorkflowDtoInterface workflowDto = reference().workflow().getLatestWorkflowInfo(workflow);
+		// 存在確認
+		checkSelectedDataExist(workflowDto);
 		// 対象個人ID取得
 		String personalId = workflowDto.getPersonalId();
 		// 対象日取得
@@ -635,6 +695,8 @@ public class ApprovalCardAction extends TimeAction {
 		vo.setLblYear(DateUtility.getStringYear(targetDate));
 		vo.setLblMonth(DateUtility.getStringMonth(targetDate));
 		vo.setLblDay(DateUtility.getStringDay(targetDate));
+		// 前ワークフロー・次ワークフロー設定
+		setRollWorkflow();
 	}
 	
 	/**
@@ -656,34 +718,38 @@ public class ApprovalCardAction extends TimeAction {
 		if (dto == null || workflowDto == null) {
 			return;
 		}
-		// 打刻始業時刻準備
-		StringBuffer recodeStart = new StringBuffer();
+		// 始業時刻準備
+		StringBuffer lblStartTime = new StringBuffer();
+		lblStartTime.append(getStringTimeMinutes(dto.getStartTime()));
 		// 打刻始業時刻を取得
 		TimeRecordDtoInterface recodeStartDto = timeReference().timeRecord().findForKey(personalId, targetDate,
 				TimeBean.TIMES_WORK_DEFAULT, PortalTimeCardBean.RECODE_START_WORK);
 		// 打刻始業時刻がある場合
 		if (recodeStartDto != null) {
 			// 【】内に打刻始業時刻を設定
-			recodeStart.append(mospParams.getName("FrontWithCornerParentheses"));
-			recodeStart.append(DateUtility.getStringTime(recodeStartDto.getRecordTime(), dto.getWorkDate()));
-			recodeStart.append(mospParams.getName("BackWithCornerParentheses"));
+			lblStartTime.append(mospParams.getName("FrontWithCornerParentheses"));
+			lblStartTime.append(DateUtility.getStringTimeAndSecond(recodeStartDto.getRecordTime(), dto.getWorkDate()));
+			lblStartTime.append(mospParams.getName("BackWithCornerParentheses"));
 		}
-		// 打刻終業時刻準備
-		StringBuffer recodeEnd = new StringBuffer();
+		// 終業時刻準備
+		StringBuffer lblEndTime = new StringBuffer();
+		lblEndTime.append(DateUtility.getStringHour(dto.getEndTime(), dto.getWorkDate()));
+		lblEndTime.append(mospParams.getName("Hour"));
+		lblEndTime.append(getStringMinute(dto.getEndTime()));
+		lblEndTime.append(mospParams.getName("Minutes"));
 		// 終業打刻時刻を取得
 		TimeRecordDtoInterface recodeEndDto = timeReference().timeRecord().findForKey(personalId, targetDate,
 				TimeBean.TIMES_WORK_DEFAULT, PortalTimeCardBean.RECODE_END_WORK);
 		// 打刻終業時刻がある場合
 		if (recodeEndDto != null) {
 			// 【】内に打刻終業時刻を設定
-			recodeEnd.append(mospParams.getName("FrontWithCornerParentheses"));
-			recodeEnd.append(DateUtility.getStringTime(recodeEndDto.getRecordTime(), dto.getWorkDate()));
-			recodeEnd.append(mospParams.getName("BackWithCornerParentheses"));
+			lblEndTime.append(mospParams.getName("FrontWithCornerParentheses"));
+			lblEndTime.append(DateUtility.getStringTimeAndSecond(recodeEndDto.getRecordTime(), dto.getWorkDate()));
+			lblEndTime.append(mospParams.getName("BackWithCornerParentheses"));
 		}
 		// 出退勤情報設定
-		vo.setLblStartTime(getStringTimeMinutes(dto.getStartTime()) + recodeStart);
-		vo.setLblEndTime(DateUtility.getStringHour(dto.getEndTime(), dto.getWorkDate()) + mospParams.getName("Hour")
-				+ getStringMinute(dto.getEndTime()) + mospParams.getName("Minutes") + recodeEnd);
+		vo.setLblStartTime(lblStartTime.toString());
+		vo.setLblEndTime(lblEndTime.toString());
 		vo.setLblWorkTime(getTimeTimeFormat(dto.getWorkTime()));
 		// 勤務形態設定
 		vo.setLblWorkType(getWorkTypeAbbrStartTimeEndTime(dto));
@@ -696,6 +762,16 @@ public class ApprovalCardAction extends TimeAction {
 			directWorkManage = directWorkManage + mospParams.getName("DirectEnd");
 		}
 		vo.setLblDirectWorkManage(directWorkManage);
+		// 始業忘れ/その他
+		String checkWorkStart = "";
+		if (dto.getForgotRecordWorkStart() == 1) {
+			checkWorkStart = mospParams.getName("ForgotRecordWorkStart") + SEPARATOR;
+		}
+		if (dto.getNotRecordWorkStart() == 1) {
+			checkWorkStart = checkWorkStart + mospParams.getName("Others");
+		}
+		vo.setLblCheckWorkStart(checkWorkStart);
+		vo.setLblRemarks(dto.getRemarks());
 		// 無給時短時間設定
 		vo.setLblUnpaidShortTime(getTimeTimeFormat(dto.getShortUnpaid()));
 		// 勤怠コメント設定
@@ -715,11 +791,13 @@ public class ApprovalCardAction extends TimeAction {
 		vo.setLblLeaveEarlyCertificate(getCodeName(dto.getLeaveEarlyCertificate(), TimeConst.CODE_ALLOWANCE));
 		vo.setLblLeaveEarlyComment(dto.getLeaveEarlyComment());
 		// 割増情報
+		vo.setLblOvertime("");
 		vo.setLblOverTimeIn(getTimeTimeFormat(dto.getOvertime()));
 		vo.setLblOverTimeOut(getTimeTimeFormat(dto.getOvertimeOut()));
 		vo.setLblLateNightTime(getTimeTimeFormat(dto.getLateNightTime()));
 		vo.setLblSpecificWorkTimeIn(getTimeTimeFormat(dto.getSpecificWorkTime()));
 		vo.setLblLegalWorkTime(getTimeTimeFormat(dto.getLegalWorkTime()));
+		vo.setLblHolidayWorkTime(getTimeTimeFormat(dto.getSpecificWorkTime() + dto.getLegalWorkTime()));
 		vo.setLblDecreaseTime(getTimeTimeFormat(dto.getDecreaseTime()));
 		// 休憩情報取得
 		List<RestDtoInterface> restList = timeReference().rest().getRestList(personalId, targetDate,
@@ -728,28 +806,28 @@ public class ApprovalCardAction extends TimeAction {
 		for (RestDtoInterface restDto : restList) {
 			switch (restDto.getRest()) {
 				case 1:
-					vo.setLblRestTime1(getTimeWaveFormat(restDto.getRestStart(), restDto.getRestEnd(),
-							restDto.getWorkDate()));
+					vo.setLblRestTime1(
+							getTimeWaveFormat(restDto.getRestStart(), restDto.getRestEnd(), restDto.getWorkDate()));
 					break;
 				case 2:
-					vo.setLblRestTime2(getTimeWaveFormat(restDto.getRestStart(), restDto.getRestEnd(),
-							restDto.getWorkDate()));
+					vo.setLblRestTime2(
+							getTimeWaveFormat(restDto.getRestStart(), restDto.getRestEnd(), restDto.getWorkDate()));
 					break;
 				case 3:
-					vo.setLblRestTime3(getTimeWaveFormat(restDto.getRestStart(), restDto.getRestEnd(),
-							restDto.getWorkDate()));
+					vo.setLblRestTime3(
+							getTimeWaveFormat(restDto.getRestStart(), restDto.getRestEnd(), restDto.getWorkDate()));
 					break;
 				case 4:
-					vo.setLblRestTime4(getTimeWaveFormat(restDto.getRestStart(), restDto.getRestEnd(),
-							restDto.getWorkDate()));
+					vo.setLblRestTime4(
+							getTimeWaveFormat(restDto.getRestStart(), restDto.getRestEnd(), restDto.getWorkDate()));
 					break;
 				case 5:
-					vo.setLblRestTime5(getTimeWaveFormat(restDto.getRestStart(), restDto.getRestEnd(),
-							restDto.getWorkDate()));
+					vo.setLblRestTime5(
+							getTimeWaveFormat(restDto.getRestStart(), restDto.getRestEnd(), restDto.getWorkDate()));
 					break;
 				case 6:
-					vo.setLblRestTime6(getTimeWaveFormat(restDto.getRestStart(), restDto.getRestEnd(),
-							restDto.getWorkDate()));
+					vo.setLblRestTime6(
+							getTimeWaveFormat(restDto.getRestStart(), restDto.getRestEnd(), restDto.getWorkDate()));
 					break;
 				default:
 					break;
@@ -934,8 +1012,8 @@ public class ApprovalCardAction extends TimeAction {
 			}
 		}
 		// 時差出勤申請取得
-		DifferenceRequestDtoInterface differenceDto = timeReference().differenceRequest().findForKeyOnWorkflow(
-				personalId, targetDate);
+		DifferenceRequestDtoInterface differenceDto = timeReference().differenceRequest()
+			.findForKeyOnWorkflow(personalId, targetDate);
 		// 時差出勤申請及びワークフロー状況確認
 		if (differenceDto != null && workflowIntegrate.isCompleted(differenceDto.getWorkflow())) {
 			// 時差出勤申請情報設定
@@ -1001,8 +1079,8 @@ public class ApprovalCardAction extends TimeAction {
 			}
 			aryLblOvertimeReason[i] = dto.getRequestReason();
 			// ワークフローコメント情報の取得
-			WorkflowCommentDtoInterface commentDto = reference().workflowComment().getLatestWorkflowCommentInfo(
-					dto.getWorkflow());
+			WorkflowCommentDtoInterface commentDto = reference().workflowComment()
+				.getLatestWorkflowCommentInfo(dto.getWorkflow());
 			if (commentDto == null) {
 				aryLblOvertimeState[i] = "";
 				aryLblOvertimeComment[i] = "";
@@ -1084,8 +1162,8 @@ public class ApprovalCardAction extends TimeAction {
 			aryLblHolidayTime[i] = getTimeWaveFormat(dto.getStartTime(), dto.getEndTime(), dto.getRequestStartDate());
 			aryLblHolidayReason[i] = dto.getRequestReason();
 			// ワークフローコメント情報取得
-			WorkflowCommentDtoInterface commentDto = reference().workflowComment().getLatestWorkflowCommentInfo(
-					dto.getWorkflow());
+			WorkflowCommentDtoInterface commentDto = reference().workflowComment()
+				.getLatestWorkflowCommentInfo(dto.getWorkflow());
 			if (commentDto == null) {
 				aryLblHolidayState[i] = "";
 				aryLblHolidayApprover[i] = "";
@@ -1133,7 +1211,7 @@ public class ApprovalCardAction extends TimeAction {
 			workRange = mospParams.getName("PostMeridiem");
 		}
 		vo.setLblWorkOnHolidayDate(getStringDateAndDay(dto.getRequestDate()) + workRange);
-		vo.setLblWorkOnHolidayTime(getTimeWaveFormat(dto.getStartTime(), dto.getEndTime()));
+		vo.setLblWorkOnHolidayTime(getWorkOnHolidaySchedule(dto));
 		vo.setLblWorkOnHolidayReason(dto.getRequestReason());
 		vo.setLblWorkOnHolidayTransferDate("");
 		// 振替休日リスト取得
@@ -1242,11 +1320,11 @@ public class ApprovalCardAction extends TimeAction {
 		// 勤務形態変更申請情報設定
 		vo.setLblWorkTypeChangeDate(getStringDateAndDay(dto.getRequestDate()));
 		vo.setLblWorkTypeChangeBeforeWorkType(time().workTypeChangeRequestRegist().getScheduledWorkTypeName(dto));
-		vo.setLblWorkTypeChangeAfterWorkType(timeReference().workType().getWorkTypeAbbrAndTime(dto.getWorkTypeCode(),
-				dto.getRequestDate()));
+		vo.setLblWorkTypeChangeAfterWorkType(
+				timeReference().workType().getWorkTypeAbbrAndTime(dto.getWorkTypeCode(), dto.getRequestDate()));
 		vo.setLblWorkTypeChangeReason(dto.getRequestReason());
-		WorkflowCommentDtoInterface commentDto = reference().workflowComment().getLatestWorkflowCommentInfo(
-				dto.getWorkflow());
+		WorkflowCommentDtoInterface commentDto = reference().workflowComment()
+			.getLatestWorkflowCommentInfo(dto.getWorkflow());
 		if (commentDto == null) {
 			return;
 		}
@@ -1274,6 +1352,8 @@ public class ApprovalCardAction extends TimeAction {
 		WorkflowIntegrateBeanInterface workflowIntegrate = reference().workflowIntegrate();
 		// ワークフロー情報を取得
 		WorkflowDtoInterface dto = reference().workflow().getLatestWorkflowInfo(vo.getWorkflow());
+		// 存在確認
+		checkSelectedDataExist(dto);
 		// ログインユーザ個人ID取得
 		String personalId = mospParams.getUser().getPersonalId();
 		// 申請確認詳細フラグ及びワークフロー状況確認
@@ -1286,7 +1366,8 @@ public class ApprovalCardAction extends TimeAction {
 			if (!timeReference().cutoffUtil().isNotTighten(vo.getPersonalId(), dto.getWorkflowDate())) {
 				return;
 			}
-			if (workflowIntegrate.isCompleted(dto) || workflowIntegrate.isCancelApprovable(dto)) {
+			if (workflowIntegrate.isCompleted(dto) || workflowIntegrate.isCancelApprovable(dto)
+					|| workflowIntegrate.isCancelWithDrawnApprovable(dto)) {
 				// 承認済又は解除承認可能の場合
 				// 勤怠以外の場合
 				if (vo.isAttendance() == false) {
@@ -1297,14 +1378,14 @@ public class ApprovalCardAction extends TimeAction {
 					}
 				}
 				// ログインユーザがスーパーユーザ又はログインユーザが操作者(最終承認者)の場合
-				if (mospParams.getUserRole().isSuper() || workflowIntegrate.isApprover(dto, personalId)) {
+				if (RoleUtility.isSuper(mospParams) || workflowIntegrate.isApprover(dto, personalId)) {
 					vo.setNeedCancelButton(true);
 					return;
 				}
 			} else if (workflowIntegrate.isApprovable(dto)) {
 				// 承認可能の場合
 				// ログインユーザがスーパーユーザ又はログインユーザが操作者(最終承認者)の場合
-				if (mospParams.getUserRole().isSuper() || workflowIntegrate.isApprover(dto, personalId)) {
+				if (RoleUtility.isSuper(mospParams) || workflowIntegrate.isApprover(dto, personalId)) {
 					vo.setNeedApproveButton(true);
 					return;
 				}
@@ -1334,7 +1415,7 @@ public class ApprovalCardAction extends TimeAction {
 				// 承認解除差戻ボタン不要
 				vo.setNeedCancelApproveButton(false);
 				// ログインユーザがスーパーユーザ又はログインユーザが操作者(最終承認者)の場合
-				if (mospParams.getUserRole().isSuper() || workflowIntegrate.isApprover(dto, personalId)) {
+				if (RoleUtility.isSuper(mospParams) || workflowIntegrate.isApprover(dto, personalId)) {
 					vo.setNeedApproveButton(true);
 					return;
 				}
@@ -1349,10 +1430,11 @@ public class ApprovalCardAction extends TimeAction {
 						return;
 					}
 				}
-			} else if (workflowIntegrate.isCancelApprovable(dto)) {
+			} else if (workflowIntegrate.isCancelApprovable(dto)
+					|| workflowIntegrate.isCancelWithDrawnApprovable(dto)) {
 				// 解除承認可能の場合
 				// ログインユーザがスーパーユーザ又はログインユーザが操作者(最終承認者)の場合
-				if (mospParams.getUserRole().isSuper() || workflowIntegrate.isApprover(dto, personalId)) {
+				if (RoleUtility.isSuper(mospParams) || workflowIntegrate.isApprover(dto, personalId)) {
 					vo.setNeedCancelApproveButton(true);
 					return;
 				}
@@ -1371,6 +1453,124 @@ public class ApprovalCardAction extends TimeAction {
 			vo.setNeedApproveButton(false);
 			vo.setNeedCancelApproveButton(false);
 		}
+	}
+	
+	/**
+	 * 前ワークフロー・次ワークフローを設定する。<br>
+	 */
+	protected void setRollWorkflow() {
+		// VO取得
+		ApprovalCardVo vo = (ApprovalCardVo)mospParams.getVo();
+		Object object = mospParams.getGeneralParam(TimeConst.PRM_ROLL_ARRAY);
+		if (object != null) {
+			vo.setRollArray((BaseDtoInterface[])object);
+		}
+		if (vo.getRollArray() == null || vo.getRollArray().length == 0) {
+			return;
+		}
+		int i = 0;
+		for (BaseDtoInterface baseDto : vo.getRollArray()) {
+			ManagementRequestListDtoInterface dto = (ManagementRequestListDtoInterface)baseDto;
+			if (vo.getWorkflow() == dto.getWorkflow()) {
+				break;
+			}
+			i++;
+		}
+		// 前ワークフロー設定
+		if (i > 0) {
+			BaseDtoInterface baseDto = vo.getRollArray()[i - 1];
+			ManagementRequestListDtoInterface dto = (ManagementRequestListDtoInterface)baseDto;
+			vo.setPrevWorkflow(dto.getWorkflow());
+			vo.setPrevCommand(getRollCommand(dto.getRequestType()));
+		}
+		// 次ワークフロー設定
+		if (i + 1 < vo.getRollArray().length) {
+			BaseDtoInterface baseDto = vo.getRollArray()[i + 1];
+			ManagementRequestListDtoInterface dto = (ManagementRequestListDtoInterface)baseDto;
+			vo.setNextWorkflow(dto.getWorkflow());
+			vo.setNextCommand(getRollCommand(dto.getRequestType()));
+		}
+	}
+	
+	/**
+	 * 前次遷移用コマンドを取得する。<br>
+	 * @param requestType 申請区分
+	 * @return コマンド
+	 */
+	protected String getRollCommand(String requestType) {
+		if (CMD_APPROVAL_CONFIRMATION_ATTENDANCE.equals(mospParams.getCommand())
+				|| CMD_APPROVAL_CONFIRMATION_OVERTIME.equals(mospParams.getCommand())
+				|| CMD_APPROVAL_CONFIRMATION_HOLIDAY.equals(mospParams.getCommand())
+				|| CMD_APPROVAL_CONFIRMATION_WORKONHOLIDAY.equals(mospParams.getCommand())
+				|| CMD_APPROVAL_CONFIRMATION_SUBHOLIDAY.equals(mospParams.getCommand())
+				|| CMD_APPROVAL_CONFIRMATION_DIFFERENCE.equals(mospParams.getCommand())
+				|| CMD_APPROVAL_CONFIRMATION_WORKTYPECHANGE.equals(mospParams.getCommand())) {
+			// 勤怠承認確認画面表示・
+			// 残業承認確認画面表示・
+			// 振出・休出承認確認画面表示・
+			// 代休承認確認画面表示・
+			// 時差出勤確認承認画面表示・
+			// 勤務形態変更確認承認画面表示の場合
+			if (TimeConst.CODE_FUNCTION_WORK_MANGE.equals(requestType)) {
+				// 勤怠申請の場合
+				return CMD_APPROVAL_CONFIRMATION_ATTENDANCE;
+			} else if (TimeConst.CODE_FUNCTION_OVER_WORK.equals(requestType)) {
+				// 残業申請の場合
+				return CMD_APPROVAL_CONFIRMATION_OVERTIME;
+			} else if (TimeConst.CODE_FUNCTION_VACATION.equals(requestType)) {
+				// 休暇申請の場合
+				return CMD_APPROVAL_CONFIRMATION_HOLIDAY;
+			} else if (TimeConst.CODE_FUNCTION_WORK_HOLIDAY.equals(requestType)) {
+				// 振出・休出申請の場合
+				return CMD_APPROVAL_CONFIRMATION_WORKONHOLIDAY;
+			} else if (TimeConst.CODE_FUNCTION_COMPENSATORY_HOLIDAY.equals(requestType)) {
+				// 代休申請の場合
+				return CMD_APPROVAL_CONFIRMATION_SUBHOLIDAY;
+			} else if (TimeConst.CODE_FUNCTION_DIFFERENCE.equals(requestType)) {
+				// 時差出勤申請の場合
+				return CMD_APPROVAL_CONFIRMATION_DIFFERENCE;
+			} else if (TimeConst.CODE_FUNCTION_WORK_TYPE_CHANGE.equals(requestType)) {
+				// 勤務形態変更申請の場合
+				return CMD_APPROVAL_CONFIRMATION_WORKTYPECHANGE;
+			}
+		} else if (CMD_APPROVAL_ATTENDANCE.equals(mospParams.getCommand())
+				|| CMD_APPROVAL_OVERTIME.equals(mospParams.getCommand())
+				|| CMD_APPROVAL_HOLIDAY.equals(mospParams.getCommand())
+				|| CMD_APPROVAL_WORKONHOLIDAY.equals(mospParams.getCommand())
+				|| CMD_APPROVAL_SUBHOLIDAY.equals(mospParams.getCommand())
+				|| CMD_APPROVAL_DIFFERENCE.equals(mospParams.getCommand())
+				|| CMD_APPROVAL_WORKTYPECHANGE.equals(mospParams.getCommand())) {
+			// 勤怠承認画面表示・
+			// 残業承認画面表示・
+			// 休暇承認画面表示・
+			// 振出・休出承認画面表示・
+			// 代休承認画面表示・
+			// 時差出勤承認画面表示・
+			// 勤務形態変更承認画面表示の場合
+			if (TimeConst.CODE_FUNCTION_WORK_MANGE.equals(requestType)) {
+				// 勤怠申請の場合
+				return CMD_APPROVAL_ATTENDANCE;
+			} else if (TimeConst.CODE_FUNCTION_OVER_WORK.equals(requestType)) {
+				// 残業申請の場合
+				return CMD_APPROVAL_OVERTIME;
+			} else if (TimeConst.CODE_FUNCTION_VACATION.equals(requestType)) {
+				// 休暇申請の場合
+				return CMD_APPROVAL_HOLIDAY;
+			} else if (TimeConst.CODE_FUNCTION_WORK_HOLIDAY.equals(requestType)) {
+				// 振出・休出申請の場合
+				return CMD_APPROVAL_WORKONHOLIDAY;
+			} else if (TimeConst.CODE_FUNCTION_COMPENSATORY_HOLIDAY.equals(requestType)) {
+				// 代休申請の場合
+				return CMD_APPROVAL_SUBHOLIDAY;
+			} else if (TimeConst.CODE_FUNCTION_DIFFERENCE.equals(requestType)) {
+				// 時差出勤申請の場合
+				return CMD_APPROVAL_DIFFERENCE;
+			} else if (TimeConst.CODE_FUNCTION_WORK_TYPE_CHANGE.equals(requestType)) {
+				// 勤務形態変更申請の場合
+				return CMD_APPROVAL_WORKTYPECHANGE;
+			}
+		}
+		return "";
 	}
 	
 	/**
@@ -1429,8 +1629,14 @@ public class ApprovalCardAction extends TimeAction {
 				|| TimeConst.CODE_WORK_ON_PRESCRIBED_HOLIDAY.equals(workTypeCode)) {
 			return workType.getParticularWorkTypeName(workTypeCode);
 		}
+		// リクエストユーティリティ準備
+		RequestUtilBeanInterface requestUtil = timeReference().requestUtil();
+		requestUtil.setRequests(dto.getPersonalId(), dto.getWorkDate());
+		// 申請エンティティを取得
+		RequestEntity entity = requestUtil.getRequestEntity(dto.getPersonalId(), dto.getWorkDate());
 		// 勤務形態略称を取得
-		return timeReference().workType().getWorkTypeAbbrAndTime(workTypeCode, dto.getWorkDate());
+		return timeReference().workType().getWorkTypeAbbrAndTime(workTypeCode, dto.getWorkDate(),
+				entity.isAmHoliday(false), entity.isPmHoliday(false));
 	}
 	
 	/**

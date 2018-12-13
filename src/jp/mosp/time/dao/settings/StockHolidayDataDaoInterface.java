@@ -79,4 +79,17 @@ public interface StockHolidayDataDaoInterface extends BaseDaoInterface {
 	 */
 	List<StockHolidayDataDtoInterface> findForInfoList(String personalId, Date activateDate) throws MospException;
 	
+	/**
+	 * ストック休暇データリストを取得する。<br>
+	 * 個人IDと対象日から全てのストック休暇データリストを取得する。<br>
+	 * <br>
+	 * 但し、期限日が対象日より前の情報は、取得対象外とする。<br>
+	 * <br>
+	 * @param personalId 個人ID
+	 * @param targetDate 対象日
+	 * @return ストック休暇データDTOリスト
+	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
+	 */
+	List<StockHolidayDataDtoInterface> findForInfoAllList(String personalId, Date targetDate) throws MospException;
+	
 }

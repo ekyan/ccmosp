@@ -20,15 +20,20 @@ package jp.mosp.platform.bean.human.impl;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.base.MospParams;
+import jp.mosp.framework.constant.MospConst;
+import jp.mosp.framework.property.ConventionProperty;
 import jp.mosp.framework.utils.DateUtility;
+import jp.mosp.framework.xml.ItemProperty;
 import jp.mosp.framework.xml.TableItemProperty;
 import jp.mosp.platform.base.PlatformBean;
 import jp.mosp.platform.bean.human.HumanGeneralBeanInterface;
+import jp.mosp.platform.bean.human.HumanGeneralCheckBeanInterface;
 import jp.mosp.platform.bean.human.HumanHistoryRegistBeanInterface;
 import jp.mosp.platform.bean.human.HumanReferenceBeanInterface;
 import jp.mosp.platform.constant.PlatformConst;
@@ -36,6 +41,7 @@ import jp.mosp.platform.dao.human.HumanHistoryDaoInterface;
 import jp.mosp.platform.dto.human.HumanDtoInterface;
 import jp.mosp.platform.dto.human.HumanHistoryDtoInterface;
 import jp.mosp.platform.dto.human.impl.PfaHumanHistoryDto;
+import jp.mosp.platform.human.constant.PlatformHumanConst;
 
 /**
  * 人事汎用履歴情報登録クラス。
@@ -45,17 +51,22 @@ public class HumanHistoryRegistBean extends HumanGeneralBean implements HumanHis
 	/**
 	 * 人事汎用履歴情報DAOクラス。<br>
 	 */
-	HumanHistoryDaoInterface	dao;
+	HumanHistoryDaoInterface		dao;
 	
 	/**
 	 * 人事情報参照クラス。<br>
 	 */
-	HumanReferenceBeanInterface	humanReference;
+	HumanReferenceBeanInterface		humanReference;
+	
+	/**
+	 * 人事汎用管理チェッククラス
+	 */
+	HumanGeneralCheckBeanInterface	humanGeneralCheckBean;
 	
 	/**
 	 * 人事汎用クラス。
 	 */
-	HumanGeneralBeanInterface	humanGeneral;
+	HumanGeneralBeanInterface		humanGeneral;
 	
 	
 	/**
@@ -81,6 +92,7 @@ public class HumanHistoryRegistBean extends HumanGeneralBean implements HumanHis
 		dao = (HumanHistoryDaoInterface)createDao(HumanHistoryDaoInterface.class);
 		humanReference = (HumanReferenceBeanInterface)createBean(HumanReferenceBeanInterface.class);
 		humanGeneral = (HumanGeneralBeanInterface)createBean(HumanGeneralBeanInterface.class);
+		humanGeneralCheckBean = (HumanGeneralCheckBeanInterface)createBean(HumanGeneralCheckBeanInterface.class);
 	}
 	
 	@Override
@@ -235,7 +247,7 @@ public class HumanHistoryRegistBean extends HumanGeneralBean implements HumanHis
 	}
 	
 	@Override
-	public void delete(String division, String viewKey, String personalId, Date targetDate) throws MospException {
+	public void delete(String division, String viewKey, LinkedHashMap<String, Long> recordsMap) throws MospException {
 		// 人事汎用項目情報リストを取得
 		List<TableItemProperty> tableItemList = getTableItemList(division, viewKey);
 		//人事汎用項目毎に処理
@@ -248,13 +260,16 @@ public class HumanHistoryRegistBean extends HumanGeneralBean implements HumanHis
 				if (itemName.isEmpty()) {
 					continue;
 				}
-				// 人事汎用履歴情報取得
-				HumanHistoryDtoInterface dto = dao.findForKey(personalId, itemName, targetDate);
+				// レコード識別ID取得
+				Long recordId = recordsMap.get(itemName);
+				
 				// レコード識別ID確認
-				if (dto == null) {
+				if (recordId == null) {
 					// 処理なし
 					continue;
 				}
+				// 人事汎用履歴情報取得
+				HumanHistoryDtoInterface dto = (HumanHistoryDtoInterface)dao.findForKey(recordId, false);
 				// 削除
 				delete(dto);
 			}
@@ -297,14 +312,22 @@ public class HumanHistoryRegistBean extends HumanGeneralBean implements HumanHis
 	
 	@Override
 	public void add(String division, String viewKey, String personalId, Date activeDate) throws MospException {
+		
+		// 入力チェック
+		humanGeneralCheckBean.validate(division, viewKey);
+		if (mospParams.hasErrorMessage()) {
+			return;
+		}
 		// 人事汎用項目情報リストを取得
 		List<TableItemProperty> tableItemList = getTableItemList(division, viewKey);
 		//人事汎用項目毎に処理
 		for (TableItemProperty tableItem : tableItemList) {
 			// 人事汎用項目名を取得
 			String[] itemNames = tableItem.getItemNames();
-			// 人事汎用項目名毎に処理
-			for (String itemName : itemNames) {
+			String[] itemKeys = tableItem.getItemKeys();
+			// 人事汎用一覧情報項目名毎に処理
+			for (int i = 0; i < itemNames.length; i++) {
+				String itemName = itemNames[i];
 				// 空の場合
 				if (itemName.isEmpty()) {
 					continue;
@@ -314,6 +337,20 @@ public class HumanHistoryRegistBean extends HumanGeneralBean implements HumanHis
 				if (value == null) {
 					value = "";
 				}
+				// 人事汎用項目区分設定情報取得
+				ConventionProperty conventionProperty = mospParams.getProperties().getConventionProperties()
+					.get(PlatformHumanConst.KEY_DEFAULT_CONVENTION);
+				
+				ItemProperty itemProperty = conventionProperty.getItem(itemKeys[i]);
+				
+				// 項目形式がチェックボックス以外
+				if (itemProperty.getType().equals(PlatformHumanConst.KEY_HUMAN_ITEM_TYPE_CHECK_BOX)) {
+					// チェックボックスで且つ値が未設定の場合
+					if (value.isEmpty()) {
+						value = MospConst.CHECKBOX_OFF;
+					}
+				}
+				
 				// DTOに設定
 				HumanHistoryDtoInterface dto = getInitDto();
 				dto.setPersonalId(personalId);
@@ -348,33 +385,55 @@ public class HumanHistoryRegistBean extends HumanGeneralBean implements HumanHis
 	}
 	
 	@Override
-	public void update(String division, String viewKey, String personalId, Date activeDate) throws MospException {
+	public void update(String division, String viewKey, String personalId, Date activeDate,
+			LinkedHashMap<String, Long> recordsMap) throws MospException {
+		// 入力チェック
+		humanGeneralCheckBean.validate(division, viewKey);
+		if (mospParams.hasErrorMessage()) {
+			return;
+		}
+		
 		// 人事汎用項目情報リストを取得
 		List<TableItemProperty> tableItemList = getTableItemList(division, viewKey);
 		//人事汎用項目毎に処理
 		for (TableItemProperty tableItem : tableItemList) {
 			// 人事汎用項目名を取得
 			String[] itemNames = tableItem.getItemNames();
-			// 人事汎用項目名毎に処理
-			for (String itemName : itemNames) {
+			String[] itemKeys = tableItem.getItemKeys();
+			// 人事汎用一覧情報項目名毎に処理
+			for (int i = 0; i < itemNames.length; i++) {
+				String itemName = itemNames[i];
 				// 空の場合
 				if (itemName.isEmpty()) {
 					continue;
 				}
+				// レコード識別ID取得
+				Long recordId = recordsMap.get(itemName);
 				
-				// 人事汎用履歴情報取得
-				HumanHistoryDtoInterface dto = dao.findForKey(personalId, itemName, activeDate);
+				// DTO初期化
+				HumanHistoryDtoInterface dto = getInitDto();
 				// MosP処理情報から値取得
 				String value = mospParams.getRequestParam(itemName);
 				// 値が未設定の場合
 				if (value == null) {
 					value = "";
 				}
+				// 人事汎用項目区分設定情報取得
+				ConventionProperty conventionProperty = mospParams.getProperties().getConventionProperties()
+					.get(PlatformHumanConst.KEY_DEFAULT_CONVENTION);
+				
+				ItemProperty itemProperty = conventionProperty.getItem(itemKeys[i]);
+				
+				// 項目形式がチェックボックス以外
+				if (itemProperty.getType().equals(PlatformHumanConst.KEY_HUMAN_ITEM_TYPE_CHECK_BOX)) {
+					// チェックボックスで且つ値が未設定の場合
+					if (value.isEmpty()) {
+						value = MospConst.CHECKBOX_OFF;
+					}
+				}
 				
 				// 履歴登録時には存在しなかった項目の場合
-				if (dto == null) {
-					// DTOに設定
-					dto = getInitDto();
+				if (recordId == null) {
 					dto.setPersonalId(personalId);
 					dto.setActivateDate(activeDate);
 					dto.setHumanItemType(itemName);
@@ -388,6 +447,8 @@ public class HumanHistoryRegistBean extends HumanGeneralBean implements HumanHis
 					continue;
 				}
 				
+				// 人事汎用履歴情報取得
+				dto = (HumanHistoryDtoInterface)dao.findForKey(recordId, false);
 				// レコード識別ID確認
 				dto.setHumanItemValue(value);
 				// 更新

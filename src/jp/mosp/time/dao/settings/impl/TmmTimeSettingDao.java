@@ -485,6 +485,11 @@ public class TmmTimeSettingDao extends PlatformDao implements TimeSettingDaoInte
 	public static final String	COL_LEGAL_HOLIDAY					= "legal_holiday";
 	
 	/**
+	 * 見込月。
+	 */
+	public static final String	COL_PROSPECTS_MONTHS				= "prospects_months";
+	
+	/**
 	 * 無効フラグ。
 	 */
 	public static final String	COL_INACTIVATE_FLAG					= "inactivate_flag";
@@ -597,6 +602,7 @@ public class TmmTimeSettingDao extends PlatformDao implements TimeSettingDaoInte
 		dto.setAlternativeLegal(getInt(COL_ALTERNATIVE_LEGAL));
 		dto.setSpecificHoliday(getInt(COL_SPECIFIC_HOLIDAY));
 		dto.setLegalHoliday(getInt(COL_LEGAL_HOLIDAY));
+		dto.setProspectsMonths(getString(COL_PROSPECTS_MONTHS));
 		dto.setInactivateFlag(getInt(COL_INACTIVATE_FLAG));
 		mappingCommonInfo(dto);
 		return dto;
@@ -875,7 +881,7 @@ public class TmmTimeSettingDao extends PlatformDao implements TimeSettingDaoInte
 		setParam(index++, dto.getRoundDailyStart());
 		setParam(index++, dto.getRoundDailyEndUnit());
 		setParam(index++, dto.getRoundDailyEnd());
-		setParam(index++, dto.getRoundDailyWorkUnit());
+		setParam(index++, dto.getRoundDailyTimeWork());
 		setParam(index++, dto.getRoundDailyWork());
 		setParam(index++, dto.getRoundDailyRestStartUnit());
 		setParam(index++, dto.getRoundDailyRestStart());
@@ -946,6 +952,7 @@ public class TmmTimeSettingDao extends PlatformDao implements TimeSettingDaoInte
 		setParam(index++, dto.getAlternativeLegal());
 		setParam(index++, dto.getSpecificHoliday());
 		setParam(index++, dto.getLegalHoliday());
+		setParam(index++, dto.getProspectsMonths());
 		setParam(index++, dto.getInactivateFlag());
 		setCommonParams(baseDto, isInsert);
 	}

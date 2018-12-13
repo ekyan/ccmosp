@@ -25,11 +25,16 @@ import jp.mosp.platform.bean.file.HumanImportBeanInterface;
 import jp.mosp.platform.bean.file.ImportBeanInterface;
 import jp.mosp.platform.bean.file.ImportFieldRegistBeanInterface;
 import jp.mosp.platform.bean.file.ImportRegistBeanInterface;
+import jp.mosp.platform.bean.file.PositionImportBeanInterface;
 import jp.mosp.platform.bean.file.SectionImportBeanInterface;
+import jp.mosp.platform.bean.file.TemplateOutputBeanInterface;
+import jp.mosp.platform.bean.file.UserExtraRoleImportBeanInterface;
 import jp.mosp.platform.bean.file.UserImportBeanInterface;
 import jp.mosp.platform.bean.file.UserPasswordImportBeanInterface;
 import jp.mosp.platform.bean.file.impl.UnitPersonImportBean;
 import jp.mosp.platform.bean.file.impl.UnitSectionImportBean;
+import jp.mosp.platform.bean.human.AccountRegistBeanInterface;
+import jp.mosp.platform.bean.human.AddressRegistBeanInterface;
 import jp.mosp.platform.bean.human.ConcurrentRegistBeanInterface;
 import jp.mosp.platform.bean.human.EntranceRegistBeanInterface;
 import jp.mosp.platform.bean.human.HistoryBasicDeleteBeanInterface;
@@ -40,23 +45,29 @@ import jp.mosp.platform.bean.human.HumanBinaryNormalRegistBeanInterface;
 import jp.mosp.platform.bean.human.HumanHistoryRegistBeanInterface;
 import jp.mosp.platform.bean.human.HumanNormalRegistBeanInterface;
 import jp.mosp.platform.bean.human.HumanRegistBeanInterface;
+import jp.mosp.platform.bean.human.PhoneRegistBeanInterface;
 import jp.mosp.platform.bean.human.RetirementRegistBeanInterface;
 import jp.mosp.platform.bean.human.SuspensionRegistBeanInterface;
+import jp.mosp.platform.bean.mail.MailBeanInterface;
 import jp.mosp.platform.bean.message.MessageRegistBeanInterface;
 import jp.mosp.platform.bean.portal.AuthBeanInterface;
+import jp.mosp.platform.bean.portal.MospUserBeanInterface;
 import jp.mosp.platform.bean.portal.PasswordCheckBeanInterface;
 import jp.mosp.platform.bean.portal.PortalBeanInterface;
 import jp.mosp.platform.bean.portal.UserCheckBeanInterface;
+import jp.mosp.platform.bean.system.AppPropertyRegistBeanInterface;
+import jp.mosp.platform.bean.system.BankBaseRegistBeanInterface;
+import jp.mosp.platform.bean.system.BankBranchRegistBeanInterface;
 import jp.mosp.platform.bean.system.EmploymentContractRegistBeanInterface;
 import jp.mosp.platform.bean.system.GeneralRegistBeanInterface;
 import jp.mosp.platform.bean.system.IcCardRegistBeanInterface;
 import jp.mosp.platform.bean.system.NamingRegistBeanInterface;
 import jp.mosp.platform.bean.system.PlatformMasterCheckBeanInterface;
 import jp.mosp.platform.bean.system.PositionRegistBeanInterface;
+import jp.mosp.platform.bean.system.PostalCodeRegistBeanInterface;
 import jp.mosp.platform.bean.system.ReceptionIcCardRegistBeanInterface;
 import jp.mosp.platform.bean.system.SectionRegistBeanInterface;
-import jp.mosp.platform.bean.system.UserMasterRegistBeanInterface;
-import jp.mosp.platform.bean.system.UserPasswordRegistBeanInterface;
+import jp.mosp.platform.bean.system.UserAccountRegistBeanInterface;
 import jp.mosp.platform.bean.system.WorkPlaceRegistBeanInterface;
 import jp.mosp.platform.bean.workflow.ApprovalRouteRegistBeanInterface;
 import jp.mosp.platform.bean.workflow.ApprovalRouteUnitRegistBeanInterface;
@@ -85,6 +96,11 @@ public class PlatformBeanHandler extends BaseBeanHandler implements PlatformBean
 	}
 	
 	@Override
+	public MospUserBeanInterface mospUser() throws MospException {
+		return (MospUserBeanInterface)createBean(MospUserBeanInterface.class);
+	}
+	
+	@Override
 	public UserCheckBeanInterface userCheck() throws MospException {
 		return (UserCheckBeanInterface)createBean(UserCheckBeanInterface.class);
 	}
@@ -100,13 +116,8 @@ public class PlatformBeanHandler extends BaseBeanHandler implements PlatformBean
 	}
 	
 	@Override
-	public UserPasswordRegistBeanInterface userPasswordRegist() throws MospException {
-		return (UserPasswordRegistBeanInterface)createBean(UserPasswordRegistBeanInterface.class);
-	}
-	
-	@Override
-	public UserMasterRegistBeanInterface userMasterRegist() throws MospException {
-		return (UserMasterRegistBeanInterface)createBean(UserMasterRegistBeanInterface.class);
+	public UserAccountRegistBeanInterface userAccountRegist() throws MospException {
+		return (UserAccountRegistBeanInterface)createBean(UserAccountRegistBeanInterface.class);
 	}
 	
 	@Override
@@ -132,6 +143,21 @@ public class PlatformBeanHandler extends BaseBeanHandler implements PlatformBean
 	@Override
 	public NamingRegistBeanInterface namingRegist() throws MospException {
 		return (NamingRegistBeanInterface)createBean(NamingRegistBeanInterface.class);
+	}
+	
+	@Override
+	public PostalCodeRegistBeanInterface postalCodeRegist() throws MospException {
+		return (PostalCodeRegistBeanInterface)createBean(PostalCodeRegistBeanInterface.class);
+	}
+	
+	@Override
+	public BankBaseRegistBeanInterface bankBaseRegist() throws MospException {
+		return (BankBaseRegistBeanInterface)createBean(BankBaseRegistBeanInterface.class);
+	}
+	
+	@Override
+	public BankBranchRegistBeanInterface bankBranchRegist() throws MospException {
+		return (BankBranchRegistBeanInterface)createBean(BankBranchRegistBeanInterface.class);
 	}
 	
 	@Override
@@ -162,6 +188,21 @@ public class PlatformBeanHandler extends BaseBeanHandler implements PlatformBean
 	@Override
 	public ConcurrentRegistBeanInterface concurrentRegist() throws MospException {
 		return (ConcurrentRegistBeanInterface)createBean(ConcurrentRegistBeanInterface.class);
+	}
+	
+	@Override
+	public AddressRegistBeanInterface addressRegist() throws MospException {
+		return (AddressRegistBeanInterface)createBean(AddressRegistBeanInterface.class);
+	}
+	
+	@Override
+	public PhoneRegistBeanInterface phoneRegist() throws MospException {
+		return (PhoneRegistBeanInterface)createBean(PhoneRegistBeanInterface.class);
+	}
+	
+	@Override
+	public AccountRegistBeanInterface accountRegist() throws MospException {
+		return (AccountRegistBeanInterface)createBean(AccountRegistBeanInterface.class);
 	}
 	
 	@Override
@@ -265,6 +306,11 @@ public class PlatformBeanHandler extends BaseBeanHandler implements PlatformBean
 	}
 	
 	@Override
+	public TemplateOutputBeanInterface templateOutput() throws MospException {
+		return (TemplateOutputBeanInterface)createBean(TemplateOutputBeanInterface.class);
+	}
+	
+	@Override
 	public ImportRegistBeanInterface importRegist() throws MospException {
 		return (ImportRegistBeanInterface)createBean(ImportRegistBeanInterface.class);
 	}
@@ -285,8 +331,18 @@ public class PlatformBeanHandler extends BaseBeanHandler implements PlatformBean
 	}
 	
 	@Override
+	public UserExtraRoleImportBeanInterface userExtraRoleImport() throws MospException {
+		return (UserExtraRoleImportBeanInterface)createBean(UserExtraRoleImportBeanInterface.class);
+	}
+	
+	@Override
 	public SectionImportBeanInterface sectionImport() throws MospException {
 		return (SectionImportBeanInterface)createBean(SectionImportBeanInterface.class);
+	}
+	
+	@Override
+	public PositionImportBeanInterface positionImport() throws MospException {
+		return (PositionImportBeanInterface)createBean(PositionImportBeanInterface.class);
 	}
 	
 	@Override
@@ -305,8 +361,18 @@ public class PlatformBeanHandler extends BaseBeanHandler implements PlatformBean
 	}
 	
 	@Override
+	public MailBeanInterface mail() throws MospException {
+		return (MailBeanInterface)createBean(MailBeanInterface.class);
+	}
+	
+	@Override
 	public PortalBeanInterface portal(String className) throws MospException {
 		return (PortalBeanInterface)createBean(className);
+	}
+	
+	@Override
+	public AppPropertyRegistBeanInterface appPropertyRegist() throws MospException {
+		return (AppPropertyRegistBeanInterface)createBean(AppPropertyRegistBeanInterface.class);
 	}
 	
 }

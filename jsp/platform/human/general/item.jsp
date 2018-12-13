@@ -234,4 +234,46 @@ if (itemType.equals(PlatformHumanConst.KEY_HUMAN_ITEM_TYPE_SELECT)) {
 <%			
 	}
 }
+// 人事汎用項目形式情報確認(checkboxの場合) 
+if (itemType.equals(PlatformHumanConst.KEY_HUMAN_ITEM_TYPE_CHECK_BOX)) {
+	// 通常の場合
+	if(divisionType.equals(PlatformHumanConst.PRM_HUMAN_DIVISION_TYPE_NORMAL)){
+%>
+	<input type="<%= itemType %>" <%= css %> name="<%=itemName %>" id="<%=itemName %>" value="<%= MospConst.CHECKBOX_ON %>" <%= HtmlUtility.getChecked(vo.getNormalItem(division,itemName)) %> />
+<%	
+	}
+	// 履歴の場合
+	if(divisionType.equals(PlatformHumanConst.PRM_HUMAN_DIVISION_TYPE_HISTORY)){
+%>
+	<input type="<%= itemType %>" <%= css %> name="<%=itemName %>" id="<%=itemName %>" value="<%= MospConst.CHECKBOX_ON %>" <%= HtmlUtility.getChecked(vo.getHistoryItem(division,activeDate,itemName)) %> />
+<%		
+	}
+	// 一覧の場合
+	if(divisionType.equals(PlatformHumanConst.PRM_HUMAN_DIVISION_TYPE_ARRAY)){
+%>
+	<input type="<%= itemType %>" <%= css %> name="<%=itemName %>" id="<%=itemName %>" value="<%= MospConst.CHECKBOX_ON %>" <%= HtmlUtility.getChecked(vo.getArrayItem(division,rowId,itemName)) %> />
+<%	
+	}
+}
+// 人事汎用項目形式情報確認(radiobuttonの場合) 
+if (itemType.equals(PlatformHumanConst.KEY_HUMAN_ITEM_TYPE_RADIO)) {
+	// 通常の場合
+	if(divisionType.equals(PlatformHumanConst.PRM_HUMAN_DIVISION_TYPE_NORMAL)){
+%>
+	<%= HtmlUtility.getRadioButonInput(css, itemName, vo.getPltItem(itemName),vo.getNormalItem(division,itemName)) %>
+<%	
+	}
+	// 履歴の場合
+	if(divisionType.equals(PlatformHumanConst.PRM_HUMAN_DIVISION_TYPE_HISTORY)){
+%>
+	<%= HtmlUtility.getRadioButonInput(css, itemName, vo.getPltItem(itemName),vo.getHistoryItem(division,activeDate,itemName)) %>
+<%		
+	}
+	// 一覧の場合
+	if(divisionType.equals(PlatformHumanConst.PRM_HUMAN_DIVISION_TYPE_ARRAY)){
+%>
+	<%= HtmlUtility.getRadioButonInput(css, itemName, vo.getPltItem(itemName),vo.getArrayItem(division,rowId,itemName)) %>	
+<%	
+	}
+}
 %>

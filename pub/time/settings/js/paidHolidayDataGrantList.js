@@ -28,6 +28,12 @@ var MSG_CHECKBOX_GRANT_ERROR ="TMW0329";
 var MSG_CHECKBOX_SELECT_ERROR = "PFW0233";
 
 /**
+ * 検索条件チェックエラーメッセージ
+ */
+var MSG_SEARCH_CONDITION = "PFW0234";
+
+
+/**
  * 画面読込時追加処理
  */
 function onLoadExtra() {
@@ -36,11 +42,11 @@ function onLoadExtra() {
 	setReadOnly("txtSearchActivateMonth", true);
 	setReadOnly("txtSearchActivateDay", true);
 	// 検索ボタン利用不可
-	setDisabled("btnSearch", true);
+	setReadOnly("btnSearch", true);
 	// 有効日(編集)モード確認
 	if (modeActivateDate == MODE_ACTIVATE_DATE_FIXED) {
 		// 検索ボタン利用可
-		setDisabled("btnSearch", false);
+		setReadOnly("btnSearch", false);
 		return;
 	}
 	// 有効日編集可
@@ -48,6 +54,8 @@ function onLoadExtra() {
 	setReadOnly("txtSearchActivateMonth", false);
 	setReadOnly("txtSearchActivateDay", false);
 }
+
+
 
 /**
  * 追加チェック
@@ -60,7 +68,62 @@ function checkExtra(aryMessage, event) {
 	var month = getFormValue("txtSearchEntranceMonth");
 	var day = getFormValue("txtSearchEntranceDay");
 	checkSearchDate("txtSearchEntrance", "txtSearchEntranceMonth", "txtSearchEntranceDay", aryMessage);
+	// 検索項目必須時のチェック
+	checkSearchCondition(aryMessage);
 }
+
+/**
+ * 検索条件を確認する。
+ * @param aryMessage メッセージ配列
+ */
+function checkSearchCondition(aryMessage) {
+	if (!jsSearchConditionRequired) {
+		// 検索条件が必須でない場合
+		return;
+	}
+	// 検索条件が必須の場合
+	if (hasSearchCondition()) {
+		// 検索条件が1つでもある場合
+		return;
+	}
+	// 検索条件がない場合
+	aryMessage.push(getMessage(MSG_SEARCH_CONDITION, null));
+}
+/**
+ * 検索条件の有無を確認する
+ * @return 検索条件が1つでもある場合true、そうでない場合false
+ */
+function hasSearchCondition() {
+	return !isEmpty(
+			"txtSearchEntrance",
+			"txtSearchEntranceMonth",
+			"txtSearchEntranceDay",
+			"txtSearchEmployeeCode",
+			"txtSearchEmployeeName",
+			"pltSearchPaidHoliday",
+			"pltSearchGrant",
+			"pltSearchWorkPlace",
+			"pltSearchEmployment",
+			"pltSearchSection",
+			"pltSearchPosition"
+
+	);
+}
+
+/**
+ * 空文字列かどうか確認する
+ * @return 文字列の長さが0の場合true、そうでない場合false
+ */
+function isEmpty() {
+	for (var i = 0, argumentsLength = arguments.length; i < argumentsLength; i++) {
+		if (getFormValue(arguments[i]).length == 0) {
+			continue;
+		}
+		return false;
+	}
+	return true;
+}
+
 
 /**
  * 有給一括付与時の追加チェック

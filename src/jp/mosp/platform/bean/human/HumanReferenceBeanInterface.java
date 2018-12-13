@@ -25,7 +25,7 @@ import jp.mosp.framework.base.MospException;
 import jp.mosp.platform.dto.human.HumanDtoInterface;
 
 /**
- * 人事マスタ参照インターフェース
+ * 人事マスタ参照インターフェース。<br>
  */
 public interface HumanReferenceBeanInterface {
 	
@@ -224,5 +224,16 @@ public interface HumanReferenceBeanInterface {
 	 * @throws MospException 人事情報の取得に失敗した場合
 	 */
 	Map<String, String> getEmployeeCodeMap(Date activateDate, String... personalIds) throws MospException;
+	
+	/**
+	 * 人事情報リストに対象個人IDの情報を追加する。<br>
+	 * ただし、対象個人IDの人事情報が既にリストに含まれる場合は、追加しない。<br>
+	 * <br>
+	 * @param list       人事情報リスト
+	 * @param personalId 個人ID
+	 * @param targetDate 対象日
+	 * @throws MospException 人事情報の取得に失敗した場合
+	 */
+	void addHuman(List<HumanDtoInterface> list, String personalId, Date targetDate) throws MospException;
 	
 }

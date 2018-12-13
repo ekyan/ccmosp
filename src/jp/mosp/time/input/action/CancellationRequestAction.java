@@ -25,12 +25,15 @@ import java.util.Set;
 import jp.mosp.framework.base.BaseDtoInterface;
 import jp.mosp.framework.base.BaseVo;
 import jp.mosp.framework.base.MospException;
+import jp.mosp.framework.constant.MospConst;
 import jp.mosp.framework.utils.DateUtility;
 import jp.mosp.platform.constant.PlatformConst;
 import jp.mosp.platform.dto.workflow.WorkflowDtoInterface;
-import jp.mosp.platform.utils.MonthUtility;
 import jp.mosp.time.base.TimeAction;
+import jp.mosp.time.bean.CutoffUtilBeanInterface;
 import jp.mosp.time.comparator.settings.ManagementRequestRequestDateComparator;
+import jp.mosp.time.constant.TimeConst;
+import jp.mosp.time.dto.settings.CutoffDtoInterface;
 import jp.mosp.time.dto.settings.ManagementRequestListDtoInterface;
 import jp.mosp.time.input.vo.CancellationRequestVo;
 import jp.mosp.time.utils.TimeUtility;
@@ -149,7 +152,7 @@ public class CancellationRequestAction extends TimeAction {
 			prepareVo(true, false);
 			search();
 		} else if (mospParams.getCommand().equals(CMD_SORT)) {
-			// ソート 
+			// ソート
 			prepareVo();
 			sort();
 		} else if (mospParams.getCommand().equals(CMD_PAGE)) {
@@ -197,9 +200,40 @@ public class CancellationRequestAction extends TimeAction {
 	protected void search() throws MospException {
 		// VO取得
 		CancellationRequestVo vo = (CancellationRequestVo)mospParams.getVo();
+		// 年月日取得
+		int year = getInt(vo.getPltSearchRequestYear());
+		int month = getInt(vo.getPltSearchRequestMonth());
+		String day = vo.getPltSearchRequestDay();
+		// 期間開始日および終了日を準備
+		Date firstDate = null;
+		Date lastDate = null;
+		// 日が指定されていない場合
+		if (day.isEmpty()) {
+			// 締日ユーティリティー取得
+			CutoffUtilBeanInterface cutoffUtil = timeReference().cutoffUtil();
+			// 締日情報取得
+			CutoffDtoInterface cutoffDto = cutoffUtil.getCutoffForPersonalId(vo.getPersonalId(), year, month);
+			if (mospParams.hasErrorMessage()) {
+				// 検索結果無しメッセージ設定
+				addNoSearchResultMessage();
+				return;
+			}
+			// 締日取得
+			int cutoffDate = cutoffDto.getCutoffDate();
+			// 締日期間初日
+			firstDate = TimeUtility.getCutoffFirstDate(cutoffDate, year, month);
+			// 締日期間最終日
+			lastDate = TimeUtility.getCutoffLastDate(cutoffDate, year, month);
+			
+		} else {
+			// 指定年月日を取得(日が指定された場合)
+			firstDate = DateUtility.getDate(year, month, getInt(day));
+			lastDate = DateUtility.getDate(year, month, getInt(day));
+		}
+		
 		// 申請情報取得
-		List<ManagementRequestListDtoInterface> list = timeReference().approvalInfo().getCompletedList(
-				vo.getPersonalId(), getFromDate(), getToDate(), getFunctionCodeSet());
+		List<ManagementRequestListDtoInterface> list = timeReference().approvalInfo()
+			.getCompletedList(vo.getPersonalId(), firstDate, lastDate, getFunctionCodeSet());
 		// 検索結果リスト設定
 		vo.setList(list);
 		// デフォルトソートキー及びソート順設定
@@ -208,7 +242,7 @@ public class CancellationRequestAction extends TimeAction {
 		// ソート
 		sort();
 		// 検索結果確認
-		if (list.isEmpty()) {
+		if (list.isEmpty() && mospParams.getCommand().equals(CMD_SEARCH)) {
 			// 検索結果無しメッセージ設定
 			addNoSearchResultMessage();
 		}
@@ -232,8 +266,9 @@ public class CancellationRequestAction extends TimeAction {
 	
 	/**
 	 * 新規登録モードに設定する。<br>
+	 * @throws MospException 例外発生時
 	 */
-	protected void insertMode() {
+	protected void insertMode() throws MospException {
 		// VO取得
 		CancellationRequestVo vo = (CancellationRequestVo)mospParams.getVo();
 		// 初期値設定
@@ -292,23 +327,99 @@ public class CancellationRequestAction extends TimeAction {
 			addInsertFailedMessage();
 			return;
 		}
-		platform().workflowRegist().cancelAppli(workflowDto, vo.getTxtEditRequestReason());
-		// 登録結果確認
-		if (mospParams.hasErrorMessage()) {
-			// 登録失敗メッセージ設定
-			addInsertFailedMessage();
-			return;
+		if (workflowDto.getFunctionCode().equals(TimeConst.CODE_FUNCTION_WORK_MANGE)) {
+			// 勤怠申請の場合
+			platform().workflowRegist().cancelAttendanceAppli(workflowDto, vo.getTxtEditRequestReason(),
+					vo.getCkbWithdrawn());
+			// 登録結果確認
+			if (mospParams.hasErrorMessage()) {
+				// 登録失敗メッセージ設定
+				addInsertFailedMessage();
+				return;
+			}
+			if (workflowDto.getWorkflowStatus().equals(PlatformConst.CODE_STATUS_CANCEL_WITHDRAWN_APPLY)
+					&& isSelfApproval(workflowDto)) {
+				// 自己承認かつ、承認解除申請(取下希望)の場合
+				time.attendanceRegist().delete(workflowDto.getPersonalId(), workflowDto.getWorkflowDate());
+				// 勤怠トランザクション登録
+				time.timeApproval().registAttendanceTransaction(workflowDto.getPersonalId(),
+						workflowDto.getWorkflowDate(), dto);
+			}
+			if (mospParams.hasErrorMessage()) {
+				// 登録失敗メッセージ設定
+				addInsertFailedMessage();
+				return;
+			}
+		} else {
+			platform().workflowRegist().cancelAppli(workflowDto, vo.getTxtEditRequestReason(), vo.getCkbWithdrawn());
+			// 登録結果確認
+			if (mospParams.hasErrorMessage()) {
+				// 登録失敗メッセージ設定
+				addInsertFailedMessage();
+				return;
+			}
+			// 自己承認時の取下げ
+			withdrawnSelfApproval(workflowDto, dto);
+			// 登録結果確認
+			if (mospParams.hasErrorMessage()) {
+				// 登録失敗メッセージ設定
+				addInsertFailedMessage();
+				return;
+			}
 		}
+		
 		// コミット
 		commit();
+		
 		// 申請成功メッセージ設定
-		addAppliMessage();
+		addCancellAppliMessage();
 		// 登録結果確認
-		if (!mospParams.hasErrorMessage()) {
+		if (!mospParams.hasErrorMessage())
+		
+		{
 			// 登録が成功した場合、初期状態に戻す。
 			insertMode();
+			// 申請年月日が含まれる締月を取得し検索条件に設定
+			Date searchDate = timeReference().cutoffUtil().getCutoffMonth(workflowDto.getPersonalId(),
+					workflowDto.getWorkflowDate());
+			vo.setPltSearchRequestYear(DateUtility.getStringYear(searchDate));
+			vo.setPltSearchRequestMonth(DateUtility.getStringMonthM(searchDate));
 			search();
 		}
+	}
+	
+	/**
+	 * 自己承認時の取下処理
+	 * @param workflowDto
+	 * @param dto
+	 * @throws MospException
+	 */
+	protected void withdrawnSelfApproval(WorkflowDtoInterface workflowDto, BaseDtoInterface dto) throws MospException {
+		// 自己承認確認
+		if (isSelfApproval(workflowDto)
+				&& workflowDto.getWorkflowStatus().equals(PlatformConst.CODE_STATUS_WITHDRAWN)) {
+			
+			// 自己承認かつ、承認解除申請(取下希望)の場合
+			if (TimeConst.CODE_FUNCTION_WORK_HOLIDAY.equals(workflowDto.getFunctionCode())) {
+				// 振出・休出申請の場合は勤怠を削除する
+				time.attendanceRegist().delete(workflowDto.getPersonalId(), workflowDto.getWorkflowDate());
+			} else if (TimeConst.CODE_FUNCTION_OVER_WORK.equals(workflowDto.getFunctionCode())
+					|| TimeConst.CODE_FUNCTION_VACATION.equals(workflowDto.getFunctionCode())
+					|| TimeConst.CODE_FUNCTION_COMPENSATORY_HOLIDAY.equals(workflowDto.getFunctionCode())
+					|| TimeConst.CODE_FUNCTION_DIFFERENCE.equals(workflowDto.getFunctionCode())) {
+				// 残業申請・休暇申請・代休申請・時差出勤申請の場合は勤怠を下書し直す
+				time.timeApproval().reDraft(workflowDto.getPersonalId(), workflowDto.getWorkflowDate(), false, false,
+						false);
+			} else if (TimeConst.CODE_FUNCTION_WORK_TYPE_CHANGE.equals(workflowDto.getFunctionCode())) {
+				// 勤務形態変更申請の場合は勤怠を下書し直す
+				time.timeApproval().reDraft(workflowDto.getPersonalId(), workflowDto.getWorkflowDate(), false, false,
+						true);
+			}
+			// 勤怠トランザクション登録
+			time.timeApproval().registAttendanceTransaction(workflowDto.getPersonalId(), workflowDto.getWorkflowDate(),
+					dto);
+		}
+		
 	}
 	
 	/**
@@ -322,40 +433,6 @@ public class CancellationRequestAction extends TimeAction {
 		setTargetWorkflow(vo.getAryWorkflow()[getTransferredIndex()]);
 		// 承認履歴画面へ遷移(連続実行コマンド設定)
 		mospParams.setNextCommand(vo.getAryHistoryCmd()[getTransferredIndex()]);
-	}
-	
-	/**
-	 * VOから対象期間自を取得する。<br>
-	 * @return 対象期間自
-	 * @throws MospException 日付の取得に失敗した場合
-	 */
-	protected Date getFromDate() throws MospException {
-		// VO取得
-		CancellationRequestVo vo = (CancellationRequestVo)mospParams.getVo();
-		int year = Integer.parseInt(vo.getPltSearchRequestYear());
-		int month = Integer.parseInt(vo.getPltSearchRequestMonth());
-		String day = vo.getPltSearchRequestDay();
-		if (day.isEmpty()) {
-			return MonthUtility.getYearMonthTermFirstDate(year, month, mospParams);
-		}
-		return DateUtility.getDate(year, month, Integer.parseInt(day));
-	}
-	
-	/**
-	 * VOから対象期間至を取得する。<br>
-	 * @return 対象期間至
-	 * @throws MospException 日付の取得に失敗した場合
-	 */
-	protected Date getToDate() throws MospException {
-		// VO取得
-		CancellationRequestVo vo = (CancellationRequestVo)mospParams.getVo();
-		int year = Integer.parseInt(vo.getPltSearchRequestYear());
-		int month = Integer.parseInt(vo.getPltSearchRequestMonth());
-		String day = vo.getPltSearchRequestDay();
-		if (day.isEmpty()) {
-			return MonthUtility.getYearMonthTermLastDate(year, month, mospParams);
-		}
-		return DateUtility.getDate(year, month, Integer.parseInt(day));
 	}
 	
 	/**
@@ -379,20 +456,25 @@ public class CancellationRequestAction extends TimeAction {
 	
 	/**
 	 * 初期値を設定する。<br>
+	 * @throws MospException 例外発生時
 	 */
-	public void setDefaultValues() {
+	public void setDefaultValues() throws MospException {
 		// VO取得
 		CancellationRequestVo vo = (CancellationRequestVo)mospParams.getVo();
 		Date date = getSystemDate();
 		vo.setPltSearchApprovalType("");
-		vo.setPltSearchRequestYear(Integer.toString(DateUtility.getYear(date)));
-		vo.setPltSearchRequestMonth(Integer.toString(DateUtility.getMonth(date)));
+		// システム日付が含まれる締月を取得し検索条件に設定
+		Date searchDate = timeReference().cutoffUtil().getCutoffMonth(vo.getPersonalId(), date);
+		vo.setPltSearchRequestYear(DateUtility.getStringYear(searchDate));
+		vo.setPltSearchRequestMonth(DateUtility.getStringMonthM(searchDate));
 		vo.setPltSearchRequestDay("");
 		vo.setLblRequestDate("");
 		vo.setLblRequestType("");
 		vo.setLblRequestInfo("");
 		vo.setLblState("");
 		vo.setTxtEditRequestReason("");
+		vo.setCkbWithdrawn(MospConst.CHECKBOX_OFF);
+		vo.setJsRequestType("");
 	}
 	
 	/**
@@ -418,8 +500,15 @@ public class CancellationRequestAction extends TimeAction {
 		vo.setWorkflow(dto.getWorkflow());
 		vo.setLblRequestDate(DateUtility.getStringDateAndDay(dto.getRequestDate()));
 		vo.setLblRequestType(getRequestTypeForView(dto));
-		vo.setLblRequestInfo(dto.getRequestInfo());
+		vo.setLblRequestInfo(getRequestInfo(dto));
 		vo.setLblState(getStatusStageValueView(dto.getState(), dto.getStage()));
+		if (dto.getRequestType().equals(TimeConst.CODE_FUNCTION_WORK_MANGE)) {
+			vo.setCkbWithdrawn(MospConst.CHECKBOX_OFF);
+			vo.setJsRequestType(TimeConst.CODE_FUNCTION_WORK_MANGE);
+		} else {
+			vo.setCkbWithdrawn(MospConst.CHECKBOX_ON);
+			vo.setJsRequestType("");
+		}
 	}
 	
 	/**
@@ -446,7 +535,7 @@ public class CancellationRequestAction extends TimeAction {
 			// 配列に情報を設定
 			aryLblRequestDate[i] = DateUtility.getStringDateAndDay(dto.getRequestDate());
 			aryLblRequestType[i] = getRequestTypeForView(dto);
-			aryLblRequestInfo[i] = dto.getRequestInfo();
+			aryLblRequestInfo[i] = getRequestInfo(dto);
 			aryLblWorkflowStatus[i] = getStatusStageValueView(dto.getState(), dto.getStage());
 			aryLblApproverName[i] = dto.getApproverName();
 			aryBackColor[i] = setBackColor(dto.getPersonalId(), dto.getRequestDate(), dto.getRequestType());
@@ -464,4 +553,20 @@ public class CancellationRequestAction extends TimeAction {
 		vo.setAryWorkflow(aryWorkflow);
 	}
 	
+	/**
+	 * ワークフローが自己承認であるかを確認する。<br>
+	 * @param dto 確認対象ワークフロー情報
+	 * @return 自己承認確認結果(true：自己承認、false：自己承認でない)
+	 */
+	protected boolean isSelfApproval(WorkflowDtoInterface dto) {
+		// 承認者ID確認
+		if (dto.getApproverId().equals(PlatformConst.APPROVAL_ROUTE_SELF)) {
+			return true;
+		}
+		// ルートコード確認
+		if (dto.getRouteCode().equals(PlatformConst.APPROVAL_ROUTE_SELF)) {
+			return true;
+		}
+		return false;
+	}
 }

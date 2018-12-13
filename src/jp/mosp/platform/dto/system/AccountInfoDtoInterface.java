@@ -17,6 +17,8 @@
  */
 package jp.mosp.platform.dto.system;
 
+import java.util.Map;
+
 import jp.mosp.platform.base.PlatformDtoInterface;
 import jp.mosp.platform.dto.base.EmployeeCodeDtoInterface;
 import jp.mosp.platform.dto.base.EmployeeNameDtoInterface;
@@ -24,8 +26,8 @@ import jp.mosp.platform.dto.base.EmployeeNameDtoInterface;
 /**
  * アカウント一覧DTOのインターフェース。<br>
  */
-public interface AccountInfoDtoInterface extends PlatformDtoInterface, EmployeeCodeDtoInterface,
-		EmployeeNameDtoInterface {
+public interface AccountInfoDtoInterface
+		extends PlatformDtoInterface, EmployeeCodeDtoInterface, EmployeeNameDtoInterface {
 	
 	/**
 	 * @return pfmUserId
@@ -66,6 +68,16 @@ public interface AccountInfoDtoInterface extends PlatformDtoInterface, EmployeeC
 	 * @param roleCode セットする roleCode
 	 */
 	void setRoleCode(String roleCode);
+	
+	/**
+	 * @return extraRoles
+	 */
+	Map<String, String> getExtraRoles();
+	
+	/**
+	 * @param extraRoles セットする extraRoles
+	 */
+	void setExtraRoles(Map<String, String> extraRoles);
 	
 	/**
 	 * @return roleName

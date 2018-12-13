@@ -27,6 +27,7 @@ import jp.mosp.framework.base.MospParams;
 import jp.mosp.platform.base.PlatformBean;
 import jp.mosp.time.base.TimeBean;
 import jp.mosp.time.bean.OvertimeRequestReferenceBeanInterface;
+import jp.mosp.time.constant.TimeConst;
 import jp.mosp.time.dao.settings.OvertimeRequestDaoInterface;
 import jp.mosp.time.dto.settings.OvertimeRequestDtoInterface;
 
@@ -38,7 +39,7 @@ public class OvertimeRequestReferenceBean extends TimeBean implements OvertimeRe
 	/**
 	 * 残業申請DAOクラス。<br>
 	 */
-	OvertimeRequestDaoInterface	dao;
+	OvertimeRequestDaoInterface dao;
 	
 	
 	/**
@@ -90,6 +91,7 @@ public class OvertimeRequestReferenceBean extends TimeBean implements OvertimeRe
 	
 	@Override
 	public void chkBasicInfo(String personalId, Date targetDate) throws MospException {
-		initial(personalId, targetDate);
+		// 勤怠基本情報確認
+		initial(personalId, targetDate, TimeConst.CODE_FUNCTION_OVER_WORK);
 	}
 }

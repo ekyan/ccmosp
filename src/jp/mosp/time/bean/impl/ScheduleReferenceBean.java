@@ -38,7 +38,7 @@ public class ScheduleReferenceBean extends PlatformBean implements ScheduleRefer
 	/**
 	 * カレンダマスタDAO。
 	 */
-	private ScheduleDaoInterface	dao;
+	private ScheduleDaoInterface dao;
 	
 	
 	/**

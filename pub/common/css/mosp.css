@@ -618,3 +618,159 @@ Body {
 	float: right;
 	margin: 5px 10px auto auto;
 }
+
+/* ********************************************* */
+/* === 各種スクロール一覧(.Scroll)のスタイル === */
+/* ********************************************* */
+/**
+ * 水平スクロール欄(div)。
+ */
+.ScrollSide {
+	width: 980px;
+	float: left;
+	border-right: 1px solid black;
+	border-left: 1px solid black;
+	border-bottom: 1px solid black;
+	margin: 10px auto;
+	overflow-x: scroll;
+}
+
+/**
+ * 水平スクロール欄(div)。
+ */
+.ScrollSide td {
+	border: 1px solid black;
+}
+
+/**
+ * 垂直スクロール欄(div)。
+ */
+.ScrollVertical {
+	width: 980px;
+	height: 300px;
+	float: left;
+	border-top: 1px solid black;
+	border-right: 1px solid black;
+	border-bottom: 1px solid black;
+	margin: 10px auto;
+	overflow-y: scroll;
+}
+
+/**
+ * 垂直スクロール欄(div)。
+ */
+.ScrollVerticalUnder {
+	width: 980px;
+	height: 150px;
+	float: left;
+	border-top: 1px solid black;
+	border-right: 1px solid black;
+	border-bottom: 1px solid black;
+	overflow-y: scroll;
+	margin-bottom: 10px;
+}
+
+/**
+ * 垂直スクロール欄(div)。
+ */
+.ScrollVerticalUnder td {
+	border: 1px solid black;
+}
+
+/**
+ * 垂直スクロール欄(div)。
+ */
+.ScrollVertical td {
+	border: 1px solid black;
+}
+
+/**
+ * スクロール固定欄(div)。
+ */
+.ScrollLeft {
+	width: 180px;
+	margin-bottom: 10px;
+	margin-right: -4px;
+}
+
+/**
+ * スクロール移動欄(div)。
+ */
+.ScrollRight {
+	width: 790px;
+	border-right: 1px solid black;
+	border-left: 1px solid black;
+	border-bottom: 1px solid black;
+	margin-top: 18px;
+	margin-bottom: 10px;
+	overflow-x: scroll;
+	margin-left: -4px;
+}
+
+/**
+ * スクロール固定欄(table)。
+ */
+.ScrollVerticalOverTable {
+	width: 963px;
+	margin-left: 0px;
+	table-layout: fixed;
+	margin-top: 10px;
+}
+
+/**
+ * スクロール固定欄(table)。
+ */
+.ScrollVerticalUnderTable {
+	width: 963px;
+	table-layout: fixed;
+}
+
+/**
+ * スクロール固定欄(table)。
+ */
+.ScrollLeftTable {
+	width: 180px;
+}
+
+/**
+ * スクロール固定欄(table)。
+ */
+.ScrollLeftTable td {
+	border-right: none;
+	border: 1px solid black;
+}
+
+/**
+ * スクロール移動欄(table)。
+ */
+.ScrollRightTable td {
+	border: 1px solid black;
+}
+
+/**
+ * 警告メッセージ表示欄(div)。
+ */
+.WarningDiv {
+	background: linear-gradient(to bottom right, lightpink, white);
+	border:1px solid lightgrey;
+	border-radius: 10px;
+	padding: 20px;
+	margin: 50px;
+	text-align: center;
+	font-size: 15px;
+	font-weight: bold;
+}
+
+/**
+ * 通知メッセージ表示欄(div)。
+ */
+.NoticingDiv {
+	background: linear-gradient(to bottom right, lightgreen, white);
+	border:1px solid lightgrey;
+	border-radius: 10px;
+	padding: 20px;
+	margin: 50px;
+	text-align: center;
+	font-size: 15px;
+	font-weight: bold;
+}

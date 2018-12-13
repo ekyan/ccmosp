@@ -34,7 +34,6 @@ import jp.mosp.time.dao.settings.ScheduleDateDaoInterface;
 import jp.mosp.time.dao.settings.WorkTypeItemDaoInterface;
 import jp.mosp.time.dto.settings.ScheduleDateDtoInterface;
 import jp.mosp.time.dto.settings.WorkTypeItemDtoInterface;
-import jp.mosp.time.dto.settings.impl.TmmWorkTypeItemDto;
 
 /**
  * 勤怠データ手当情報参照クラス。
@@ -131,14 +130,13 @@ public class ScheduleReferenceTotalBean extends PlatformBean implements Schedule
 		
 		List<ScheduleDateDtoInterface> scheduleDateDto = scheduleDateDao.findForList(scheduleCode, startDate, endDate);
 		
-		WorkTypeItemDtoInterface workTypeItemDto = new TmmWorkTypeItemDto();
-		
 		int totalRestTime = 0;
 		
 		for (int i = 0; i < scheduleDateDto.size(); i++) {
 			// 対象の休憩時間を検索
-			workTypeItemDto = workTypeItemDao.findForKey(scheduleDateDto.get(i).getWorkTypeCode(),
-					scheduleDateDto.get(i).getActivateDate(), TimeConst.CODE_RESTTIME);
+			WorkTypeItemDtoInterface workTypeItemDto = workTypeItemDao.findForKey(
+					scheduleDateDto.get(i).getWorkTypeCode(), scheduleDateDto.get(i).getActivateDate(),
+					TimeConst.CODE_RESTTIME);
 			
 			if (workTypeItemDto.getWorkTypeItemValue() != null) {
 				totalRestTime = totalRestTime + (DateUtility.getHour(workTypeItemDto.getWorkTypeItemValue()) * 60)
@@ -153,14 +151,13 @@ public class ScheduleReferenceTotalBean extends PlatformBean implements Schedule
 		
 		List<ScheduleDateDtoInterface> scheduleDateDto = scheduleDateDao.findForList(scheduleCode, startDate, endDate);
 		
-		WorkTypeItemDtoInterface workTypeItemDto = new TmmWorkTypeItemDto();
-		
 		int totalRestTime = 0;
 		
 		for (int i = 0; i < scheduleDateDto.size(); i++) {
 			// 対象の勤務時間を検索
-			workTypeItemDto = workTypeItemDao.findForKey(scheduleDateDto.get(i).getWorkTypeCode(),
-					scheduleDateDto.get(i).getActivateDate(), TimeConst.CODE_WORKTIME);
+			WorkTypeItemDtoInterface workTypeItemDto = workTypeItemDao.findForKey(
+					scheduleDateDto.get(i).getWorkTypeCode(), scheduleDateDto.get(i).getActivateDate(),
+					TimeConst.CODE_WORKTIME);
 			
 			if (workTypeItemDto.getWorkTypeItemValue() != null) {
 				totalRestTime = totalRestTime + (DateUtility.getHour(workTypeItemDto.getWorkTypeItemValue()) * 60)

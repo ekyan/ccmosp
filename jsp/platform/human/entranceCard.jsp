@@ -36,7 +36,7 @@ import = "jp.mosp.platform.human.constant.PlatformHumanConst"
 MospParams params = (MospParams)request.getAttribute(MospConst.ATT_MOSP_PARAMS);
 EntranceCardVo vo = (EntranceCardVo)params.getVo();
 %>
-<jsp:include page="<%= PlatformHumanConst.PATH_HUMAN_COMMON_INFO_JSP %>" flush="false" />
+<jsp:include page="<%= params.getApplicationProperty(PlatformHumanConst.APP_HUMAN_COMMON_INFO_JSP) %>" flush="false" />
 <div class="List">
 <table class="CardTable" id="tblCard">
 	<tr>

@@ -25,6 +25,7 @@ errorPage    = "/jsp/common/error.jsp"
 import = "jp.mosp.framework.base.MospParams"
 import = "jp.mosp.framework.constant.MospConst"
 import = "jp.mosp.framework.utils.HtmlUtility"
+import = "jp.mosp.framework.utils.CalendarHtmlUtility"
 import = "jp.mosp.platform.constant.PlatformConst"
 import = "jp.mosp.platform.utils.PlatformUtility"
 import = "jp.mosp.time.comparator.settings.SubHolidayRequestApproverNameComparator"
@@ -37,6 +38,7 @@ import = "jp.mosp.time.input.vo.SubHolidayRequestVo"
 %><%
 MospParams params = (MospParams)request.getAttribute(MospConst.ATT_MOSP_PARAMS);
 SubHolidayRequestVo vo = (SubHolidayRequestVo)params.getVo();
+boolean isChanging = vo.isModeActivateDateFixed() == false;
 %>
 <div class="ListHeader">
 	<table class="EmployeeLabelTable">
@@ -49,7 +51,7 @@ SubHolidayRequestVo vo = (SubHolidayRequestVo)params.getVo();
 <%
 if (vo.getAryLblCompensationWorkDate().length > 0) {
 %>
-	<table class="ListTable">
+	<table class="ListTable" id="subHolidayRequest_tblRemainder">
 		<tr>
 			<th class="ListSelectTh"><%= params.getName("CompensatoryHoliday", "Target", "GoingWork", "Day") %></th>
 			<th class="ListSelectTh"><%= params.getName("Acquisition", "TimeLimit") %></th>
@@ -99,7 +101,7 @@ if (vo.getAryLblCompensationDayTh().length > 0) {
 %>
 </div>
 <div class="List" id="divEdit">
-	<table class="OverInputTable">
+	<table class="OverInputTable" id="subHolidayRequest_tblEdit">
 		<tr>
 			<th class="EditTableTh" colspan="4">
 				<jsp:include page="<%= TimeConst.PATH_TIME_APPLY_INFO_JSP %>" flush="false" />
@@ -111,8 +113,9 @@ if (vo.getAryLblCompensationDayTh().length > 0) {
 		<tr>
 			<td class="TitleTd"><%= params.getName("CompensatoryHoliday","Day") %></td>
 			<td class="InputTd" id="tdRequestDate">
+				<%= CalendarHtmlUtility.getCalendarDiv(CalendarHtmlUtility.TYPE_DAY, "pltEditRequest", "", "", false, false, isChanging) %>
 				<select class="Number4PullDown" id="pltEditRequestYear" name="pltEditRequestYear">
-					<%= HtmlUtility.getSelectOption(vo.getAryPltEditRequestYear(), vo.getPltEditRequestYear()) %>
+					<%= HtmlUtility.getSelectOption(vo.getAryPltEditRequestYear(), vo.getPltEditRequestYear(), true) %>
 				</select>
 				<%= params.getName("Year") %>
 				<select class="Number2PullDown" id="pltEditRequestMonth" name="pltEditRequestMonth">
@@ -135,11 +138,18 @@ if (vo.getAryLblCompensationDayTh().length > 0) {
 				</select>
 			</td>
 		</tr>
+<%
+// 承認個人ID利用
+if(!params.isTargetApprovalUnit()){
+%>
 		<jsp:include page="<%= TimeConst.PATH_TIME_APPROVER_PULLDOWN_JSP %>" flush="false" />
+<%
+}
+%>
 	</table>
 </div>
 <div class="List">
-	<table class="InputTable SearchInputTable" id="tblSearch">
+	<table class="InputTable SearchInputTable" id="subHolidayRequest_tblSearch">
 		<tr>
 			<th class="ListTableTh" colspan="6">
 				<span class="TitleTh"><%= params.getName("Search") %></span>
@@ -151,8 +161,9 @@ if (vo.getAryLblCompensationDayTh().length > 0) {
 		<tr>
 			<td class="TitleTd"><%= params.getName("CompensatoryHoliday","Day") %></td>
 			<td class="InputTd">
+				<%= CalendarHtmlUtility.getCalendarDiv(CalendarHtmlUtility.TYPE_MONTH, "pltSearchRequest", "", "", false, false, true) %>
 				<select class="Number4PullDown" id="pltSearchRequestYear" name="pltSearchRequestYear">
-					<%= HtmlUtility.getSelectOption(vo.getAryPltSearchRequestYear(), vo.getPltSearchRequestYear()) %>
+					<%= HtmlUtility.getSelectOption(vo.getAryPltSearchRequestYear(), vo.getPltSearchRequestYear(), true) %>
 				</select>
 				<%= params.getName("Year") %>
 				<select class="Number2PullDown" id="pltSearchRequestMonth" name="pltSearchRequestMonth">
@@ -162,8 +173,9 @@ if (vo.getAryLblCompensationDayTh().length > 0) {
 			</td>
 			<td class="TitleTd"><%= params.getName("GoingWork","Day") %></td>
 			<td class="InputTd">
+				<%= CalendarHtmlUtility.getCalendarDiv(CalendarHtmlUtility.TYPE_MONTH, "pltSearchWork", "", "", false, false, true) %>
 				<select class="Number4PullDown" id="pltSearchWorkYear" name="pltSearchWorkYear">
-					<%= HtmlUtility.getSelectOption(vo.getAryPltSearchWorkYear(), vo.getPltSearchWorkYear()) %>
+					<%= HtmlUtility.getSelectOption(vo.getAryPltSearchWorkYear(), vo.getPltSearchWorkYear(), true) %>
 				</select>
 				<%= params.getName("Year") %>
 				<select class="Number2PullDown" id="pltSearchWorkMonth" name="pltSearchWorkMonth">

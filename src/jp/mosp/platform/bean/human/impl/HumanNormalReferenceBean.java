@@ -20,12 +20,12 @@ package jp.mosp.platform.bean.human.impl;
 import java.sql.Connection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import jp.mosp.framework.base.MospException;
 import jp.mosp.framework.base.MospParams;
-import jp.mosp.framework.property.ConventionProperty;
 import jp.mosp.framework.xml.ItemProperty;
 import jp.mosp.framework.xml.TableItemProperty;
 import jp.mosp.platform.base.PlatformBean;
@@ -42,22 +42,22 @@ public class HumanNormalReferenceBean extends HumanGeneralBean implements HumanN
 	/**
 	 * 人事通常情報DAO。
 	 */
-	private HumanNormalDaoInterface		normalDao;
-	
-	/**
-	 * 人事汎用項目区分設定情報。
-	 */
-	protected ConventionProperty		conventionProperty;
+	private HumanNormalDaoInterface			normalDao;
 	
 	/**
 	 * 人事汎用項目情報リスト
 	 */
-	protected List<TableItemProperty>	tableItemList;
+	protected List<TableItemProperty>		tableItemList;
+	
+	/**
+	 * 人事通常レコード識別マップ
+	 */
+	protected LinkedHashMap<String, Long>	recordsMap;
 	
 	/**
 	 * 人事通常情報汎用マップ
 	 */
-	protected Map<String, String>		normalMap;
+	protected Map<String, String>			normalMap;
 	
 	
 	/**
@@ -96,13 +96,15 @@ public class HumanNormalReferenceBean extends HumanGeneralBean implements HumanN
 		tableItemList = getTableItemList(division, viewKey);
 		// 人事通常情報汎用マップ初期化
 		normalMap = new HashMap<String, String>();
+		recordsMap = new LinkedHashMap<String, Long>();
 	}
 	
 	@Override
-	public Map<String, String> getHumanNormalMapInfo(String division, String viewKey, String personalId,
-			Date activeDate, boolean isPulldownName) throws MospException {
+	public void getHumanNormalRecordMapInfo(String division, String viewKey, String personalId, Date activeDate,
+			boolean isPulldownName) throws MospException {
 		// 共通情報設定
 		setCommounInfo(division, viewKey);
+		
 		//人事汎用項目毎に処理
 		for (TableItemProperty tableItem : tableItemList) {
 			// 人事汎用項目名を取得
@@ -121,7 +123,6 @@ public class HumanNormalReferenceBean extends HumanGeneralBean implements HumanN
 				HumanNormalDtoInterface dto = normalDao.findForInfo(itemName, personalId);
 				// 人事汎用通常情報がない場合
 				if (dto == null) {
-					normalMap.put(itemName, "");
 					continue;
 				}
 				// 人事汎用項目キー取得
@@ -132,14 +133,13 @@ public class HumanNormalReferenceBean extends HumanGeneralBean implements HumanN
 				String pulldownValue = getPulldownValue(itemProperty, activeDate, dto.getHumanItemValue(), itemName,
 						isPulldownName);
 				if (pulldownValue.isEmpty() == false) {
-					normalMap.put(itemName, pulldownValue);
-					continue;
+					dto.setHumanItemValue(pulldownValue);
 				}
 				// 値を設定
+				recordsMap.put(itemName, dto.getPfaHumanNormalId());
 				normalMap.put(itemName, dto.getHumanItemValue());
 			}
 		}
-		return normalMap;
 	}
 	
 	@Override
@@ -243,5 +243,20 @@ public class HumanNormalReferenceBean extends HumanGeneralBean implements HumanN
 			}
 		}
 		return "";
+	}
+	
+	@Override
+	public List<HumanNormalDtoInterface> findForInfoForValue(String itemName, String itemValue) throws MospException {
+		return normalDao.findForInfoForValue(itemName, itemValue);
+	}
+	
+	@Override
+	public LinkedHashMap<String, Long> getRecordsMap() {
+		return recordsMap;
+	}
+	
+	@Override
+	public Map<String, String> getNormalMap() {
+		return normalMap;
 	}
 }

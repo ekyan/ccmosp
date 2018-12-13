@@ -19,6 +19,7 @@ package jp.mosp.platform.portal.vo;
 
 import java.util.List;
 
+import jp.mosp.framework.js.DirectJs;
 import jp.mosp.platform.base.PlatformVo;
 
 /**
@@ -51,12 +52,14 @@ public class PasswordChangeVo extends PlatformVo {
 	/**
 	 * パスワード最低文字数。<br>
 	 */
-	private String				jsMinPassword;
+	@DirectJs
+	private String				minPassword;
 	
 	/**
 	 * パスワード文字種。<br>
 	 */
-	private String				jsCharPassword;
+	@DirectJs
+	private String				charPassword;
 	
 	/**
 	 * 注意書きリスト。
@@ -128,31 +131,17 @@ public class PasswordChangeVo extends PlatformVo {
 	}
 	
 	/**
-	 * @return jsMinPassword
+	 * @param minPassword セットする minPassword
 	 */
-	public String getJsMinPassword() {
-		return jsMinPassword;
+	public void setMinPassword(String minPassword) {
+		this.minPassword = minPassword;
 	}
 	
 	/**
-	 * @param jsMinPassword セットする jsMinPassword
+	 * @param charPassword セットする charPassword
 	 */
-	public void setJsMinPassword(String jsMinPassword) {
-		this.jsMinPassword = jsMinPassword;
-	}
-	
-	/**
-	 * @return jsCharPassword
-	 */
-	public String getJsCharPassword() {
-		return jsCharPassword;
-	}
-	
-	/**
-	 * @param jsCharPassword セットする jsCharPassword
-	 */
-	public void setJsCharPassword(String jsCharPassword) {
-		this.jsCharPassword = jsCharPassword;
+	public void setCharPassword(String charPassword) {
+		this.charPassword = charPassword;
 	}
 	
 	/**

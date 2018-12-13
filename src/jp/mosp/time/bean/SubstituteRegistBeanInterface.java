@@ -15,9 +15,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-/**
- * 
- */
 package jp.mosp.time.bean;
 
 import jp.mosp.framework.base.MospException;
@@ -57,11 +54,17 @@ public interface SubstituteRegistBeanInterface {
 	
 	/**
 	 * 登録時の確認処理を行う。<br>
-	 * @param dto1 対象DTO1
-	 * @param dto2 対象DTO2
+	 * @param dto 対象DTO
 	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
 	 */
-	void checkRegist(SubstituteDtoInterface dto1, SubstituteDtoInterface dto2) throws MospException;
+	void checkRegist(SubstituteDtoInterface dto) throws MospException;
+	
+	/**
+	 * インポート時の確認処理を行う。<br>
+	 * @param dto 対象DTO
+	 * @throws MospException インスタンスの取得、或いはSQL実行に失敗した場合
+	 */
+	void checkImport(SubstituteDtoInterface dto) throws MospException;
 	
 	/**
 	 * 入力チェック。振替日の妥当性チェック。<br>
@@ -109,8 +112,9 @@ public interface SubstituteRegistBeanInterface {
 	 * 法定休日でなく且つ所定休日でない場合、エラーメッセージを設定する。
 	 * </p>
 	 * @param dto 対象DTO
+	 * @throws MospException SQLの作成に失敗した場合、或いはSQL例外が発生した場合
 	 */
-	void checkHolidayDate(SubstituteDtoInterface dto);
+	void checkHolidayDate(SubstituteDtoInterface dto) throws MospException;
 	
 	/**
 	 * 休職チェック。<br>
@@ -132,4 +136,9 @@ public interface SubstituteRegistBeanInterface {
 	 */
 	void checkRetirement(SubstituteDtoInterface dto) throws MospException;
 	
+	/**
+	 * 振替日の入力チェック。<br>
+	 * @param dto 対象DTO
+	 */
+	void checkValidate(SubstituteDtoInterface dto);
 }
