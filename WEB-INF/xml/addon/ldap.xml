@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE MosP>
+<MosP>
+<!--
+LDAP関連機能アドオン設定ファイル。
+アドオン有効フラグ(AddonValid)をtrueにすることで、
+アドオン設定情報以下に設定した情報が読み込まれる。
+
+当アドオンでは、以下の機能を提供する。
+・LDAPを用いた認証機能
+
+LDAPを用いた認証機能の利用方法：
+・認証クラス(Application key="Auth")を変更する。
+・パスワード有効期限(Application key="PasswordPeriod")を期限無しとする。
+・パスワード確認(Application key="CheckPassword")を確認無しとする。
+・パスワード変更画面(Menu key="PasswordChange")を利用不可とする。
+-->
+	<!-- アドオン設定情報 -->
+	<Addon key="Ldap">
+		<AddonName>LDAP関連機能</AddonName>
+		<AddonValid>false</AddonValid>
+	</Addon>
+	
+	<!-- 認証クラス変更 -->
+	<Model key="Auth">
+		jp.mosp.addon.ldap.bean.impl.LdapAuthBean
+	</Model>
+	
+	<!-- パスワード有効期限無し -->
+	<Application key="PasswordPeriod">
+	</Application>
+	
+	<!-- パスワード確認無し -->
+	<Application key="CheckPassword">
+	</Application>
+	
+	<!-- パスワード変更画面利用不可 -->
+	<MainMenu key="menuIndividualSetting">
+		<Menu key="PasswordChange">
+			<MenuValid>false</MenuValid>
+		</Menu>
+	</MainMenu>
+	
+	<!-- パスワード初期化可否 -->
+	<Application key="InitPasswordImpossible">
+		true
+	</Application>
+	
+	<!-- 文言 -->
+	<Naming key="ldapAuthFailed">
+		LDAP認証失敗
+	</Naming>
+	
+	<!-- LDAPプロバイダURL -->
+	<Application key="LdapProviderUrl">
+		ldap://192.168.1.1:389
+	</Application>
+	
+	<!-- LDAPディレクトリ名 -->
+	<Application key="LdapDirName">
+		uid=%,ou=People,dc=mosp,dc=jp
+	</Application>
+	
+	<!-- LDAPバインドDN(ActiveDirectoryAuthBean用) -->
+	<Application key="LdapBindDN">
+		%@mosp.jp
+	</Application>
+	
+	<!-- LDAP検索用ユーザID(ActiveDirectoryAuthBean用) -->
+	<Application key="LdapSearchUser">
+		userldap
+	</Application>
+	
+	<!-- LDAP検索用パスワード(ActiveDirectoryAuthBean用) -->
+	<Application key="LdapSearchPass">
+		passldap
+	</Application>
+	
+	<!-- LDAPユーザID接尾辞 -->
+	<Application key="SuffixUserId">
+	</Application>
+	
+</MosP>

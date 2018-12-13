@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE MosP>
+<MosP>
+
+	<!-- 勤怠管理用SQLファイルディレクトリ -->
+	<Application key="SetUpDatabase">
+		time
+	</Application>
+
+</MosP>
